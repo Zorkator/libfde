@@ -10,19 +10,20 @@
 
 
 #define _tryProcedure( id, args ) \
-   integer*4 function id( catchList, sub, args() theEnd ) bind(C,name="f_try") ;\
-     use, intrinsic :: iso_c_binding; use arg_terminator                         
+   integer(kind=c_int) function id( catchList, sub, args() argEnd ) bind(C,name="f_try") ;\
+     use, intrinsic :: iso_c_binding
 
 
 #define _end_tryProcedure \
-     integer(kind=c_int), intent(in)   :: catchList(*)                           ;\
-     procedure ()                      :: sub                                    ;\
-     type (NeverProvideThis), optional :: theEnd                                 ;\
+     integer(kind=c_int), intent(in)    :: catchList(*)  ;\
+     type (c_funptr), value, intent(in) :: sub           ;\
+     type (c_ptr),    value, intent(in) :: argEnd        ;\
    end function
 
 
 #define _catch(cases)   [cases, 0]
 #define _catchAny       [0]
+#define _argEnd         c_null_ptr
 
 #endif 
 

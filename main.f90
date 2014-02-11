@@ -37,7 +37,7 @@ module funx
       print *, str(msg)
       val = val / 2
 
-      print *, try( _catch((/1/)), another, str("bla"), str("& text"), val )!, val, 4.2 )
+      print *, try( _catch((/1/)), proc(another), str("bla"), str("& text"), val, _argEnd )!, val, 4.2 )
         !case (0); print *, "catched"
       !end select
     endif
@@ -52,7 +52,7 @@ program main
   integer*4 :: val
 
   val = 2
-  select case ( try( _catchAny, mayFail, val, str("test") ) )
+  select case ( try( _catchAny, proc(mayFail), val, str("test"), _argEnd ) )
     case (1); print *, "catched exception 1"
     case (2); print *, "catched exception 2"
     case (3); print *, "catched exception 3"

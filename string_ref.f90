@@ -4,8 +4,8 @@ module string_ref
   implicit none
 
   type, public, bind(C) :: StringRef
-    type (c_ptr) :: loc = c_null_ptr
-    integer*4    :: len = 0
+    type (c_ptr)        :: loc = c_null_ptr
+    integer(kind=c_int) :: len = 0
   end type
 
   interface str
@@ -38,7 +38,9 @@ module string_ref
   function str_to_stringRef( fstr ) result(strRef)
     character(len=*), target, intent(in) :: fstr
     type (StringRef)                     :: strRef
-    strRef%loc = c_loc(fstr)
+    character(len=len(fstr)), pointer    :: ptr
+    ptr => fstr
+    strRef%loc = c_loc(ptr(1:1))
     strRef%len = len(fstr)
   end function
 

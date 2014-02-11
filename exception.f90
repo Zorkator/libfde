@@ -1,18 +1,8 @@
 
 #include "exception.fpp"
 
-module arg_terminator
-  implicit none
-
-  ! We have to split this apart from exception_base, since
-  !  fortran does not allow to use any encompassing module
-
-  type NeverProvideThis
-    ! empty
-  end type
-end module
-
 module exception
+  use iso_c_binding
   implicit none
 
   interface try
@@ -26,6 +16,19 @@ module exception
     integer(kind=c_int), value :: code
     end subroutine
   end interface
+
+  interface proc
+    module procedure anyProc_to_tryProc
+  end interface
+
+  contains
+
+  function anyProc_to_tryProc( proc ) result(res)
+    use, intrinsic :: iso_c_binding
+    procedure()     :: proc
+    type (c_funptr) :: res
+    res = c_funloc(proc)
+  end function
 
 end module
 
