@@ -5,7 +5,7 @@ f90_pp_flags        = BUILT_TYPE=SHARED_LIB
 f90_options         = pic shared
 f90_options_debug   = debug
 f90_options_release = O3
-f90_files           = string_ref.f90 exception_base.f90 main.f90
+f90_files           = string_ref.f90 exception.f90 main.f90
 f90_moduleLib       =
 f90_library_dirs    = .
 f90_link_options    =

@@ -1,10 +1,16 @@
 
-#define _catch(cases)   [cases, 0]
-#define _catchAny       [0]
-
+#include "exception.fpp"
 
 module funx
-  use exception_base
+  use exception
+
+  interface try
+    _tryProcedure( tryFunc_1, str1, str2, val )
+      use string_ref
+      type (StringRef) :: str1, str2
+      integer*4        :: val
+    _end_tryProcedure
+  end interface
 
   contains
 
@@ -16,7 +22,7 @@ module funx
     !if (val1 + val2 < rval) then
       !val2 = val1
     !else
-      call throwException(val1)
+      call throw(val1)
     !endif
     print *, str(msg2)
   end subroutine
@@ -26,12 +32,12 @@ module funx
     type (StringRef) :: msg
 
     if (val < 10) then
-      call throwException(1)
+      call throw(1)
     else
       print *, str(msg)
       val = val / 2
 
-      print *, tryCall( _catch((/1/)), another, str("bla"), str("& text"), val )!, val, 4.2 )
+      print *, try( _catch((/1/)), another, str("bla"), str("& text"), val )!, val, 4.2 )
         !case (0); print *, "catched"
       !end select
     endif
@@ -41,12 +47,12 @@ end module
 
 program main
   use funx
-  use exception_base
+  use exception
   implicit none
   integer*4 :: val
 
   val = 2
-  select case ( tryCall( _catchAny, mayFail, val, str("test") ) )
+  select case ( try( _catchAny, mayFail, val, str("test") ) )
     case (1); print *, "catched exception 1"
     case (2); print *, "catched exception 2"
     case (3); print *, "catched exception 3"

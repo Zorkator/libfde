@@ -35,6 +35,7 @@ struct CheckPoint
   std::set<int> codes;
 };
 
+
 typedef void (*FortranProcedure)( ... );
 typedef void *                  ArgRef;
 typedef std::vector<CheckPoint> CatchStack;
@@ -42,8 +43,9 @@ typedef std::vector<CheckPoint> CatchStack;
 static CatchStack _catchStack;
 static ArgRef     _argList[100];
 
+
 extern "C" _dllExport
-int _callingConv tryCall( int *catchList, FortranProcedure proc, ... )
+int _callingConv f_try( int *catchList, FortranProcedure proc, ... )
 {
   va_list  vaArgs;
   size_t   nrArgs;
@@ -85,12 +87,12 @@ int _callingConv tryCall( int *catchList, FortranProcedure proc, ... )
 }
 
 
-#if 0 /* basic version - able to tryCall only one specific procedure type */
+#if 0 /* basic version - able to f_try only one specific procedure type */
 
 typedef void (_callingConv *Func)( const char *argString, size_t len );
 
 extern "C" _dllExport
-int _callingConv tryCall( Func func, int *catchList, int len )
+int _callingConv f_try( Func func, int *catchList, int len )
 {
   _catchStack.push_back( CheckPoint( catchList, len ) );
 
@@ -107,7 +109,7 @@ int _callingConv tryCall( Func func, int *catchList, int len )
 
 
 extern "C" _dllExport
-void _callingConv throwException( int code )
+void _callingConv f_throw( int code )
 {
   while (_catchStack.size())
   {
