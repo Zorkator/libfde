@@ -17,17 +17,26 @@ module exception
     end subroutine
   end interface
 
-  interface proc
-    module procedure anyProc_to_tryProc
+  abstract interface
+    subroutine VoidProc() bind(C)
+    end subroutine
   end interface
 
   contains
 
-  function anyProc_to_tryProc( proc ) result(res)
+  function proc( sub ) result(res)
     use, intrinsic :: iso_c_binding
-    procedure()     :: proc
+    procedure()     :: sub
     type (c_funptr) :: res
-    res = c_funloc(proc)
+    res = boundProc( sub )
+
+    contains
+
+    function boundProc( sub ) result(res)
+      procedure(VoidProc) :: sub
+      type (c_funptr)     :: res
+      res = c_funloc(sub)
+    end function
   end function
 
 end module

@@ -43,6 +43,16 @@ mk_f90_libraryPath = -L
 mk_f90_linkLib     = -l
 mk_f90_tmps        = *.s *.i90
 
+# mk_f90_compiler    = gfortan
+# mk_f90_includePath = -I
+# mk_f90_modulePath  = -J
+# mk_f90_ppFlag      = -D
+# mk_f90_compile     = -c
+# mk_f90_out         = -o
+# mk_f90_pp_off      =
+# mk_f90_pp_on       = -x f95-cpp-input
+# mk_f90_pp_full     = $(mk_f90_pp_on) -ffree-line-length-none
+
 # derived ...
 mk_f90_I_dirs       = $(f90_include_dirs:%=$(mk_f90_includePath)%) $(mk_f90_includePath)./$(mk_config)
 mk_f90_module_dirs  = $(mk_f90_modulePath) ./$(mk_config)

@@ -2,14 +2,21 @@
 #include "exception.fpp"
 
 module funx
-  use exception
+  use exception, only : throw
+  use string_ref
 
   interface try
-    _tryProcedure( tryFunc_1, str1, str2, val )
-      use string_ref
-      type (StringRef) :: str1, str2
-      integer*4        :: val
+    _tryProcedure( tryFunc_1, _2_args )
+      import StringRef
+      integer(kind=c_int) :: arg1
+      type (StringRef)    :: arg2
     _end_tryProcedure
+
+    !_tryProcedure( tryFunc_2, _3_args )
+    !  import StringRef
+    !  type (StringRef)    :: arg1, arg2
+    !  integer(kind=c_int) :: arg3
+    !_end_tryProcedure
   end interface
 
   contains
@@ -37,7 +44,7 @@ module funx
       print *, str(msg)
       val = val / 2
 
-      print *, try( _catch((/1/)), proc(another), str("bla"), str("& text"), val, _argEnd )!, val, 4.2 )
+      !print *, try( _catch((/1/)), proc(another), str("bla"), str("& text"), val, _argEnd )!, val, 4.2 )
         !case (0); print *, "catched"
       !end select
     endif
@@ -47,7 +54,7 @@ end module
 
 program main
   use funx
-  use exception
+  use exception, only : proc
   implicit none
   integer*4 :: val
 
