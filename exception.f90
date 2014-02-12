@@ -17,11 +17,6 @@ module exception
     end subroutine
   end interface
 
-  abstract interface
-    subroutine VoidProc() bind(C)
-    end subroutine
-  end interface
-
   contains
 
   function proc( sub ) result(res)
@@ -33,6 +28,10 @@ module exception
     contains
 
     function boundProc( sub ) result(res)
+      interface
+        subroutine VoidProc() bind(C); end subroutine
+      end interface
+
       procedure(VoidProc) :: sub
       type (c_funptr)     :: res
       res = c_funloc(sub)
