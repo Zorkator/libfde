@@ -4,8 +4,8 @@ module string_ref
   implicit none
 
   type, public, bind(C) :: StringRef
-    type (c_ptr)        :: loc = c_null_ptr
-    integer(kind=c_int) :: len = 0
+    type (c_ptr)        :: loc
+    integer(kind=c_int) :: len
   end type
 
   interface str
@@ -21,7 +21,7 @@ module string_ref
     module procedure stringRef_len
   end interface
 
-  abstract interface
+  interface
     subroutine mainITF( argString )
       character(len=*) :: argString
     end subroutine
@@ -33,6 +33,8 @@ module string_ref
 
   function create_stringRef() result(strRef)
     type (StringRef) :: strRef
+    strRef%loc = c_null_ptr
+    strRef%len = 0
   end function
 
   function str_to_stringRef( fstr ) result(strRef)
