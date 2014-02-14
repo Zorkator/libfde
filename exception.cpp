@@ -19,6 +19,11 @@
 
 struct CheckPoint
 {
+  // Note: for storing the exception codes we use a ordered set, with descending order!
+  typedef std::set<int, std::greater<int> >  CodeSet;
+  typedef CodeSet::iterator                  CodeSetItr;
+
+
     CheckPoint( int *codeList, size_t len )
     : codes( codeList, codeList + len )
       { memset( &this->env, 0, sizeof(std::jmp_buf) ); }
@@ -26,13 +31,22 @@ struct CheckPoint
   void
     handle( int code ) //< NOTE: might not return!
     {
-      if (this->codes.empty()
-      || (this->codes.find( code ) != this->codes.end()))
-        { std::longjmp( this->env, code ); }
+      CodeSetItr it = this->codes.begin();
+
+      // iterate over codes in descending order
+      // This means we get the exception codes from most to least specific.
+      for (; it != this->codes.end(); ++it)
+      {
+        if ((*it & code) == *it)
+          { break; }
+      }
+
+      if (this->codes.empty() || it != this->codes.end())
+        { std::longjmp( this->env, *it ); }
     }
 
   std::jmp_buf  env;
-  std::set<int> codes;
+  CodeSet       codes;
 };
 
 
