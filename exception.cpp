@@ -1,12 +1,13 @@
 
 #include <vector>
-#include <set>
+#include <map>
+#include <algorithm>
 #include <csetjmp>
 #include <string.h>
 #include <stdarg.h>
 
 //
-// XXX: Portability issues
+// TODO: Portability issues
 //  * replace __cdecl calling convention by some macro definition
 
 //# define _callingConv   __cdecl
@@ -20,18 +21,21 @@
 struct CheckPoint
 {
   // Note: for storing the exception codes we use a ordered set, with descending order!
-  typedef std::set<int, std::greater<int> >  CodeSet;
-  typedef CodeSet::iterator                  CodeSetItr;
+  typedef std::vector<int>  CodeSet;
 
 
     CheckPoint( int *codeList, size_t len )
     : codes( codeList, codeList + len )
-      { memset( &this->env, 0, sizeof(std::jmp_buf) ); }
+    {
+      memset( &this->env, 0, sizeof(std::jmp_buf) );
+      std::sort( this->codes.begin(), this->codes.end(), std::greater<int>() );
+    }
+
 
   void
     handle( int code ) //< NOTE: might not return!
     {
-      CodeSetItr it = this->codes.begin();
+      CodeSet::iterator it = this->codes.begin();
 
       // iterate over codes in descending order
       // This means we get the exception codes from most to least specific.
@@ -49,37 +53,60 @@ struct CheckPoint
   CodeSet       codes;
 };
 
-
 typedef void (*FortranProcedure)( ... );
-typedef void *                  ArgRef;
-typedef std::vector<CheckPoint> CatchStack;
+typedef void *                      ArgRef;
+typedef std::vector<CheckPoint>     CatchStack;
+typedef std::map<int, CatchStack>   ContextMap;
 
-static CatchStack _catchStack;
-static ArgRef     _argList[100];
+
+/**
+ * Note, that this try-catch mechanism NOT fit for threading yet!
+ * This is mostly because of one static CatchStack.
+ * Even synchronized, it would happily mix up CheckPoints that originate from try-calls
+ *   of different threads - and that's surely not healthy!
+ * We'd rather have to associate a separate CatchStack to each thread.
+ * This could be fixed easily by mapping the thread-id to a CatchStack.
+ * However, since there's no theadding standard yet (thanks M$!) this causes again
+ *   portability issues.
+ */
+
+inline CatchStack &
+getContext( void )
+{
+  static ContextMap _contextMap;
+
+  // TODO: synchronize here!
+  int threadId = 0 /*<< TODO: replace this by current thread-Id! */;
+  return _contextMap[threadId];
+}
 
 
 extern "C" _dllExport
-int _callingConv f_try( int *catchList, FortranProcedure proc, ... )
+int
+_callingConv f_try( int *catchList, FortranProcedure proc, ... )
 {
   va_list  vaArgs;
+  ArgRef   argBuf[32];
   size_t   nrArgs;
 
   va_start( vaArgs, proc );
   {
-    // unpack list of given procedure arguments into _argList
-    ArgRef *argPtr = _argList;
+    // unpack list of given procedure arguments into argBuf
+    ArgRef *argPtr = argBuf;
     while( *argPtr++ = va_arg( vaArgs, ArgRef ));
-    nrArgs = (argPtr - _argList) - 1;
+    nrArgs = (argPtr - argBuf) - 1;
   }
   va_end( vaArgs );
 
-  // convert 0-terminated catchList into CheckPoint and push it onto _catchStack
+  // convert 0-terminated catchList into CheckPoint and push it onto catchStack
   int len;
   for (len = 0; catchList[len]; ++len);
-  _catchStack.push_back( CheckPoint( catchList, len ) );
+
+  CatchStack &catchStack = getContext();
+  catchStack.push_back( CheckPoint( catchList, len ) );
 
   // mark current stack location as point of return ...
-  CheckPoint &here = _catchStack.back();
+  CheckPoint &here = catchStack.back();
   int        code  = setjmp( here.env ); //< for marking setjmp returns 0!
   
   //<<< longjmp ends up here with some code different from 0!
@@ -87,48 +114,68 @@ int _callingConv f_try( int *catchList, FortranProcedure proc, ... )
   {
     switch (nrArgs)
     {
-      case 0: proc(); break;
-      case 1: proc( _argList[0] ); break;
-      case 2: proc( _argList[0], _argList[1] ); break;
-      case 3: proc( _argList[0], _argList[1], _argList[2] ); break;
-      case 4: proc( _argList[0], _argList[1], _argList[2], _argList[3] ); break;
-      case 5: proc( _argList[0], _argList[1], _argList[2], _argList[3], _argList[4] ); break;
+#     define expandArgs_0     
+#     define expandArgs_1     argBuf[0]
+#     define expandArgs_2     expandArgs_1, argBuf[1]
+#     define expandArgs_3     expandArgs_2, argBuf[2]
+#     define expandArgs_4     expandArgs_3, argBuf[3]
+#     define expandArgs_5     expandArgs_4, argBuf[4]
+#     define expandArgs_6     expandArgs_5, argBuf[5]
+#     define expandArgs_7     expandArgs_6, argBuf[6]
+#     define expandArgs_8     expandArgs_7, argBuf[7]
+#     define expandArgs_9     expandArgs_8, argBuf[8]
+#     define expandArgs_10    expandArgs_9, argBuf[9]
+#     define expandArgs_11    expandArgs_10, argBuf[10]
+#     define expandArgs_12    expandArgs_11, argBuf[11]
+#     define expandArgs_13    expandArgs_12, argBuf[12]
+#     define expandArgs_14    expandArgs_13, argBuf[13]
+#     define expandArgs_15    expandArgs_14, argBuf[14]
+#     define expandArgs_16    expandArgs_15, argBuf[15]
+#     define expandArgs_17    expandArgs_16, argBuf[16]
+#     define expandArgs_18    expandArgs_17, argBuf[17]
+#     define expandArgs_19    expandArgs_18, argBuf[18]
+#     define expandArgs_20    expandArgs_19, argBuf[19]
+#     define expandArgs(nr)   expandArgs_ ## nr
+
+      case  0: proc( expandArgs( 0) ); break;
+      case  1: proc( expandArgs( 1) ); break;
+      case  2: proc( expandArgs( 2) ); break;
+      case  3: proc( expandArgs( 3) ); break;
+      case  4: proc( expandArgs( 4) ); break;
+      case  5: proc( expandArgs( 5) ); break;
+      case  6: proc( expandArgs( 6) ); break;
+      case  7: proc( expandArgs( 7) ); break;
+      case  8: proc( expandArgs( 8) ); break;
+      case  9: proc( expandArgs( 9) ); break;
+      case 10: proc( expandArgs(10) ); break;
+      case 11: proc( expandArgs(11) ); break;
+      case 12: proc( expandArgs(12) ); break;
+      case 13: proc( expandArgs(13) ); break;
+      case 14: proc( expandArgs(14) ); break;
+      case 15: proc( expandArgs(15) ); break;
+      case 16: proc( expandArgs(16) ); break;
+      case 17: proc( expandArgs(17) ); break;
+      case 18: proc( expandArgs(18) ); break;
+      case 19: proc( expandArgs(19) ); break;
+      case 20: proc( expandArgs(20) ); break;
       default: throw; //<< can't handle number of given arguments!
     }
   }
-  _catchStack.pop_back();
+  catchStack.pop_back();
   return code;
 }
 
 
-#if 0 /* basic version - able to f_try only one specific procedure type */
-
-typedef void (_callingConv *Func)( const char *argString, size_t len );
-
 extern "C" _dllExport
-int _callingConv f_try( Func func, int *catchList, int len )
+void
+_callingConv f_throw( int code )
 {
-  _catchStack.push_back( CheckPoint( catchList, len ) );
+  CatchStack &catchStack = getContext();
 
-  CheckPoint &here = _catchStack.back();
-  int        code  = setjmp( here.env );
-  
-  //< longjmp ends up here with code set different from 0!
-  if (code == 0)
-    { func( "testinger", 9 ); }
-  _catchStack.pop_back();
-  return code;
-}
-#endif
-
-
-extern "C" _dllExport
-void _callingConv f_throw( int code )
-{
-  while (_catchStack.size())
+  while (catchStack.size())
   {
-    _catchStack.back().handle( code );
-    _catchStack.pop_back();
+    catchStack.back().handle( code );
+    catchStack.pop_back();
   }
   /**
    * If we arrive here there's no matching catch point!
