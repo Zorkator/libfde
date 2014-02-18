@@ -40,11 +40,14 @@ struct CheckPoint
       for (; it != this->codes.end(); ++it)
       {
         if ((*it & code) == *it)
-          { break; }
+        {
+          code = *it; //< use most specific exception code found
+          break;
+        }
       }
 
       if (this->codes.empty() || it != this->codes.end())
-        { std::longjmp( this->env, *it ); }
+        { std::longjmp( this->env, code ); }
     }
 
   std::jmp_buf  env;
