@@ -1,6 +1,5 @@
 
 #include <vector>
-#include <set>
 #include <map>
 #include <algorithm>
 #include <csetjmp>
@@ -22,12 +21,15 @@
 struct CheckPoint
 {
   // Note: for storing the exception codes we use a ordered set, with descending order!
-  typedef std::set<int, std::greater<int> >  CodeSet;
+	typedef std::vector<int>  CodeSet;
 
 
     CheckPoint( int *codeList, size_t len )
     : codes( codeList, codeList + len )
-      { memset( &this->env, 0, sizeof(std::jmp_buf) ); }
+    {
+			memset( &this->env, 0, sizeof(std::jmp_buf) );
+			std::sort( this->codes.begin(), this->codes.end(), std::greater<int>() );
+		}
 
 
   void
@@ -35,7 +37,7 @@ struct CheckPoint
     {
       CodeSet::iterator it = this->codes.begin();
 
-      // iterate over codes in descending order
+      // iterate over codes (sorted by descending order!)
       // This means we get the exception codes from most to least specific.
       for (; it != this->codes.end(); ++it)
       {
