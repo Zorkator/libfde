@@ -6,7 +6,7 @@ module funx
   use string_ref
 
   interface try
-    _tryProcedure( tryFunc_1, 2 )
+    _tryProcedure( tryFunc_1, _args_2 )
       import StringRef
       integer(kind=c_int) :: arg1
       type (StringRef)    :: arg2

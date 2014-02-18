@@ -41,7 +41,7 @@ module exception
   !   subroutine without arguments.
   ! For trying any other subroutine it's signature has to be defined
   !   manually.
-  ! The preprocessor macros _tryProcedure() and _end_tryProcedure
+  ! The preprocessor macros _tryProcedure and _end_tryProcedure
   !   help to define them correctly.
   ! Keep in mind that such interface is used to call a C-function.
   ! For this reason it is important to use the type kinds provided by
@@ -53,7 +53,7 @@ module exception
   !   e.g. an integer, a real, and a string, might look like this:
   !
   ! interface try
-  !   _tryProcedure( some_unique_name_, 3 ) !<< number of expected arguments
+  !   _tryProcedure( some_unique_name_, _args_3 ) !<< number of expected arguments
   !     integer(kind=c_int) :: arg1   !<< define arguments by dummy names arg#
   !     real(kind=c_double) :: arg2   !<< ... starting at arg1, up to arg20
   !     type(StringRef)     :: arg3
@@ -62,7 +62,7 @@ module exception
   !
 
   interface try
-    _tryProcedure( exception_try_0_args_, 0 )
+    _tryProcedure( exception_try_0_args_, _args_0 )
     _end_tryProcedure
   end interface
 
