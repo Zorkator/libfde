@@ -6,13 +6,13 @@ module funx
   use string_ref
 
   interface try
-    _tryProcedure( tryFunc_1, _2_args )
+    _tryProcedure( tryFunc_1, 2 )
       import StringRef
       integer(kind=c_int) :: arg1
       type (StringRef)    :: arg2
     _end_tryProcedure
 
-    !_tryProcedure( tryFunc_2, _3_args )
+    !_tryProcedure( tryFunc_2, 3 )
     !  import StringRef
     !  type (StringRef)    :: arg1, arg2
     !  integer(kind=c_int) :: arg3
