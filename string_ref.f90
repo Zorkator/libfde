@@ -1,9 +1,15 @@
 
+#if defined(__GFORTRAN__)
+# define _TypeBinding   , bind(C)
+#else
+# define _TypeBinding
+#endif
+
 module string_ref
   use, intrinsic :: iso_c_binding
   implicit none
 
-  type, public, bind(C) :: StringRef
+  type, public _TypeBinding :: StringRef
     type (c_ptr)        :: loc
     integer(kind=c_int) :: len
   end type

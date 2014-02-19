@@ -164,7 +164,7 @@ mk_libtype                ?= shared
 mk_cpp_options_shared      = -fPIC -O3
 mk_cpp_link_options_shared = -shared -Wl,-soname,libfortres.so.1
 mk_cpp_linker_shared       = g++
-mk_cpp_link_output_shared  = $(mk_libtype)/libfortres.so
+mk_cpp_link_output_shared  = $(mk_libtype)/libfortres.so.1
 mk_cpp_linker_out_shared   = -o
 
 mk_cpp_options_static      = -O3
