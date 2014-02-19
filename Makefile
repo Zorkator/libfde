@@ -179,6 +179,9 @@ shared static:
 	$(MAKE) library mk_libtype=$@
 	@echo "done"
 
+release:
+	$(MAKE) shared
+
 clean:
 	rm -rf shared static release
 
