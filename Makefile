@@ -148,50 +148,67 @@ mk_cpp_pp_cmd       = $(mk_cpp_pp_$(cpp_pp))
 mk_cpp_pp_flags     = $(cpp_pp_flags:%=$(mk_cpp_ppFlag)%)
 mk_cpp_pp           = $(mk_cpp_pp_cmd) $(mk_cpp_pp_flags)
 mk_cpp_opts         = $(cpp_options) $(cpp_options_$(mk_config))
-mk_cpp_options      = $(foreach opt,$(mk_cpp_opts:%=mk_cpp_%),$($(opt)))
 mk_cpp_files        = $(wildcard $(cpp_files))
 mk_cpp_objects      = $(mk_cpp_files:%.cpp=$(mk_config)/%.o)
 mk_cpp_modules      = $(wildcard $(mk_config)/*.mod)
 mk_cpp_moduleLib    = $(mk_config)/$(if $(cpp_moduleLib),$(cpp_moduleLib),modules.lib)
 mk_cpp_L_dirs       = $(cpp_library_dirs:%=$(mk_cpp_libraryPath)%)
 mk_cpp_link_libs    = $(cpp_link_libs:%=$(mk_cpp_linkLib)%)
-mk_cpp_link_options = $(foreach opt,$(cpp_link_options:%=mk_cpp_%),$($(opt)))
-mk_cpp_link_output  = $(mk_config)/$(cpp_link_output)
 mk_cpp_tmp_files    = $(wildcard $(mk_cpp_tmps))
 
-mk_libtype                ?= shared
 
-mk_cpp_options_shared      = -fPIC -O3
-mk_cpp_link_options_shared = -shared -Wl,-soname,libfortres.so
+mk_libtype                ?= $(if $(_libtype),$(_libtype),shared)
+mk_arch										?= $(if $(_arch),$(_arch),x32)
+mk_build_dir							 = $(mk_libtype).$(mk_arch)
+
+mk_cpp_archopt_x32         = -m32
+mk_cpp_archopt_x64         = -m64
+mk_cpp_archopt             = $(mk_cpp_archopt_$(mk_arch))
+
+mk_cpp_libname_shared			 = libfortres.$(mk_arch).so
+mk_cpp_options_shared      = -fPIC -O3 $(mk_cpp_archopt)
+mk_cpp_link_options_shared = -shared -Wl,-soname,$(mk_cpp_libname_shared) $(mk_cpp_archopt)
 mk_cpp_linker_shared       = g++
-mk_cpp_link_output_shared  = $(mk_libtype)/libfortres.so
+mk_cpp_link_output_shared  = $(mk_build_dir)/$(mk_cpp_libname_shared)
 mk_cpp_linker_out_shared   = -o
 
-mk_cpp_options_static      = -O3
+mk_cpp_libname_static      = libfortres.$(mk_arch).a
+mk_cpp_options_static      = -O3 $(mk_cpp_archopt)
 mk_cpp_link_options_static = rcs
 mk_cpp_linker_static       = ar
-mk_cpp_link_output_static  = $(mk_libtype)/libfortres.a
+mk_cpp_link_output_static  = $(mk_build_dir)/$(mk_cpp_libname_static)
 mk_cpp_linker_out_static   = 
 
 
+mk_cpp_options             = $(mk_cpp_options_$(mk_libtype))
+mk_cpp_linker              = $(mk_cpp_linker_$(mk_libtype))
+mk_cpp_link_output         = $(mk_cpp_link_output_$(mk_libtype))
+mk_cpp_link_options        = $(mk_cpp_link_options_$(mk_libtype))
+mk_cpp_linker_out          = $(mk_cpp_linker_out_$(mk_libtype))
+
+
 shared static:
-	mkdir -p $@ release
-	$(MAKE) library mk_libtype=$@
+	$(MAKE) library _libtype=$@ _arch=x32
+	$(MAKE) library _libtype=$@ _arch=x64
 	@echo "done"
 
 release:
 	$(MAKE) shared
 
 clean:
-	rm -rf shared static release
+	rm -rf shared.x?? static.x?? release
 
-library: $(mk_cpp_link_output_$(mk_libtype))
-	cp $< release
+library:
+	mkdir -p $(mk_build_dir) release
+	$(MAKE) $(mk_cpp_link_output)
+	cp $(mk_cpp_link_output) release
 
+echo_%:
+	@echo "$* = $($*)"
 
-$(mk_libtype)/exception.o: exception.cpp
-	$(mk_cpp_compiler) $(mk_cpp_pp) $(mk_cpp_I_dirs) $(mk_cpp_options_$(mk_libtype)) $(mk_cpp_compile) $< $(mk_cpp_out) $@
+$(mk_build_dir)/exception.o: exception.cpp
+	$(mk_cpp_compiler) $(mk_cpp_pp) $(mk_cpp_I_dirs) $(mk_cpp_options) $(mk_cpp_compile) $< $(mk_cpp_out) $@
 
-$(mk_cpp_link_output_$(mk_libtype)): $(mk_libtype)/exception.o
-	$(mk_cpp_linker_$(mk_libtype)) $(mk_cpp_link_options_$(mk_libtype)) $(mk_cpp_linker_out_$(mk_libtype)) $@ $<
+$(mk_cpp_link_output): $(mk_build_dir)/exception.o
+	$(mk_cpp_linker) $(mk_cpp_link_options) $(mk_cpp_linker_out) $@ $<
 
