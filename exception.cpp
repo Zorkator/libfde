@@ -3,6 +3,7 @@
 #include <map>
 #include <algorithm>
 #include <csetjmp>
+#include <functional>
 #include <string.h>
 #include <stdarg.h>
 
