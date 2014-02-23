@@ -1,6 +1,14 @@
 #ifndef __EXCEPTION_FPP
 #define __EXCEPTION_FPP
 
+#if defined(__GFORTRAN__)
+# define _paste(a,b)    a/**/b
+# define _str(a)        "a"
+#else
+# define _paste(a,b)    a ## b
+# define _str(a)        #a
+#endif
+
 #define _args_0()
 #define _args_1()     arg1,
 #define _args_2()     _args_1() arg2,
@@ -22,7 +30,7 @@
 #define _args_18()    _args_17() arg18,
 #define _args_19()    _args_18() arg19,
 #define _args_20()    _args_19() arg20,
-#define _args(nr)     _args_ ## nr()
+#define _args(nr)     _paste(_args_,nr)()
 
 
 #define _tryProcedure( id, args ) \

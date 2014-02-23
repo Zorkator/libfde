@@ -14,7 +14,7 @@
 //# define _callingConv   __cdecl
 # define _callingConv
 #if defined _WIN32
-#	define _dllExport		__declspec(dllexport)
+#	define _dllExport   __declspec(dllexport)
 #else
 #	define _dllExport
 #endif
@@ -22,15 +22,15 @@
 struct CheckPoint
 {
   // Note: for storing the exception codes we use a ordered set, with descending order!
-	typedef std::vector<int>  CodeSet;
+  typedef std::vector<int>  CodeSet;
 
 
     CheckPoint( int *codeList, size_t len )
     : codes( codeList, codeList + len )
     {
-			memset( &this->env, 0, sizeof(std::jmp_buf) );
-			std::sort( this->codes.begin(), this->codes.end(), std::greater<int>() );
-		}
+      memset( &this->env, 0, sizeof(std::jmp_buf) );
+      std::sort( this->codes.begin(), this->codes.end(), std::greater<int>() );
+    }
 
 
   void
