@@ -107,7 +107,7 @@ module block_try
   contains
 
   recursive subroutine main_prog()
-    integer*4 :: code
+    integer*4 :: code, loop, val
 
 #   define _tryBlock(label) \
       goto label; entry _paste(tryblock__,label)
@@ -119,41 +119,49 @@ module block_try
 #   define _tryEnd \
       end select
 
-    code = 0
+# define _tryDo(label) \
+    _paste(label,00) _tryBlock(label)
 
-123 continue
-      _tryBlock(42)
-        ! only in subroutines
-        ! containing subroutines must be recursive!
-        ! can't share local variables!
-        print *, "enter value"
-        read(5,*), code !<< different instance of variable code!!!
+# define _tryWhile(label,cond) \
+    _tryEnd                   ;\
+    if (cond) goto _paste(label,00)
 
-        print *, "testinger"
-        select case (code)
-          case (10);    call throw( IOError )
-          case (20);    call throw( ZeroDivisionError )
-          case default; code = func( code )
-        end select
+    loop = 1
+    _tryDo(42)
+      ! only in subroutines
+      ! containing subroutines must be recursive!
+      ! can't share local variables!
+      print *, "enter value"
+      read(5,*), val !<< different instance of variable code!!!
 
-      _tryCatch(42, (/ArithmeticError, EnvironmentError/))
-        case (ArithmeticError);  print *, "catched ArithmeticError"
-        case (EnvironmentError); print *, "catched EnvironmentError"
-        case default;            code = 1
-      _tryEnd
-    if (code == 0) &
-      goto 123
+      print *, "testinger"
+      select case (val)
+        case (10);    call throw( IOError )
+        case (20);    call throw( ZeroDivisionError )
+        case default; code = func( val )
+      end select
 
-    print *, code
+    _tryCatch(42, (/ArithmeticError, EnvironmentError/))
+      case (ArithmeticError);  print *, "catched ArithmeticError"
+      case (EnvironmentError); print *, "catched EnvironmentError"
+      case default;            loop = 0
+    _tryWhile(42, loop .ne. 0)
+
+    print *, code, loop
   end subroutine
 
   integer*4 function func( x ) result(res)
     integer*4 :: x, y
-    y = x * 2 - 40
-    if (y < 0) &
-      call throw( ArithmeticError )
-    res = y
+    res = 1.0/(x - 2.0)
   end function
+
+  subroutine fpe_handler( sig, code )
+    !use ifport
+    integer :: sig, code, ir
+    character*10 :: out, in
+    ir = ieee_flags('clear', 'exception', 'division', out)
+    call throw( ZeroDivisionError )
+  end subroutine
 
 end module
 
@@ -161,6 +169,9 @@ end module
 program main
   use block_try
 
+  integer :: ir
+
+  ir = ieee_handler('set', 'division', fpe_handler)
   call main_prog()
   print *, "main finish"
   
