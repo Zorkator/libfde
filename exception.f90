@@ -68,8 +68,8 @@ module exception
 
   interface
     subroutine throw( code ) bind(C,name="f_throw")
-    use, intrinsic :: iso_c_binding
-    integer(kind=c_int), value :: code
+      use, intrinsic :: iso_c_binding
+      integer(kind=c_int), value :: code
     end subroutine
   end interface
 
