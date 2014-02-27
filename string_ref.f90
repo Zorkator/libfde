@@ -10,8 +10,8 @@ module string_ref
   implicit none
 
   type, public _TypeBinding :: StringRef
-    type (c_ptr)        :: loc
-    integer(kind=c_int) :: len
+    type (c_ptr)        :: loc = c_null_ptr
+    integer(kind=c_int) :: len = 0
   end type
 
   interface str
