@@ -75,6 +75,7 @@
 !   _tryCatch(20, (/ArithmeticError, RuntimeError/))
 !     case (ArithmeticError); continue
 !     case (RuntimeError);    print *, "catched RuntimeError"
+!                             _exitLoop(20)
 !   _tryWhile(20, value < 0)
 !
 !   _tryFor(30, i = 0, i < 10, i = i + 1)
