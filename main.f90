@@ -73,15 +73,15 @@ module block_try
       res = func( itr )
       print *, itr, ": res = ", res
 
-      _tryFor(31, x = -1, x < 3, x = x + 1 )
+      _tryFor(31, x = -1, x < 3, x = x + 1)
         print *, func( x )
       _tryCatch(31, _catchAny)
         case (NotImplementedError); continue
-        case default;               _exit !<< only possible to exit inner loop!
+        case default;               _exitLoop(31) !<< only possible to exit inner loop!
       _tryEndFor(31)
 
     _tryCatch(30, (/ArithmeticError, RuntimeError/))
-      case (RuntimeError); _exit
+      case (RuntimeError); _exitLoop(30)
       case default;        continue
     _tryEndFor(30)
 

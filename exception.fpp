@@ -104,7 +104,7 @@
     entry _paste(tryblock__,label)
 
 
-!-- the middle part, catching all declared exception types --
+!-- start catch block, catching all given exception types --
 # define _tryCatch(label, catchList)  \
     return                           ;\
     _paste(label,02) continue        ;\
@@ -112,25 +112,28 @@
       case (0); continue  !< this is important! Without it gfortran would skip the try!
 
 
-!-- end a simple try block 
+!-- end a simple try-catch
 # define _tryEnd(label) \
     end select
 
-!-- end a _tryDo block
+!-- end a _tryDo
 # define _tryWhile(label,cond)          \
     _tryEnd(label)                     ;\
     if (cond) goto _paste(label,02)    ;\
     _paste(label,03) continue
 
-!-- end a _tryFor block
+!-- end a _tryFor
 # define _tryEndFor(label)     \
     end select                ;\
     goto _paste(label,00)     ;\
     _paste(label,03) continue
 
-!-- early exit
-# define _exit \
-    return 
+!-- early exit 
+!   RESTRICTIONS:
+!    -> breaks only the most inner try-loop
+!    -> works only within catch block
+# define _exitLoop(label)      \
+    goto _paste(label,03)
 
 #endif 
 
