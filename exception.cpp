@@ -4,6 +4,7 @@
 #include <algorithm>
 #include <csetjmp>
 #include <functional>
+#include <string>
 #include <string.h>
 #include <stdarg.h>
 
@@ -18,6 +19,38 @@
 #else
 #	define _dllExport
 #endif
+
+
+struct StringRef
+{
+  const StringRef &
+    operator = ( const std::string &str )
+    {
+      this->clear();
+      this->len = std::min( str.length(), this->len );
+      memcpy( this->ref, str.c_str(), this->len );
+      return *this;
+    }
+
+    operator std::string ( void ) const
+      { return std::string( this->ref, this->len ); }
+
+  void
+    clear( void )
+      { memset( this->ref, ' ', this->len ); }
+
+  void
+    erase( void )
+    {
+      this->ref = NULL;
+      this->len = 0;
+    }
+
+  char  *ref;
+  size_t len;
+};
+
+
 
 struct CheckPoint
 {
@@ -34,7 +67,7 @@ struct CheckPoint
 
 
   void
-    handle( int code ) //< NOTE: might not return!
+    handle( int code, const StringRef *what ) //< NOTE: might not return!
     {
       CodeSet::iterator it = this->codes.begin();
 
@@ -50,12 +83,17 @@ struct CheckPoint
       }
 
       if (this->codes.empty() || it != this->codes.end())
-        { std::longjmp( this->env, code ); }
+      {
+        this->msg = *what;
+        std::longjmp( this->env, code );
+      }
     }
 
   std::jmp_buf  env;
   CodeSet       codes;
+  std::string   msg;
 };
+
 
 typedef void (*FortranProcedure)( ... );
 typedef void *                      ArgRef;
@@ -87,7 +125,7 @@ getContext( void )
 
 extern "C" _dllExport
 int
-_callingConv f_try( int *catchList, FortranProcedure proc, ... )
+_callingConv f_try( int *catchList, StringRef *what, FortranProcedure proc, ... )
 {
   va_list  vaArgs;
   ArgRef   argBuf[32];
@@ -164,7 +202,11 @@ _callingConv f_try( int *catchList, FortranProcedure proc, ... )
       case 20: proc( expandArgs(20) ); break;
       default: throw; //<< can't handle number of given arguments!
     }
+    what->erase();
   }
+  else
+    { *what = here.msg; }
+
   catchStack.pop_back();
   return code;
 }
@@ -172,13 +214,13 @@ _callingConv f_try( int *catchList, FortranProcedure proc, ... )
 
 extern "C" _dllExport
 void
-_callingConv f_throw( int code )
+_callingConv f_throw( int code, const StringRef *what )
 {
   CatchStack &catchStack = getContext();
 
   while (catchStack.size())
   {
-    catchStack.back().handle( code );
+    catchStack.back().handle( code, what );
     catchStack.pop_back();
   }
   /**

@@ -67,9 +67,11 @@ module exception
   end interface
 
   interface
-    subroutine throw( code ) bind(C,name="f_throw")
+    subroutine throw( code, what ) bind(C,name="f_throw")
       use, intrinsic :: iso_c_binding
+      use string_ref
       integer(kind=c_int), value :: code
+      type (StringRef)           :: what
     end subroutine
   end interface
 

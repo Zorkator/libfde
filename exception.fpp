@@ -34,12 +34,14 @@
 
 
 #define _tryProcedure( id, args ) \
-   function id( catchList, sub, args() argEnd ) bind(C,name="f_try") result(res) ;\
-     use, intrinsic :: iso_c_binding
+   function id( catchList, what, sub, args() argEnd ) bind(C,name="f_try") result(res) ;\
+     use, intrinsic :: iso_c_binding                                                   ;\
+     use string_ref
 
 
 #define _end_tryProcedure \
      integer(kind=c_int), intent(in)    :: catchList(*)  ;\
+     type (StringRef),       intent(in) :: what          ;\
      type (c_funptr), value, intent(in) :: sub           ;\
      type (c_ptr),    value, intent(in) :: argEnd        ;\
      integer(kind=c_int)                :: res           ;\
@@ -106,10 +108,10 @@
 
 
 !-- start catch block, catching all given exception types --
-# define _tryCatch(label, catchList)  \
+# define _tryCatch(label, catchList, what)  \
     return                           ;\
     _paste(label,02) continue        ;\
-    select case( try( _catch(catchList), proc(_paste(tryblock__,label)), _argEnd ) ) ;\
+    select case( try( _catch(catchList), str(what), proc(_paste(tryblock__,label)), _argEnd ) ) ;\
       case (0); continue  !< this is important! Without it gfortran would skip the try!
 
 
