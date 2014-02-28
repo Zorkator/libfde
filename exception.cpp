@@ -20,7 +20,7 @@
 #	define _dllExport
 #endif
 
-
+#pragma pack(push, 4)
 struct StringRef
 {
   const StringRef &
@@ -49,6 +49,7 @@ struct StringRef
   char  *ref;
   size_t len;
 };
+#pragma pack(pop)
 
 
 
@@ -84,7 +85,8 @@ struct CheckPoint
 
       if (this->codes.empty() || it != this->codes.end())
       {
-        this->msg = *what;
+        //this->msg = *what;
+				//this->msg.assign( what->ref, what->len );
         std::longjmp( this->env, code );
       }
     }
