@@ -8,16 +8,12 @@
 #include <string.h>
 #include <stdarg.h>
 
-//
-// TODO: Portability issues
-//  * replace __cdecl calling convention by some macro definition
-
-//# define _callingConv   __cdecl
-# define _callingConv
-#if defined _WIN32
-#	define _dllExport   __declspec(dllexport)
+#if defined _MSC_VER
+#	define _dllExport         __declspec(dllexport)
+  typedef unsigned __int32  uint32_t;
 #else
 #	define _dllExport
+# include <stdint.h>
 #endif
 
 #pragma pack(push, 4)
@@ -26,28 +22,33 @@ struct StringRef
   const StringRef &
     operator = ( const std::string &str )
     {
-      this->clear();
-      this->len = std::min( str.length(), this->len );
-      memcpy( this->ref, str.c_str(), this->len );
+      if (_ref != NULL)
+      {
+        this->clear(); //< clear string buffer by spaces to make fortran happy
+        if (str.length() < _len)
+          { _len = str.length(); }
+        memcpy( _ref, str.c_str(), _len );
+      }
       return *this;
     }
 
-    operator std::string ( void ) const
-      { return std::string( this->ref, this->len ); }
+  void
+    assignTo( std::string &str ) const
+      { str.assign( _ref, _len ); }
 
   void
     clear( void )
-      { memset( this->ref, ' ', this->len ); }
+      { memset( _ref, ' ', _len ); }
 
   void
     erase( void )
     {
-      this->ref = NULL;
-      this->len = 0;
+      _ref = NULL;
+      _len = 0;
     }
 
-  char  *ref;
-  size_t len;
+  char     *_ref;
+  uint32_t  _len;
 };
 #pragma pack(pop)
 
@@ -85,8 +86,7 @@ struct CheckPoint
 
       if (this->codes.empty() || it != this->codes.end())
       {
-        //this->msg = *what;
-				//this->msg.assign( what->ref, what->len );
+        what->assignTo( this->msg );
         std::longjmp( this->env, code );
       }
     }
@@ -127,7 +127,7 @@ getContext( void )
 
 extern "C" _dllExport
 int
-_callingConv f_try( int *catchList, StringRef *what, FortranProcedure proc, ... )
+f_try( int *catchList, StringRef *what, FortranProcedure proc, ... )
 {
   va_list  vaArgs;
   ArgRef   argBuf[32];
@@ -207,7 +207,12 @@ _callingConv f_try( int *catchList, StringRef *what, FortranProcedure proc, ... 
     what->erase();
   }
   else
-    { *what = here.msg; }
+  {
+    // Here, we've just landed the longjmp and the stack is not the same any more.
+    // HENCE, we can't rely on the 'here' reference taken above!
+    CheckPoint &here = catchStack.back();
+    *what = here.msg;
+  }
 
   catchStack.pop_back();
   return code;
@@ -216,7 +221,7 @@ _callingConv f_try( int *catchList, StringRef *what, FortranProcedure proc, ... 
 
 extern "C" _dllExport
 void
-_callingConv f_throw( int code, const StringRef *what )
+f_throw( int code, const StringRef *what )
 {
   CatchStack &catchStack = getContext();
 

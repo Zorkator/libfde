@@ -3,6 +3,8 @@
 
 module block_try
   use exception
+  use string_ref
+  use iso_c_binding
   implicit none
 
   integer*4 :: itr, x, y
@@ -12,9 +14,18 @@ module block_try
 
   recursive subroutine main_prog()
     integer*4 :: loop, val
+    character(len=100) :: what
+    type (StringRef) :: strRef
+    type (c_ptr)     :: ptr
+    integer(kind=c_long) :: xlen
 
     loop = 0
     val  = 1
+
+    print *, "size: ", storage_size(strRef)/8
+    print *, "size: ", storage_size(ptr)/8
+    print *, "size: ", storage_size(xlen)/8
+
 
     !-- standard try block --
     _tryBlock(10)
@@ -23,8 +34,8 @@ module block_try
       ! can't share local variables!
       res = func( itr + 42 )
       print *, itr, ": res = ", res
-    _tryCatch(10, _catchAny)
-      case default; print *, "catched exception"
+    _tryCatch(10, _catchAny, what)
+      case default; print *, "catched exception: " // what
     _tryEnd(10)
 
 
@@ -36,13 +47,13 @@ module block_try
         print *, "entering inner block"
         print *, func( -1 )
 
-      _tryCatch(12, (/ArithmeticError/))
-        case default; print *, "catched ArithmeticError"
+      _tryCatch(12, (/ArithmeticError/), what)
+        case default; print *, "catched ArithmeticError: " // what
       _tryEnd(12)
       print *, "leaving outer block"
 
-    _tryCatch(11, _catchAny)
-      case default; print *, "catched exception"
+    _tryCatch(11, _catchAny, what)
+      case default; print *, "catched exception: " // what
     _tryEnd(11)
 
 
@@ -52,7 +63,7 @@ module block_try
       itr = itr + 1
       res = func( itr )
       print *, itr, ": res = ", res
-    _tryCatch(21, (/ArithmeticError/))
+    _tryCatch(21, (/ArithmeticError/), what)
       ! just ignore
     _tryWhile(21, itr < 10)
 
@@ -64,7 +75,7 @@ module block_try
         print *, func( itr )
         itr = itr + 1
       end do
-    _tryCatch(22, (/OverflowError/))
+    _tryCatch(22, (/OverflowError/), what)
     _tryEnd(22)
 
 
@@ -75,12 +86,12 @@ module block_try
 
       _tryFor(31, x = -1, x < 3, x = x + 1)
         print *, func( x )
-      _tryCatch(31, _catchAny)
+      _tryCatch(31, _catchAny, what)
         case (NotImplementedError); continue
         case default;               _exitLoop(31) !<< only possible to exit inner loop!
       _tryEndFor(31)
 
-    _tryCatch(30, (/ArithmeticError, RuntimeError/))
+    _tryCatch(30, (/ArithmeticError, RuntimeError/), what)
       case (RuntimeError); _exitLoop(30)
       case default;        continue
     _tryEndFor(30)
@@ -93,11 +104,11 @@ module block_try
   real*8 function func( x ) result(res)
     integer*4 :: x
     if (x < 0) &
-      call throw( NotImplementedError )
+      call throw( NotImplementedError, str("value lower zero") )
     if (x == 5) &
-      call throw( ZeroDivisionError )
+      call throw( ZeroDivisionError, str("value equals 5") )
     if (x >= 20) &
-      call throw( OverflowError )
+      call throw( OverflowError, str('value too large')  )
     res = 1.0/(x - 5)
   end function
 

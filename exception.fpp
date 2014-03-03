@@ -41,7 +41,7 @@
 
 #define _end_tryProcedure \
      integer(kind=c_int), intent(in)    :: catchList(*)  ;\
-     type (StringRef),       intent(in) :: what          ;\
+     type (StringRef)                   :: what          ;\
      type (c_funptr), value, intent(in) :: sub           ;\
      type (c_ptr),    value, intent(in) :: argEnd        ;\
      integer(kind=c_int)                :: res           ;\
@@ -119,13 +119,13 @@
 # define _tryEnd(label) \
     end select
 
-!-- end a _tryDo
+!-- end a try-do
 # define _tryWhile(label,cond)          \
     _tryEnd(label)                     ;\
     if (cond) goto _paste(label,02)    ;\
     _paste(label,03) continue
 
-!-- end a _tryFor
+!-- end a try-for
 # define _tryEndFor(label)     \
     end select                ;\
     goto _paste(label,00)     ;\

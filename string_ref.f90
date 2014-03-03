@@ -1,17 +1,11 @@
 
-#if defined(__GFORTRAN__)
-# define _TypeBinding   , bind(C)
-#else
-# define _TypeBinding
-#endif
-
 module string_ref
   use, intrinsic :: iso_c_binding
   implicit none
 
-  type, public _TypeBinding :: StringRef
-    type (c_ptr)        :: loc = c_null_ptr
-    integer(kind=c_int) :: len = 0
+  type, public, bind(C) :: StringRef
+    type (c_ptr)            :: loc = c_null_ptr
+    integer(kind=c_int32_t) :: len = 0
   end type
 
   interface str

@@ -165,11 +165,14 @@ mk_cpp_archopt_x32         = -m32
 mk_cpp_archopt_x64         = -m64
 mk_cpp_archopt             = $(mk_cpp_archopt_$(mk_arch))
 
+mk_lib_mayor               = 0
+mk_lib_minor               = 1
+mk_lib_version             = $(mk_lib_mayor).$(mk_lib_minor)
 mk_cpp_libname_shared			 = libfortres.$(mk_arch).so
-mk_cpp_options_shared      = -fPIC -O3 $(mk_cpp_archopt)
-mk_cpp_link_options_shared = -shared -Wl,-soname,$(mk_cpp_libname_shared) $(mk_cpp_archopt)
+mk_cpp_options_shared      = -fPIC -g $(mk_cpp_archopt)
+mk_cpp_link_options_shared = -shared -Wl,-soname,$(mk_cpp_libname_shared).$(mk_lib_mayor) $(mk_cpp_archopt)
 mk_cpp_linker_shared       = g++
-mk_cpp_link_output_shared  = $(mk_build_dir)/$(mk_cpp_libname_shared)
+mk_cpp_link_output_shared  = $(mk_build_dir)/$(mk_cpp_libname_shared).$(mk_lib_version)
 mk_cpp_linker_out_shared   = -o
 
 mk_cpp_libname_static      = libfortres.$(mk_arch).a
