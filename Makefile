@@ -205,6 +205,8 @@ library:
 	mkdir -p $(mk_build_dir) release
 	$(MAKE) $(mk_cpp_link_output)
 	cp $(mk_cpp_link_output) release
+	ln -sf `basename $(mk_cpp_link_output)` release/`basename $(mk_cpp_link_output) .$(mk_lib_minor)`
+	ln -sf `basename $(mk_cpp_link_output)` release/`basename $(mk_cpp_link_output) .$(mk_lib_mayor).$(mk_lib_minor)`
 
 echo_%:
 	@echo "$* = $($*)"
