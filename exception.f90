@@ -12,6 +12,7 @@ module exception
   !   which is encoded by the assigned parameter value.
 
   integer*4, parameter :: StopExecution           = x'01000000'
+  integer*4, parameter ::   JobDone               = x'01010000'
 
   integer*4, parameter :: StandardError           = x'02000000'
 
