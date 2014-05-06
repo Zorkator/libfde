@@ -40,10 +40,19 @@ module string_ref
   function str_to_stringRef( fstr ) result(strRef)
     character(len=*), target, intent(in) :: fstr
     type (StringRef)                     :: strRef
-    character(len=len(fstr)), pointer    :: ptr
-    ptr => fstr
-    strRef%loc = c_loc(ptr(1:1))
+    ! NOTE: gfortran doesn't allow to use c_loc on character strings.
+    !       We fix this by a little wrapper function that usually gets inlined.
+    !       BTW: this should work on empty strings, too!
+    strRef%loc = get_string_loc(fstr)
     strRef%len = len(fstr)
+
+    contains
+
+    function get_string_loc( fstr ) result(loc)
+      character(len=1), target, intent(in) :: fstr
+      type (c_ptr)                         :: loc
+      loc = c_loc(fstr)
+    end function
   end function
 
   function stringRef_to_str( strRef ) result(fptr)
