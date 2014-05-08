@@ -82,19 +82,7 @@ module exception
     use, intrinsic :: iso_c_binding
     procedure()     :: sub
     type (c_funptr) :: res
-    res = boundProc( sub )
-
-    contains
-
-    function boundProc( sub ) result(res)
-      interface
-        subroutine VoidProc() bind(C); end subroutine
-      end interface
-
-      procedure(VoidProc) :: sub
-      type (c_funptr)     :: res
-      res = c_funloc(sub)
-    end function
+    res = c_funloc( sub )
   end function
 
 end module
