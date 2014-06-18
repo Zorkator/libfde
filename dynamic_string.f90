@@ -31,10 +31,13 @@ module dynamic_string
     integer*1                               :: mine = _ref_clear
   end type
 
+  type, public :: VolatileString
+  end type
+
 
   ! declare public interfaces 
 
-  public :: ref, str
+  public :: ref, str, cptr
   public :: char
   public :: delete
 
@@ -64,6 +67,7 @@ module dynamic_string
   interface DynamicString; module procedure ds_from_cs, ds_from_buf         ; end interface
   interface ptr          ; module procedure ds_ptr                          ; end interface
   interface ref          ; module procedure ds_ref                          ; end interface
+  interface cptr         ; module procedure ds_cptr                         ; end interface
   interface str          ; module procedure ds_str                          ; end interface
   interface char         ; module procedure ds_char, ds_char_l              ; end interface
   interface delete       ; module procedure ds_delete                       ; end interface
@@ -84,7 +88,7 @@ module dynamic_string
   ! assignment and operators
 
   interface assignment(=)
-    module procedure ds_assign_cs, cs_assign_ds, ds_assign_ds, ds_assign_buf
+    module procedure ds_assign_cs, cs_assign_ds, ds_assign_ds, ds_assign_buf, ds_assign_volatile
   end interface
 
   interface operator(//)
@@ -179,6 +183,19 @@ module dynamic_string
       deallocate( ds%ptr )
     else if (associated(ds%ptr)) then
       call c_f_pointer( c_loc(ds%ptr(1)), res )
+    end if
+  end function
+
+
+  ! c_loc
+  function ds_cptr( ds ) result(res)
+    type (DynamicString) :: ds
+    type (c_ptr)         :: res
+
+    if (_ref_stat(ds) == _ref_soft_mine) then
+      deallocate( ds%ptr )
+    else if (associated(ds%ptr)) then
+      res = c_loc(ds%ptr(1))
     end if
   end function
 
@@ -309,6 +326,13 @@ module dynamic_string
     20 allocate( lhs%ptr(lhs%len) )
        _set_mine( lhs )
     30 lhs%ptr(:lhs%len) = rhs
+  end subroutine
+
+
+  subroutine ds_assign_volatile( lhs, rhs )
+    type (DynamicString),  intent(inout) :: lhs
+    type (VolatileString),    intent(in) :: rhs
+    _clr_hard(lhs)
   end subroutine
 
 
@@ -710,11 +734,14 @@ program testinger
   use dynamic_string
   implicit none
 
+  type (DynamicString) :: tmp
   type (DynamicString) :: ds, ds2, ds3
   type (DynamicString) :: strings(4)
   character            :: buffer(10), bufferB(10)
   character            :: buffer2(5)
   integer :: i, idx, jdx
+
+  tmp = VolatileString()
 
   ds = DynamicString("test string")
   print *, ref(ds), len(ds)   !< print string and its length
@@ -756,6 +783,8 @@ program testinger
   print *, str(DynamicString('testinger'))
   ds2 = DynamicString( buffer ) // " appendix"
   ds2 = buffer
+
+  print *, cptr(ds2)
 
   print *, lge( buffer, char(ds2) )
 
