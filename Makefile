@@ -21,12 +21,13 @@ dynstring: dynamic_string.f90
 	$(mk_F90C) $(mk_F90_FLAGS) -DTEST $(mk_INCLUDE_PATHLIST) $< -o $@.$(F90C).$(CFG)
 
 gref: generic_ref.f90
-	$(mk_F90C) $(mk_F90_FLAGS) $(mk_INCLUDE_PATHLIST) -c type_info.f90
 	$(mk_F90C) $(mk_F90_FLAGS) $(mk_INCLUDE_PATHLIST) -c dynamic_string.f90
-	$(mk_F90C) $(mk_F90_FLAGS) -DTEST $(mk_INCLUDE_PATHLIST) $< type_info.o dynamic_string.o -o $@.$(F90C).$(CFG)
+	$(mk_F90C) $(mk_F90_FLAGS) -DTEST $(mk_INCLUDE_PATHLIST) $< dynamic_string.o -o $@.$(F90C).$(CFG)
 
+#$(mk_F90C) $(mk_F90_FLAGS) $(mk_INCLUDE_PATHLIST) -c type_info.f90
 
-
+clean:
+	rm -f *.mod *.o *.debug *.release
 
 
 
