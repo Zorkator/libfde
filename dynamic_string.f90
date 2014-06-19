@@ -192,6 +192,7 @@ module dynamic_string
     type (DynamicString) :: ds
     type (c_ptr)         :: res
 
+    res = C_NULL_PTR
     if (_ref_stat(ds) == _ref_soft_mine) then
       deallocate( ds%ptr )
     else if (associated(ds%ptr)) then
@@ -238,6 +239,7 @@ module dynamic_string
   subroutine ds_delete( ds )
     type (DynamicString) :: ds
     
+    ds%len = 0
     if (ds%mine > 0) then
       deallocate( ds%ptr )
       _clr_mine(ds)

@@ -9,24 +9,16 @@ module type_info
     character(32)                :: baseType;   integer*2 :: baseType_term = 0
     integer                      :: byteSize    =  0
     integer                      :: rank        =  0
-    procedure(), nopass, pointer :: assignFunc  => null() !< mandatory: assignment of datatype
-    procedure(), nopass, pointer :: deleteFunc  => null() !< mandatory: deletion of datatype
-    ! --- optional type specific functions ---
-    procedure(), nopass, pointer :: usrFunc1    => null() !< shape inspector
-    procedure(), nopass, pointer :: usrFunc2    => null() !< clone func
-    procedure(), nopass, pointer :: usrFunc3    => null()
+    procedure(), nopass, pointer :: assignFunc  => null()
+    procedure(), nopass, pointer :: shapeFunc   => null()
+    procedure(), nopass, pointer :: cloneFunc   => null()
+    procedure(), nopass, pointer :: deleteFunc  => null()
     logical                      :: initialized = .false.
   end type
 
-  !interface operator (.string.); module procedure TypeInfo_get_string; end interface
 
-  !interface assignFunc ; module procedure ti_assignFunc ; end interface
-  !interface cloneFunc  ; module procedure ti_cloneFunc  ; end interface
-  !interface inspectFunc; module procedure ti_inspectFunc; end interface
-  !interface deleteFunc ; module procedure ti_deleteFunc ; end interface
-
-  type (TypeInfo), target :: TypeInfo_void = TypeInfo("void", 0, "", 0, 0, 0, null(), null(), &
-                                                      null(), null(), null(), .true.)
+  type (TypeInfo), target :: TypeInfo_void = TypeInfo("void", 0, "", 0, 0, 0, &
+                                                      null(), null(), null(), null(), .true.)
 
   contains
 
@@ -36,50 +28,37 @@ module type_info
   ! @param typeId      - the type's id string (e.g. double)
   ! @param baseType    - the type's base string (e.g. real*8)
   ! @param byteSize    - the storage size of the type in bytes (=> storage_size(type)/8)
-  ! @param rank        - the rank of the type (default: 0, so assume scalar)
+  ! @param rank        - the rank of the type
   ! @param assignFunc  - the procedure to assign a variable of this type to another
+  ! @param shapeFunc   - the procedure to inspect the shape of a type instance
+  ! @param cloneFunc   - the procedure to clone a type instance
   ! @param deleteFunc  - the procedure to delete a variable
-  ! @param shapeFunc   - the procedure to inspect the shape
-  ! @param cloneFunc   - optional type procedure 2
   !*
   !PROC_EXPORT_1REF( TypeInfo_init, self )
-  subroutine TypeInfo_init( self, typeId, baseType, byteSize, rank, assignFunc, deleteFunc, usrFunc1, usrFunc2, usrFunc3 )
+  subroutine TypeInfo_init( self, typeId, baseType, byteSize, rank, assignFunc, shapeFunc, cloneFunc, deleteFunc )
     type (TypeInfo),    intent(inout) :: self
     character(len=*),      intent(in) :: typeId, baseType
     integer,               intent(in) :: byteSize
-    integer,     optional, intent(in) :: rank
-    procedure(), optional             :: assignFunc, deleteFunc, usrFunc1, usrFunc2, usrFunc3
+    integer,               intent(in) :: rank
+    procedure(), optional             :: assignFunc, shapeFunc, cloneFunc, deleteFunc
 
     self%typeId   = typeId;   self%typeId_term   = 0
     self%baseType = baseType; self%baseType_term = 0
     self%byteSize = byteSize
+    self%rank     = rank
 
     ! pre-initialize optional arguments
-    self%rank       =  0
     self%assignFunc => null()
+    self%shapeFunc  => null()
+    self%cloneFunc  => null()
     self%deleteFunc => null()
-    self%usrFunc1   => null()
-    self%usrFunc2   => null()
-    self%usrFunc3   => null()
 
-    if (present(rank))       self%rank       =  rank
     if (present(assignFunc)) self%assignFunc => assignFunc
+    if (present(shapeFunc))  self%shapeFunc  => shapeFunc
+    if (present(cloneFunc))  self%cloneFunc  => cloneFunc
     if (present(deleteFunc)) self%deleteFunc => deleteFunc
-    if (present(usrFunc1))   self%usrFunc1   => usrFunc1
-    if (present(usrFunc2))   self%usrFunc2   => usrFunc2
-    if (present(usrFunc3))   self%usrFunc3   => usrFunc3
     self%initialized = .true.
   end subroutine
-
-
-  !!PROC_EXPORT_1REF( TypeInfo_get_string, self )
-  !function TypeInfo_get_string( self ) result(res)
-  !  type (TypeInfo), intent(in) :: self
-  !  character(len=60)           :: res, buff
-  !  if (self%rank > 0) &
-  !    write (buff, "(A,I02)"), " Array-rank: ", self%rank
-  !  res  = trim(self%baseType) // buff
-  !end function
 
 end module type_info
 

@@ -4,49 +4,29 @@
 # define _same(a)       a
 
 #if defined(__GFORTRAN__)
-# define _str(a)            "a"
-# define _paste(a,b)        _same(a)_same(b)
-# define _paste3(a,b,c)     _same(a)_same(b)_same(c)
-# define _paste4(a,b,c,d)   _same(a)_same(b)_same(c)_same(d)
+# define _str(a)                "a"
+# define _paste(a,b)            _same(a)_same(b)
+# define _paste_3(a,b,c)        _same(a)_same(b)_same(c)
+# define _paste_4(a,b,c,d)      _same(a)_same(b)_same(c)_same(d)
 
 #else
-# define _str(a)            #a
-# define _paste(a,b)        a ## b
-# define _paste3(a,b,c)     a ## b ## c
-# define _paste4(a,b,c,d)   a ## b ## c ## d
+
+# define _pp_str(a)             #a
+# define _pp_merge(a,b)         a ## b
+# define _pp_merge_3(a,b,c)     a ## b ## c
+# define _pp_merge_4(a,b,c,d)   a ## b ## c ## d
+
+# define _str(a)                _pp_ ## str(a)
+# define _paste(a,b)            _pp_ ## merge(a,b)
+# define _paste_3(a,b,c)        _pp_ ## merge_3(a,b,c)
+# define _paste_4(a,b,c,d)      _pp_ ## merge_4(a,b,c,d)
 
 #endif
 
-
-
-! most of the following definitions don't work with gfortran!
-!# define ppStr( var )                    #var
-!# define ppStr_1( var )                  pp ## Str( var )
-!# define ppStr_2( var )                  pp ## Str_1( var )
-!# define ppStr_3( var )                  pp ## Str_2( var )
-!# define ppVarStr( var )                 pp ## Str_3( var )
-
-!# define ppMerge( a, b )                 a ## b
-!# define ppMerge_1( a, b )               pp ## Merge( a, b )
-!# define ppMerge_2( a, b )               pp ## Merge_1( a, b )
-!# define ppMerge_3( a, b )               pp ## Merge_2( a, b )
-!# define ppVarMerge( a, b )              pp ## Merge_3( a, b )
-!
-# define _eatArgs_1( a )
-# define _eatArgs_2( a, b )
-# define _eatArgs_3( a, b, c )
-!# define ppEatArgList( nr )              ppEatArgList_ ## nr
-!
-!# define ppEat2ArgLists_1_1( a )         ppEatArgList(1)
-!# define ppEat2ArgLists_1_2( a )         ppEatArgList(2)
-!# define ppEat2ArgLists_1_3( a )         ppEatArgList(3)
-!# define ppEat2ArgLists_2_1( a, b )      ppEatArgList(1)
-!# define ppEat2ArgLists_2_2( a, b )      ppEatArgList(2)
-!# define ppEat2ArgLists_2_3( a, b )      ppEatArgList(3)
-!# define ppEat2ArgLists_3_1( a, b, c )   ppEatArgList(1)
-!# define ppEat2ArgLists_3_2( a, b, c )   ppEatArgList(2)
-!# define ppEat2ArgLists_3_3( a, b, c )   ppEatArgList(3)
-!# define ppEat2ArgLists( n1, n2 )        ppEat2ArgLists_ ## n1 ## _ ## n2
+# define _eatArgList_1(a)
+# define _eatArgList_2(a,b)
+# define _eatArgList_3(a,b,c)
+# define _eatArgList_4(a,b,c,d)
 
 
 #if 0
@@ -67,3 +47,4 @@
 # define XtableExpand(tableId)           _paste(Xtable_,tableId)
 
 #endif
+
