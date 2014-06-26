@@ -741,6 +741,10 @@ program testinger
   type (DynamicString) :: strings(4)
   character            :: buffer(10), bufferB(10)
   character            :: buffer2(5)
+
+  character(len=32)    :: stringArray(20)
+  character(len=10)    :: strMat(10,20)
+
   integer :: i, idx, jdx
 
   tmp = VolatileString()
@@ -786,7 +790,7 @@ program testinger
   ds2 = DynamicString( buffer ) // " appendix"
   ds2 = buffer
 
-  print *, cptr(ds2)
+  !print *, cptr(ds2)
 
   print *, lge( buffer, char(ds2) )
 
@@ -810,6 +814,21 @@ program testinger
   call delete( ds )
   call delete( ds2 )
   call delete( ds3 )
+
+  call acceptStringArray( stringArray )
+  call acceptStringMatrix( strMat )
+
+  contains
+
+  subroutine acceptStringArray( x )
+    character(*), dimension(:) :: x
+  end subroutine
+
+  subroutine acceptStringMatrix( x )
+    character(*), dimension(:,:) :: x
+  end subroutine
+
+
 end
 
 #endif
