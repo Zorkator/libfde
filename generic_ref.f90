@@ -161,9 +161,10 @@ module generic_ref
     integer                       :: res(rank(self))
 
     if (associated( self%typeInfo )) then
-      if (associated( self%typeInfo%shapeProc )) &
+      if (associated( self%typeInfo%shapeProc )) then
         call self%typeInfo%shapeProc( self, res, self%typeInfo%rank )
         return
+      end if
     end if
     res = 0
   end function
@@ -175,9 +176,10 @@ module generic_ref
 
     res%ref_str = VolatileString()
     if (associated( self%typeInfo )) then
-      if (associated( self%typeInfo%cloneProc )) &
+      if (associated( self%typeInfo%cloneProc )) then
         call self%typeInfo%cloneProc( self, res )
         return
+      end if
     end if
     res = self
   end function
@@ -227,119 +229,39 @@ module generic_ref
 end module
 
 
-!---------------------------------------------------------------
-!  module encoders represents the user code needed for using
-!    GenericRef with arbitrary types.
-!  Creating this code module should be automated by either
-!    using the preprocessor (if possible) or some script.
-!---------------------------------------------------------------
-
 module encoders
   use generic_ref
   implicit none
+  !private
 
-!# define _scalar()
-!# define _rank_0()                       _scalar()
-!# define _rank_1()                       , dimension(:)
-!# define _rank_2()                       , dimension(:,:)
-!# define _rank_3()                       , dimension(:,:,:)
-!# define _rank_4()                       , dimension(:,:,:,:)
-!# define _rank_5()                       , dimension(:,:,:,:,:)
-!# define _rank_6()                       , dimension(:,:,:,:,:,:)
-!# define _rank_7()                       , dimension(:,:,:,:,:,:,:)
-!
-!# define _baseType  integer*4
-!# define _typeId    Int
-!# define _rank      _rank_2()
-!
-!! derived ...
-!# define _typeInfo  _paste(TypeInfo_,_typeId)
-!# define _encoder   _paste(GenericRef_encode_,_typeId)
-!# define _decoder   _paste(GenericRef_decode_,_typeId)
-!# define _inspect   _paste(GenericRef_inspect_,_typeId)
-!# define _cloner    _paste(GenericRef_clone_,_typeId)
-!
-!
-!
-!  type, public :: _typeId; _baseType _rank, pointer :: ptr; end type
-!  type (TypeInfo), target :: _typeInfo
-!  interface GenericRef;          module procedure _encoder; end interface
-!  interface _paste(_typeId,Ptr); module procedure _decoder; end interface
+  abstract interface
+    subroutine simpleCall(); end subroutine
+  end interface
 
+  abstract interface
+    function func( x ) result(res)
+      real*4 :: x, res
+    end function
+  end interface
 
-  !_TypeReference_declare( int,   integer*4, dimension(:,:) )
-  !_TypeReference_declare( float, real*4,    scalar )
+  !_TypeReference_declare( int,      integer*4, dimension(:,:) )
+  !_TypeReference_declare( float,    real*4,    scalar )
+  !_TypeReference_declare( CallBack, procedure(simpleCall),  scalar )
+  !_TypeReference_declare( CalcFunc, procedure(func),  scalar )
 
   contains
 
-  !_TypeReference_implement( int )
-  !_TypeReference_implement( float )
+  !_TypeReference_implementAll()
 
 
-!  subroutine some_assign( lhs, rhs )
-!    integer*4, intent(inout) :: lhs
-!    integer*4,    intent(in) :: rhs
-!    lhs = rhs
-!  end subroutine
-!
-!  subroutine some_delete( lhs )
-!    integer*4, intent(inout) :: lhs
-!    lhs = 0
-!  end subroutine
-!
-!  function _encoder( val ) result(res)
-!    use iso_c_binding
-!    _baseType _rank, target, intent(in) :: val
-!    type (GenericRef)                   :: res
-!    type (_typeId),              target :: wrap
-!    procedure(),                pointer :: None => null()
-!
-!    wrap%ptr => val
-!    if (gr_set_TypeReference( res, c_loc(wrap), storage_size(wrap), _typeInfo )) &
-!      call gr_init_TypeInfo( _typeInfo, _str(_typeId), _str(_baseType), &
-!                          storage_size(val)/8, size(shape(val)), &
-!                          assignProc = None, &
-!                          deleteProc = some_delete, &
-!                          cloneProc = _cloner, &
-!                          shapeProc = _inspect )
-!  end function
-!
-!
-!  function _decoder( val ) result(res)
-!    use iso_c_binding
-!    type (GenericRef), intent(in) :: val
-!    _baseType _rank,      pointer :: res
-!    type (_typeId),       pointer :: wrap
-!    
-!    call c_f_pointer( gr_get_TypeReference(val), wrap )
-!    res => wrap%ptr
-!  end function
-!
-!
-!  subroutine _inspect( val, res, n )
-!    type (GenericRef), intent(in) :: val
-!    integer                       :: n
-!    integer                       :: res(n)
-!    res(:n) = shape( _decoder( val ) )
-!  end subroutine
-!
-!
-!  subroutine _cloner( val, res )
-!    use iso_c_binding
-!    type (GenericRef),           intent(in) :: val
-!    type (GenericRef)                       :: res
-!    _baseType _rank,                pointer :: src, tgt => null()
-!    character(len=1), dimension(:), pointer :: tmp
-!
-!    src => _decoder( val )
-!    ! allocate target, and copy info
-!    allocate( tmp(product(shape(src)) * storage_size(src)/8) )
-!    call c_f_pointer( c_loc(tmp(1)), tgt, shape(src) ) !< CAUTION: do not provide shape for scalar types!
-!    tgt = src
-!    ! or
-!    ! call a function / subroutine to do it somehow ...
-!    res = _encoder( tgt )
-!  end subroutine
+  subroutine sub_a()
+    print *, "sub_a was called"
+  end subroutine
+
+  function func_a( x ) result(y)
+    real*4 :: x, y
+    y = x ** 2
+  end function
 
 end module
 
@@ -362,81 +284,48 @@ program testinger
   integer*4, dimension(:)  , pointer :: ptr1d => null()
   integer*4,                 pointer :: ptr0d => null()
   !procedure(bla), dimension(:), pointer :: procPtr #< not possible to create array of proc pointers!
+  procedure(func),       pointer :: f  => null()
+  procedure(simpleCall), pointer :: sc => null()
 
   type (c_ptr)      :: cpointer
   type (GenericRef) :: ref, ref2
 
-  ref = GenericRef( intArray )
-  ptr2d => IntPtr(ref)
+  ref = .ref.intArray
+  ptr2d => .int.ref
   ptr2d = 42
   cpointer = cptr(ref)
 
   allocate( ptr2d(4,4) )
-  ref = GenericRef( ptr2d )
+  ref = .ref. ptr2d
 
   ptr2d => null()
-  ptr2d => IntPtr(ref)
+  ptr2d => .int.ref
 
   ptr2d = 21
+
+  ref2 = ref_from_CallBack( sub_a )
+  print *, rank(ref2)
+  print *, shape(ref2)
+  ref2 = clone(ref2)
+
+  sc => CallBack_from_ref( ref2 )
+  call sc()
+
+  ref2 = ref_from_CalcFunc( func_a )
+
+  f => CalcFunc_from_ref( ref2 )
+  print *, f( 2.43 )
 
   print *, shape(ref)
   ref2 = clone(ref)
   print *, shape(ref2)
-  print *, IntPtr(ref2)
+  print *, .int.ref2
 
   call free(ref)
   call free(ref2)
   call delete( ref )
 
-  call do_clone( intArray, ptr2d )
-  print *, ptr2d
-
-  call do_clone2( 42, ptr0d )
-  print *, ptr0d
-
-  deallocate(ptr0d)
-  deallocate(ptr2d)
-
-  contains
-
-# define alloc_size(x)  (product(shape(x)) * storage_size(x)/8)
-
-  subroutine do_clone( src, tgt )
-    integer*4, dimension(:,:),       target :: src
-    integer*4, dimension(:,:),      pointer :: tgt
-    character(len=1), dimension(:), pointer :: tmp
-
-    allocate( tmp(alloc_size(src)) )
-    call c_f_pointer( c_loc(tmp(1)), tgt, shape(src) )
-    tgt = src
-  end subroutine
-
-  subroutine do_clone2( src, tgt )
-    integer*4,                       target :: src
-    integer*4,                      pointer :: tgt
-    character(len=1), dimension(:), pointer :: tmp
-
-    allocate( tmp(alloc_size(src)) )
-    call c_f_pointer( c_loc(tmp(1)), tgt )
-    tgt = src
-  end subroutine
-
 end
 
 #endif
-
-
-!!_TypeReference_declare( IntType, integer*4, dimension(:,:), deleteProc = myDel, cloneProc = myCloner, assignProc = myAssign )
-!
-!!_TypeReference_declare( xFunc, procedure(ITF), scalar )
-!
-!
-!! contains
-!
-!
-!!_TypeReference_implement( IntType )
-!
-!
-!!_TypeReference_implement( xFunc )
-
 
