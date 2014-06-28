@@ -6,15 +6,15 @@ class ReferenceType(object):
 
   Scope = dict()
   
-  _typeId    = '\s*(\w+)\s*'      #< some type identifier
+  _ident     = '\s*(\w+)\s*'      #< some type identifier
   _baseType  = '\s*([\w *()]+)'   #< e.g. integer*4, type(Struct), character(*), <interfaceId>, ...
   _dimType   = '\s*([\w ,:()]+)'  #< e.g. scalar, dimension(:,:), procedure
   _keyAssign = '\s*(\w+)\s*=\s*(\w+)\s*'
-  _procItf   = '\s*procedure\s*\(%s\)\s*' % _typeId         #< procedure interface
+  _procItf   = '\s*procedure\s*\(%s\)\s*' % _ident          #< procedure interface
   _dimSpec   = '\s*dimension\s*\(\s*:(?:\s*,\s*:)*\s*\)\s*' #< dimension specification
   _keySpecs  = '((?:,\s*\w+\s*=\s*\w+\s*)*)'
-  _typeDecl  = '^\s*!\s*_TypeReference_declare\(%s,%s,%s%s\)' % (_typeId, _baseType, _dimType, _keySpecs)
-  _typeImpl  = '^\s*!\s*_TypeReference_implement\(%s\)' % _typeId
+  _typeDecl  = '^\s*!\s*_TypeReference_declare\(%s,%s,%s,%s%s\)' % (_ident, _ident, _baseType, _dimType, _keySpecs)
+  _typeImpl  = '^\s*!\s*_TypeReference_implement\(%s\)' % _ident
   _typeImplA = '^\s*!\s*_TypeReference_implementAll\(\)'
   
   typeDeclMatch    = re.compile( _typeDecl ).match
@@ -25,7 +25,7 @@ class ReferenceType(object):
 
   _template  = dict(
     info = """
-    !@ _TypeReference_declare( {typeId}, {baseType}{dimType}{typeProcs} )""",
+    !@ _TypeReference_declare( {access}, {typeId}, {baseType}{dimType}{typeProcs} )""",
 
     header = """
     !#################################
@@ -185,7 +185,7 @@ class ReferenceType(object):
   )
 
 
-  def __init__( self, typeId, baseType, dimType, typeProcedures ):
+  def __init__( self, access, typeId, baseType, dimType, typeProcedures ):
     self._isProc    = bool(self.procItfMatch( baseType ))
     self._isScalar  = dimType == 'scalar'
     self._isArray   = bool(self.dimSpecMatch( dimType ))
@@ -195,7 +195,10 @@ class ReferenceType(object):
     if not (self._isScalar ^ self._isArray):
       raise TypeError('invalid dimension specification "%s"' % dimType)
 
-    self.access    = 'public'
+    if access not in ('public', 'private'):
+      raise ValueError('invalid access specification "%s"' % access)
+
+    self.access    = access
     self.typeId    = typeId
     self.baseType  = baseType
     self.baseExtra = ('', ', nopass')[self._isProc]
@@ -225,7 +228,6 @@ class ReferenceType(object):
     self._declared    = False
     self._implemented = False
 
-    #print Dict.str(self.__dict__)
     ReferenceType.Scope[typeId] = self
 
 

@@ -31,7 +31,7 @@ module dynamic_string
     integer*1                               :: mine = _ref_clear
   end type
 
-  type, public :: Attribute
+  type :: Attribute
     private
     integer*1 :: val = 0
   end type

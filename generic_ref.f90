@@ -37,15 +37,16 @@ module generic_ref
   ! declare public interfaces 
 
   public :: assignment(=)
-  public :: gr_init_TypeInfo
-  public :: gr_set_TypeReference
-  public :: gr_get_TypeReference
+  public :: gr_init_TypeInfo      !< needed by generated code
+  public :: gr_set_TypeReference  !<            "
+  public :: gr_get_TypeReference  !<            "
   public :: rank
   public :: shape
   public :: clone
   public :: cptr
   public :: delete
   public :: free
+  public :: ti_void
 
 
   ! interface definitions
@@ -67,7 +68,7 @@ module generic_ref
 
   public :: operator(.ref.)
   
-  !@ _TypeReference_declare( gref, type(GenericRef), cloneProc = gref_cloner, deleteProc = gref_deleter )
+  !@ _TypeReference_declare( public, gref, type(GenericRef), cloneProc = gref_cloner, deleteProc = gref_deleter )
   type, public :: gref
      type(GenericRef), pointer :: ptr
   end type
@@ -335,12 +336,12 @@ module encoders
 
   public :: simpleCall, func, sub_a, func_a
 
-  !_TypeReference_declare( int,      integer*4, scalar )
-  !_TypeReference_declare( intXY,    integer*4, dimension(:,:) )
-  !_TypeReference_declare( float,    real*4,    scalar, cloneProc = float_cloner, deleteProc = float_clear )
-  !_TypeReference_declare( CallBack, procedure(simpleCall),  scalar )
-  !_TypeReference_declare( CalcFunc, procedure(func),  scalar )
-  !_TypeReference_declare( ADing, type(Ding),  scalar )
+  !_TypeReference_declare( public, int,      integer*4, scalar )
+  !_TypeReference_declare( public, intXY,    integer*4, dimension(:,:) )
+  !_TypeReference_declare( public, float,    real*4,    scalar, cloneProc = float_cloner, deleteProc = float_clear )
+  !_TypeReference_declare( public, CallBack, procedure(simpleCall),  scalar )
+  !_TypeReference_declare( public, CalcFunc, procedure(func),  scalar )
+  !_TypeReference_declare( public, ADing, type(Ding),  scalar )
 
   contains
 
