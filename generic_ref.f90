@@ -64,13 +64,76 @@ module generic_ref
 
   type :: voidRef ; integer, pointer :: ptr; end type
 
-  !_TypeReference_declare( gref, type(GenericRef), scalar, cloneProc = gref_cloner, deleteProc = gref_deleter )
 
+  public :: operator(.ref.)
+  
+  !@ _TypeReference_declare( gref, type(GenericRef), cloneProc = gref_cloner, deleteProc = gref_deleter )
+  type, public :: gref
+     type(GenericRef), pointer :: ptr
+  end type
+  type (TypeInfo), target :: TypeInfo_gref
+  
+  interface operator(.ref.);  module procedure GenericRef_encode_gref; end interface
+  interface operator(.gref.); module procedure GenericRef_decode_gref; end interface
+  public :: operator(.gref.)
+  
 !-----------------
   contains
 !-----------------
 
-  !_TypeReference_implement( gref )
+
+  !#################################
+  !# gref
+  !#################################
+  
+  function GenericRef_encode_gref( val ) result(res)
+    use iso_c_binding
+    type(GenericRef), target, intent(in) :: val
+    type (GenericRef)                    :: res
+    type (gref),                  target :: wrap
+    procedure(),                 pointer :: None => null()
+  
+    wrap%ptr => val
+    if (gr_set_TypeReference( res, c_loc(wrap), storage_size(wrap), TypeInfo_gref )) &
+      call gr_init_TypeInfo( TypeInfo_gref, 'gref', 'type(GenericRef)' &
+                             , storage_size(val)/8 &
+                             , size(shape(val)), assignProc = None, deleteProc = gref_deleter &
+                             , cloneProc = GenericRef_clone_gref )
+  end function
+  
+
+  function GenericRef_decode_gref( val ) result(res)
+    use iso_c_binding
+    type (GenericRef), intent(in) :: val
+    type(GenericRef),  pointer :: res
+    type (gref),      pointer :: wrap
+    
+    call c_f_pointer( gr_get_TypeReference(val), wrap )
+    res => wrap%ptr
+  end function
+  
+
+  subroutine GenericRef_clone_gref( val, res )
+    use iso_c_binding
+    type (GenericRef),          intent(in) :: val
+    type (GenericRef)                      :: res
+    type(GenericRef),           pointer :: src, tgt => null()
+    character(len=1), dimension(:), pointer :: tmp
+  
+    src => GenericRef_decode_gref( val )
+    tgt => gref_cloner( src )
+  
+    res =  GenericRef_encode_gref( tgt )
+  end subroutine
+  
+
+  subroutine GenericRef_inspect_gref( val, res, n )
+    type (GenericRef), intent(in) :: val
+    integer                       :: n
+    integer                       :: res(n)
+    res(:n) = shape( GenericRef_decode_gref( val ) )
+  end subroutine
+  
 
   function gref_cloner( val ) result(res)
     type (GenericRef), intent(in) :: val
@@ -271,7 +334,6 @@ module encoders
   end type
 
   public :: simpleCall, func, sub_a, func_a
-  public :: operator(.ref.)
 
   !_TypeReference_declare( int,      integer*4, scalar )
   !_TypeReference_declare( intXY,    integer*4, dimension(:,:) )
