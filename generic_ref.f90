@@ -62,11 +62,29 @@ module generic_ref
   interface free  ; module procedure gr_free  ; end interface
 
 
-  type, public :: voidRef ; integer, pointer :: ptr; end type
+  type :: voidRef ; integer, pointer :: ptr; end type
+
+  !_TypeReference_declare( gref, type(GenericRef), scalar, cloneProc = gref_cloner, deleteProc = gref_deleter )
 
 !-----------------
   contains
 !-----------------
+
+  !_TypeReference_implement( gref )
+
+  function gref_cloner( val ) result(res)
+    type (GenericRef), intent(in) :: val
+    type (GenericRef),    pointer :: res
+    allocate( res ) !< initializes res as default GenericRef
+    res = val
+  end function
+
+
+  subroutine gref_deleter( val )
+    type (GenericRef) :: val
+    call delete( val )
+  end subroutine
+
 
   !**
   ! gr_init_TypeInfo initializes TypeInfo structure.
@@ -130,7 +148,7 @@ module generic_ref
     logical                          :: needInit
 
     call c_f_pointer( cptr, ptr )
-    self%ref_str  = VolatileString()
+    self%ref_str  = attrib_volatile
     self%ref_str  = ptr
     needInit      = .not. ti%initialized
     self%typeInfo => ti
@@ -174,7 +192,7 @@ module generic_ref
     type (GenericRef), intent(in) :: self
     type (GenericRef)             :: res
 
-    res%ref_str = VolatileString()
+    res%ref_str = attrib_volatile
     if (associated( self%typeInfo )) then
       if (associated( self%typeInfo%cloneProc )) then
         call self%typeInfo%cloneProc( self, res )
@@ -229,10 +247,13 @@ module generic_ref
 end module
 
 
+!###########################################################################################
+#ifdef TEST
+
 module encoders
   use generic_ref
   implicit none
-  !private
+  private
 
   abstract interface
     subroutine simpleCall(); end subroutine
@@ -244,14 +265,38 @@ module encoders
     end function
   end interface
 
-  !_TypeReference_declare( int,      integer*4, dimension(:,:) )
-  !_TypeReference_declare( float,    real*4,    scalar )
+  type, public :: Ding
+    integer*4 :: val1, val2
+    real*4    :: val3
+  end type
+
+  public :: simpleCall, func, sub_a, func_a
+  public :: operator(.ref.)
+
+  !_TypeReference_declare( int,      integer*4, scalar )
+  !_TypeReference_declare( intXY,    integer*4, dimension(:,:) )
+  !_TypeReference_declare( float,    real*4,    scalar, cloneProc = float_cloner, deleteProc = float_clear )
   !_TypeReference_declare( CallBack, procedure(simpleCall),  scalar )
   !_TypeReference_declare( CalcFunc, procedure(func),  scalar )
+  !_TypeReference_declare( ADing, type(Ding),  scalar )
 
   contains
 
   !_TypeReference_implementAll()
+
+  function float_cloner( val ) result(res)
+    real*4, intent(in) :: val
+    real*4,    pointer :: res
+    print *, 'float_cloner'
+    allocate( res )
+    res = val
+  end function
+
+  subroutine float_clear( val )
+    real*4 :: val
+    print *, 'float_clear'
+    val = 0.0
+  end subroutine
 
 
   subroutine sub_a()
@@ -265,9 +310,6 @@ module encoders
 
 end module
 
-
-!###########################################################################################
-#ifdef TEST
 
 program testinger
   use generic_ref
@@ -286,20 +328,41 @@ program testinger
   !procedure(bla), dimension(:), pointer :: procPtr #< not possible to create array of proc pointers!
   procedure(func),       pointer :: f  => null()
   procedure(simpleCall), pointer :: sc => null()
+  type(Ding)                     :: dong
 
   type (c_ptr)      :: cpointer
-  type (GenericRef) :: ref, ref2
+  type (GenericRef) :: ref1, ref2, ref3
 
-  ref = .ref.intArray
-  ptr2d => .int.ref
+  ref2 = .ref.42
+  ref1 = .ref.ref2
+  print *, .int.ref2
+  print *, .int.(.gref.ref1)
+
+  ref3 = clone(ref1)
+  print *, .int.(.gref.ref3)
+  call free( ref3 )
+
+  ref1 = .ref.intArray
+  ptr2d => .intXY.ref1
   ptr2d = 42
-  cpointer = cptr(ref)
+  cpointer = cptr(ref1)
+
+  ref2 = .ref.4.23
+  ref1 = clone(ref2)
+
+  call free(ref1)
+
+  ref1 = .ref.dong
+
+  ref2 = clone(ref1)
+
+  call free(ref2)
 
   allocate( ptr2d(4,4) )
-  ref = .ref. ptr2d
+  ref1 = .ref. ptr2d
 
   ptr2d => null()
-  ptr2d => .int.ref
+  ptr2d => .intXY.ref1
 
   ptr2d = 21
 
@@ -316,14 +379,14 @@ program testinger
   f => CalcFunc_from_ref( ref2 )
   print *, f( 2.43 )
 
-  print *, shape(ref)
-  ref2 = clone(ref)
+  print *, shape(ref1)
+  ref2 = clone(ref1)
   print *, shape(ref2)
-  print *, .int.ref2
+  print *, .intXY.ref2
 
-  call free(ref)
+  call free(ref1)
   call free(ref2)
-  call delete( ref )
+  call delete( ref1 )
 
 end
 

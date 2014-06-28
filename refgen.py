@@ -24,6 +24,9 @@ class ReferenceType(object):
   dimSpecMatch     = re.compile( _dimSpec ).match
 
   _template  = dict(
+    info = """
+    !@ _TypeReference_declare( {typeId}, {baseType}{dimType}{typeProcs} )""",
+
     header = """
     !#################################
     !# {typeId}
@@ -182,11 +185,11 @@ class ReferenceType(object):
   )
 
 
-  def __init__( self, typeId, baseType, dimType, keySpecs ):
-    self._isProc   = bool(self.procItfMatch( baseType ))
-    self._isScalar = dimType == 'scalar'
-    self._isArray  = bool(self.dimSpecMatch( dimType ))
-    self._typeProc = dict( re.findall( self._keyAssign, keySpecs ) )
+  def __init__( self, typeId, baseType, dimType, typeProcedures ):
+    self._isProc    = bool(self.procItfMatch( baseType ))
+    self._isScalar  = dimType == 'scalar'
+    self._isArray   = bool(self.dimSpecMatch( dimType ))
+    self._typeProcs = dict( re.findall( self._keyAssign, typeProcedures ) )
 
     # sanity check
     if not (self._isScalar ^ self._isArray):
@@ -199,14 +202,19 @@ class ReferenceType(object):
     self.valTarget = (', target, intent(in)', '')[self._isProc]
     self.dimType   = ('', ', %s' % dimType)[self._isArray]
     self.shapeArg  = ('', ', shape(src)')[self._isArray]
+    self.typeProcs = ''
 
-    self.assignProc = ', assignProc = %s' % self._typeProc.get('assignProc')
-    self.deleteProc = ', deleteProc = %s' % self._typeProc.get('deleteProc')
+    if self._typeProcs:
+      self.typeProcs = ', ' + ', '.join( '%s = %s' % i for i in self._typeProcs.items() )
+
+    self.assignProc = ', assignProc = %s' % self._typeProcs.get('assignProc')
+    self.deleteProc = ', deleteProc = %s' % self._typeProcs.get('deleteProc')
     self.shapeProc  = ('', ', shapeProc  = GenericRef_inspect_%s' % typeId)[self._isArray]
-    self.cloneProc  = self._typeProc.get('cloneProc')
-    self.cloneType  = ('alloc_clone', 'func_clone')[bool(self.cloneProc)]
+    self.clonerFunc = self._typeProcs.get('cloneProc')
+    self.cloneType  = ('alloc_clone', 'func_clone')[bool(self.clonerFunc)]
     self.cloneBy    = self._template[self.cloneType].format( **self.__dict__ )
-    
+   
+    self._info    = self._template['info'] 
     self._type    = self._template['type']
     self._itf     = self._template[('ref_itf', 'proc_itf')[self._isProc]]
     self._encoder = self._template[('ref_encoder', 'proc_encoder')[self._isProc]]
@@ -221,23 +229,24 @@ class ReferenceType(object):
     ReferenceType.Scope[typeId] = self
 
 
-  def declare( self ):
+  def declare( self, out ):
     if not self._declared:
       if len(ReferenceType.Scope) == 1:
-        sys.stdout.write( self._template['gen_itf'].format( **self.__dict__ ) )
+        out( self._template['gen_itf'].format( **self.__dict__ ) )
 
-      sys.stdout.write( self._type.format( **self.__dict__ ) )
-      sys.stdout.write( self._itf.format( **self.__dict__ ) )
+      out( self._info.format( **self.__dict__ ) )
+      out( self._type.format( **self.__dict__ ) )
+      out( self._itf.format( **self.__dict__ ) )
       self._declared = True
 
 
-  def implement( self ):
+  def implement( self, out ):
     if not self._implemented:
-      sys.stdout.write( self._template['header'].format( **self.__dict__ ) )
-      sys.stdout.write( self._encoder.format( **self.__dict__ ) )
-      sys.stdout.write( self._decoder.format( **self.__dict__ ) )
-      sys.stdout.write( self._cloner.format( **self.__dict__ ) )
-      sys.stdout.write( self._inspect.format( **self.__dict__ ) )
+      out( self._template['header'].format( **self.__dict__ ) )
+      out( self._encoder.format( **self.__dict__ ) )
+      out( self._decoder.format( **self.__dict__ ) )
+      out( self._cloner.format( **self.__dict__ ) )
+      out( self._inspect.format( **self.__dict__ ) )
       self._implemented = True
 
 
@@ -245,24 +254,26 @@ class ReferenceType(object):
   def convert( _class, fileName ):
 
     with open(fileName) as f:
-      for l in f.readlines():
+      out = sys.stdout.write
 
-        match = _class.typeDeclMatch( l )
+      for line in f.readlines():
+
+        match = _class.typeDeclMatch( line )
         if match:
-          _class( *map( str.strip, match.groups() ) ).declare()
+          _class( *map( str.strip, match.groups() ) ).declare( out )
           continue
 
-        match = _class.typeImplMatch( l )
+        match = _class.typeImplMatch( line )
         if match:
-          _class.Scope[ match.groups()[0] ].implement()
+          _class.Scope[ match.groups()[0] ].implement( out )
           continue
 
-        if _class.typeImplAllMatch( l ):
+        if _class.typeImplAllMatch( line ):
           for decl in sorted( _class.Scope.items() ):
-            decl[1].implement()
+            decl[1].implement( out )
           continue
 
-        sys.stdout.write( l )
+        sys.stdout.write( line )
 
 
 

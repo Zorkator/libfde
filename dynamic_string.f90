@@ -31,11 +31,17 @@ module dynamic_string
     integer*1                               :: mine = _ref_clear
   end type
 
-  type, public :: VolatileString
+  type, public :: Attribute
+    private
+    integer*1 :: val = 0
   end type
+
+  type (Attribute), parameter :: attrib_permanent = Attribute(0)
+  type (Attribute), parameter :: attrib_volatile  = Attribute(1)
 
 
   ! declare public interfaces 
+  public :: attrib_permanent, attrib_volatile
 
   public :: ref, str, cptr
   public :: char
@@ -88,7 +94,7 @@ module dynamic_string
   ! assignment and operators
 
   interface assignment(=)
-    module procedure ds_assign_cs, cs_assign_ds, ds_assign_ds, ds_assign_buf, ds_assign_volatile
+    module procedure ds_assign_cs, cs_assign_ds, ds_assign_ds, ds_assign_buf, ds_assign_attrib
   end interface
 
   interface operator(//)
@@ -331,10 +337,13 @@ module dynamic_string
   end subroutine
 
 
-  subroutine ds_assign_volatile( lhs, rhs )
+  subroutine ds_assign_attrib( lhs, rhs )
     type (DynamicString),  intent(inout) :: lhs
-    type (VolatileString),    intent(in) :: rhs
-    _clr_hard(lhs)
+    type (Attribute),         intent(in) :: rhs
+    select case (rhs%val)
+      case (0); _set_hard(lhs)
+      case (1); _clr_hard(lhs)
+    end select
   end subroutine
 
 
@@ -747,7 +756,8 @@ program testinger
 
   integer :: i, idx, jdx
 
-  tmp = VolatileString()
+  tmp = attrib_volatile
+  tmp = attrib_permanent
 
   ds = DynamicString("test string")
   print *, ref(ds), len(ds)   !< print string and its length
