@@ -1,5 +1,5 @@
 
-#include "adt/ppUtil.xpp"
+!#include "adt/ppUtil.xpp"
 
 module generic_ref
   use dynamic_string
@@ -23,8 +23,8 @@ module generic_ref
   end type
 
 
-  type (TypeInfo), target :: ti_void = TypeInfo( "void", 0, "", 0, 0, 0, .true., &
-                                                 null(), null(), null(), null() )
+  type (TypeInfo), target :: TypeInfo_void = TypeInfo( "void", 0, "", 0, 0, 0, .true., &
+                                                       null(), null(), null(), null() )
 
 
   type, public :: GenericRef
@@ -46,7 +46,7 @@ module generic_ref
   public :: cptr
   public :: delete
   public :: free
-  public :: ti_void
+  public :: TypeInfo_void
 
 
   ! interface definitions
@@ -171,8 +171,8 @@ module generic_ref
     integer,               intent(in) :: rank
     procedure(),             optional :: assignProc, deleteProc, shapeProc, cloneProc
 
-    self%typeId   = typeId;   self%typeId_term   = 0
-    self%baseType = baseType; self%baseType_term = 0
+    self%typeId   = adjustl(typeId);   self%typeId_term   = 0
+    self%baseType = adjustl(baseType); self%baseType_term = 0
     self%byteSize = byteSize
     self%rank     = rank
 

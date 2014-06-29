@@ -31,6 +31,13 @@ gref: gref_test.f90
 gref_test._f90: generic_ref.f90
 	cp $< $@
 
+
+varitem: var_item.f90 gref_test.f90
+	$(mk_F90C) $(mk_F90_FLAGS) $(mk_INCLUDE_PATHLIST) -c dynamic_string.f90
+	$(mk_F90C) $(mk_F90_FLAGS) $(mk_INCLUDE_PATHLIST) -c gref_test.f90
+	$(mk_F90C) $(mk_F90_FLAGS) -DTEST $(mk_INCLUDE_PATHLIST) $< gref_test.o dynamic_string.o -o $@.$(F90C).$(CFG)
+
+
 clean:
 	rm -f *.mod *.o *.debug *.release
 
