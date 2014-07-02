@@ -2,15 +2,15 @@
 !#include "ref_stat.fpp"
 
 # define _ref_clear       b'00'
-# define _ref_mine        b'01'
-# define _ref_hard        b'10'
+# define _ref_hard        b'01'
+# define _ref_mine        b'10'
 
-# define _ref_soft_lent   b'00'
-# define _ref_soft_mine   b'01'
-# define _ref_hard_lent   b'10'
-# define _ref_hard_mine   b'11'
+# define _ref_lent_soft   b'00'
+# define _ref_mine_soft   b'10'
+# define _ref_lent_hard   b'01'
+# define _ref_mine_hard   b'11'
 
-# define _ref_stat(s)     ior(s%hard, s%mine)
+# define _ref_stat(s)     ior(s%mine, s%hard)
 
 # define _set_mine(s)     s%mine = _ref_mine
 # define _clr_mine(s)     s%mine = _ref_clear
@@ -25,10 +25,10 @@ module dynamic_string
 
   type, public :: DynamicString
     private
-    character(len=1), dimension(:), pointer :: ptr  => null()
+    integer*1                               :: hard = _ref_hard   !< CAUTION: by convention this MUST be the first member!
+    integer*1                               :: mine = _ref_clear  !<          The union-mimic of var_item relies on that!
     integer*4                               :: len  = 0
-    integer*1                               :: hard = _ref_hard
-    integer*1                               :: mine = _ref_clear
+    character(len=1), dimension(:), pointer :: ptr  => null()
   end type
 
   type :: Attribute
@@ -46,6 +46,7 @@ module dynamic_string
   public :: ref, str, cptr
   public :: char
   public :: delete
+  public :: ds_assign_ds, ds_delete
 
   public :: adjustl
   public :: adjustr
@@ -163,7 +164,7 @@ module dynamic_string
 
   subroutine ds_release_weak( ds )
     type (DynamicString) :: ds
-    if (_ref_stat(ds) == _ref_soft_mine) &
+    if (_ref_stat(ds) == _ref_mine_soft) &
       deallocate( ds%ptr )
   end subroutine
 
@@ -185,7 +186,7 @@ module dynamic_string
     character(len=ref_len(ds)), pointer :: res
 
     res => null()
-    if (_ref_stat(ds) == _ref_soft_mine) then
+    if (_ref_stat(ds) == _ref_mine_soft) then
       deallocate( ds%ptr )
     else if (associated(ds%ptr)) then
       call c_f_pointer( c_loc(ds%ptr(1)), res )
@@ -199,7 +200,7 @@ module dynamic_string
     type (c_ptr)         :: res
 
     res = C_NULL_PTR
-    if (_ref_stat(ds) == _ref_soft_mine) then
+    if (_ref_stat(ds) == _ref_mine_soft) then
       deallocate( ds%ptr )
     else if (associated(ds%ptr)) then
       res = c_loc(ds%ptr(1))
@@ -299,7 +300,7 @@ module dynamic_string
     ! prevent self assignment ...
     if (.not. associated(lhs%ptr, rhs%ptr)) then
       ! assigning from a soft/mine rhs
-      if (_ref_stat(rhs) == _ref_soft_mine) then
+      if (_ref_stat(rhs) == _ref_mine_soft) then
         if (lhs%mine > 0) &
           deallocate( lhs%ptr )
 
@@ -425,7 +426,7 @@ module dynamic_string
   pure function ref_len( ds ) result(length)
     type (DynamicString), intent(in) :: ds
     integer                          :: length
-    length = merge( 0, ds%len, _ref_stat(ds) == _ref_soft_mine )
+    length = merge( 0, ds%len, _ref_stat(ds) == _ref_mine_soft )
   end function
   
 

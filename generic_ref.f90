@@ -23,8 +23,8 @@ module generic_ref
   end type
 
 
-  type (TypeInfo), target :: TypeInfo_void = TypeInfo( "void", 0, "", 0, 0, 0, .true., &
-                                                       null(), null(), null(), null() )
+  type (TypeInfo), target :: type_void = TypeInfo( "void", 0, "", 0, 0, 0, .true., &
+                                                   null(), null(), null(), null() )
 
 
   type, public :: GenericRef
@@ -46,7 +46,8 @@ module generic_ref
   public :: cptr
   public :: delete
   public :: free
-  public :: TypeInfo_void
+  public :: type_void
+  public :: gr_assign_gr, gr_delete
 
 
   ! interface definitions
