@@ -71,7 +71,7 @@ module generic_ref
   
   !@ _TypeReference_declare( public, gref, type(GenericRef), cloneProc = gref_cloner, deleteProc = gref_deleter )
   type, public :: gref
-     type(GenericRef), pointer :: ptr
+    type(GenericRef), pointer :: ptr
   end type
   type (TypeInfo), target :: TypeInfo_gref
   
@@ -82,6 +82,45 @@ module generic_ref
 !-----------------
   contains
 !-----------------
+
+  !**
+  ! gr_init_TypeInfo initializes TypeInfo structure.
+  ! @param self        - the TypeInfo to initialize
+  ! @param typeId      - the type's id string (e.g. double)
+  ! @param baseType    - the type's base string (e.g. real*8)
+  ! @param byteSize    - the storage size of the type in bytes (=> storage_size(type)/8)
+  ! @param rank        - the rank of the type
+  ! @param assignProc  - the subroutine to assign a variable: subroutine assign( lhs, rhs )
+  ! @param deleteProc  - the subroutine to delete a variable: subroutine delete( var )
+  ! @param shapeProc   - the function to inspect the shape  : function getShape( var ) return(res)
+  ! @param cloneProc   - the function to clone a variable   : function getClone( var ) return(res)
+  !*
+  !PROC_EXPORT_1REF( gr_init_TypeInfo, self )
+  subroutine gr_init_TypeInfo( self, typeId, baseType, byteSize, rank, &
+                               assignProc, deleteProc, shapeProc, cloneProc )
+    type (TypeInfo),    intent(inout) :: self
+    character(len=*),      intent(in) :: typeId, baseType
+    integer,               intent(in) :: byteSize
+    integer,               intent(in) :: rank
+    procedure(),             optional :: assignProc, deleteProc, shapeProc, cloneProc
+
+    self%typeId   = adjustl(typeId);   self%typeId_term   = 0
+    self%baseType = adjustl(baseType); self%baseType_term = 0
+    self%byteSize = byteSize
+    self%rank     = rank
+
+    ! pre-initialize optional arguments
+    self%assignProc => null()
+    self%deleteProc => null()
+    self%shapeProc  => null()
+    self%cloneProc  => null()
+
+    if (present(assignProc)) self%assignProc => assignProc
+    if (present(deleteProc)) self%deleteProc => deleteProc
+    if (present(shapeProc))  self%shapeProc  => shapeProc
+    if (present(cloneProc))  self%cloneProc  => cloneProc
+    self%initialized = .true.
+  end subroutine
 
 
   !#################################
@@ -148,46 +187,6 @@ module generic_ref
   subroutine gref_deleter( val )
     type (GenericRef) :: val
     call delete( val )
-  end subroutine
-
-
-  !**
-  ! gr_init_TypeInfo initializes TypeInfo structure.
-  ! @param self        - the TypeInfo to initialize
-  ! @param typeId      - the type's id string (e.g. double)
-  ! @param baseType    - the type's base string (e.g. real*8)
-  ! @param byteSize    - the storage size of the type in bytes (=> storage_size(type)/8)
-  ! @param rank        - the rank of the type
-  ! @param assignProc  - the subroutine to assign a variable: subroutine assign( lhs, rhs )
-  ! @param deleteProc  - the subroutine to delete a variable: subroutine delete( var )
-  ! @param shapeProc   - the function to inspect the shape  : function getShape( var ) return(res)
-  ! @param cloneProc   - the function to clone a variable   : function getClone( var ) return(res)
-  !*
-  !PROC_EXPORT_1REF( gr_init_TypeInfo, self )
-  subroutine gr_init_TypeInfo( self, typeId, baseType, byteSize, rank, &
-                               assignProc, deleteProc, shapeProc, cloneProc )
-    type (TypeInfo),    intent(inout) :: self
-    character(len=*),      intent(in) :: typeId, baseType
-    integer,               intent(in) :: byteSize
-    integer,               intent(in) :: rank
-    procedure(),             optional :: assignProc, deleteProc, shapeProc, cloneProc
-
-    self%typeId   = adjustl(typeId);   self%typeId_term   = 0
-    self%baseType = adjustl(baseType); self%baseType_term = 0
-    self%byteSize = byteSize
-    self%rank     = rank
-
-    ! pre-initialize optional arguments
-    self%assignProc => null()
-    self%deleteProc => null()
-    self%shapeProc  => null()
-    self%cloneProc  => null()
-
-    if (present(assignProc)) self%assignProc => assignProc
-    if (present(deleteProc)) self%deleteProc => deleteProc
-    if (present(shapeProc))  self%shapeProc  => shapeProc
-    if (present(cloneProc))  self%cloneProc  => cloneProc
-    self%initialized = .true.
   end subroutine
 
 

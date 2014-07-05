@@ -1,5 +1,6 @@
 
 #include "adt/ppUtil.xpp"
+#include "ref_status.fpp"
 
 module var_item
   use generic_ref
@@ -343,15 +344,10 @@ module var_item
         if (associated( self%typeInfo%deleteProc )) &
           call self%typeInfo%deleteProc( self%data )
       end if
-      ! IMPORTANT: setting data to zero effectively marks any
-      !   non-primitive types volatile, which is essential for constructors!
-      ! Another reason for doing this is to eliminate any borrowed pointers
-      !   that would cause trouble at another allocation.
-      self%data     = 0 !! FIXME: need new_typeInfo%initProc here!!!!!
-                        !! this is NOT ok for assignments as it overrides the
-                        !! hardness of lhs!!!!!
-      self%data(1)  = hardness
-      self%typeInfo => new_typeInfo
+      ! IMPORTANT: the new type might hold a RefStatus (by convention at the structure begin).
+      !   We initialize it according to given hardness
+      _ref_init( self%data, hardness )
+      self%typeInfo  => new_typeInfo
     end if
   end subroutine
 

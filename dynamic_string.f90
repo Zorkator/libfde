@@ -1,34 +1,17 @@
 
-!#include "ref_stat.fpp"
-
-# define _ref_clear       b'00'
-# define _ref_hard        b'01'
-# define _ref_mine        b'10'
-
-# define _ref_lent_soft   b'00'
-# define _ref_mine_soft   b'10'
-# define _ref_lent_hard   b'01'
-# define _ref_mine_hard   b'11'
-
-# define _ref_stat(s)     ior(s%mine, s%hard)
-
-# define _set_mine(s)     s%mine = _ref_mine
-# define _clr_mine(s)     s%mine = _ref_clear
-# define _set_hard(s)     s%hard = _ref_hard
-# define _clr_hard(s)     s%hard = _ref_clear
-
+#include "ref_status.fpp"
 
 module dynamic_string
   use iso_c_binding
   implicit none
   private
 
+
   type, public :: DynamicString
     private
-    integer*1                               :: hard = _ref_hard   !< CAUTION: by convention this MUST be the first member!
-    integer*1                               :: mine = _ref_clear  !<          The union-mimic of var_item relies on that!
-    integer*4                               :: len  = 0
-    character(len=1), dimension(:), pointer :: ptr  => null()
+    _RefStatus                              :: refstat = _ref_HardLent
+    integer*4                               :: len     = 0
+    character(len=1), dimension(:), pointer :: ptr     => null()
   end type
 
   type :: Attribute
@@ -36,8 +19,8 @@ module dynamic_string
     integer*1 :: val = 0
   end type
 
-  type (Attribute), parameter :: attrib_permanent = Attribute(0)
-  type (Attribute), parameter :: attrib_volatile  = Attribute(1)
+  type (Attribute), parameter :: attrib_volatile  = Attribute(0)
+  type (Attribute), parameter :: attrib_permanent = Attribute(1)
 
 
   ! declare public interfaces 
@@ -46,7 +29,7 @@ module dynamic_string
   public :: ref, str, cptr
   public :: char
   public :: delete
-  public :: ds_assign_ds, ds_delete
+  public :: ds_initialize, ds_assign_ds, ds_delete
 
   public :: adjustl
   public :: adjustr
@@ -133,6 +116,14 @@ module dynamic_string
   contains
 !-----------------
 
+  subroutine ds_initialize( ds )
+    type (DynamicString) :: ds
+    
+    ds%ptr     => null()
+    ds%len     = 0
+    ds%refstat = _ref_HardLent
+  end subroutine
+
 
   ! DynamicString
   function ds_from_cs( cs ) result(ds)
@@ -140,9 +131,8 @@ module dynamic_string
     type (DynamicString)            :: ds
     character(len=len(cs)), pointer :: ptr
 
-    _clr_hard(ds)
-    _set_mine(ds)
-    ds%len = len(cs) 
+    ds%refstat = _ref_WeakMine
+    ds%len     = len(cs) 
     allocate( ds%ptr(ds%len) )
     call c_f_pointer( c_loc(ds%ptr(1)), ptr )
     ptr = cs
@@ -152,10 +142,10 @@ module dynamic_string
     character(len=1), dimension(:), intent(in) :: buf
     type (DynamicString)                       :: ds
 
-    _clr_hard(ds)
+    _ref_setHard( ds%refstat, 0 )
     if (size(buf) > 0) then
       ds%len = size(buf)
-      _set_mine(ds)
+      _ref_setMine( ds%refstat, 1 )
       allocate( ds%ptr(ds%len) )
       ds%ptr = buf
     end if
@@ -164,7 +154,7 @@ module dynamic_string
 
   subroutine ds_release_weak( ds )
     type (DynamicString) :: ds
-    if (_ref_stat(ds) == _ref_mine_soft) &
+    if (_ref_isWeakMine( ds%refstat )) &
       deallocate( ds%ptr )
   end subroutine
 
@@ -186,7 +176,7 @@ module dynamic_string
     character(len=ref_len(ds)), pointer :: res
 
     res => null()
-    if (_ref_stat(ds) == _ref_mine_soft) then
+    if (_ref_isWeakMine( ds%refstat )) then
       deallocate( ds%ptr )
     else if (associated(ds%ptr)) then
       call c_f_pointer( c_loc(ds%ptr(1)), res )
@@ -200,7 +190,7 @@ module dynamic_string
     type (c_ptr)         :: res
 
     res = C_NULL_PTR
-    if (_ref_stat(ds) == _ref_mine_soft) then
+    if (_ref_isWeakMine( ds%refstat )) then
       deallocate( ds%ptr )
     else if (associated(ds%ptr)) then
       res = c_loc(ds%ptr(1))
@@ -247,9 +237,9 @@ module dynamic_string
     type (DynamicString) :: ds
     
     ds%len = 0
-    if (ds%mine > 0) then
+    if (_ref_isMine( ds%refstat )) then
       deallocate( ds%ptr )
-      _clr_mine(ds)
+      _ref_setMine( ds%refstat, 0 )
     else
       ds%ptr => null()
     end if
@@ -264,7 +254,7 @@ module dynamic_string
     character(len=len(cs)),     pointer :: ptr
 
     ds%len = len(cs)
-    if (ds%mine > 0) then
+    if (_ref_isMine( ds%refstat )) then
       ! it's my buffer - reuse it if possible
       select case (ds%len > size(ds%ptr)) !< need bigger block?
         case (.true.) ; goto 10 !< dealloc, allocate, copy
@@ -279,7 +269,7 @@ module dynamic_string
     ! update string buffer and content ...
     10 deallocate( ds%ptr )
     20 allocate( ds%ptr(ds%len) )
-       _set_mine( ds )
+       _ref_setMine( ds%refstat, 1 )
     30 call c_f_pointer( c_loc(ds%ptr(1)), ptr )
        ptr(:ds%len) = cs
   end subroutine
@@ -300,14 +290,14 @@ module dynamic_string
     ! prevent self assignment ...
     if (.not. associated(lhs%ptr, rhs%ptr)) then
       ! assigning from a soft/mine rhs
-      if (_ref_stat(rhs) == _ref_mine_soft) then
-        if (lhs%mine > 0) &
+      if (_ref_isWeakMine( rhs%refstat )) then
+        if (_ref_isMine( lhs%refstat )) &
           deallocate( lhs%ptr )
 
         ! take length, pointer and mark as mine
         lhs%ptr => rhs%ptr
         lhs%len = rhs%len
-        _set_mine( lhs )
+        _ref_setMine( lhs%refstat, 1 )
 
       ! assigning from hard rhs
       else
@@ -322,7 +312,7 @@ module dynamic_string
     character(len=1), dimension(:), intent(in) :: rhs
 
     lhs%len = size(rhs)
-    if (lhs%mine > 0) then
+    if (_ref_isMine( lhs%refstat )) then
       ! it's my buffer - reuse it if possible
       select case (lhs%len > size(lhs%ptr)) !< need bigger block?
         case (.true.) ; goto 10 !< dealloc, allocate, copy
@@ -333,7 +323,7 @@ module dynamic_string
     ! update string buffer and content ...
     10 deallocate( lhs%ptr )
     20 allocate( lhs%ptr(lhs%len) )
-       _set_mine( lhs )
+       _ref_setMine( lhs%refstat, 1 )
     30 lhs%ptr(:lhs%len) = rhs
   end subroutine
 
@@ -341,10 +331,7 @@ module dynamic_string
   subroutine ds_assign_attrib( lhs, rhs )
     type (DynamicString),  intent(inout) :: lhs
     type (Attribute),         intent(in) :: rhs
-    select case (rhs%val)
-      case (0); _set_hard(lhs)
-      case (1); _clr_hard(lhs)
-    end select
+    _ref_setHard( lhs%refstat, rhs%val )
   end subroutine
 
 
@@ -426,7 +413,7 @@ module dynamic_string
   pure function ref_len( ds ) result(length)
     type (DynamicString), intent(in) :: ds
     integer                          :: length
-    length = merge( 0, ds%len, _ref_stat(ds) == _ref_mine_soft )
+    length = merge( 0, ds%len, _ref_isWeakMine(ds%refstat) )
   end function
   
 
