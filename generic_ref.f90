@@ -1,6 +1,4 @@
 
-!#include "adt/ppUtil.xpp"
-
 module generic_ref
   use dynamic_string
   use iso_c_binding
@@ -34,6 +32,13 @@ module generic_ref
   end type
 
 
+  type, public :: deref
+    private
+    type(GenericRef), pointer :: ptr
+  end type
+  type (TypeInfo), target :: TypeInfo_deref
+
+  
   ! declare public interfaces 
 
   public :: assignment(=)
@@ -48,7 +53,9 @@ module generic_ref
   public :: free
   public :: type_void
   public :: gr_assign_gr, gr_delete
-
+  public :: ref
+  public :: is_ref
+  public :: typeinfo_of
 
   ! interface definitions
 
@@ -56,28 +63,18 @@ module generic_ref
     module procedure gr_assign_gr
   end interface
 
-  interface rank  ; module procedure gr_rank  ; end interface
-  interface shape ; module procedure gr_shape ; end interface
-  interface clone ; module procedure gr_clone ; end interface
-  interface cptr  ; module procedure gr_cptr  ; end interface
-  interface delete; module procedure gr_delete; end interface
-  interface free  ; module procedure gr_free  ; end interface
-
+  interface rank       ; module procedure gr_rank        ; end interface
+  interface shape      ; module procedure gr_shape       ; end interface
+  interface clone      ; module procedure gr_clone       ; end interface
+  interface cptr       ; module procedure gr_cptr        ; end interface
+  interface delete     ; module procedure gr_delete      ; end interface
+  interface free       ; module procedure gr_free        ; end interface
+  interface ref        ; module procedure gr_encode_deref; end interface
+  interface deref      ; module procedure gr_decode_deref; end interface
+  interface is_ref     ; module procedure gr_is_ref      ; end interface
+  interface typeinfo_of; module procedure gr_typeinfo_of ; end interface
 
   type :: voidRef ; integer, pointer :: ptr; end type
-
-
-  public :: operator(.ref.)
-  
-  !@ _TypeReference_declare( public, gref, type(GenericRef), cloneProc = gref_cloner, deleteProc = gref_deleter )
-  type, public :: gref
-    type(GenericRef), pointer :: ptr
-  end type
-  type (TypeInfo), target :: TypeInfo_gref
-  
-  interface operator(.ref.);  module procedure GenericRef_encode_gref; end interface
-  interface operator(.gref.); module procedure GenericRef_decode_gref; end interface
-  public :: operator(.gref.)
   
 !-----------------
   contains
@@ -120,73 +117,6 @@ module generic_ref
     if (present(shapeProc))  self%shapeProc  => shapeProc
     if (present(cloneProc))  self%cloneProc  => cloneProc
     self%initialized = .true.
-  end subroutine
-
-
-  !#################################
-  !# gref
-  !#################################
-  
-  function GenericRef_encode_gref( val ) result(res)
-    use iso_c_binding
-    type(GenericRef), target, intent(in) :: val
-    type (GenericRef)                    :: res
-    type (gref),                  target :: wrap
-    procedure(),                 pointer :: None => null()
-  
-    wrap%ptr => val
-    if (gr_set_TypeReference( res, c_loc(wrap), storage_size(wrap), TypeInfo_gref )) &
-      call gr_init_TypeInfo( TypeInfo_gref, 'gref', 'type(GenericRef)' &
-                             , storage_size(val)/8 &
-                             , size(shape(val)), assignProc = None, deleteProc = gref_deleter &
-                             , cloneProc = GenericRef_clone_gref )
-  end function
-  
-
-  function GenericRef_decode_gref( val ) result(res)
-    use iso_c_binding
-    type (GenericRef), intent(in) :: val
-    type(GenericRef),  pointer :: res
-    type (gref),      pointer :: wrap
-    
-    call c_f_pointer( gr_get_TypeReference(val), wrap )
-    res => wrap%ptr
-  end function
-  
-
-  subroutine GenericRef_clone_gref( val, res )
-    use iso_c_binding
-    type (GenericRef),          intent(in) :: val
-    type (GenericRef)                      :: res
-    type(GenericRef),           pointer :: src, tgt => null()
-    character(len=1), dimension(:), pointer :: tmp
-  
-    src => GenericRef_decode_gref( val )
-    tgt => gref_cloner( src )
-  
-    res =  GenericRef_encode_gref( tgt )
-  end subroutine
-  
-
-  subroutine GenericRef_inspect_gref( val, res, n )
-    type (GenericRef), intent(in) :: val
-    integer                       :: n
-    integer                       :: res(n)
-    res(:n) = shape( GenericRef_decode_gref( val ) )
-  end subroutine
-  
-
-  function gref_cloner( val ) result(res)
-    type (GenericRef), intent(in) :: val
-    type (GenericRef),    pointer :: res
-    allocate( res ) !< initializes res as default GenericRef
-    res = val
-  end function
-
-
-  subroutine gref_deleter( val )
-    type (GenericRef) :: val
-    call delete( val )
   end subroutine
 
 
@@ -308,6 +238,87 @@ module generic_ref
     call delete( self )
   end subroutine
 
+
+!--------------------------------------------------------------
+!   deref
+!--------------------------------------------------------------
+  
+  function gr_encode_deref( val ) result(res)
+    use iso_c_binding
+    type(GenericRef), target, intent(in) :: val
+    type (GenericRef)                    :: res
+    type (deref),                  target :: wrap
+    procedure(),                 pointer :: None => null()
+  
+    wrap%ptr => val
+    if (gr_set_TypeReference( res, c_loc(wrap), storage_size(wrap), TypeInfo_deref )) &
+      call gr_init_TypeInfo( TypeInfo_deref, 'deref', 'type(GenericRef)' &
+                             , storage_size(val)/8 &
+                             , size(shape(val)), assignProc = None, deleteProc = deref_deleter &
+                             , cloneProc = gr_clone_deref )
+  end function
+  
+
+  function gr_decode_deref( val ) result(res)
+    use iso_c_binding
+    type (GenericRef), intent(in) :: val
+    type(GenericRef),  pointer :: res
+    type (deref),      pointer :: wrap
+    
+    call c_f_pointer( gr_get_TypeReference(val), wrap )
+    res => wrap%ptr
+  end function
+  
+
+  subroutine gr_clone_deref( val, res )
+    use iso_c_binding
+    type (GenericRef),          intent(in) :: val
+    type (GenericRef)                      :: res
+    type(GenericRef),           pointer :: src, tgt => null()
+    character(len=1), dimension(:), pointer :: tmp
+  
+    src => gr_decode_deref( val )
+    tgt => deref_cloner( src )
+  
+    res =  gr_encode_deref( tgt )
+  end subroutine
+  
+
+  subroutine gr_inspect_deref( val, res, n )
+    type (GenericRef), intent(in) :: val
+    integer                       :: n
+    integer                       :: res(n)
+    res(:n) = shape( gr_decode_deref( val ) )
+  end subroutine
+  
+
+  function deref_cloner( val ) result(res)
+    type (GenericRef), intent(in) :: val
+    type (GenericRef),    pointer :: res
+    allocate( res ) !< initializes res as default GenericRef
+    res = val
+  end function
+
+
+  subroutine deref_deleter( val )
+    type (GenericRef) :: val
+    call delete( val )
+  end subroutine
+
+  
+  function gr_is_ref( self ) result(res)
+    type (GenericRef), intent(in) :: self
+    logical                       :: res
+    res = associated( self%typeInfo, TypeInfo_deref )
+  end function
+
+  
+  function gr_typeinfo_of( self ) result(res)
+    type (GenericRef), intent(in) :: self
+    type (TypeInfo),      pointer :: res
+    res => self%typeInfo
+  end function
+
 end module
 
 
@@ -336,7 +347,7 @@ module encoders
 
   public :: simpleCall, func, sub_a, func_a
 
-  !_TypeReference_declare( public, int,      integer*4, scalar )
+  !_TypeReference_declare( public, int32,    integer*4, scalar )
   !_TypeReference_declare( public, intXY,    integer*4, dimension(:,:) )
   !_TypeReference_declare( public, float,    real*4,    scalar, cloneProc = float_cloner, deleteProc = float_clear )
   !_TypeReference_declare( public, CallBack, procedure(simpleCall),  scalar )
@@ -396,36 +407,42 @@ program testinger
   type (c_ptr)      :: cpointer
   type (GenericRef) :: ref1, ref2, ref3
 
-  ref2 = .ref.42
-  ref1 = .ref.ref2
-  print *, .int.ref2
-  print *, .int.(.gref.ref1)
+  ref2 = ref(42)
+  ref1 = ref(ref2)
+  print *, int32(ref2)
+  print *, int32(deref(ref1))
+
+  if (is_ref(ref1)) then
+    ref3 = deref(ref1)
+    if (is_int32(ref3)) &
+      print *, int32(ref3)
+  end if
 
   ref3 = clone(ref1)
-  print *, .int.(.gref.ref3)
+  print *, int32(deref(ref3))
   call free( ref3 )
 
-  ref1 = .ref.intArray
-  ptr2d => .intXY.ref1
+  ref1 = ref(intArray)
+  ptr2d => intXY(ref1)
   ptr2d = 42
   cpointer = cptr(ref1)
 
-  ref2 = .ref.4.23
+  ref2 = ref(4.23)
   ref1 = clone(ref2)
 
   call free(ref1)
 
-  ref1 = .ref.dong
+  ref1 = ref(dong)
 
   ref2 = clone(ref1)
 
   call free(ref2)
 
   allocate( ptr2d(4,4) )
-  ref1 = .ref. ptr2d
+  ref1 = ref(ptr2d)
 
   ptr2d => null()
-  ptr2d => .intXY.ref1
+  ptr2d => intXY(ref1)
 
   ptr2d = 21
 
@@ -445,7 +462,7 @@ program testinger
   print *, shape(ref1)
   ref2 = clone(ref1)
   print *, shape(ref2)
-  print *, .intXY.ref2
+  print *, intXY(ref2)
 
   call free(ref1)
   call free(ref2)

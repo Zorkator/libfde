@@ -27,8 +27,8 @@ module var_item
 
 
 # define _Table_nonPrimitive_types_ \
-    _np_Type(string, type(DynamicString), assignProc => ds_assign_ds, deleteProc => ds_delete ) \
-    _np_Type(gref,   type(GenericRef),    assignProc => gr_assign_gr, deleteProc => gr_delete )
+    _np_Type(string, type(DynamicString), assignProc => ds_assign_ds, deleteProc => ds_delete) \
+    _np_Type(gref,   type(GenericRef),    assignProc => gr_assign_gr, deleteProc => gr_delete)
 
 
   type, public :: VarItem
@@ -82,7 +82,9 @@ module var_item
 
   ! declare interfaces public
 
-    interface delete; module procedure vi_delete; end interface
+    interface is_valid   ; module procedure vi_is_valid   ; end interface
+    interface typeinfo_of; module procedure vi_typeinfo_of; end interface
+    interface delete     ; module procedure vi_delete     ; end interface
 
     public :: is_valid
     public :: typeinfo_of
@@ -299,13 +301,13 @@ module var_item
   _implementPredicate_(gref,     type(GenericRef))
 
 
-  logical function is_valid( self ) result(res)
+  logical function vi_is_valid( self ) result(res)
     type (VarItem), intent(in) :: self
     res = associated( self%typeInfo )
   end function
 
 
-  function typeinfo_of( self ) result(res)
+  function vi_typeinfo_of( self ) result(res)
     type (VarItem), intent(in) :: self
     type (TypeInfo),   pointer :: res
 
@@ -383,7 +385,7 @@ program testinger
   v1 = 5.34
   v1 = DynamicString("testinger")
   v1 = 'bla & text'
-  v1 = .ref.gr
+  v1 = ref(gr)
 
   v2 = v1
   v1 = v1

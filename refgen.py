@@ -51,7 +51,7 @@ class ReferenceType(object):
     #   access: private | public
     #
     gen_itf = """
-    {access} :: operator(.ref.)
+    {access} :: ref
     """,
   
     # parameters:
@@ -59,9 +59,10 @@ class ReferenceType(object):
     #   typeId: type identifier
     #
     ref_itf = """
-    interface operator(.ref.);      module procedure GenericRef_encode_{typeId}; end interface
-    interface operator(.{typeId}.); module procedure GenericRef_decode_{typeId}; end interface
-    {access} :: operator(.{typeId}.)
+    interface ref        ; module procedure GenericRef_encode_{typeId}; end interface
+    interface {typeId}   ; module procedure GenericRef_decode_{typeId}; end interface
+    interface is_{typeId}; module procedure GenericRef_is_{typeId}    ; end interface
+    {access} :: is_{typeId}
     """,
   
     # parameters:
@@ -74,8 +75,10 @@ class ReferenceType(object):
     #
     proc_itf = """
     interface {typeId}_from_ref; module procedure GenericRef_decode_{typeId}; end interface
+    interface is_{typeId}      ; module procedure GenericRef_is_{typeId}    ; end interface
     {access} :: ref_from_{typeId}
     {access} :: {typeId}_from_ref
+    {access} :: is_{typeId}
     """,
   
     # parameters:
@@ -181,6 +184,15 @@ class ReferenceType(object):
       integer                       :: res(n)
       res(:n) = shape( GenericRef_decode_{typeId}( val ) )
     end subroutine
+    """,
+
+    # parameters:
+    typecheck = """
+    function GenericRef_is_{typeId}( self ) result(res)
+      type (GenericRef), intent(in) :: self
+      logical                       :: res
+      res = associated( typeinfo_of(self), TypeInfo_{typeId} )
+    end function
     """
   )
 
@@ -224,6 +236,7 @@ class ReferenceType(object):
     self._decoder = self._template['decoder']
     self._cloner  = (self._template['cloner'], '')[self._isProc]
     self._inspect = (self._template['inspector'], '')[self._isProc]
+    self._typeChk = self._template['typecheck']
 
     self._declared    = False
     self._implemented = False
@@ -249,6 +262,7 @@ class ReferenceType(object):
       out( self._decoder.format( **self.__dict__ ) )
       out( self._cloner.format( **self.__dict__ ) )
       out( self._inspect.format( **self.__dict__ ) )
+      out( self._typeChk.format( **self.__dict__ ) )
       self._implemented = True
 
 
