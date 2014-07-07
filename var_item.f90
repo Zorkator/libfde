@@ -31,9 +31,22 @@ module var_item
     _np_Type(gref,   type(GenericRef),    assignProc => gr_assign_gr, deleteProc => gr_delete)
 
 
+! declare dummy variables - used to determine each type's storage_size ...
+# define _initType_(typeId, baseType)   baseType :: _paste(typeId,_var);
+    _Table_varItem_types_
+# undef _initType_
+
+
+# define _initType_(typeId, baseType) \
+    , storage_size(_paste(typeId,_var))
+
+  integer*4, parameter :: maxBytes = max(0 _Table_varItem_types_)/8
+# undef _initType_
+
+
   type, public :: VarItem
     private
-    integer*1                :: data(48) = 0
+    integer*1                :: data(maxBytes) = 0
     type (TypeInfo), pointer :: typeInfo => null()
   end type
 
@@ -105,15 +118,10 @@ module var_item
 
 
   subroutine vi_initilize_module()
-    ! declare local dummy variables - used to determine each type's storage_size ...
-#   define _initType_(typeId, baseType)   baseType :: _paste(typeId,_var);
-      _Table_varItem_types_
-#   undef _initType_
-
     ! call type initialization for each type ...
 #   define _initType_(typeId, baseType) \
       call gr_init_TypeInfo( _paste(vi_type_,typeId), _str(typeId), _str(baseType) \
-                             , storage_size(_paste(typeId,_var))/8, 0 );
+                             , int(storage_size(_paste(typeId,_var)),4), 0 );
       _Table_varItem_types_
 #   undef _initType_
 
@@ -371,6 +379,10 @@ program testinger
   type (DynamicString) :: ds
   type (GenericRef)    :: gr
 
+  print *, "VarItem: ",       storage_size(v1)/8
+  print *, "DynamicString: ", storage_size(ds)/8
+  print *, "GenericRef: ",    storage_size(gr)/8
+
   v1 = VarItem(345597)
   print *, .int.v1
   v1 = VarItem(34.55)
@@ -393,10 +405,6 @@ program testinger
   v1 = 42
 
   intvar = v1
-
-  print *, storage_size(v1)/8
-  print *, storage_size(ds)/8
-  print *, storage_size(gr)/8
 
   call delete(ds)
   call delete(gr)

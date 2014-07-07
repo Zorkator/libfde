@@ -9,8 +9,8 @@ module generic_ref
   type, public :: TypeInfo
     character(32)                :: typeId;     integer*2 :: typeId_term   = 0
     character(32)                :: baseType;   integer*2 :: baseType_term = 0
-    integer                      :: byteSize    =  0
-    integer                      :: rank        =  0
+    integer*4                    :: byteSize    =  0
+    integer*4                    :: rank        =  0
     logical                      :: initialized = .false.
 
     ! type specific subroutines called by generic interfaces 
@@ -85,7 +85,7 @@ module generic_ref
   ! @param self        - the TypeInfo to initialize
   ! @param typeId      - the type's id string (e.g. double)
   ! @param baseType    - the type's base string (e.g. real*8)
-  ! @param byteSize    - the storage size of the type in bytes (=> storage_size(type)/8)
+  ! @param bitSize     - the storage size of the type in bytes (=> storage_size(type))
   ! @param rank        - the rank of the type
   ! @param assignProc  - the subroutine to assign a variable: subroutine assign( lhs, rhs )
   ! @param deleteProc  - the subroutine to delete a variable: subroutine delete( var )
@@ -93,17 +93,17 @@ module generic_ref
   ! @param cloneProc   - the function to clone a variable   : function getClone( var ) return(res)
   !*
   !PROC_EXPORT_1REF( gr_init_TypeInfo, self )
-  subroutine gr_init_TypeInfo( self, typeId, baseType, byteSize, rank, &
+  subroutine gr_init_TypeInfo( self, typeId, baseType, bitSize, rank, &
                                assignProc, deleteProc, shapeProc, cloneProc )
     type (TypeInfo),    intent(inout) :: self
     character(len=*),      intent(in) :: typeId, baseType
-    integer,               intent(in) :: byteSize
-    integer,               intent(in) :: rank
+    integer*4,             intent(in) :: bitSize
+    integer*4,             intent(in) :: rank
     procedure(),             optional :: assignProc, deleteProc, shapeProc, cloneProc
 
     self%typeId   = adjustl(typeId);   self%typeId_term   = 0
     self%baseType = adjustl(baseType); self%baseType_term = 0
-    self%byteSize = byteSize
+    self%byteSize = bitSize/8
     self%rank     = rank
 
     ! pre-initialize optional arguments
@@ -251,9 +251,9 @@ module generic_ref
     procedure(),                 pointer :: None => null()
   
     wrap%ptr => val
-    if (gr_set_TypeReference( res, c_loc(wrap), storage_size(wrap), TypeInfo_deref )) &
+    if (gr_set_TypeReference( res, c_loc(wrap), int(storage_size(wrap),4), TypeInfo_deref )) &
       call gr_init_TypeInfo( TypeInfo_deref, 'deref', 'type(GenericRef)' &
-                             , storage_size(val)/8 &
+                             , int(storage_size(val),4) &
                              , size(shape(val)), assignProc = None, deleteProc = deref_deleter &
                              , cloneProc = gr_clone_deref )
   end function

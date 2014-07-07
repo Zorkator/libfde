@@ -1,6 +1,5 @@
 
 import sys, re
-from extensions import Dict
 
 class ReferenceType(object):
 
@@ -98,9 +97,9 @@ class ReferenceType(object):
       procedure(),                    pointer :: None => null()
     
       wrap%ptr => val
-      if (gr_set_TypeReference( res, c_loc(wrap), storage_size(wrap), TypeInfo_{typeId} )) &
+      if (gr_set_TypeReference( res, c_loc(wrap), int(storage_size(wrap),4), TypeInfo_{typeId} )) &
         call gr_init_TypeInfo( TypeInfo_{typeId}, '{typeId}', '{baseType}' &
-                               , storage_size(val)/8 &
+                               , int(storage_size(val),4) &
                                , size(shape(val)){assignProc}{deleteProc}{shapeProc} &
                                , cloneProc = GenericRef_clone_{typeId} )
     end function
@@ -119,7 +118,7 @@ class ReferenceType(object):
       type ({typeId}), target :: wrap
     
       wrap%ptr => val
-      if (gr_set_TypeReference( res, c_loc(wrap), storage_size(wrap), TypeInfo_{typeId} )) &
+      if (gr_set_TypeReference( res, c_loc(wrap), int(storage_size(wrap),4), TypeInfo_{typeId} )) &
         call gr_init_TypeInfo( TypeInfo_{typeId}, '{typeId}', '{baseType}', 0, 0 )
     end function
     """,
