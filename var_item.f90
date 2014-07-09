@@ -13,7 +13,7 @@ module var_item
     _initType_(bool,     logical)             \
     _initType_(byte,     integer*1)           \
     _initType_(shortInt, integer*2)           \
-    _initType_(int,      integer*4)           \
+    _initType_(int32,    integer*4)           \
     _initType_(longInt,  integer*8)           \
     _initType_(float,    real*4)              \
     _initType_(double,   real*8)              \
@@ -55,7 +55,8 @@ module var_item
     , _paste(vi_from_,typeId)
 
   interface VarItem
-    module procedure vi_from_vi &
+    module procedure vi_from_vi         &
+                   , vi_from_charString &
                      _Table_varItem_types_
   end interface
 # undef _initType_
@@ -64,9 +65,8 @@ module var_item
   ! declare operators (.<typeId>.) for getting type pointers
   ! and declare them public
 # define _initType_(typeId, baseType) \
-    interface operator(.typeId.); procedure _paste(vi_get_,typeId); end interface; \
-    public :: operator(.typeId.);
-
+    interface typeId; module procedure _paste(vi_get_,typeId); end interface; \
+    public :: typeId;
     _Table_varItem_types_
 # undef _initType_
 
@@ -149,7 +149,7 @@ module var_item
   _implementConstructor_(bool,     logical)
   _implementConstructor_(byte,     integer*1)
   _implementConstructor_(shortInt, integer*2)
-  _implementConstructor_(int,      integer*4)
+  _implementConstructor_(int32,    integer*4)
   _implementConstructor_(longInt,  integer*8)
   _implementConstructor_(float,    real*4)
   _implementConstructor_(double,   real*8)
@@ -197,7 +197,7 @@ module var_item
   _implementGetter_(bool,     logical)
   _implementGetter_(byte,     integer*1)
   _implementGetter_(shortInt, integer*2)
-  _implementGetter_(int,      integer*4)
+  _implementGetter_(int32,    integer*4)
   _implementGetter_(longInt,  integer*8)
   _implementGetter_(float,    real*4)
   _implementGetter_(double,   real*8)
@@ -223,7 +223,7 @@ module var_item
   _implementSetter_(bool,     logical)
   _implementSetter_(byte,     integer*1)
   _implementSetter_(shortInt, integer*2)
-  _implementSetter_(int,      integer*4)
+  _implementSetter_(int32,    integer*4)
   _implementSetter_(longInt,  integer*8)
   _implementSetter_(float,    real*4)
   _implementSetter_(double,   real*8)
@@ -267,14 +267,14 @@ module var_item
       baseType,    intent(inout) :: lhs                             ;\
       type (VarItem), intent(in) :: rhs                             ;\
       if (associated( rhs%typeInfo, _paste(vi_type_,typeId) )) then ;\
-        lhs = .typeId. rhs                                          ;\
+        lhs = typeId(rhs)                                           ;\
       end if                                                        ;\
     end subroutine
 
   _implementAssignTo_(bool,     logical)
   _implementAssignTo_(byte,     integer*1)
   _implementAssignTo_(shortInt, integer*2)
-  _implementAssignTo_(int,      integer*4)
+  _implementAssignTo_(int32,    integer*4)
   _implementAssignTo_(longInt,  integer*8)
   _implementAssignTo_(float,    real*4)
   _implementAssignTo_(double,   real*8)
@@ -296,7 +296,7 @@ module var_item
   _implementPredicate_(bool,     logical)
   _implementPredicate_(byte,     integer*1)
   _implementPredicate_(shortInt, integer*2)
-  _implementPredicate_(int,      integer*4)
+  _implementPredicate_(int32,    integer*4)
   _implementPredicate_(longInt,  integer*8)
   _implementPredicate_(float,    real*4)
   _implementPredicate_(double,   real*8)
@@ -384,9 +384,9 @@ program testinger
   print *, "GenericRef: ",    storage_size(gr)/8
 
   v1 = VarItem(345597)
-  print *, .int.v1
+  print *, int32(v1)
   v1 = VarItem(34.55)
-  print *, .float.v1
+  print *, float(v1)
 
   print *, is_valid(v1)
   print *, is_float(v1)
@@ -394,9 +394,11 @@ program testinger
   ti = typeinfo_of(v1)
   print *, ti%typeId
 
+  v1 = VarItem(DynamicString('testinger'))
   v1 = 5.34
   v1 = DynamicString("testinger")
   v1 = 'bla & text'
+  v1 = VarItem('bla & text')
   v1 = ref(gr)
 
   v2 = v1
@@ -437,7 +439,7 @@ end
     type (TypeInfo), pointer :: ti     ;\
     vi  = VarItem(val)                 ;\
     vi  = val                          ;\
-    ptr => ._typeId.vi                 ;\
+    ptr => _typeId(vi)                 ;\
     val = vi                           ;\
     ti  => typeinfo_of(vi)             ;\
     print *, ti%typeId, ti%baseType    ;\
@@ -451,7 +453,7 @@ end
   _implementTest_(bool,     logical, _nop)
   _implementTest_(byte,     integer*1, _nop)
   _implementTest_(shortInt, integer*2, _nop)
-  _implementTest_(int,      integer*4, _nop)
+  _implementTest_(int32,    integer*4, _nop)
   _implementTest_(longInt,  integer*8, _nop)
   _implementTest_(float,    real*4, _nop)
   _implementTest_(double,   real*8, _nop)

@@ -7,8 +7,8 @@ module generic_ref
 
 
   type, public :: TypeInfo
-    character(32)                :: typeId;     integer*2 :: typeId_term   = 0
-    character(32)                :: baseType;   integer*2 :: baseType_term = 0
+    character(32)                :: typeId;     integer*2, private :: typeId_term   = 0
+    character(32)                :: baseType;   integer*2, private :: baseType_term = 0
     integer*4                    :: byteSize    =  0
     integer*4                    :: rank        =  0
     logical                      :: initialized = .false.

@@ -4,7 +4,7 @@ CFG  ?= debug
 
 mk_F90_FLAGS_gfortran_debug   = -ggdb -cpp -ffree-line-length-none
 mk_F90_FLAGS_gfortran_release = -O3 -cpp -ffree-line-length-none
-mk_F90C_gfortran              = gfortran-4.8
+mk_F90C_gfortran              = gfortran-4.9
 
 mk_F90_FLAGS_ifort_debug      = -g -fpp -allow nofpp-comments 
 mk_F90_FLAGS_ifort_release    = -O3 -fpp -allow nofpp-comments 
@@ -36,6 +36,13 @@ varitem: var_item.f90 gref_test.f90
 	$(mk_F90C) $(mk_F90_FLAGS) $(mk_INCLUDE_PATHLIST) -c dynamic_string.f90
 	$(mk_F90C) $(mk_F90_FLAGS) $(mk_INCLUDE_PATHLIST) -c gref_test.f90
 	$(mk_F90C) $(mk_F90_FLAGS) -DTEST $(mk_INCLUDE_PATHLIST) $< gref_test.o dynamic_string.o -o $@.$(F90C).$(CFG)
+
+
+glist: generic_list.f90
+	$(mk_F90C) $(mk_F90_FLAGS) $(mk_INCLUDE_PATHLIST) -c dynamic_string.f90
+	$(mk_F90C) $(mk_F90_FLAGS) $(mk_INCLUDE_PATHLIST) -c gref_test.f90
+	$(mk_F90C) $(mk_F90_FLAGS) $(mk_INCLUDE_PATHLIST) -c var_item.f90
+	$(mk_F90C) $(mk_F90_FLAGS) -DTEST $(mk_INCLUDE_PATHLIST) $< var_item.o gref_test.o dynamic_string.o -o $@.$(F90C).$(CFG)
 
 
 clean:
