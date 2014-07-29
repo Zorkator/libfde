@@ -362,9 +362,9 @@ program testinger
   function vallist_deref_itr( itr ) result(res)
     use iso_c_binding
     type (ListIterator), intent(in) :: itr
-    _TYPE,              pointer :: res
+    _TYPE,                  pointer :: res
     type (ValList),         pointer :: node
-    node => ValList(itr%node)
+    call c_f_pointer( c_loc(itr%node), node )
     res  => node%val
   end function
 
