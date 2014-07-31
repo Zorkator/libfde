@@ -7,7 +7,7 @@ module dynamic_string
   private
 
 
-  type, public :: DynamicString
+  type :: DynamicString
     private
     _RefStatus                              :: refstat = _ref_HardLent
     integer*4                               :: len     = 0
@@ -74,7 +74,8 @@ module dynamic_string
   interface lle          ; module procedure ds_lle_cs, cs_lle_ds, ds_lle_ds ; end interface
   interface llt          ; module procedure ds_llt_cs, cs_llt_ds, ds_llt_ds ; end interface
 
-
+  public DynamicString
+  
   ! assignment and operators
 
   interface assignment(=)
@@ -132,10 +133,12 @@ module dynamic_string
     character(len=len(cs)), pointer :: ptr
 
     ds%refstat = _ref_WeakMine
-    ds%len     = len(cs) 
-    allocate( ds%ptr(ds%len) )
-    call c_f_pointer( c_loc(ds%ptr(1)), ptr )
-    ptr = cs
+    ds%len     = len(cs)
+    if (ds%len > 0) then
+      allocate( ds%ptr(ds%len) )
+      call c_f_pointer( c_loc(ds%ptr(1)), ptr )
+      ptr = cs
+    end if
   end function
 
   function ds_from_buf( buf ) result(ds)
@@ -165,7 +168,7 @@ module dynamic_string
     character(len=ds%len),   pointer :: res
 
     res => null()
-    if (associated(ds%ptr)) &
+    if (associated(ds%ptr) .and. ds%len > 0) &
       call c_f_pointer( c_loc(ds%ptr(1)), res )
   end function
 
@@ -178,7 +181,7 @@ module dynamic_string
     res => null()
     if (_ref_isWeakMine( ds%refstat )) then
       deallocate( ds%ptr )
-    else if (associated(ds%ptr)) then
+    else if (associated(ds%ptr) .and. ds%len > 0) then
       call c_f_pointer( c_loc(ds%ptr(1)), res )
     end if
   end function
@@ -248,30 +251,28 @@ module dynamic_string
 
   ! assignments
 
-  subroutine ds_assign_cs( ds, cs )
-    type (DynamicString), intent(inout) :: ds
-    character(len=*),        intent(in) :: cs
-    character(len=len(cs)),     pointer :: ptr
+  subroutine ds_assign_cs( lhs, rhs )
+    type (DynamicString), intent(inout) :: lhs
+    character(len=*),        intent(in) :: rhs
+    character(len=len(rhs)),    pointer :: ptr
 
-    ds%len = len(cs)
-    if (_ref_isMine( ds%refstat )) then
-      ! it's my buffer - reuse it if possible
-      select case (ds%len > size(ds%ptr)) !< need bigger block?
-        case (.true.) ; goto 10 !< dealloc, allocate, copy
-        case (.false.); goto 30 !< copy
-      end select
+    lhs%len = len(rhs)
+    if (lhs%len == 0) return !< nothing to do
+
+    if (_ref_isMine( lhs%refstat )) then
+      ! it's my buffer - if it's large enough ...
+      if (lhs%len <= size(lhs%ptr)) goto 20 !< ... just copy new content
+      deallocate( lhs%ptr )                 !< otherwise: dealloc, allocate, copy
     else
       ! it's not my buffer
-      ds%ptr => null() !< make sure pointer is null before allocating it!
-      goto 20          !< allocate, copy
+      lhs%ptr => null() !< make sure pointer is null before allocating it!
     end if
 
     ! update string buffer and content ...
-    10 deallocate( ds%ptr )
-    20 allocate( ds%ptr(ds%len) )
-       _ref_setMine( ds%refstat, 1 )
-    30 call c_f_pointer( c_loc(ds%ptr(1)), ptr )
-       ptr(:ds%len) = cs
+    10  allocate( lhs%ptr(lhs%len) )
+        _ref_setMine( lhs%refstat, 1 )
+    20  call c_f_pointer( c_loc(lhs%ptr(1)), ptr )
+        ptr(:lhs%len) = rhs
   end subroutine
 
 
@@ -301,7 +302,7 @@ module dynamic_string
 
       ! assigning from hard rhs
       else
-        lhs = ptr(rhs) !< this works fine for assigning null strings!
+        lhs = ptr(rhs) !< use ptr here to get the right length!
       end if
     end if
   end subroutine
@@ -312,19 +313,21 @@ module dynamic_string
     character(len=1), dimension(:), intent(in) :: rhs
 
     lhs%len = size(rhs)
+    if (lhs%len == 0) return !< nothing to do
+
     if (_ref_isMine( lhs%refstat )) then
-      ! it's my buffer - reuse it if possible
-      select case (lhs%len > size(lhs%ptr)) !< need bigger block?
-        case (.true.) ; goto 10 !< dealloc, allocate, copy
-        case (.false.); goto 30 !< copy
-      end select
+      ! it's my buffer - if it's large enough ...
+      if (lhs%len <= size(lhs%ptr)) goto 20 !< ... just copy new content
+      deallocate( lhs%ptr )                 !< otherwise: dealloc, allocate, copy
+    else
+      ! it's not my buffer
+      lhs%ptr => null() !< make sure pointer is null before allocating it!
     end if
 
     ! update string buffer and content ...
-    10 deallocate( lhs%ptr )
-    20 allocate( lhs%ptr(lhs%len) )
-       _ref_setMine( lhs%refstat, 1 )
-    30 lhs%ptr(:lhs%len) = rhs
+    10  allocate( lhs%ptr(lhs%len) )
+        _ref_setMine( lhs%refstat, 1 )
+    20  lhs%ptr(:lhs%len) = rhs
   end subroutine
 
 
