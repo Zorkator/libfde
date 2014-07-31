@@ -32,31 +32,13 @@ module generic_ref
   end type
 
 
-  type, public :: deref
+  type :: deref
     private
     type(GenericRef), pointer :: ptr
   end type
   type (TypeInfo), target :: TypeInfo_deref
 
   
-  ! declare public interfaces 
-
-  public :: assignment(=)
-  public :: gr_init_TypeInfo      !< needed by generated code
-  public :: gr_set_TypeReference  !<            "
-  public :: gr_get_TypeReference  !<            "
-  public :: rank
-  public :: shape
-  public :: clone
-  public :: cptr
-  public :: delete
-  public :: free
-  public :: type_void
-  public :: gr_assign_gr, gr_delete
-  public :: ref
-  public :: is_ref
-  public :: typeinfo_of
-
   ! interface definitions
 
   interface assignment(=)
@@ -73,6 +55,25 @@ module generic_ref
   interface deref      ; module procedure gr_decode_deref; end interface
   interface is_ref     ; module procedure gr_is_ref      ; end interface
   interface typeinfo_of; module procedure gr_typeinfo_of ; end interface
+
+  ! declare public interfaces 
+
+  public :: assignment(=)
+  public :: gr_init_TypeInfo      !< needed by generated code
+  public :: gr_set_TypeReference  !<            "
+  public :: gr_get_TypeReference  !<            "
+  public :: rank
+  public :: shape
+  public :: clone
+  public :: cptr
+  public :: delete
+  public :: free
+  public :: type_void
+  public :: gr_assign_gr, gr_delete
+  public :: ref
+  public :: deref
+  public :: is_ref
+  public :: typeinfo_of
 
   type :: voidRef ; integer, pointer :: ptr; end type
   

@@ -33,14 +33,13 @@ class ReferenceType(object):
     """,
 
     # parameters:
-    #   access:    private | public
     #   typeId:    type identifier
     #   baseType:  fortran base type | type(...) | procedure(...) [needs baseExtra: , nopass]
     #   baseExtra: ('', ', nopass')[is_procedure] 
     #   dimType:   ('', ', dimension(:,...)')[has_dimension]
     #
     type = """
-    type, {access} :: {typeId}
+    type :: {typeId}
        {baseType}{baseExtra}{dimType}, pointer :: ptr
     end type
     type (TypeInfo), target :: TypeInfo_{typeId}
@@ -61,6 +60,7 @@ class ReferenceType(object):
     interface ref        ; module procedure GenericRef_encode_{typeId}; end interface
     interface {typeId}   ; module procedure GenericRef_decode_{typeId}; end interface
     interface is_{typeId}; module procedure GenericRef_is_{typeId}    ; end interface
+    {access} :: {typeId}
     {access} :: is_{typeId}
     """,
   

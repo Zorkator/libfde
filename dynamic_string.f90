@@ -23,35 +23,6 @@ module dynamic_string
   type (Attribute), parameter :: attrib_permanent = Attribute(1)
 
 
-  ! declare public interfaces 
-  public :: attrib_permanent, attrib_volatile
-
-  public :: ref, str, cptr
-  public :: char
-  public :: delete
-  public :: ds_initialize, ds_assign_ds, ds_delete
-
-  public :: adjustl
-  public :: adjustr
-  public :: iachar
-  public :: ichar
-  public :: index
-  public :: len
-  public :: len_trim
-  public :: lge
-  public :: lgt
-  public :: lle
-  public :: llt
-  public :: assignment(=)
-  public :: operator(//)
-  public :: operator(==)
-  public :: operator(/=)
-  public :: operator(<)
-  public :: operator(<=)
-  public :: operator(>)
-  public :: operator(>=)
-
-
   ! interface definitions
 
   interface DynamicString; module procedure ds_from_cs, ds_from_buf         ; end interface
@@ -74,7 +45,34 @@ module dynamic_string
   interface lle          ; module procedure ds_lle_cs, cs_lle_ds, ds_lle_ds ; end interface
   interface llt          ; module procedure ds_llt_cs, cs_llt_ds, ds_llt_ds ; end interface
 
-  public DynamicString
+  ! declare public interfaces 
+
+  public :: DynamicString
+  public :: ref, str, cptr
+  public :: char
+  public :: delete
+  public :: ds_initialize, ds_assign_ds, ds_delete
+  public :: attrib_permanent, attrib_volatile
+
+  public :: adjustl
+  public :: adjustr
+  public :: iachar
+  public :: ichar
+  public :: index
+  public :: len
+  public :: len_trim
+  public :: lge
+  public :: lgt
+  public :: lle
+  public :: llt
+  public :: assignment(=)
+  public :: operator(//)
+  public :: operator(==)
+  public :: operator(/=)
+  public :: operator(<)
+  public :: operator(<=)
+  public :: operator(>)
+  public :: operator(>=)
   
   ! assignment and operators
 
