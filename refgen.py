@@ -58,7 +58,7 @@ class ReferenceType(object):
     type :: {typeId}_t
        {baseType}{baseExtra}{dimType}, pointer :: ptr
     end type
-    type (TypeInfo), target :: TypeInfo_{typeId}
+    type(TypeInfo), target :: TypeInfo_{typeId}
     """,
 
     # parameters:
@@ -108,8 +108,8 @@ class ReferenceType(object):
     function GenericRef_encode_{typeId}( val ) result(res)
       use iso_c_binding
       {baseType}{dimType}, target, intent(in) :: val
-      type (GenericRef)                       :: res
-      type ({typeId}_t),               target :: wrap
+      type(GenericRef)                        :: res
+      type({typeId}_t),                target :: wrap
       procedure(),                    pointer :: None => null()
     
       wrap%ptr => val
@@ -129,9 +129,9 @@ class ReferenceType(object):
     proc_encoder = """
     function ref_from_{typeId}( val ) result(res)
       use iso_c_binding
-      {baseType}{dimType}       :: val
-      type (GenericRef)         :: res
-      type ({typeId}_t), target :: wrap
+      {baseType}{dimType}      :: val
+      type(GenericRef)         :: res
+      type({typeId}_t), target :: wrap
     
       wrap%ptr => val
       if (gr_set_TypeReference( res, c_loc(wrap), int(storage_size(wrap),4), TypeInfo_{typeId} )) &
@@ -147,9 +147,9 @@ class ReferenceType(object):
     decoder = """
     function GenericRef_decode_{typeId}( val ) result(res)
       use iso_c_binding
-      type (GenericRef), intent(in) :: val
-      {baseType}{dimType},  pointer :: res
-      type ({typeId}_t),    pointer :: wrap
+      type(GenericRef), intent(in) :: val
+      {baseType}{dimType}, pointer :: res
+      type({typeId}_t),    pointer :: wrap
       
       call c_f_pointer( gr_get_TypeReference(val), wrap )
       res => wrap%ptr
@@ -165,9 +165,9 @@ class ReferenceType(object):
     cloner = """
     subroutine GenericRef_clone_{typeId}( val, res )
       use iso_c_binding
-      type (GenericRef),          intent(in) :: val
-      type (GenericRef)                      :: res
-      {baseType}{dimType},           pointer :: src, tgt => null()
+      type(GenericRef),            intent(in) :: val
+      type(GenericRef)                        :: res
+      {baseType}{dimType},            pointer :: src, tgt => null()
       character(len=1), dimension(:), pointer :: tmp
     
       src => GenericRef_decode_{typeId}( val ){cloneBy}
@@ -194,9 +194,9 @@ class ReferenceType(object):
     #
     inspector = """
     subroutine GenericRef_inspect_{typeId}( val, res, n )
-      type (GenericRef), intent(in) :: val
-      integer                       :: n
-      integer                       :: res(n)
+      type(GenericRef), intent(in) :: val
+      integer                      :: n
+      integer                      :: res(n)
       res(:n) = shape( GenericRef_decode_{typeId}( val ) )
     end subroutine
     """,
@@ -204,8 +204,8 @@ class ReferenceType(object):
     # parameters:
     typecheck = """
     function GenericRef_is_{typeId}( self ) result(res)
-      type (GenericRef), intent(in) :: self
-      logical                       :: res
+      type(GenericRef), intent(in) :: self
+      logical                      :: res
       res = associated( typeinfo_of(self), TypeInfo_{typeId} )
     end function
     """
