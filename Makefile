@@ -18,36 +18,22 @@ mk_INCLUDE_PATHLIST = -I. -I./include
 mk_TAG              = $(F90C).$(CFG).$(ARCH)
 
 
-union: test_union.f90
-	$(mk_F90C) $(mk_F90_FLAGS) $(mk_INCLUDE_PATHLIST) $< -o $@.$(mk_TAG)
-		
-dynstring: dynamic_string.f90
-	$(mk_F90C) $(mk_F90_FLAGS) -D TEST_DYNAMIC_STRING $(mk_INCLUDE_PATHLIST) $< -o $@.$(mk_TAG)
+all: clean dynstring gref varitem
 
-gref: test_generic_ref.f90 test_type_references.f90
-	$(mk_F90C) $(mk_F90_FLAGS) $(mk_INCLUDE_PATHLIST) -c dynamic_string.f90
-	$(mk_F90C) $(mk_F90_FLAGS) $(mk_INCLUDE_PATHLIST) -c generic_ref.f90
-	$(mk_F90C) $(mk_F90_FLAGS) $(mk_INCLUDE_PATHLIST) -c test_type_references.f90
-	$(mk_F90C) $(mk_F90_FLAGS) -D TEST_GENERIC_REF $(mk_INCLUDE_PATHLIST) $< dynamic_string.o -o $@.$(mk_TAG)
+dynstring: dynamic_string.o test_dynamic_string.o
+	$(mk_F90C) $(mk_F90_FLAGS) $(mk_INCLUDE_PATHLIST) $? -o $@.$(mk_TAG)
 
-varitem: var_item.f90 gref_test.f90
-	$(mk_F90C) $(mk_F90_FLAGS) $(mk_INCLUDE_PATHLIST) -c dynamic_string.f90
-	$(mk_F90C) $(mk_F90_FLAGS) $(mk_INCLUDE_PATHLIST) -c gref_test.f90
-	$(mk_F90C) $(mk_F90_FLAGS) -D TEST_VAR_ITEM $(mk_INCLUDE_PATHLIST) $< gref_test.o dynamic_string.o -o $@.$(mk_TAG)
+gref: dynamic_string.o generic_ref.o test_type_references.o test_generic_ref.o
+	$(mk_F90C) $(mk_F90_FLAGS) $(mk_INCLUDE_PATHLIST) $? -o $@.$(mk_TAG)
 
+varitem: dynamic_string.o generic_ref.o test_type_references.o var_item.o test_var_item.o
+	$(mk_F90C) $(mk_F90_FLAGS) $(mk_INCLUDE_PATHLIST) $? -o $@.$(mk_TAG)
 
-glist: generic_list.f90 gref_test.f90
-	$(mk_F90C) $(mk_F90_FLAGS) $(mk_INCLUDE_PATHLIST) -c dynamic_string.f90
-	$(mk_F90C) $(mk_F90_FLAGS) $(mk_INCLUDE_PATHLIST) -c gref_test.f90
-	$(mk_F90C) $(mk_F90_FLAGS) $(mk_INCLUDE_PATHLIST) -c var_item.f90
-	$(mk_F90C) $(mk_F90_FLAGS) -D TEST_GENERIC_REF $(mk_INCLUDE_PATHLIST) $< var_item.o gref_test.o dynamic_string.o -o $@.$(F90C).$(CFG)
+glist: generic_list.o
+	$(mk_F90C) $(mk_F90_FLAGS) $(mk_INCLUDE_PATHLIST) $? -o $@.$(mk_TAG)
 
-
-alist: abstract_list.f90 gref_test.f90
-	$(mk_F90C) $(mk_F90_FLAGS) $(mk_INCLUDE_PATHLIST) -c dynamic_string.f90
-	$(mk_F90C) $(mk_F90_FLAGS) $(mk_INCLUDE_PATHLIST) -c gref_test.f90
-	$(mk_F90C) $(mk_F90_FLAGS) -D TEST_ABSTRACT_LIST $(mk_INCLUDE_PATHLIST) $< gref_test.o dynamic_string.o -o $@.$(F90C).$(CFG)
-
+alist: abstract_list.o
+	$(mk_F90C) $(mk_F90_FLAGS) $(mk_INCLUDE_PATHLIST) $? -o $@.$(mk_TAG)
 
 clean:
 	rm -f *.mod *.o *.debug.* *.release.*
