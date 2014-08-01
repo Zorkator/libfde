@@ -1,6 +1,7 @@
 
 module type_references
   use generic_ref
+  use type_info
   implicit none
   private
 

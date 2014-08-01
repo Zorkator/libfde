@@ -32,7 +32,7 @@ varitem: dynamic_string.o generic_ref.o test_type_references.o var_item.o test_v
 glist: generic_list.o
 	$(mk_F90C) $(mk_F90_FLAGS) $(mk_INCLUDE_PATHLIST) $? -o $@.$(mk_TAG)
 
-alist: abstract_list.o
+alist: dynamic_string.o generic_ref.o test_type_references.o var_item.o test_var_item.o abstract_list.o test_abstract_list.o
 	$(mk_F90C) $(mk_F90_FLAGS) $(mk_INCLUDE_PATHLIST) $? -o $@.$(mk_TAG)
 
 clean:

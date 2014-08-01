@@ -4,6 +4,7 @@
 program testinger
   use var_item
   use generic_ref
+  use type_info
   use dynamic_string
   use type_references
   implicit none
@@ -74,6 +75,7 @@ end
   subroutine _paste(test_,_typeId)()   ;\
     use var_item                       ;\
     use generic_ref                    ;\
+    use type_info                      ;\
     use dynamic_string                 ;\
     use iso_c_binding                  ;\
     _baseType               :: val     ;\

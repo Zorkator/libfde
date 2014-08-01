@@ -4,14 +4,16 @@
 
 module var_item
   use generic_ref
+  use type_info
   use dynamic_string
   use iso_c_binding
   implicit none
   private
 
 # define _Table_nonPrimitive_types_ \
-    _np_Type(string, type(DynamicString_t), assignProc => ds_assign_ds, deleteProc => ds_delete) \
-    _np_Type(gref,   type(GenericRef),      assignProc => gr_assign_gr, deleteProc => gr_delete)
+    _np_Type(string,  type(DynamicString_t), assignProc => ds_assign_ds, deleteProc => ds_delete) \
+    _np_Type(gref,    type(GenericRef),      assignProc => gr_assign_gr, deleteProc => gr_delete) \
+    _np_Type(VarItem, type(VarItem),         assignProc => vi_assign_vi, deleteProc => vi_delete)
 
 
 ! declare dummy variables - used to determine each type's storage_size ...
@@ -73,7 +75,8 @@ module var_item
 
     _Table_varItem_types_
 # undef _initType_
-    logical :: is_initialized = .false.
+    type(TypeInfo), target :: vi_type_VarItem
+    logical                :: is_initialized = .false.
   
 
   ! declare interfaces public
@@ -87,6 +90,7 @@ module var_item
     public :: typeinfo_of
     public :: delete
     public :: assignment (=)
+    public :: vi_type_VarItem
 
   ! declare predicate functions public ...
 # define _initType_(typeId, baseType) \
@@ -104,8 +108,8 @@ module var_item
   subroutine vi_initilize_module()
     ! call type initialization for each type ...
 #   define _initType_(typeId, baseType) \
-      call gr_init_TypeInfo( _paste(vi_type_,typeId), _str(typeId), _str(baseType) \
-                             , int(storage_size(_paste(typeId,_var)),4), 0 );
+      call init_TypeInfo( _paste(vi_type_,typeId), _str(typeId), _str(baseType) \
+                          , int(storage_size(_paste(typeId,_var)),4), 0 );
       _Table_varItem_types_
 #   undef _initType_
 

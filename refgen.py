@@ -114,10 +114,10 @@ class ReferenceType(object):
     
       wrap%ptr => val
       if (gr_set_TypeReference( res, c_loc(wrap), int(storage_size(wrap),4), TypeInfo_{typeId} )) &
-        call gr_init_TypeInfo( TypeInfo_{typeId}, '{typeId}', '{baseType}' &
-                               , int(storage_size(val),4) &
-                               , size(shape(val)){assignProc}{deleteProc}{shapeProc} &
-                               , cloneProc = GenericRef_clone_{typeId} )
+        call init_TypeInfo( TypeInfo_{typeId}, '{typeId}', '{baseType}' &
+                            , int(storage_size(val),4) &
+                            , size(shape(val)){assignProc}{deleteProc}{shapeProc} &
+                            , cloneProc = GenericRef_clone_{typeId} )
     end function
     """,
     
@@ -135,7 +135,7 @@ class ReferenceType(object):
     
       wrap%ptr => val
       if (gr_set_TypeReference( res, c_loc(wrap), int(storage_size(wrap),4), TypeInfo_{typeId} )) &
-        call gr_init_TypeInfo( TypeInfo_{typeId}, '{typeId}', '{baseType}', 0, 0 )
+        call init_TypeInfo( TypeInfo_{typeId}, '{typeId}', '{baseType}', 0, 0 )
     end function
     """,
     

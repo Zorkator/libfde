@@ -1,5 +1,6 @@
 
 module abstract_list
+  use type_info
   implicit none
 
   type, public :: Item
@@ -7,11 +8,13 @@ module abstract_list
     type (Item), pointer :: prev => null(), next => null()
   end type
 
+
   type, public :: List
     private
-    type (Item)                  :: item
-    procedure(), nopass, pointer :: clearItem => null()
+    type(Item)              :: item
+    type(TypeInfo), pointer :: typeInfo => null()
   end type
+
 
   type, public :: ListIterator
     private
@@ -20,7 +23,16 @@ module abstract_list
     integer                      :: step = 1
   end type
 
+
+  interface front; module procedure al_front; end interface
+  interface back ; module procedure al_back ; end interface
+
+  public :: front
+  public :: back
+
+
   contains
+
 
   subroutine al_initialize_item( self )
     type (Item), target :: self
@@ -58,25 +70,28 @@ module abstract_list
   end subroutine
 
 
-
-  subroutine al_initialize( self, clearProc )
-    type (List),   target :: self
-    procedure(), optional :: clearProc
+  subroutine al_initialize( self, item_typeInfo )
+    type(List),               target :: self
+    type(TypeInfo), optional, target :: item_typeInfo
     self%item%prev => self%item
     self%item%next => self%item
-    self%clearItem => null()
-    if (present(clearProc))  self%clearItem => clearProc
+    self%typeInfo  => null()
+    if (present(item_typeInfo)) &
+      self%typeInfo => item_typeInfo
   end subroutine
+
 
   logical function al_is_valid( self ) result(res)
     type (List), target :: self
     res = associated(self%item%prev) .and. associated(self%item%next)
   end function
 
+
   logical function al_is_empty( self ) result(res)
     type (List), target :: self
     res = associated(self%item%prev, self%item) .and. associated(self%item%next, self%item)
   end function
+
 
   subroutine al_append_list( self, other )
     type (List), target :: self, other
@@ -87,17 +102,18 @@ module abstract_list
     call al_initialize_item( other%item )
   end subroutine
 
+
   subroutine al_append_item( self, node )
     type (List), target :: self
     type (Item), target :: node
     call al_link_item( node, self%item%prev, self%item )
   end subroutine
 
+
   subroutine al_append_itr( self, itr )
     type (List), target :: self
     type (ListIterator) :: itr
   end subroutine
-
 
 
   subroutine al_delete( self )
@@ -107,67 +123,28 @@ module abstract_list
     do while (.not. associated( ptr, self%item ))
       delPtr => ptr
       ptr    => ptr%next
-      if (associated( self%clearItem )) &
-        call self%clearItem( delPtr )
+      if (associated( self%typeInfo ) ) then
+        if (associated( self%typeInfo%deleteProc )) &
+          call self%typeInfo%deleteProc( delPtr )
+      end if
       deallocate( delPtr )
     end do
     call al_initialize( self )
   end subroutine
 
-end module
 
-
-
-!##################################################################################################
-#ifdef TEST
-
-program testinger
-  use abstract_list
-  implicit none
-
-  type :: MyItem
-    type (Item) :: super
-    integer*4   :: value
-  end type
-
-  type (List) :: l
-
-  call al_initialize( l, myitem_delete )
-
-  call al_delete( l )
-
-  contains
-
-  subroutine myitem_delete( node )
-    use iso_c_binding
-    type (Item),    target :: node
-    type (MyItem), pointer :: ptr
-    call c_f_pointer( c_loc(node), ptr )
-    ptr%value = 0 ! call delete( ptr%value )
-  end subroutine
-
-  function myitem_downcast( node ) result(res)
-    use iso_c_binding
-    type (Item),    target :: node
-    type (MyItem), pointer :: res
-    call c_f_pointer( c_loc(node), res )
+  function al_front( self ) result(res)
+    type (List), intent(in) :: self
+    type (Item),    pointer :: res
+    res => self%item%next
   end function
 
-  !subroutine mylist_delete( self )
-  !  type (MyList) :: self
-  !  type (Item),   pointer :: ptr
-  !  type (MyItem), pointer :: delPtr
+    
+  function al_back( self ) result(res)
+    type (List), intent(in) :: self
+    type (Item),    pointer :: res
+    res => self%item%prev
+  end function
 
-  !  ptr => self%super%item%next
-  !  do while (.not. associated( ptr, self%super%item ))
-  !    call c_f_pointer( c_loc(ptr), delPtr )
-  !    ptr => ptr%next
-  !    delPtr%value = 0 !< call delete(delPtr%value)
-  !    deallocate( delPtr )
-  !  end do
-  !end subroutine
-
-end program
-
-#endif
+end module
 
