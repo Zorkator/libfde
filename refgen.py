@@ -1,5 +1,21 @@
 
+"""Usage: refgen FILE [-o OUTFILE]
+
+Preprocess FILE and expand type reference declarations.
+The result is output to stdout.
+
+Arguments:
+  FILE        input file
+  OUTFILE     output file
+
+Options:
+  -o OUTFILE --output=OUTFILE   the output file
+
+"""
+
+from docopt import docopt
 import sys, re
+
 
 class ReferenceType(object):
 
@@ -39,7 +55,7 @@ class ReferenceType(object):
     #   dimType:   ('', ', dimension(:,...)')[has_dimension]
     #
     type = """
-    type :: {typeId}
+    type :: {typeId}_t
        {baseType}{baseExtra}{dimType}, pointer :: ptr
     end type
     type (TypeInfo), target :: TypeInfo_{typeId}
@@ -93,7 +109,7 @@ class ReferenceType(object):
       use iso_c_binding
       {baseType}{dimType}, target, intent(in) :: val
       type (GenericRef)                       :: res
-      type ({typeId}),                 target :: wrap
+      type ({typeId}_t),               target :: wrap
       procedure(),                    pointer :: None => null()
     
       wrap%ptr => val
@@ -113,9 +129,9 @@ class ReferenceType(object):
     proc_encoder = """
     function ref_from_{typeId}( val ) result(res)
       use iso_c_binding
-      {baseType}{dimType}     :: val
-      type (GenericRef)       :: res
-      type ({typeId}), target :: wrap
+      {baseType}{dimType}       :: val
+      type (GenericRef)         :: res
+      type ({typeId}_t), target :: wrap
     
       wrap%ptr => val
       if (gr_set_TypeReference( res, c_loc(wrap), int(storage_size(wrap),4), TypeInfo_{typeId} )) &
@@ -133,7 +149,7 @@ class ReferenceType(object):
       use iso_c_binding
       type (GenericRef), intent(in) :: val
       {baseType}{dimType},  pointer :: res
-      type ({typeId}),      pointer :: wrap
+      type ({typeId}_t),    pointer :: wrap
       
       call c_f_pointer( gr_get_TypeReference(val), wrap )
       res => wrap%ptr
@@ -266,33 +282,36 @@ class ReferenceType(object):
 
 
   @classmethod
-  def convert( _class, fileName ):
+  def convert( _class, options ):
 
-    with open(fileName) as f:
-      out = sys.stdout.write
+    with open(options['FILE']) as f:
+
+      outFile = options.get('--output')
+      outChnl = outFile and open( outFile, 'w' ) or sys.stdout
 
       for line in f.readlines():
 
         match = _class.typeDeclMatch( line )
         if match:
-          _class( *map( str.strip, match.groups() ) ).declare( out )
+          _class( *map( str.strip, match.groups() ) ).declare( outChnl.write )
           continue
 
         match = _class.typeImplMatch( line )
         if match:
-          _class.Scope[ match.groups()[0] ].implement( out )
+          _class.Scope[ match.groups()[0] ].implement( outChnl.write )
           continue
 
         if _class.typeImplAllMatch( line ):
           for decl in sorted( _class.Scope.items() ):
-            decl[1].implement( out )
+            decl[1].implement( outChnl.write )
           continue
 
-        sys.stdout.write( line )
+        outChnl.write( line )
+      outChnl.close()
 
 
 
 if __name__ == '__main__':
-  ReferenceType.convert( sys.argv[1] )
+  ReferenceType.convert( docopt( __doc__ ) )
 
 

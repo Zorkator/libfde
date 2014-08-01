@@ -324,7 +324,7 @@ end module
 
 
 !###########################################################################################
-#ifdef TEST
+#ifdef TEST_GENERIC_REF
 
 module encoders
   use generic_ref

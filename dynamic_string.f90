@@ -7,7 +7,7 @@ module dynamic_string
   private
 
 
-  type :: DynamicString
+  type, public :: DynamicString_t
     private
     _RefStatus                              :: refstat = _ref_HardLent
     integer*4                               :: len     = 0
@@ -19,8 +19,8 @@ module dynamic_string
     integer*1 :: val = 0
   end type
 
-  type (Attribute), parameter :: attrib_volatile  = Attribute(0)
-  type (Attribute), parameter :: attrib_permanent = Attribute(1)
+  type(Attribute), parameter :: attrib_volatile  = Attribute(0)
+  type(Attribute), parameter :: attrib_permanent = Attribute(1)
 
 
   ! interface definitions
@@ -116,7 +116,7 @@ module dynamic_string
 !-----------------
 
   subroutine ds_initialize( ds )
-    type (DynamicString) :: ds
+    type(DynamicString_t) :: ds
     
     ds%ptr     => null()
     ds%len     = 0
@@ -127,7 +127,7 @@ module dynamic_string
   ! DynamicString
   function ds_from_cs( cs ) result(ds)
     character(len=*),    intent(in) :: cs
-    type (DynamicString)            :: ds
+    type(DynamicString_t)           :: ds
     character(len=len(cs)), pointer :: ptr
 
     ds%refstat = _ref_WeakMine
@@ -141,7 +141,7 @@ module dynamic_string
 
   function ds_from_buf( buf ) result(ds)
     character(len=1), dimension(:), intent(in) :: buf
-    type (DynamicString)                       :: ds
+    type(DynamicString_t)                      :: ds
 
     _ref_setHard( ds%refstat, 0 )
     if (size(buf) > 0) then
@@ -154,7 +154,7 @@ module dynamic_string
 
 
   subroutine ds_release_weak( ds )
-    type (DynamicString) :: ds
+    type(DynamicString_t) :: ds
     if (_ref_isWeakMine( ds%refstat )) &
       deallocate( ds%ptr )
   end subroutine
@@ -162,8 +162,8 @@ module dynamic_string
 
   ! ptr
   function ds_ptr( ds ) result(res)
-    type (DynamicString), intent(in) :: ds
-    character(len=ds%len),   pointer :: res
+    type(DynamicString_t), intent(in) :: ds
+    character(len=ds%len),    pointer :: res
 
     res => null()
     if (associated(ds%ptr) .and. ds%len > 0) &
@@ -173,7 +173,7 @@ module dynamic_string
 
   ! ref
   function ds_ref( ds ) result(res)
-    type (DynamicString)                :: ds
+    type(DynamicString_t)               :: ds
     character(len=ref_len(ds)), pointer :: res
 
     res => null()
@@ -187,8 +187,8 @@ module dynamic_string
 
   ! c_loc
   function ds_cptr( ds ) result(res)
-    type (DynamicString) :: ds
-    type (c_ptr)         :: res
+    type(DynamicString_t) :: ds
+    type(c_ptr)           :: res
 
     res = C_NULL_PTR
     if (_ref_isWeakMine( ds%refstat )) then
@@ -201,7 +201,7 @@ module dynamic_string
 
   ! str
   function ds_str( ds ) result(res)
-    type (DynamicString)  :: ds
+    type(DynamicString_t) :: ds
     character(len=ds%len) :: res
     integer               :: idx
 
@@ -212,8 +212,8 @@ module dynamic_string
 
   ! char
   function ds_char( ds ) result(res)
-    type (DynamicString) :: ds
-    character(len=1)     :: res(ds%len)
+    type(DynamicString_t) :: ds
+    character(len=1)      :: res(ds%len)
 
     res = ds%ptr(:ds%len)
     call ds_release_weak( ds )
@@ -221,10 +221,10 @@ module dynamic_string
 
   ! char - fixed length
   function ds_char_l( ds, length ) result(res)
-    type (DynamicString) :: ds
-    integer,  intent(in) :: length
-    character(len=1)     :: res(length)
-    integer              :: idx, limit
+    type(DynamicString_t) :: ds
+    integer,   intent(in) :: length
+    character(len=1)      :: res(length)
+    integer               :: idx, limit
 
     limit = min(ds%len, length)
     res(1:limit)        = ds%ptr(:limit)
@@ -235,7 +235,7 @@ module dynamic_string
 
   ! delete
   subroutine ds_delete( ds )
-    type (DynamicString) :: ds
+    type(DynamicString_t) :: ds
     
     ds%len = 0
     if (_ref_isMine( ds%refstat )) then
@@ -250,9 +250,9 @@ module dynamic_string
   ! assignments
 
   subroutine ds_assign_cs( lhs, rhs )
-    type (DynamicString), intent(inout) :: lhs
-    character(len=*),        intent(in) :: rhs
-    character(len=len(rhs)),    pointer :: ptr
+    type(DynamicString_t), intent(inout) :: lhs
+    character(len=*),         intent(in) :: rhs
+    character(len=len(rhs)),     pointer :: ptr
 
     lhs%len = len(rhs)
     if (lhs%len == 0) return !< nothing to do
@@ -275,16 +275,16 @@ module dynamic_string
 
 
   subroutine cs_assign_ds( cs, ds )
-    character(len=*),    intent(out) :: cs
-    type (DynamicString), intent(in) :: ds
+    character(len=*),     intent(out) :: cs
+    type(DynamicString_t), intent(in) :: ds
     cs = ptr(ds)
     call ds_release_weak( ds )
   end subroutine
 
 
   subroutine ds_assign_ds( lhs, rhs )
-    type (DynamicString), intent(inout) :: lhs
-    type (DynamicString),    intent(in) :: rhs
+    type(DynamicString_t), intent(inout) :: lhs
+    type(DynamicString_t),    intent(in) :: rhs
 
     ! prevent self assignment ...
     if (.not. associated(lhs%ptr, rhs%ptr)) then
@@ -307,7 +307,7 @@ module dynamic_string
 
 
   subroutine ds_assign_buf( lhs, rhs )
-    type (DynamicString),        intent(inout) :: lhs
+    type(DynamicString_t),       intent(inout) :: lhs
     character(len=1), dimension(:), intent(in) :: rhs
 
     lhs%len = size(rhs)
@@ -330,8 +330,8 @@ module dynamic_string
 
 
   subroutine ds_assign_attrib( lhs, rhs )
-    type (DynamicString),  intent(inout) :: lhs
-    type (Attribute),         intent(in) :: rhs
+    type(DynamicString_t),  intent(inout) :: lhs
+    type(Attribute),           intent(in) :: rhs
     _ref_setHard( lhs%refstat, rhs%val )
   end subroutine
 
@@ -340,16 +340,16 @@ module dynamic_string
 
   ! adjustl
   function ds_adjustl( ds ) result(res)
-    type (DynamicString), intent(in) :: ds
-    character(len=ds%len)            :: res
+    type(DynamicString_t), intent(in) :: ds
+    character(len=ds%len)             :: res
     res = adjustl(ptr(ds))
     call ds_release_weak( ds )
   end function
 
   ! adjustr
   function ds_adjustr( ds ) result(res)
-    type (DynamicString), intent(in) :: ds
-    character(len=ds%len)            :: res
+    type(DynamicString_t), intent(in) :: ds
+    character(len=ds%len)             :: res
     res = adjustr(ptr(ds))
     call ds_release_weak( ds )
   end function
@@ -357,8 +357,8 @@ module dynamic_string
 
   ! iachar
   function ds_iachar( ds ) result(res)
-    type (DynamicString), intent(in) :: ds
-    integer                          :: res(ds%len)
+    type(DynamicString_t), intent(in) :: ds
+    integer                           :: res(ds%len)
     res = iachar(ds%ptr(:ds%len))
     call ds_release_weak( ds )
   end function
@@ -366,8 +366,8 @@ module dynamic_string
   
   ! ichar
   function ds_ichar( ds ) result(res)
-    type (DynamicString), intent(in) :: ds
-    integer                          :: res(ds%len)
+    type(DynamicString_t), intent(in) :: ds
+    integer                           :: res(ds%len)
     res = ichar(ds%ptr(:ds%len))
     call ds_release_weak( ds )
   end function
@@ -375,28 +375,28 @@ module dynamic_string
 
   ! index
   function ds_idx_cs( strg, sub, back ) result(res)
-    type (DynamicString), intent(in) :: strg
-    character(len=*),     intent(in) :: sub
-    logical,    intent(in), optional :: back
-    integer                          :: res
+    type(DynamicString_t), intent(in) :: strg
+    character(len=*),      intent(in) :: sub
+    logical,     intent(in), optional :: back
+    integer                           :: res
     res = index(ptr(strg), sub, back )
     call ds_release_weak( strg )
   end function
 
   function cs_idx_ds( strg, sub, back ) result(res)
-    character(len=*),     intent(in) :: strg
-    type (DynamicString), intent(in) :: sub
-    logical,    intent(in), optional :: back
-    integer                          :: res
+    character(len=*),      intent(in) :: strg
+    type(DynamicString_t), intent(in) :: sub
+    logical,     intent(in), optional :: back
+    integer                           :: res
     res = index(strg, ptr(sub), back )
     call ds_release_weak( sub )
   end function
 
   function ds_idx_ds( strg, sub, back ) result(res)
-    type (DynamicString), intent(in) :: strg
-    type (DynamicString), intent(in) :: sub
-    logical,    intent(in), optional :: back
-    integer                          :: res
+    type(DynamicString_t), intent(in) :: strg
+    type(DynamicString_t), intent(in) :: sub
+    logical,     intent(in), optional :: back
+    integer                           :: res
     res = index(ptr(strg), ptr(sub), back )
     call ds_release_weak( strg )
     call ds_release_weak( sub )
@@ -405,23 +405,23 @@ module dynamic_string
 
   ! len
   function ds_len( ds ) result(length)
-    type (DynamicString), intent(in) :: ds
-    integer                          :: length
+    type(DynamicString_t), intent(in) :: ds
+    integer                           :: length
     length = ds%len
     call ds_release_weak( ds )
   end function
 
   pure function ref_len( ds ) result(length)
-    type (DynamicString), intent(in) :: ds
-    integer                          :: length
+    type(DynamicString_t), intent(in) :: ds
+    integer                           :: length
     length = merge( 0, ds%len, _ref_isWeakMine(ds%refstat) )
   end function
   
 
   ! len_trim
   function ds_len_trim( ds ) result(length)
-    type (DynamicString), intent(in) :: ds
-    integer                          :: length
+    type(DynamicString_t), intent(in) :: ds
+    integer                           :: length
     length = len_trim(ptr(ds))
     call ds_release_weak( ds )
   end function
@@ -429,25 +429,25 @@ module dynamic_string
 
   ! lge
   function ds_lge_cs( strgA, strgB ) result(res)
-    type (DynamicString), intent(in) :: strgA
-    character(len=*),     intent(in) :: strgB
-    logical                          :: res
+    type(DynamicString_t), intent(in) :: strgA
+    character(len=*),      intent(in) :: strgB
+    logical                           :: res
     res = lge(ptr(strgA), strgB)
     call ds_release_weak( strgA )
   end function
 
   function cs_lge_ds( strgA, strgB ) result(res)
-    character(len=*),     intent(in) :: strgA
-    type (DynamicString), intent(in) :: strgB
-    logical                          :: res
+    character(len=*),      intent(in) :: strgA
+    type(DynamicString_t), intent(in) :: strgB
+    logical                           :: res
     res = lge(strgA, ptr(strgB))
     call ds_release_weak( strgB )
   end function
 
   function ds_lge_ds( strgA, strgB ) result(res)
-    type (DynamicString), intent(in) :: strgA
-    type (DynamicString), intent(in) :: strgB
-    logical                          :: res
+    type(DynamicString_t), intent(in) :: strgA
+    type(DynamicString_t), intent(in) :: strgB
+    logical                           :: res
     res = lge(ptr(strgA), ptr(strgB))
     call ds_release_weak( strgA )
     call ds_release_weak( strgB )
@@ -456,25 +456,25 @@ module dynamic_string
 
   ! lgt
   function ds_lgt_cs( strgA, strgB ) result(res)
-    type (DynamicString), intent(in) :: strgA
-    character(len=*),     intent(in) :: strgB
-    logical                          :: res
+    type(DynamicString_t), intent(in) :: strgA
+    character(len=*),      intent(in) :: strgB
+    logical                           :: res
     res = lgt(ptr(strgA), strgB)
     call ds_release_weak( strgA )
   end function
 
   function cs_lgt_ds( strgA, strgB ) result(res)
-    character(len=*),     intent(in) :: strgA
-    type (DynamicString), intent(in) :: strgB
-    logical                          :: res
+    character(len=*),      intent(in) :: strgA
+    type(DynamicString_t), intent(in) :: strgB
+    logical                           :: res
     res = lgt(strgA, ptr(strgB))
     call ds_release_weak( strgB )
   end function
 
   function ds_lgt_ds( strgA, strgB ) result(res)
-    type (DynamicString), intent(in) :: strgA
-    type (DynamicString), intent(in) :: strgB
-    logical                          :: res
+    type(DynamicString_t), intent(in) :: strgA
+    type(DynamicString_t), intent(in) :: strgB
+    logical                           :: res
     res = lgt(ptr(strgA), ptr(strgB))
     call ds_release_weak( strgA )
     call ds_release_weak( strgB )
@@ -483,25 +483,25 @@ module dynamic_string
 
   ! lle
   function ds_lle_cs( strgA, strgB ) result(res)
-    type (DynamicString), intent(in) :: strgA
-    character(len=*),     intent(in) :: strgB
-    logical                          :: res
+    type(DynamicString_t), intent(in) :: strgA
+    character(len=*),      intent(in) :: strgB
+    logical                           :: res
     res = lle(ptr(strgA), strgB)
     call ds_release_weak( strgA )
   end function
 
   function cs_lle_ds( strgA, strgB ) result(res)
-    character(len=*),     intent(in) :: strgA
-    type (DynamicString), intent(in) :: strgB
-    logical                          :: res
+    character(len=*),      intent(in) :: strgA
+    type(DynamicString_t), intent(in) :: strgB
+    logical                           :: res
     res = lle(strgA, ptr(strgB))
     call ds_release_weak( strgB )
   end function
 
   function ds_lle_ds( strgA, strgB ) result(res)
-    type (DynamicString), intent(in) :: strgA
-    type (DynamicString), intent(in) :: strgB
-    logical                          :: res
+    type(DynamicString_t), intent(in) :: strgA
+    type(DynamicString_t), intent(in) :: strgB
+    logical                           :: res
     res = lle(ptr(strgA), ptr(strgB))
     call ds_release_weak( strgA )
     call ds_release_weak( strgB )
@@ -510,25 +510,25 @@ module dynamic_string
 
   ! llt
   function ds_llt_cs( strgA, strgB ) result(res)
-    type (DynamicString), intent(in) :: strgA
-    character(len=*),     intent(in) :: strgB
-    logical                          :: res
+    type(DynamicString_t), intent(in) :: strgA
+    character(len=*),      intent(in) :: strgB
+    logical                           :: res
     res = llt(ptr(strgA), strgB)
     call ds_release_weak( strgA )
   end function
 
   function cs_llt_ds( strgA, strgB ) result(res)
-    character(len=*),     intent(in) :: strgA
-    type (DynamicString), intent(in) :: strgB
-    logical                          :: res
+    character(len=*),      intent(in) :: strgA
+    type(DynamicString_t), intent(in) :: strgB
+    logical                           :: res
     res = llt(strgA, ptr(strgB))
     call ds_release_weak( strgB )
   end function
 
   function ds_llt_ds( strgA, strgB ) result(res)
-    type (DynamicString), intent(in) :: strgA
-    type (DynamicString), intent(in) :: strgB
-    logical                          :: res
+    type(DynamicString_t), intent(in) :: strgA
+    type(DynamicString_t), intent(in) :: strgB
+    logical                           :: res
     res = llt(ptr(strgA), ptr(strgB))
     call ds_release_weak( strgA )
     call ds_release_weak( strgB )
@@ -538,25 +538,25 @@ module dynamic_string
   ! concatenation
 
   function ds_concat_cs( lhs, rhs ) result(res)
-    type (DynamicString), intent(in) :: lhs
-    character(len=*),     intent(in) :: rhs
-    character(len=lhs%len+len(rhs)) :: res
+    type(DynamicString_t), intent(in) :: lhs
+    character(len=*),      intent(in) :: rhs
+    character(len=lhs%len+len(rhs))   :: res
     res = ptr(lhs) // rhs
     call ds_release_weak( lhs )
   end function
 
   function cs_concat_ds( lhs, rhs ) result(res)
-    character(len=*),     intent(in) :: lhs
-    type (DynamicString), intent(in) :: rhs
-    character(len=len(lhs)+rhs%len) :: res
+    character(len=*),      intent(in) :: lhs
+    type(DynamicString_t), intent(in) :: rhs
+    character(len=len(lhs)+rhs%len)   :: res
     res = lhs // ptr(rhs)
     call ds_release_weak( rhs )
   end function
 
   function ds_concat_ds( lhs, rhs ) result(res)
-    type (DynamicString), intent(in) :: lhs
-    type (DynamicString), intent(in) :: rhs
-    character(len=lhs%len+rhs%len) :: res
+    type(DynamicString_t), intent(in) :: lhs
+    type(DynamicString_t), intent(in) :: rhs
+    character(len=lhs%len+rhs%len)    :: res
     res = ptr(lhs) // ptr(rhs)
     call ds_release_weak( lhs )
     call ds_release_weak( rhs )
@@ -565,25 +565,25 @@ module dynamic_string
   ! equality
 
   function ds_eq_cs( lhs, rhs ) result(res)
-    type (DynamicString), intent(in) :: lhs
-    character(len=*),     intent(in) :: rhs
-    logical                          :: res
+    type(DynamicString_t), intent(in) :: lhs
+    character(len=*),      intent(in) :: rhs
+    logical                           :: res
     res = ptr(lhs) == rhs
     call ds_release_weak( lhs )
   end function
 
   function cs_eq_ds( lhs, rhs ) result(res)
-    character(len=*),     intent(in) :: lhs
-    type (DynamicString), intent(in) :: rhs
-    logical                          :: res
+    character(len=*),      intent(in) :: lhs
+    type(DynamicString_t), intent(in) :: rhs
+    logical                           :: res
     res = lhs == ptr(rhs)
     call ds_release_weak( rhs )
   end function
 
   function ds_eq_ds( lhs, rhs ) result(res)
-    type (DynamicString), intent(in) :: lhs
-    type (DynamicString), intent(in) :: rhs
-    logical                          :: res
+    type(DynamicString_t), intent(in) :: lhs
+    type(DynamicString_t), intent(in) :: rhs
+    logical                           :: res
     res = ptr(lhs) == ptr(rhs)
     call ds_release_weak( lhs )
     call ds_release_weak( rhs )
@@ -592,25 +592,25 @@ module dynamic_string
   ! inequality
 
   function ds_ne_cs( lhs, rhs ) result(res)
-    type (DynamicString), intent(in) :: lhs
-    character(len=*),     intent(in) :: rhs
-    logical                          :: res
+    type(DynamicString_t), intent(in) :: lhs
+    character(len=*),      intent(in) :: rhs
+    logical                           :: res
     res = ptr(lhs) /= rhs
     call ds_release_weak( lhs )
   end function
 
   function cs_ne_ds( lhs, rhs ) result(res)
-    character(len=*),     intent(in) :: lhs
-    type (DynamicString), intent(in) :: rhs
-    logical                          :: res
+    character(len=*),      intent(in) :: lhs
+    type(DynamicString_t), intent(in) :: rhs
+    logical                           :: res
     res = lhs /= ptr(rhs)
     call ds_release_weak( rhs )
   end function
 
   function ds_ne_ds( lhs, rhs ) result(res)
-    type (DynamicString), intent(in) :: lhs
-    type (DynamicString), intent(in) :: rhs
-    logical                          :: res
+    type(DynamicString_t), intent(in) :: lhs
+    type(DynamicString_t), intent(in) :: rhs
+    logical                           :: res
     res = ptr(lhs) /= ptr(rhs)
     call ds_release_weak( lhs )
     call ds_release_weak( rhs )
@@ -619,25 +619,25 @@ module dynamic_string
   ! lower than
 
   function ds_lt_cs( lhs, rhs ) result(res)
-    type (DynamicString), intent(in) :: lhs
-    character(len=*),     intent(in) :: rhs
-    logical                          :: res
+    type(DynamicString_t), intent(in) :: lhs
+    character(len=*),      intent(in) :: rhs
+    logical                           :: res
     res = ptr(lhs) < rhs
     call ds_release_weak( lhs )
   end function
 
   function cs_lt_ds( lhs, rhs ) result(res)
-    character(len=*),     intent(in) :: lhs
-    type (DynamicString), intent(in) :: rhs
-    logical                          :: res
+    character(len=*),      intent(in) :: lhs
+    type(DynamicString_t), intent(in) :: rhs
+    logical                           :: res
     res = lhs < ptr(rhs)
     call ds_release_weak( rhs )
   end function
 
   function ds_lt_ds( lhs, rhs ) result(res)
-    type (DynamicString), intent(in) :: lhs
-    type (DynamicString), intent(in) :: rhs
-    logical                          :: res
+    type(DynamicString_t), intent(in) :: lhs
+    type(DynamicString_t), intent(in) :: rhs
+    logical                           :: res
     res = ptr(lhs) < ptr(rhs)
     call ds_release_weak( lhs )
     call ds_release_weak( rhs )
@@ -646,25 +646,25 @@ module dynamic_string
   ! lower equal
 
   function ds_le_cs( lhs, rhs ) result(res)
-    type (DynamicString), intent(in) :: lhs
-    character(len=*),     intent(in) :: rhs
-    logical                          :: res
+    type(DynamicString_t), intent(in) :: lhs
+    character(len=*),      intent(in) :: rhs
+    logical                           :: res
     res = ptr(lhs) <= rhs
     call ds_release_weak( lhs )
   end function
 
   function cs_le_ds( lhs, rhs ) result(res)
-    character(len=*),     intent(in) :: lhs
-    type (DynamicString), intent(in) :: rhs
-    logical                          :: res
+    character(len=*),      intent(in) :: lhs
+    type(DynamicString_t), intent(in) :: rhs
+    logical                           :: res
     res = lhs <= ptr(rhs)
     call ds_release_weak( rhs )
   end function
 
   function ds_le_ds( lhs, rhs ) result(res)
-    type (DynamicString), intent(in) :: lhs
-    type (DynamicString), intent(in) :: rhs
-    logical                          :: res
+    type(DynamicString_t), intent(in) :: lhs
+    type(DynamicString_t), intent(in) :: rhs
+    logical                           :: res
     res = ptr(lhs) <= ptr(rhs)
     call ds_release_weak( lhs )
     call ds_release_weak( rhs )
@@ -673,26 +673,26 @@ module dynamic_string
   ! greater than
 
   function ds_gt_cs( lhs, rhs ) result(res)
-    type (DynamicString), intent(in) :: lhs
-    character(len=*),     intent(in) :: rhs
-    logical                          :: res
+    type(DynamicString_t), intent(in) :: lhs
+    character(len=*),      intent(in) :: rhs
+    logical                           :: res
     res = ptr(lhs) > rhs
     call ds_release_weak( lhs )
   end function
 
   function cs_gt_ds( lhs, rhs ) result(res)
-    character(len=*),     intent(in) :: lhs
-    type (DynamicString), intent(in) :: rhs
-    logical                          :: res
+    character(len=*),      intent(in) :: lhs
+    type(DynamicString_t), intent(in) :: rhs
+    logical                           :: res
     res = lhs > ptr(rhs)
     call ds_release_weak( rhs )
   end function
 
 
   function ds_gt_ds( lhs, rhs ) result(res)
-    type (DynamicString), intent(in) :: lhs
-    type (DynamicString), intent(in) :: rhs
-    logical                          :: res
+    type(DynamicString_t), intent(in) :: lhs
+    type(DynamicString_t), intent(in) :: rhs
+    logical                           :: res
     res = ptr(lhs) > ptr(rhs)
     call ds_release_weak( lhs )
     call ds_release_weak( rhs )
@@ -701,25 +701,25 @@ module dynamic_string
   ! greater equal
 
   function ds_ge_cs( lhs, rhs ) result(res)
-    type (DynamicString), intent(in) :: lhs
-    character(len=*),     intent(in) :: rhs
-    logical                          :: res
+    type(DynamicString_t), intent(in) :: lhs
+    character(len=*),      intent(in) :: rhs
+    logical                           :: res
     res = ptr(lhs) >= rhs
     call ds_release_weak( lhs )
   end function
 
   function cs_ge_ds( lhs, rhs ) result(res)
-    character(len=*),     intent(in) :: lhs
-    type (DynamicString), intent(in) :: rhs
-    logical                          :: res
+    character(len=*),      intent(in) :: lhs
+    type(DynamicString_t), intent(in) :: rhs
+    logical                           :: res
     res = lhs >= ptr(rhs)
     call ds_release_weak( rhs )
   end function
 
   function ds_ge_ds( lhs, rhs ) result(res)
-    type (DynamicString), intent(in) :: lhs
-    type (DynamicString), intent(in) :: rhs
-    logical                          :: res
+    type(DynamicString_t), intent(in) :: lhs
+    type(DynamicString_t), intent(in) :: rhs
+    logical                           :: res
     res = ptr(lhs) >= ptr(rhs)
     call ds_release_weak( lhs )
     call ds_release_weak( rhs )
@@ -728,20 +728,20 @@ module dynamic_string
 end module
 
 !##################################################################################################
-#ifdef TEST
+#ifdef TEST_DYNAMIC_STRING
 
 program testinger
   use dynamic_string
   implicit none
 
-  type (DynamicString) :: tmp
-  type (DynamicString) :: ds, ds2, ds3
-  type (DynamicString) :: strings(4)
-  character            :: buffer(10), bufferB(10)
-  character            :: buffer2(5)
+  type(DynamicString_t) :: tmp
+  type(DynamicString_t) :: ds, ds2, ds3
+  type(DynamicString_t) :: strings(4)
+  character             :: buffer(10), bufferB(10)
+  character             :: buffer2(5)
 
-  character(len=32)    :: stringArray(20)
-  character(len=10)    :: strMat(10,20)
+  character(len=32)     :: stringArray(20)
+  character(len=10)     :: strMat(10,20)
 
   integer :: i, idx, jdx
 

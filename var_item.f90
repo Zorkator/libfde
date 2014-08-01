@@ -10,25 +10,25 @@ module var_item
   private
 
 # define _Table_varItem_types_ \
-    _initType_(bool,     logical)             \
-    _initType_(byte,     integer*1)           \
-    _initType_(shortInt, integer*2)           \
-    _initType_(int32,    integer*4)           \
-    _initType_(longInt,  integer*8)           \
-    _initType_(float,    real*4)              \
-    _initType_(double,   real*8)              \
-    _initType_(longDbl,  real*16)             \
-    _initType_(cplx,     complex*8)           \
-    _initType_(dblCplx,  complex*16)          \
-    _initType_(quadCplx, complex*32)          \
-    _initType_(cptr,     type(c_ptr))         \
-    _initType_(string,   type(DynamicString)) \
+    _initType_(bool,     logical)               \
+    _initType_(byte,     integer*1)             \
+    _initType_(shortInt, integer*2)             \
+    _initType_(int32,    integer*4)             \
+    _initType_(longInt,  integer*8)             \
+    _initType_(float,    real*4)                \
+    _initType_(double,   real*8)                \
+    _initType_(longDbl,  real*16)               \
+    _initType_(cplx,     complex*8)             \
+    _initType_(dblCplx,  complex*16)            \
+    _initType_(quadCplx, complex*32)            \
+    _initType_(cptr,     type(c_ptr))           \
+    _initType_(string,   type(DynamicString_t)) \
     _initType_(gref,     type(GenericRef))
 
 
 # define _Table_nonPrimitive_types_ \
-    _np_Type(string, type(DynamicString), assignProc => ds_assign_ds, deleteProc => ds_delete) \
-    _np_Type(gref,   type(GenericRef),    assignProc => gr_assign_gr, deleteProc => gr_delete)
+    _np_Type(string, type(DynamicString_t), assignProc => ds_assign_ds, deleteProc => ds_delete) \
+    _np_Type(gref,   type(GenericRef),      assignProc => gr_assign_gr, deleteProc => gr_delete)
 
 
 ! declare dummy variables - used to determine each type's storage_size ...
@@ -44,10 +44,10 @@ module var_item
 # undef _initType_
 
 
-  type, public :: VarItem
+  type, public :: VarItem_t
     private
-    integer*1                :: data(maxBytes) = 0
-    type (TypeInfo), pointer :: typeInfo => null()
+    integer*1               :: data(maxBytes) = 0
+    type(TypeInfo), pointer :: typeInfo => null()
   end type
 
   ! declare VarItem(<type>) interface ...
@@ -86,7 +86,7 @@ module var_item
   ! declare TypeInfo variables, one for each type
   ! and set flag that they need to be initialized ...
 # define _initType_(typeId, baseType) \
-    type (TypeInfo), target :: _paste(vi_type_,typeId);
+    type(TypeInfo), target :: _paste(vi_type_,typeId);
 
     _Table_varItem_types_
 # undef _initType_
@@ -99,6 +99,7 @@ module var_item
     interface typeinfo_of; module procedure vi_typeinfo_of; end interface
     interface delete     ; module procedure vi_delete     ; end interface
 
+    public :: VarItem
     public :: is_valid
     public :: typeinfo_of
     public :: delete
@@ -138,9 +139,9 @@ module var_item
 
 # define _implementConstructor_(typeId, baseType)          \
     function _paste(vi_from_,typeId)( val ) result(res)   ;\
-      baseType,   intent(in) :: val                       ;\
-      baseType,      pointer :: ptr                       ;\
-      type (VarItem), target :: res                       ;\
+      baseType,    intent(in) :: val                      ;\
+      baseType,       pointer :: ptr                      ;\
+      type(VarItem_t), target :: res                      ;\
       call vi_reshape( res, _paste(vi_type_,typeId), 0 )  ;\
       call c_f_pointer( c_loc(res%data(1)), ptr )         ;\
       ptr = val                                           ;\
@@ -158,14 +159,14 @@ module var_item
   _implementConstructor_(dblCplx,  complex*16)
   _implementConstructor_(quadCplx, complex*32)
   _implementConstructor_(cptr,     type(c_ptr))
-  _implementConstructor_(string,   type(DynamicString))
+  _implementConstructor_(string,   type(DynamicString_t))
   _implementConstructor_(gref,     type(GenericRef))
 
 
   function vi_from_charString( val ) result(res)
-    character(len=*),     intent(in) :: val
-    type (DynamicString),    pointer :: ptr
-    type (VarItem),           target :: res
+    character(len=*),   intent(in) :: val
+    type(DynamicString_t), pointer :: ptr
+    type(VarItem_t),        target :: res
     call vi_reshape( res, vi_type_string, 0 )
     call c_f_pointer( c_loc(res%data(1)), ptr )
     ptr = val
@@ -173,8 +174,8 @@ module var_item
 
 
   function vi_from_vi( val ) result(res)
-    type (VarItem), intent(in) :: val
-    type (VarItem)             :: res
+    type(VarItem_t), intent(in) :: val
+    type(VarItem_t)             :: res
 
     call vi_reshape( res, val%typeInfo, 0 )
     if (associated( res%typeInfo )) then
@@ -188,8 +189,8 @@ module var_item
 
 # define _implementGetter_(typeId, baseType)               \
     function _paste(vi_get_,typeId)( self ) result(res)   ;\
-      type (VarItem), target, intent(in) :: self          ;\
-      baseType,                  pointer :: res           ;\
+      type(VarItem_t), target, intent(in) :: self         ;\
+      baseType,                   pointer :: res          ;\
       call vi_reshape( self, _paste(vi_type_,typeId), 1 ) ;\
       call c_f_pointer( c_loc(self%data(1)), res )        ;\
     end function
@@ -206,15 +207,15 @@ module var_item
   _implementGetter_(dblCplx,  complex*16)
   _implementGetter_(quadCplx, complex*32)
   _implementGetter_(cptr,     type(c_ptr))
-  _implementGetter_(string,   type(DynamicString))
+  _implementGetter_(string,   type(DynamicString_t))
   _implementGetter_(gref,     type(GenericRef))
 
 
 # define _implementSetter_(typeId, baseType)              \
     subroutine _paste(vi_assign_,typeId)( lhs, rhs )     ;\
-      type (VarItem), target, intent(inout) :: lhs       ;\
-      baseType,                  intent(in) :: rhs       ;\
-      baseType,                     pointer :: ptr       ;\
+      type(VarItem_t), target, intent(inout) :: lhs      ;\
+      baseType,                   intent(in) :: rhs      ;\
+      baseType,                      pointer :: ptr      ;\
       call vi_reshape( lhs, _paste(vi_type_,typeId), 1 ) ;\
       call c_f_pointer( c_loc(lhs%data(1)), ptr )        ;\
       ptr = rhs                                          ;\
@@ -232,14 +233,14 @@ module var_item
   _implementSetter_(dblCplx,  complex*16)
   _implementSetter_(quadCplx, complex*32)
   _implementSetter_(cptr,     type(c_ptr))
-  _implementSetter_(string,   type(DynamicString))
+  _implementSetter_(string,   type(DynamicString_t))
   _implementSetter_(gref,     type(GenericRef))
 
 
   subroutine vi_assign_charString( lhs, rhs )
-    type (VarItem), target, intent(inout) :: lhs
-    character(len=*),          intent(in) :: rhs
-    type (DynamicString),         pointer :: ptr
+    type(VarItem_t), target, intent(inout) :: lhs
+    character(len=*),           intent(in) :: rhs
+    type(DynamicString_t),         pointer :: ptr
     call vi_reshape( lhs, vi_type_string, 1 )
     call c_f_pointer( c_loc(lhs%data(1)), ptr )
     ptr = rhs
@@ -247,8 +248,8 @@ module var_item
 
 
   subroutine vi_assign_vi( lhs, rhs )
-    type (VarItem), intent(inout) :: lhs
-    type (VarItem)                :: rhs
+    type(VarItem_t), intent(inout) :: lhs
+    type(VarItem_t)                :: rhs
 
     ! can't prevent self assignment ... (since fortran gives us a shallow copy of rhs)
     ! so in case - just do it and let sensitive types handle it themselves.
@@ -264,8 +265,8 @@ module var_item
 
 # define _implementAssignTo_(typeId, baseType)                       \
     subroutine _paste(typeId,_assign_vi)( lhs, rhs )                ;\
-      baseType,    intent(inout) :: lhs                             ;\
-      type (VarItem), intent(in) :: rhs                             ;\
+      baseType,     intent(inout) :: lhs                            ;\
+      type(VarItem_t), intent(in) :: rhs                            ;\
       if (associated( rhs%typeInfo, _paste(vi_type_,typeId) )) then ;\
         lhs = typeId(rhs)                                           ;\
       end if                                                        ;\
@@ -283,13 +284,13 @@ module var_item
   _implementAssignTo_(dblCplx,  complex*16)
   _implementAssignTo_(quadCplx, complex*32)
   _implementAssignTo_(cptr,     type(c_ptr))
-  _implementAssignTo_(string,   type(DynamicString))
+  _implementAssignTo_(string,   type(DynamicString_t))
   _implementAssignTo_(gref,     type(GenericRef))
 
 
 # define _implementPredicate_(typeId, baseType)                   \
     logical function _paste(is_,typeId)( self ) result(res)      ;\
-      type (VarItem), intent(in) :: self                         ;\
+      type(VarItem_t), intent(in) :: self                        ;\
       res = associated( self%typeInfo, _paste(vi_type_,typeId) ) ;\
     end function
 
@@ -305,19 +306,19 @@ module var_item
   _implementPredicate_(dblCplx,  complex*16)
   _implementPredicate_(quadCplx, complex*32)
   _implementPredicate_(cptr,     type(c_ptr))
-  _implementPredicate_(string,   type(DynamicString))
+  _implementPredicate_(string,   type(DynamicString_t))
   _implementPredicate_(gref,     type(GenericRef))
 
 
   logical function vi_is_valid( self ) result(res)
-    type (VarItem), intent(in) :: self
+    type(VarItem_t), intent(in) :: self
     res = associated( self%typeInfo )
   end function
 
 
   function vi_typeinfo_of( self ) result(res)
-    type (VarItem), intent(in) :: self
-    type (TypeInfo),   pointer :: res
+    type(VarItem_t), intent(in) :: self
+    type(TypeInfo),     pointer :: res
 
     select case (associated( self%typeInfo ))
       case (.true.) ; res => self%typeInfo
@@ -327,7 +328,7 @@ module var_item
 
 
   subroutine vi_delete( self )
-    type (VarItem) :: self
+    type(VarItem_t) :: self
     
     if (associated( self%typeInfo )) then
       if (associated( self%typeInfo%deleteProc )) &
@@ -338,9 +339,9 @@ module var_item
  
 
   subroutine vi_reshape( self, new_typeInfo, hardness )
-    type (VarItem)                      :: self
-    type (TypeInfo), target, intent(in) :: new_typeInfo 
-    integer,                 intent(in) :: hardness
+    type(VarItem_t)                    :: self
+    type(TypeInfo), target, intent(in) :: new_typeInfo 
+    integer,                intent(in) :: hardness
 
     if (.not. associated( self%typeInfo, new_typeInfo )) then
       ! Important: check for initialization - even with associated typeInfo,
@@ -365,7 +366,7 @@ end module var_item
 
 
 !##################################################################################################
-#ifdef TEST
+#ifdef TEST_VAR_ITEM
 
 program testinger
   use var_item
@@ -373,11 +374,11 @@ program testinger
   use dynamic_string
   implicit none
 
-  type (VarItem)  :: v1, v2
-  type (TypeInfo) :: ti
-  integer*4       :: intvar
-  type (DynamicString) :: ds
-  type (GenericRef)    :: gr
+  type(VarItem_t)       :: v1, v2
+  type(TypeInfo)        :: ti
+  integer*4             :: intvar
+  type(DynamicString_t) :: ds
+  type(GenericRef)      :: gr
 
   print *, "VarItem: ",       storage_size(v1)/8
   print *, "DynamicString: ", storage_size(ds)/8
@@ -433,10 +434,10 @@ end
     use generic_ref                    ;\
     use dynamic_string                 ;\
     use iso_c_binding                  ;\
-    _baseType                :: val    ;\
-    _baseType,       pointer :: ptr    ;\
-    type (VarItem)           :: vi     ;\
-    type (TypeInfo), pointer :: ti     ;\
+    _baseType               :: val     ;\
+    _baseType,      pointer :: ptr     ;\
+    type(VarItem_t)         :: vi      ;\
+    type(TypeInfo), pointer :: ti      ;\
     vi  = VarItem(val)                 ;\
     vi  = val                          ;\
     ptr => _typeId(vi)                 ;\
@@ -462,8 +463,8 @@ end
   _implementTest_(dblCplx,  complex*16, _nop)
   _implementTest_(quadCplx, complex*32, _nop)
   _implementTest_(cptr,     type(c_ptr), _nop)
-  _implementTest_(string,   type(DynamicString), _delete)
-  _implementTest_(gref,   type(GenericRef), _delete)
+  _implementTest_(string,   type(DynamicString_t), _delete)
+  _implementTest_(gref,     type(GenericRef), _delete)
 
 #endif
 
