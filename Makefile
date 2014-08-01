@@ -18,21 +18,21 @@ mk_INCLUDE_PATHLIST = -I. -I./include
 mk_TAG              = $(F90C).$(CFG).$(ARCH)
 
 
-all: clean dynstring gref varitem
+all: clean dynstring gref varitem alist
 
 dynstring: dynamic_string.o test_dynamic_string.o
 	$(mk_F90C) $(mk_F90_FLAGS) $(mk_INCLUDE_PATHLIST) $? -o $@.$(mk_TAG)
 
-gref: dynamic_string.o generic_ref.o test_type_references.o test_generic_ref.o
+gref: dynamic_string.o type_info.o generic_ref.o test_type_references.o test_generic_ref.o
 	$(mk_F90C) $(mk_F90_FLAGS) $(mk_INCLUDE_PATHLIST) $? -o $@.$(mk_TAG)
 
-varitem: dynamic_string.o generic_ref.o test_type_references.o var_item.o test_var_item.o
+varitem: dynamic_string.o type_info.o generic_ref.o test_type_references.o var_item.o test_var_item.o
 	$(mk_F90C) $(mk_F90_FLAGS) $(mk_INCLUDE_PATHLIST) $? -o $@.$(mk_TAG)
 
 glist: generic_list.o
 	$(mk_F90C) $(mk_F90_FLAGS) $(mk_INCLUDE_PATHLIST) $? -o $@.$(mk_TAG)
 
-alist: dynamic_string.o generic_ref.o test_type_references.o var_item.o test_var_item.o abstract_list.o test_abstract_list.o
+alist: dynamic_string.o type_info.o generic_ref.o test_type_references.o var_item.o abstract_list.o test_abstract_list.o
 	$(mk_F90C) $(mk_F90_FLAGS) $(mk_INCLUDE_PATHLIST) $? -o $@.$(mk_TAG)
 
 clean:
