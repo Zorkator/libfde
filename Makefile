@@ -17,9 +17,6 @@ mk_INCLUDE_PATHLIST = -I. -I./include
 
 mk_TAG              = $(F90C).$(CFG).$(ARCH)
 
-.SUFFIXES: ._f90
-.SECONDARY: gref_test.f90 gref_test._f90
-.INTERMEDIATE: gref_test._f90
 
 union: test_union.f90
 	$(mk_F90C) $(mk_F90_FLAGS) $(mk_INCLUDE_PATHLIST) $< -o $@.$(mk_TAG)
@@ -27,13 +24,11 @@ union: test_union.f90
 dynstring: dynamic_string.f90
 	$(mk_F90C) $(mk_F90_FLAGS) -D TEST_DYNAMIC_STRING $(mk_INCLUDE_PATHLIST) $< -o $@.$(mk_TAG)
 
-gref: gref_test.f90
+gref: test_generic_ref.f90 test_type_references.f90
 	$(mk_F90C) $(mk_F90_FLAGS) $(mk_INCLUDE_PATHLIST) -c dynamic_string.f90
+	$(mk_F90C) $(mk_F90_FLAGS) $(mk_INCLUDE_PATHLIST) -c generic_ref.f90
+	$(mk_F90C) $(mk_F90_FLAGS) $(mk_INCLUDE_PATHLIST) -c test_type_references.f90
 	$(mk_F90C) $(mk_F90_FLAGS) -D TEST_GENERIC_REF $(mk_INCLUDE_PATHLIST) $< dynamic_string.o -o $@.$(mk_TAG)
-
-gref_test._f90: generic_ref.f90
-	cp $< $@
-
 
 varitem: var_item.f90 gref_test.f90
 	$(mk_F90C) $(mk_F90_FLAGS) $(mk_INCLUDE_PATHLIST) -c dynamic_string.f90
@@ -58,8 +53,8 @@ clean:
 	rm -f *.mod *.o *.debug.* *.release.*
 
 
-%.f90: %._f90
-	python refgen.py $< > $@
+%.f90: %.f90.rg
+	python refgen.py $< -o $@
 
 %.o: %.f90
 	$(mk_F90C) $(mk_F90_FLAGS) $(mk_INCLUDE_PATHLIST) -c $< -o $@

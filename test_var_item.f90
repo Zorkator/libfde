@@ -1,15 +1,18 @@
 
+#include "adt/var_item.fpp"
+
 program testinger
   use var_item
   use generic_ref
   use dynamic_string
+  use type_references
   implicit none
 
   type(VarItem_t)       :: v1, v2
   type(TypeInfo)        :: ti
   integer*4             :: intvar
   type(DynamicString_t) :: ds
-  type(GenericRef)      :: gr
+  type(GenericRef)      :: gr, gr2
 
   print *, "VarItem: ",       storage_size(v1)/8
   print *, "DynamicString: ", storage_size(ds)/8
@@ -40,8 +43,17 @@ program testinger
 
   intvar = v1
 
+  gr2 = ref(intvar)
+  gr  = ref(gr2)
+
+  do while (is_ref(gr))
+    gr = deref(gr)
+  end do
+  v1 = int32(gr)
+
   call delete(ds)
   call delete(gr)
+  call delete(gr2)
   call delete(v1)
   call delete(v2)
 
@@ -52,9 +64,8 @@ program testinger
   _Table_varItem_types_
 # undef _initType_
 
-
-
 end
+
 
 # define _nop(a)
 # define _delete(a)   call delete(a)
