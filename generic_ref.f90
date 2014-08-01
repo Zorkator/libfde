@@ -21,22 +21,22 @@ module generic_ref
   end type
 
 
-  type (TypeInfo), target :: type_void = TypeInfo( "void", 0, "", 0, 0, 0, .true., &
+  type(TypeInfo), target :: type_void = TypeInfo( "void", 0, "", 0, 0, 0, .true., &
                                                    null(), null(), null(), null() )
 
 
   type, public :: GenericRef
     private
-    type (DynamicString)     :: ref_str
-    type (TypeInfo), pointer :: typeInfo => null()
+    type(DynamicString_t)   :: ref_str
+    type(TypeInfo), pointer :: typeInfo => null()
   end type
 
 
-  type :: deref
+  type :: deref_t
     private
     type(GenericRef), pointer :: ptr
   end type
-  type (TypeInfo), target :: TypeInfo_deref
+  type(TypeInfo), target :: TypeInfo_deref
 
   
   ! interface definitions
@@ -96,11 +96,11 @@ module generic_ref
   !PROC_EXPORT_1REF( gr_init_TypeInfo, self )
   subroutine gr_init_TypeInfo( self, typeId, baseType, bitSize, rank, &
                                assignProc, deleteProc, shapeProc, cloneProc )
-    type (TypeInfo),    intent(inout) :: self
-    character(len=*),      intent(in) :: typeId, baseType
-    integer*4,             intent(in) :: bitSize
-    integer*4,             intent(in) :: rank
-    procedure(),             optional :: assignProc, deleteProc, shapeProc, cloneProc
+    type(TypeInfo),    intent(inout) :: self
+    character(len=*),     intent(in) :: typeId, baseType
+    integer*4,            intent(in) :: bitSize
+    integer*4,            intent(in) :: rank
+    procedure(),            optional :: assignProc, deleteProc, shapeProc, cloneProc
 
     self%typeId   = adjustl(typeId);   self%typeId_term   = 0
     self%baseType = adjustl(baseType); self%baseType_term = 0
@@ -126,8 +126,8 @@ module generic_ref
 !--------------------------------------------------------------
 
   subroutine gr_assign_gr( lhs, rhs )
-    type (GenericRef), intent(inout) :: lhs
-    type (GenericRef),    intent(in) :: rhs
+    type(GenericRef), intent(inout) :: lhs
+    type(GenericRef),    intent(in) :: rhs
 
     lhs%ref_str  =  rhs%ref_str
     lhs%typeInfo => rhs%typeInfo
@@ -135,12 +135,12 @@ module generic_ref
 
 
   function gr_set_TypeReference( self, cptr, bits, ti ) result(needInit)
-    type (GenericRef), intent(inout) :: self
-    type (c_ptr),         intent(in) :: cptr
-    integer*4,            intent(in) :: bits
-    type (TypeInfo),          target :: ti
-    character(len=bits/8),   pointer :: ptr
-    logical                          :: needInit
+    type(GenericRef), intent(inout) :: self
+    type(c_ptr),         intent(in) :: cptr
+    integer*4,           intent(in) :: bits
+    type(TypeInfo),          target :: ti
+    character(len=bits/8),  pointer :: ptr
+    logical                         :: needInit
 
     call c_f_pointer( cptr, ptr )
     self%ref_str  = attrib_volatile
@@ -151,15 +151,15 @@ module generic_ref
 
 
   function gr_get_TypeReference( self ) result(res)
-    type (GenericRef), intent(in) :: self
-    type (c_ptr)                  :: res
+    type(GenericRef), intent(in) :: self
+    type(c_ptr)                  :: res
     res = cptr(self%ref_str)
   end function
 
 
   pure function gr_rank( self ) result(res)
-    type (GenericRef), intent(in) :: self
-    integer                       :: res
+    type(GenericRef), intent(in) :: self
+    integer                      :: res
 
     if (associated( self%typeInfo )) then
       res = self%typeInfo%rank
@@ -170,8 +170,8 @@ module generic_ref
 
 
   pure function gr_shape( self ) result(res)
-    type (GenericRef), intent(in) :: self
-    integer                       :: res(rank(self))
+    type(GenericRef), intent(in) :: self
+    integer                      :: res(rank(self))
 
     if (associated( self%typeInfo )) then
       if (associated( self%typeInfo%shapeProc )) then
@@ -184,8 +184,8 @@ module generic_ref
 
 
   function gr_clone( self ) result(res)
-    type (GenericRef), intent(in) :: self
-    type (GenericRef)             :: res
+    type(GenericRef), intent(in) :: self
+    type(GenericRef)             :: res
 
     res%ref_str = attrib_volatile
     if (associated( self%typeInfo )) then
@@ -199,9 +199,9 @@ module generic_ref
 
 
   function gr_cptr( self ) result(res)
-    type (GenericRef), intent(in) :: self
-    type (c_ptr)                  :: res
-    type (voidRef),       pointer :: wrap
+    type(GenericRef), intent(in) :: self
+    type(c_ptr)                  :: res
+    type(voidRef),       pointer :: wrap
 
     res = gr_get_TypeReference(self)
     if (c_associated(res)) then
@@ -212,7 +212,7 @@ module generic_ref
 
 
   subroutine gr_delete( self )
-    type (GenericRef) :: self
+    type(GenericRef) :: self
 
     call delete( self%ref_str )
     self%typeInfo => null()
@@ -220,9 +220,9 @@ module generic_ref
 
 
   subroutine gr_free( self )
-    type (GenericRef)       :: self
-    type (voidRef), pointer :: wrap
-    type (c_ptr)            :: cptr
+    type(GenericRef)       :: self
+    type(voidRef), pointer :: wrap
+    type(c_ptr)            :: cptr
 
     cptr = gr_get_TypeReference(self)
     if (c_associated( cptr )) then
@@ -247,9 +247,9 @@ module generic_ref
   function gr_encode_deref( val ) result(res)
     use iso_c_binding
     type(GenericRef), target, intent(in) :: val
-    type (GenericRef)                    :: res
-    type (deref),                  target :: wrap
-    procedure(),                 pointer :: None => null()
+    type(GenericRef)                     :: res
+    type(deref_t),                target :: wrap
+    procedure(),                  pointer :: None => null()
   
     wrap%ptr => val
     if (gr_set_TypeReference( res, c_loc(wrap), int(storage_size(wrap),4), TypeInfo_deref )) &
@@ -262,9 +262,9 @@ module generic_ref
 
   function gr_decode_deref( val ) result(res)
     use iso_c_binding
-    type (GenericRef), intent(in) :: val
-    type(GenericRef),  pointer :: res
-    type (deref),      pointer :: wrap
+    type(GenericRef), intent(in) :: val
+    type(GenericRef),    pointer :: res
+    type(deref_t),       pointer :: wrap
     
     call c_f_pointer( gr_get_TypeReference(val), wrap )
     res => wrap%ptr
@@ -273,9 +273,9 @@ module generic_ref
 
   subroutine gr_clone_deref( val, res )
     use iso_c_binding
-    type (GenericRef),          intent(in) :: val
-    type (GenericRef)                      :: res
-    type(GenericRef),           pointer :: src, tgt => null()
+    type(GenericRef),            intent(in) :: val
+    type(GenericRef)                        :: res
+    type(GenericRef),               pointer :: src, tgt => null()
     character(len=1), dimension(:), pointer :: tmp
   
     src => gr_decode_deref( val )
@@ -286,37 +286,37 @@ module generic_ref
   
 
   subroutine gr_inspect_deref( val, res, n )
-    type (GenericRef), intent(in) :: val
-    integer                       :: n
-    integer                       :: res(n)
+    type(GenericRef), intent(in) :: val
+    integer                      :: n
+    integer                      :: res(n)
     res(:n) = shape( gr_decode_deref( val ) )
   end subroutine
   
 
   function deref_cloner( val ) result(res)
-    type (GenericRef), intent(in) :: val
-    type (GenericRef),    pointer :: res
+    type(GenericRef), intent(in) :: val
+    type(GenericRef),    pointer :: res
     allocate( res ) !< initializes res as default GenericRef
     res = val
   end function
 
 
   subroutine deref_deleter( val )
-    type (GenericRef) :: val
+    type(GenericRef) :: val
     call delete( val )
   end subroutine
 
   
   function gr_is_ref( self ) result(res)
-    type (GenericRef), intent(in) :: self
+    type(GenericRef), intent(in) :: self
     logical                       :: res
     res = associated( self%typeInfo, TypeInfo_deref )
   end function
 
   
   function gr_typeinfo_of( self ) result(res)
-    type (GenericRef), intent(in) :: self
-    type (TypeInfo),      pointer :: res
+    type(GenericRef), intent(in) :: self
+    type(TypeInfo),      pointer :: res
     res => self%typeInfo
   end function
 
