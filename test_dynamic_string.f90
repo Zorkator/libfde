@@ -18,15 +18,18 @@ program testinger
   tmp = attrib_permanent
 
   ds = DynamicString("test string")
-  print *, ref(ds), len(ds)   !< print string and its length
-  print *, ref(ds2), len(ds2) !< print null string and its length
+  print *, str(ds), len(ds)   !< print string and its length
+  print *, str(ds2), len(ds2) !< print null string and its length
   ds2 = ds                    !< assignment to null string
   ds2 = "short"               !< assignment of shorter character string (no re-allocation!)
   print *, str(ds2), len(ds2) !< print shorter string from original buffer ...
   ds  = ds                    !< self assignment (no effect!)
   ds2 = ds3                   !< assign null string (cleared but no deallocation!)
   print *, str(ds2), len(ds2) !< print cleared string and its length
-  ds2 = ds // ds2             !< concat and reassign 
+  ds2 = ds // ds2             !< concat and reassign
+
+  print *, str(ds2)
+  print *, char(ds2)
 
   print *, ds2 // " concat"
   print *, "prefix " // ds2
@@ -36,14 +39,14 @@ program testinger
   print *, "bar" == ds3
   print *, ds2 // 'bla' .eq. DynamicString(char(ds3))
 
-
   ds2 = "some long test string of more than ten characters ..."
   print *, char(ds2)
   print *, char(ds2, 10)
 
   ds2 = "    short    "
   print *, char(ds2)
-  print *, char(ds2, 10)
+  print *, char(ds2, 5) // '#'
+  print *, char(ds2, 20) // '#'
   print *, iachar(ds2)
   print *, ichar(ds2)
   print *, "#" // adjustr(ds2) // '#'

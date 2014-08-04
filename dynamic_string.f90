@@ -27,9 +27,8 @@ module dynamic_string
 
   interface DynamicString; module procedure ds_from_cs, ds_from_buf         ; end interface
   interface ptr          ; module procedure ds_ptr                          ; end interface
-  interface ref          ; module procedure ds_ref                          ; end interface
-  interface cptr         ; module procedure ds_cptr                         ; end interface
   interface str          ; module procedure ds_str                          ; end interface
+  interface cptr         ; module procedure ds_cptr                         ; end interface
   interface char         ; module procedure ds_char, ds_char_l              ; end interface
   interface delete       ; module procedure ds_delete                       ; end interface
 
@@ -48,7 +47,7 @@ module dynamic_string
   ! declare public interfaces 
 
   public :: DynamicString
-  public :: ref, str, cptr
+  public :: str, cptr
   public :: char
   public :: delete
   public :: ds_initialize, ds_assign_ds, ds_delete
@@ -115,6 +114,7 @@ module dynamic_string
   contains
 !-----------------
 
+
   subroutine ds_initialize( ds )
     type(DynamicString_t) :: ds
     
@@ -130,9 +130,9 @@ module dynamic_string
     type(DynamicString_t)           :: ds
     character(len=len(cs)), pointer :: ptr
 
-    ds%refstat = _ref_WeakMine
-    ds%len     = len(cs)
+    ds%len = len(cs)
     if (ds%len > 0) then
+      ds%refstat = _ref_WeakMine
       allocate( ds%ptr(ds%len) )
       call c_f_pointer( c_loc(ds%ptr(1)), ptr )
       ptr = cs
@@ -171,8 +171,8 @@ module dynamic_string
   end function
 
 
-  ! ref
-  function ds_ref( ds ) result(res)
+  ! str
+  function ds_str( ds ) result(res)
     type(DynamicString_t)               :: ds
     character(len=ref_len(ds)), pointer :: res
 
@@ -199,23 +199,12 @@ module dynamic_string
   end function
 
 
-  ! str
-  function ds_str( ds ) result(res)
-    type(DynamicString_t) :: ds
-    character(len=ds%len) :: res
-    integer               :: idx
-
-    res = ptr(ds)
-    call ds_release_weak( ds )
-  end function
-
-
   ! char
   function ds_char( ds ) result(res)
     type(DynamicString_t) :: ds
-    character(len=1)      :: res(ds%len)
+    character(len=ds%len) :: res
 
-    res = ds%ptr(:ds%len)
+    res = ptr(ds)
     call ds_release_weak( ds )
   end function
 
@@ -223,11 +212,11 @@ module dynamic_string
   function ds_char_l( ds, length ) result(res)
     type(DynamicString_t) :: ds
     integer,   intent(in) :: length
-    character(len=1)      :: res(length)
+    character(len=length) :: res
     integer               :: idx, limit
 
     limit = min(ds%len, length)
-    res(1:limit)        = ds%ptr(:limit)
+    res(1:limit)        = ptr(ds)
     res(limit+1:length) = ' '
     call ds_release_weak( ds )
   end function
@@ -414,7 +403,9 @@ module dynamic_string
   pure function ref_len( ds ) result(length)
     type(DynamicString_t), intent(in) :: ds
     integer                           :: length
-    length = merge( 0, ds%len, _ref_isWeakMine(ds%refstat) )
+    if (_ref_isWeakMine(ds%refstat)) then; length = 0
+                                     else; length = ds%len
+    end if
   end function
   
 
