@@ -10,7 +10,7 @@ program testinger
   implicit none
 
   type(VarItem_t)       :: v1, v2
-  type(TypeInfo)        :: ti
+  type(TypeInfo_t)      :: ti
   integer*4             :: intvar
   type(DynamicString_t) :: ds
   type(GenericRef)      :: gr, gr2
@@ -78,10 +78,10 @@ end
     use type_info                      ;\
     use dynamic_string                 ;\
     use iso_c_binding                  ;\
-    _baseType               :: val     ;\
-    _baseType,      pointer :: ptr     ;\
-    type(VarItem_t)         :: vi      ;\
-    type(TypeInfo), pointer :: ti      ;\
+    _baseType                 :: val   ;\
+    _baseType,        pointer :: ptr   ;\
+    type(VarItem_t)           :: vi    ;\
+    type(TypeInfo_t), pointer :: ti    ;\
     vi  = VarItem(val)                 ;\
     vi  = val                          ;\
     ptr => _typeId(vi)                 ;\

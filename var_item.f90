@@ -31,8 +31,8 @@ module var_item
 
   type, public :: VarItem_t
     private
-    integer*1               :: data(maxBytes) = 0
-    type(TypeInfo), pointer :: typeInfo => null()
+    integer*1                 :: data(maxBytes) = 0
+    type(TypeInfo_t), pointer :: typeInfo       => null()
   end type
 
   ! declare VarItem(<type>) interface ...
@@ -71,11 +71,11 @@ module var_item
   ! declare TypeInfo variables, one for each type
   ! and set flag that they need to be initialized ...
 # define _initType_(typeId, baseType) \
-    type(TypeInfo), target :: _paste(vi_type_,typeId);
+    type(TypeInfo_t), target :: _paste(vi_type_,typeId);
 
     _Table_varItem_types_
 # undef _initType_
-    type(TypeInfo), target :: vi_type_VarItem
+    type(TypeInfo_t), target :: vi_type_VarItem
     logical                :: is_initialized = .false.
   
 
@@ -305,7 +305,7 @@ module var_item
 
   function vi_typeinfo_of( self ) result(res)
     type(VarItem_t), intent(in) :: self
-    type(TypeInfo),     pointer :: res
+    type(TypeInfo_t),   pointer :: res
 
     select case (associated( self%typeInfo ))
       case (.true.) ; res => self%typeInfo
@@ -326,9 +326,9 @@ module var_item
  
 
   subroutine vi_reshape( self, new_typeInfo, hardness )
-    type(VarItem_t)                    :: self
-    type(TypeInfo), target, intent(in) :: new_typeInfo 
-    integer,                intent(in) :: hardness
+    type(VarItem_t)                      :: self
+    type(TypeInfo_t), target, intent(in) :: new_typeInfo 
+    integer,                  intent(in) :: hardness
 
     if (.not. associated( self%typeInfo, new_typeInfo )) then
       ! Important: check for initialization - even with associated typeInfo,

@@ -9,8 +9,8 @@ module generic_ref
 
   type, public :: GenericRef
     private
-    type(DynamicString_t)   :: ref_str
-    type(TypeInfo), pointer :: typeInfo => null()
+    type(DynamicString_t)     :: ref_str
+    type(TypeInfo_t), pointer :: typeInfo => null()
   end type
 
 
@@ -18,7 +18,7 @@ module generic_ref
     private
     type(GenericRef), pointer :: ptr
   end type
-  type(TypeInfo), target :: TypeInfo_deref
+  type(TypeInfo_t), target :: TypeInfo_deref
 
   
   ! interface definitions
@@ -79,7 +79,7 @@ module generic_ref
     type(GenericRef), intent(inout) :: self
     type(c_ptr),         intent(in) :: cptr
     integer*4,           intent(in) :: bits
-    type(TypeInfo),          target :: ti
+    type(TypeInfo_t),        target :: ti
     character(len=bits/8),  pointer :: ptr
     logical                         :: needInit
 
@@ -257,7 +257,7 @@ module generic_ref
   
   function gr_typeinfo_of( self ) result(res)
     type(GenericRef), intent(in) :: self
-    type(TypeInfo),      pointer :: res
+    type(TypeInfo_t),    pointer :: res
     res => self%typeInfo
   end function
 

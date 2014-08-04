@@ -58,7 +58,7 @@ class ReferenceType(object):
     type :: {typeId}_t
        {baseType}{baseExtra}{dimType}, pointer :: ptr
     end type
-    type(TypeInfo), target :: TypeInfo_{typeId}
+    type(TypeInfo_t), target :: TypeInfo_{typeId}
     """,
 
     # parameters:
@@ -100,9 +100,9 @@ class ReferenceType(object):
     #   typeId:     type identifier
     #   baseType:   fortran base type | type(...) | procedure(...)
     #   dimType:    ('', ', dimension(:,...)')[has_dimension]
-    #   assignProc: ('', ', assignProc = <funcId>')[has_assignProc]
-    #   deleteProc: ('', ', deleteProc = <funcId>')[has_deleteProc]
-    #   shapeProc:  ('', ', shapeProc = <funcId>')[has_shapeProc]
+    #   assignProc: ', assignProc = <funcId> | None'
+    #   deleteProc: ', deleteProc = <funcId> | None'
+    #   shapeProc:  ', shapeProc = <funcId> | None'
     #
     ref_encoder = """
     function GenericRef_encode_{typeId}( val ) result(res)
@@ -117,6 +117,7 @@ class ReferenceType(object):
         call init_TypeInfo( TypeInfo_{typeId}, '{typeId}', '{baseType}' &
                             , int(storage_size(val),4) &
                             , size(shape(val)){assignProc}{deleteProc}{shapeProc} &
+                            , castProc = GenericRef_c2f_cast_{typeId} &
                             , cloneProc = GenericRef_clone_{typeId} )
     end function
     """,
@@ -190,6 +191,21 @@ class ReferenceType(object):
     """,
 
     # parameters:
+    #   typeId:    type identifier
+    #   baseType:  fortran base type | type(...) | procedure(...)
+    #   dimType:   ('', ', dimension(:,...)')[has_dimension]
+    c2fCast = """
+    subroutine GenericRef_c2f_cast_{typeId}( ptr_c, ptr_f )
+      use iso_c_binding
+      type(c_ptr),                   intent(in) :: ptr_c
+      {baseType}{dimType}, pointer, intent(out) :: ptr_f
+      type({typeId}_t),                 pointer :: wrap
+      call c_f_pointer( ptr_c, wrap )
+      ptr_f => wrap%ptr
+    end subroutine
+    """,
+
+    # parameters:
     #   typeId: type identifier
     #
     inspector = """
@@ -249,6 +265,7 @@ class ReferenceType(object):
     self._itf     = self._template[('ref_itf', 'proc_itf')[self._isProc]]
     self._encoder = self._template[('ref_encoder', 'proc_encoder')[self._isProc]]
     self._decoder = self._template['decoder']
+    self._c2fCast = self._template['c2fCast']
     self._cloner  = (self._template['cloner'], '')[self._isProc]
     self._inspect = (self._template['inspector'], '')[self._isProc]
     self._typeChk = self._template['typecheck']
@@ -261,12 +278,12 @@ class ReferenceType(object):
 
   def declare( self, out ):
     if not self._declared:
-      if len(ReferenceType.Scope) == 1:
-        out( self._template['gen_itf'].format( **self.__dict__ ) )
-
       out( self._info.format( **self.__dict__ ) )
       out( self._type.format( **self.__dict__ ) )
       out( self._itf.format( **self.__dict__ ) )
+      if len(ReferenceType.Scope) == 1:
+        out( self._template['gen_itf'].format( **self.__dict__ ) )
+
       self._declared = True
 
 
@@ -275,6 +292,7 @@ class ReferenceType(object):
       out( self._template['header'].format( **self.__dict__ ) )
       out( self._encoder.format( **self.__dict__ ) )
       out( self._decoder.format( **self.__dict__ ) )
+      out( self._c2fCast.format( **self.__dict__ ) )
       out( self._cloner.format( **self.__dict__ ) )
       out( self._inspect.format( **self.__dict__ ) )
       out( self._typeChk.format( **self.__dict__ ) )

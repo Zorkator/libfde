@@ -5,14 +5,15 @@ module type_info
   implicit none
 
 
-  type, public :: TypeInfo
-    character(32)                :: typeId;     integer*2, private :: typeId_term   = 0
-    character(32)                :: baseType;   integer*2, private :: baseType_term = 0
-    integer*4                    :: byteSize    =  0
-    integer*4                    :: rank        =  0
-    logical                      :: initialized = .false.
+  type, public :: TypeInfo_t
+    character(32) :: typeId;     integer*2, private :: typeId_term   = 0
+    character(32) :: baseType;   integer*2, private :: baseType_term = 0
+    integer*4     :: byteSize    =  0
+    integer*4     :: rank        =  0
+    logical       :: initialized = .false.
 
     ! type specific subroutines called by generic interfaces 
+    procedure(), nopass, pointer :: castProc    => null()
     procedure(), nopass, pointer :: assignProc  => null()
     procedure(), nopass, pointer :: shapeProc   => null()
     procedure(), nopass, pointer :: cloneProc   => null()
@@ -20,8 +21,8 @@ module type_info
   end type
 
 
-  type(TypeInfo), target :: type_void = TypeInfo( "void", 0, "", 0, 0, 0, .true., &
-                                                   null(), null(), null(), null() )
+  type(TypeInfo_t), target :: type_void = TypeInfo_t( "void", 0, "", 0, 0, 0, .true., &
+                                                       null(), null(), null(), null(), null() )
 
   contains
 
@@ -39,12 +40,12 @@ module type_info
   !*
   !PROC_EXPORT_1REF( init_TypeInfo, self )
   subroutine init_TypeInfo( self, typeId, baseType, bitSize, rank, &
-                            assignProc, deleteProc, shapeProc, cloneProc )
-    type(TypeInfo),    intent(inout) :: self
+                            castProc, assignProc, deleteProc, shapeProc, cloneProc )
+    type(TypeInfo_t),  intent(inout) :: self
     character(len=*),     intent(in) :: typeId, baseType
     integer*4,            intent(in) :: bitSize
     integer*4,            intent(in) :: rank
-    procedure(),            optional :: assignProc, deleteProc, shapeProc, cloneProc
+    procedure(),            optional :: castProc, assignProc, deleteProc, shapeProc, cloneProc
 
     self%typeId   = adjustl(typeId);   self%typeId_term   = 0
     self%baseType = adjustl(baseType); self%baseType_term = 0
@@ -52,11 +53,13 @@ module type_info
     self%rank     = rank
 
     ! pre-initialize optional arguments
+    self%castProc   => null()
     self%assignProc => null()
     self%deleteProc => null()
     self%shapeProc  => null()
     self%cloneProc  => null()
 
+    if (present(castProc))   self%castProc   => castProc
     if (present(assignProc)) self%assignProc => assignProc
     if (present(deleteProc)) self%deleteProc => deleteProc
     if (present(shapeProc))  self%shapeProc  => shapeProc

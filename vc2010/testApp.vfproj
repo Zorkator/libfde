@@ -35,14 +35,16 @@
 		<File RelativePath="..\abstract_list.f90"/>
 		<File RelativePath="..\dynamic_string.f90"/>
 		<File RelativePath="..\generic_ref.f90"/>
-		<File RelativePath="..\test_abstract_list.f90"/>
-		<File RelativePath="..\test_dynamic_string.f90">
+		<File RelativePath="..\test_abstract_list.f90">
 			<FileConfiguration Name="Debug|Win32" ExcludedFromBuild="true"/>
 			<FileConfiguration Name="Release|Win32" ExcludedFromBuild="true"/></File>
+		<File RelativePath="..\test_dynamic_string.f90"/>
 		<File RelativePath="..\test_generic_ref.f90">
 			<FileConfiguration Name="Debug|Win32" ExcludedFromBuild="true"/>
 			<FileConfiguration Name="Release|Win32" ExcludedFromBuild="true"/></File>
-		<File RelativePath=".\test_type_references.f90"/>
+		<File RelativePath=".\test_type_references.f90">
+			<FileConfiguration Name="Debug|Win32" ExcludedFromBuild="true"/>
+			<FileConfiguration Name="Release|Win32" ExcludedFromBuild="true"/></File>
 		<File RelativePath="..\test_var_item.f90">
 			<FileConfiguration Name="Debug|Win32" ExcludedFromBuild="true"/>
 			<FileConfiguration Name="Release|Win32" ExcludedFromBuild="true"/></File>

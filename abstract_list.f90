@@ -11,8 +11,8 @@ module abstract_list
 
   type, public :: List
     private
-    type(Item)              :: item
-    type(TypeInfo), pointer :: typeInfo => null()
+    type(Item)                :: item
+    type(TypeInfo_t), pointer :: typeInfo => null()
   end type
 
 
@@ -24,8 +24,10 @@ module abstract_list
   end type
 
 
-  interface front; module procedure al_front; end interface
-  interface back ; module procedure al_back ; end interface
+  interface front ; module procedure al_front ; end interface
+  interface back  ; module procedure al_back  ; end interface
+  interface cfront; module procedure al_cfront; end interface
+  interface cback ; module procedure al_cback ; end interface
 
   public :: front
   public :: back
@@ -71,8 +73,8 @@ module abstract_list
 
 
   subroutine al_initialize( self, item_typeInfo )
-    type(List),               target :: self
-    type(TypeInfo), optional, target :: item_typeInfo
+    type(List),                 target :: self
+    type(TypeInfo_t), optional, target :: item_typeInfo
     self%item%prev => self%item
     self%item%next => self%item
     self%typeInfo  => null()
@@ -134,16 +136,40 @@ module abstract_list
 
 
   function al_front( self ) result(res)
-    type (List), intent(in) :: self
-    type (Item),    pointer :: res
-    res => self%item%next
+    type (List), target, intent(in) :: self
+    type (Item),            pointer :: res
+    if (associated( self%item%next, self%item )) then; res => null()
+                                                 else; res => self%item%next
+    end if
   end function
 
     
   function al_back( self ) result(res)
-    type (List), intent(in) :: self
-    type (Item),    pointer :: res
-    res => self%item%prev
+    type (List), target, intent(in) :: self
+    type (Item),            pointer :: res
+    if (associated( self%item%prev, self%item )) then; res => null()
+                                                 else; res => self%item%prev
+    end if
+  end function
+
+
+  function al_cfront( self ) result(res)
+    use iso_c_binding
+    type (List), target, intent(in) :: self
+    type (c_ptr)                    :: res
+    if (associated( self%item%next, self%item )) then; res = C_NULL_PTR
+                                                 else; res = c_loc( self%item%next )
+    end if
+  end function
+
+    
+  function al_cback( self ) result(res)
+    use iso_c_binding
+    type (List), target, intent(in) :: self
+    type (c_ptr)                    :: res
+    if (associated( self%item%prev, self%item )) then; res = C_NULL_PTR
+                                                 else; res = c_loc( self%item%prev )
+    end if
   end function
 
 end module
