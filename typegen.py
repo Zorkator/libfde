@@ -216,7 +216,7 @@ class ReferenceType(object):
     function RefType_is_{typeId}( self ) result(res)
       type(GenericRef_t), intent(in) :: self
       logical                        :: res
-      res = associated( typeinfo(self), type_{typeId} )
+      res = associated( self%typeInfo, type_{typeId} )
     end function
     """,
 

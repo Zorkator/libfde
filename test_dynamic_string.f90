@@ -1,16 +1,19 @@
 
 program testinger
   use dynamic_string
+  use generic_ref
   implicit none
 
-  type(DynamicString_t) :: tmp
-  type(DynamicString_t) :: ds, ds2, ds3
-  type(DynamicString_t) :: strings(4)
-  character             :: buffer(10), bufferB(10)
-  character             :: buffer2(5)
+  type(DynamicString_t)          :: tmp
+  type(DynamicString_t)          :: ds, ds2, ds3
+  type(DynamicString_t)          :: strings(4)
+  type(DynamicString_t), pointer :: strPtr => null()
+  type(GenericRef_t)             :: strRef, gref
+  character                      :: buffer(10), bufferB(10)
+  character                      :: buffer2(5)
 
-  character(len=32)     :: stringArray(20)
-  character(len=10)     :: strMat(10,20)
+  character(len=32)              :: stringArray(20)
+  character(len=10)              :: strMat(10,20)
 
   integer :: i, idx, jdx
 
@@ -66,6 +69,19 @@ program testinger
   ds2 = buffer
 
   !print *, cptr(ds2)
+  strRef = ref(ds2)
+  print *, is_DynamicString(strRef)
+  ds = DynamicString(strRef)
+  print *, char(DynamicString(strRef))
+
+  strPtr => DynamicString(strRef)
+  strPtr = '  x' // strPtr // 'x  '
+  print *, str(ds2)
+
+  gref = ref(strRef)
+  if (is_ref(gref)) then
+    print *, is_DynamicString(deref(gref))
+  end if
 
   print *, lge( buffer, achar(ds2) )
   print *, lge( ds2, 'abcdef' )
@@ -91,6 +107,8 @@ program testinger
   call delete( ds )
   call delete( ds2 )
   call delete( ds3 )
+  call delete( strRef )
+  call delete( gref )
 
   call acceptStringArray( stringArray )
   call acceptStringMatrix( strMat )
