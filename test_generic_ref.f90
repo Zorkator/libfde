@@ -18,8 +18,8 @@ program testinger
   procedure(simpleCall), pointer :: sc => null()
   type(Ding)                     :: dong
 
-  type(c_ptr)      :: cpointer
-  type(GenericRef) :: ref1, ref2, ref3
+  type(c_ptr)        :: cpointer
+  type(GenericRef_t) :: ref1, ref2, ref3
 
   ref2 = ref(42)
   ref1 = ref(ref2)

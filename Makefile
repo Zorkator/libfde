@@ -41,8 +41,8 @@ clean:
 	rm -f *.mod *.o *.debug.* *.release.*
 
 
-%.f90: %.f90.rg
-	python refgen.py $< -o $@
+%.f90: %.f90.tpp
+	python typegen.py $< -o $@
 
 %.o: %.f90
 	$(mk_F90C) $(mk_F90_FLAGS) $(mk_INCLUDE_PATHLIST) -c $< -o $@

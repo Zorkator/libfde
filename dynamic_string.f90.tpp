@@ -2,6 +2,8 @@
 module dynamic_string
   use iso_c_binding
   use base_string
+  use generic_ref
+  use type_info
   implicit none
   private
 
@@ -40,7 +42,7 @@ module dynamic_string
 
   ! declare public interfaces 
 
-  public :: DynamicString
+  !public :: DynamicString <= will be declared public later ...
   public :: str, cptr
   public :: char
   public :: delete
@@ -106,9 +108,14 @@ module dynamic_string
 # define _release_weak( ds ) \
     call bs_release_weak( ds%str )
 
+
+  !_TypeReference_declare( public, DynamicString, type(DynamicString_t), scalar, assignProc = ds_assign_ds, deleteProc = ds_delete )
+
 !-----------------
   contains
 !-----------------
+
+  !_TypeReference_implementAll()
 
 
   subroutine ds_initialize( ds )

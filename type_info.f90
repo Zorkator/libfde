@@ -21,6 +21,10 @@ module type_info
   end type
 
 
+  type, public :: void_t
+    integer, pointer :: ptr
+  end type
+
   type(TypeInfo_t), target :: type_void = TypeInfo_t( "void", 0, "", 0, 0, 0, .true., &
                                                        null(), null(), null(), null(), null() )
 
