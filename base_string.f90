@@ -11,132 +11,142 @@ module base_string
     character(len=1), dimension(:), pointer :: ptr     => null()
   end type
 
+
+  type :: Attribute_t
+    private
+    integer*1 :: val = 0
+  end type
+
+  type(Attribute_t), parameter :: attrib_volatile  = Attribute_t(0)
+  type(Attribute_t), parameter :: attrib_permanent = Attribute_t(1)
+
+
   interface ptr ; module procedure bs_ptr ; end interface
 
   contains
 
-  subroutine bs_init( rs )
-    type(BaseString_t) :: rs
+  subroutine bs_init( bs )
+    type(BaseString_t) :: bs
 
-    rs%ptr     => null()
-    rs%len     =  0
-    rs%refstat = _ref_HardLent
+    bs%ptr     => null()
+    bs%len     =  0
+    bs%refstat = _ref_HardLent
   end subroutine
 
 
-  subroutine bs_set_hardness( rs, val )
-    type(BaseString_t) :: rs
-    integer*1          :: val
-    _ref_setHard( rs%refstat, val )
+  subroutine bs_set_attribute( bs, attr )
+    type(BaseString_t)            :: bs
+    type(Attribute_t), intent(in) :: attr
+    _ref_setHard( bs%refstat, attr%val )
   end subroutine
 
 
-  subroutine bs_init_by_cs( rs, cs )
-    type(BaseString_t)              :: rs
+  subroutine bs_init_by_cs( bs, cs )
+    type(BaseString_t)              :: bs
     character(len=*),    intent(in) :: cs
     character(len=len(cs)), pointer :: tgt
 
-    rs%len = len(cs)
-    if (rs%len > 0) then
-      rs%refstat = _ref_WeakMine
-      allocate( rs%ptr(rs%len) )
-      call c_f_pointer( c_loc(rs%ptr(1)), tgt )
+    bs%len = len(cs)
+    if (bs%len > 0) then
+      bs%refstat = _ref_WeakMine
+      allocate( bs%ptr(bs%len) )
+      call c_f_pointer( c_loc(bs%ptr(1)), tgt )
       tgt = cs
     end if
   end subroutine
 
   
-  subroutine bs_init_by_buf( rs, buf )
-    type(BaseString_t)                         :: rs
+  subroutine bs_init_by_buf( bs, buf )
+    type(BaseString_t)                         :: bs
     character(len=1), dimension(:), intent(in) :: buf
 
-    rs%len = size(buf)
-    if (rs%len > 0) then
-      rs%refstat = _ref_WeakMine
-      allocate( rs%ptr(rs%len) )
-      rs%ptr = buf
+    bs%len = size(buf)
+    if (bs%len > 0) then
+      bs%refstat = _ref_WeakMine
+      allocate( bs%ptr(bs%len) )
+      bs%ptr = buf
     end if
   end subroutine
 
 
-  subroutine bs_release_weak( rs )
-    type(BaseString_t) :: rs
+  subroutine bs_release_weak( bs )
+    type(BaseString_t) :: bs
 
-    if (_ref_isWeakMine( rs%refstat )) &
-      deallocate( rs%ptr )
+    if (_ref_isWeakMine( bs%refstat )) &
+      deallocate( bs%ptr )
   end subroutine
 
 
-  subroutine bs_delete( rs )
-    type(BaseString_t) :: rs
+  subroutine bs_delete( bs )
+    type(BaseString_t) :: bs
 
-    rs%len = 0
-    if (_ref_isMine( rs%refstat )) then
-      deallocate( rs%ptr )
-      _ref_setMine( rs%refstat, 0 )
+    bs%len = 0
+    if (_ref_isMine( bs%refstat )) then
+      deallocate( bs%ptr )
+      _ref_setMine( bs%refstat, 0 )
     else
-      rs%ptr => null()
+      bs%ptr => null()
     end if
   end subroutine
 
 
-  function bs_ptr( rs ) result(res)
-    type(BaseString_t), intent(in) :: rs
-    character(len=rs%len), pointer :: res
+  function bs_ptr( bs ) result(res)
+    type(BaseString_t), intent(in) :: bs
+    character(len=bs%len), pointer :: res
 
-    if (associated(rs%ptr) .and. rs%len > 0) then
-      call c_f_pointer( c_loc(rs%ptr(1)), res )
+    if (associated(bs%ptr) .and. bs%len > 0) then
+      call c_f_pointer( c_loc(bs%ptr(1)), res )
     else
       res => null()
     end if
   end function
 
 
-  function bs_cptr( rs ) result(res)
-    type(BaseString_t) :: rs
+  function bs_cptr( bs ) result(res)
+    type(BaseString_t) :: bs
     type(c_ptr)        :: res
 
     res = C_NULL_PTR
-    if (_ref_isWeakMine( rs%refstat )) then
-      deallocate( rs%ptr )
-    else if (associated(rs%ptr) .and. rs%len > 0) then
-      res = c_loc(rs%ptr(1))
+    if (_ref_isWeakMine( bs%refstat )) then
+      deallocate( bs%ptr )
+    else if (associated(bs%ptr) .and. bs%len > 0) then
+      res = c_loc(bs%ptr(1))
     end if
   end function
 
 
-  pure function bs_ref_len( rs ) result(res)
-    type(BaseString_t), intent(in) :: rs
+  pure function bs_ref_len( bs ) result(res)
+    type(BaseString_t), intent(in) :: bs
     integer                        :: res
 
-    if (_ref_isWeakMine(rs%refstat)) then; res = 0
-                                     else; res = rs%len
+    if (_ref_isWeakMine(bs%refstat)) then; res = 0
+                                     else; res = bs%len
     end if
   end function
   
 
-  subroutine bs_assign_cs( rs, cs )
-    type(BaseString_t)              :: rs
+  subroutine bs_assign_cs( bs, cs )
+    type(BaseString_t)              :: bs
     character(len=*),    intent(in) :: cs
     character(len=len(cs)), pointer :: tgt
 
-    rs%len = len(cs)
-    if (rs%len == 0) return !< nothing to do
+    bs%len = len(cs)
+    if (bs%len == 0) return !< nothing to do
 
-    if (_ref_isMine( rs%refstat )) then
+    if (_ref_isMine( bs%refstat )) then
       ! it's my buffer - if it's large enough ...
-      if (rs%len <= size(rs%ptr)) goto 20 !< ... just copy new content
-      deallocate( rs%ptr )                !< otherwise: dealloc, allocate, copy
+      if (bs%len <= size(bs%ptr)) goto 20 !< ... just copy new content
+      deallocate( bs%ptr )                !< otherwise: dealloc, allocate, copy
     else
       ! it's not my buffer
-      rs%ptr => null() !< make sure pointer is null before allocating it!
+      bs%ptr => null() !< make sure pointer is null before allocating it!
     end if
 
     ! update string buffer and content ...
-    10  allocate( rs%ptr(rs%len) )
-        _ref_setMine( rs%refstat, 1 )
-    20  call c_f_pointer( c_loc(rs%ptr(1)), tgt )
-        tgt(:rs%len) = cs
+    10  allocate( bs%ptr(bs%len) )
+        _ref_setMine( bs%refstat, 1 )
+    20  call c_f_pointer( c_loc(bs%ptr(1)), tgt )
+        tgt(:bs%len) = cs
   end subroutine
 
 
@@ -163,7 +173,7 @@ module base_string
   end subroutine
 
 
-  subroutine bs_assign_rs( lhs, rhs )
+  subroutine bs_assign_bs( lhs, rhs )
     type(BaseString_t), intent(inout) :: lhs
     type(BaseString_t),    intent(in) :: rhs
 

@@ -1,6 +1,6 @@
 
 module generic_ref
-  use dynamic_string
+  use base_string
   use type_info
   use iso_c_binding
   implicit none
@@ -9,7 +9,7 @@ module generic_ref
 
   type, public :: GenericRef
     private
-    type(DynamicString_t)     :: ref_str
+    type(BaseString_t)        :: ref_str
     type(TypeInfo_t), pointer :: typeInfo => null()
   end type
 
@@ -70,7 +70,7 @@ module generic_ref
     type(GenericRef), intent(inout) :: lhs
     type(GenericRef),    intent(in) :: rhs
 
-    lhs%ref_str  =  rhs%ref_str
+    call bs_assign_bs( lhs%ref_str, rhs%ref_str )
     lhs%typeInfo => rhs%typeInfo
   end subroutine
 
@@ -84,8 +84,8 @@ module generic_ref
     logical                         :: needInit
 
     call c_f_pointer( cptr, ptr )
-    self%ref_str  = attrib_volatile
-    self%ref_str  = ptr
+    call bs_set_attribute( self%ref_str, attrib_volatile )
+    call bs_assign_cs( self%ref_str, ptr )
     needInit      = .not. ti%initialized
     self%typeInfo => ti
   end function
@@ -94,7 +94,7 @@ module generic_ref
   function gr_get_TypeReference( self ) result(res)
     type(GenericRef), intent(in) :: self
     type(c_ptr)                  :: res
-    res = cptr(self%ref_str)
+    res = bs_cptr( self%ref_str )
   end function
 
 
@@ -128,7 +128,7 @@ module generic_ref
     type(GenericRef), intent(in) :: self
     type(GenericRef)             :: res
 
-    res%ref_str = attrib_volatile
+    call bs_set_attribute( res%ref_str, attrib_volatile )
     if (associated( self%typeInfo )) then
       if (associated( self%typeInfo%cloneProc )) then
         call self%typeInfo%cloneProc( self, res )
@@ -155,7 +155,7 @@ module generic_ref
   subroutine gr_delete( self )
     type(GenericRef) :: self
 
-    call delete( self%ref_str )
+    call bs_delete( self%ref_str )
     self%typeInfo => null()
   end subroutine
 

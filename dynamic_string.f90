@@ -9,28 +9,18 @@ module dynamic_string
   type, public :: DynamicString_t
     private
     type(BaseString_t) :: str
+
+#   define _refstat(self)   self%str%refstat
+#   define _len(self)       self%str%len
+#   define _ptr(self)       ptr(self%str)
+#   define _array(self)     self%str%ptr(:self%str%len)
+#   define _reflen(self)    bs_ref_len( self%str )
   end type
-
-# define _refstat(ds)   ds%str%refstat
-# define _len(ds)       ds%str%len
-# define _ptr(ds)       ptr(ds%str)
-# define _array(ds)     ds%str%ptr(:ds%str%len)
-# define _reflen(ds)    bs_ref_len( ds%str )
-
-
-  type :: Attribute_t
-    private
-    integer*1 :: val = 0
-  end type
-
-  type(Attribute_t), parameter :: attrib_volatile  = Attribute_t(0)
-  type(Attribute_t), parameter :: attrib_permanent = Attribute_t(1)
 
 
   ! interface definitions
 
   interface DynamicString; module procedure ds_from_cs, ds_from_buf         ; end interface
-  !interface ptr          ; module procedure ds_ptr                          ; end interface
   interface str          ; module procedure ds_str                          ; end interface
   interface cptr         ; module procedure ds_cptr                         ; end interface
   interface char         ; module procedure ds_char, ds_char_l              ; end interface
@@ -142,14 +132,6 @@ module dynamic_string
   end function
 
 
-  ! ptr
-  function ds_ptr( ds ) result(res)
-    type(DynamicString_t), intent(in) :: ds
-    character(len=_len(ds)),    pointer :: res
-    res => bs_ptr( ds%str )
-  end function
-
-
   ! str
   function ds_str( ds ) result(res)
     type(DynamicString_t)               :: ds
@@ -162,7 +144,7 @@ module dynamic_string
   end function
 
 
-  ! c_loc
+  ! cptr
   function ds_cptr( ds ) result(res)
     type(DynamicString_t) :: ds
     type(c_ptr)           :: res
@@ -219,7 +201,7 @@ module dynamic_string
   subroutine ds_assign_ds( lhs, rhs )
     type(DynamicString_t), intent(inout) :: lhs
     type(DynamicString_t),    intent(in) :: rhs
-    call bs_assign_rs( lhs%str, rhs%str )
+    call bs_assign_bs( lhs%str, rhs%str )
   end subroutine
 
 
@@ -233,7 +215,7 @@ module dynamic_string
   subroutine ds_assign_attrib( lhs, rhs )
     type(DynamicString_t),  intent(inout) :: lhs
     type(Attribute_t),         intent(in) :: rhs
-    call bs_set_hardness( lhs%str, rhs%val )
+    call bs_set_attribute( lhs%str, rhs )
   end subroutine
 
 
