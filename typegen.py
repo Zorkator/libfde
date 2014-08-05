@@ -355,7 +355,7 @@ class ReferenceType(object):
 
       for line in f.readlines():
         lineBuf.append( line )
-        if line.endswith('\\\n'):
+        if line.rstrip().endswith('\\'):
           continue
         
         lines = '!' + ''.join( _class._purgeLines( lineBuf ) )
