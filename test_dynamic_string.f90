@@ -54,7 +54,11 @@ program testinger
   print *, "#" // adjustr(DynamicString('text')) // '#'
   print *, "#" // adjustl(DynamicString('       text ')) // '#' // DynamicString('usw')
 
-  buffer  = char(ds2)
+  ds2 = "abcdef"
+
+  buffer = achar(ds2)
+  buffer = achar(ds2, 4)
+  buffer = achar(ds2, 10)
   print *, buffer
 
   print *, str(DynamicString('testinger'))
@@ -63,7 +67,9 @@ program testinger
 
   !print *, cptr(ds2)
 
-  print *, lge( buffer, char(ds2) )
+  print *, lge( buffer, achar(ds2) )
+  print *, lge( ds2, 'abcdef' )
+  print *, lge( ds2, 'abxdxf' )
 
   do i = 1, 1000
     idx = mod( i,   size(strings) ) + 1

@@ -26,6 +26,7 @@ module dynamic_string
   interface str          ; module procedure ds_str                          ; end interface
   interface cptr         ; module procedure ds_cptr                         ; end interface
   interface char         ; module procedure ds_char, ds_char_l              ; end interface
+  interface achar        ; module procedure ds_achar, ds_achar_l            ; end interface
   interface delete       ; module procedure ds_delete                       ; end interface
 
   interface adjustl      ; module procedure ds_adjustl                      ; end interface
@@ -53,6 +54,7 @@ module dynamic_string
   public :: adjustr
   public :: iachar
   public :: ichar
+  public :: achar
   public :: index
   public :: len
   public :: len_trim
@@ -167,19 +169,43 @@ module dynamic_string
     _release_weak( ds )
   end function
 
+
   ! char - fixed length
   function ds_char_l( ds, length ) result(res)
     type(DynamicString_t) :: ds
     integer,   intent(in) :: length
     character(len=length) :: res
-    integer               :: idx, limit
+    integer               :: limit
 
     limit = min(_len(ds), length)
-    res(1:limit)        = _ptr(ds)
-    res(limit+1:length) = ' '
+    res(1:limit)  = _ptr(ds)
+    res(limit+1:) = ' '
     _release_weak( ds )
   end function
   
+
+  ! achar
+  function ds_achar( ds ) result(res)
+    type(DynamicString_t), intent(in) :: ds
+    character(len=1)                  :: res(_len(ds))
+    res = _array(ds)
+    _release_weak( ds )
+  end function
+
+
+  ! achar - fixed length
+  function ds_achar_l( ds, length ) result(res)
+    type(DynamicString_t), intent(in) :: ds
+    integer,   intent(in)             :: length
+    character(len=1)                  :: res(length)
+    integer                           :: limit
+
+    limit = min(_len(ds), length)
+    res(1:limit)  = _array(ds)
+    res(limit+1:) = ' '
+    _release_weak( ds )
+  end function
+
 
   ! delete
   subroutine ds_delete( ds )
@@ -239,7 +265,7 @@ module dynamic_string
   ! adjustr
   function ds_adjustr( ds ) result(res)
     type(DynamicString_t), intent(in) :: ds
-    character(len=_len(ds))             :: res
+    character(len=_len(ds))           :: res
     res = adjustr(_ptr(ds))
     _release_weak( ds )
   end function
