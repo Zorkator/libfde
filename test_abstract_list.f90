@@ -57,11 +57,13 @@ program testinger
   use var_item
   use abstract_list
   use mylist
+  use iso_c_binding
   implicit none
 
   type (List) :: l
   integer*4   :: cnt
   type (MyItem_t), pointer :: ptr
+  procedure(), pointer :: castProc => null()
 
   call al_initialize( l, vi_type_VarItem )
 
@@ -71,7 +73,21 @@ program testinger
 
   print *, MyValue( front(l) )
 
+  call cast( cfront(l), ptr )
+
   call al_delete( l )
+
+  
+
+  
+  contains
+
+  subroutine cast( c, f )
+    type(c_ptr),              intent(in) :: c
+    type(MyItem_t), pointer, intent(out) :: f
+    call c_f_pointer( c, f )
+  end subroutine
+
 
 end program
 

@@ -37,10 +37,11 @@ module type_info
   ! @param baseType    - the type's base string (e.g. real*8)
   ! @param bitSize     - the storage size of the type in bytes (=> storage_size(type))
   ! @param rank        - the rank of the type
+  ! @param castProc    - the subroutine to cast a cptr to fortran: subroutine cast( ptr_c, ptr_f )
   ! @param assignProc  - the subroutine to assign a variable: subroutine assign( lhs, rhs )
   ! @param deleteProc  - the subroutine to delete a variable: subroutine delete( var )
-  ! @param shapeProc   - the function to inspect the shape  : function getShape( var ) return(res)
-  ! @param cloneProc   - the function to clone a variable   : function getClone( var ) return(res)
+  ! @param shapeProc   - the function to inspect the shape  : subroutine shape( var, res, rank )
+  ! @param cloneProc   - the function to clone a variable   : subroutine clone( var, res )
   !*
   !PROC_EXPORT_1REF( init_TypeInfo, self )
   subroutine init_TypeInfo( self, typeId, baseType, bitSize, rank, &

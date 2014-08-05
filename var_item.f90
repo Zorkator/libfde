@@ -1,6 +1,5 @@
 
-#include "adt/var_item.fpp"
-#include "ref_status.fpp"
+#include "adt/ppUtil.xpp"
 
 module var_item
   use generic_ref
@@ -10,10 +9,21 @@ module var_item
   implicit none
   private
 
-# define _Table_nonPrimitive_types_ \
-    _np_Type(string,  type(DynamicString_t), assignProc => ds_assign_ds, deleteProc => ds_delete) \
-    _np_Type(gref,    type(GenericRef),      assignProc => gr_assign_gr, deleteProc => gr_delete) \
-    _np_Type(VarItem, type(VarItem),         assignProc => vi_assign_vi, deleteProc => vi_delete)
+# define _Table_varItem_types_ \
+    _initType_(bool,       logical)               \
+    _initType_(int8,       integer*1)             \
+    _initType_(int16,      integer*2)             \
+    _initType_(int32,      integer*4)             \
+    _initType_(int64,      integer*8)             \
+    _initType_(real32,     real*4)                \
+    _initType_(real64,     real*8)                \
+    _initType_(real128,    real*16)               \
+    _initType_(complex32,  complex*8)             \
+    _initType_(complex64,  complex*16)            \
+    _initType_(complex128, complex*32)            \
+    _initType_(c_ptr,      type(c_ptr))           \
+    _initType_(string,     type(DynamicString_t)) \
+    _initType_(gref,       type(GenericRef_t))
 
 
 ! declare dummy variables - used to determine each type's storage_size ...
@@ -67,30 +77,20 @@ module var_item
   end interface
 # undef _initType_
 
-
-  ! declare TypeInfo variables, one for each type
-  ! and set flag that they need to be initialized ...
-# define _initType_(typeId, baseType) \
-    type(TypeInfo_t), target :: _paste(vi_type_,typeId);
-
-    _Table_varItem_types_
-# undef _initType_
-    type(TypeInfo_t), target :: vi_type_VarItem
-    logical                :: is_initialized = .false.
-  
+    type(TypeInfo_t), target :: type_VarItem
 
   ! declare interfaces public
 
-    interface is_valid   ; module procedure vi_is_valid   ; end interface
-    interface typeinfo_of; module procedure vi_typeinfo_of; end interface
-    interface delete     ; module procedure vi_delete     ; end interface
+    interface is_valid    ; module procedure vi_is_valid    ; end interface
+    interface dynamic_type; module procedure vi_dynamic_type; end interface
+    interface delete      ; module procedure vi_delete      ; end interface
 
     public :: VarItem
     public :: is_valid
-    public :: typeinfo_of
+    public :: dynamic_type
     public :: delete
     public :: assignment (=)
-    public :: vi_type_VarItem
+    public :: type_VarItem
 
   ! declare predicate functions public ...
 # define _initType_(typeId, baseType) \
@@ -104,50 +104,30 @@ module var_item
   contains
 !-----------------
 
-
-  subroutine vi_initilize_module()
-    ! call type initialization for each type ...
-#   define _initType_(typeId, baseType) \
-      call init_TypeInfo( _paste(vi_type_,typeId), _str(typeId), _str(baseType) \
-                          , int(storage_size(_paste(typeId,_var)),4), 0 );
-      _Table_varItem_types_
-#   undef _initType_
-
-    ! for all non-primitive types assign procedure pointers for assignment and deletion
-#   define _np_Type(typeId, baseType, assignment, delete )  \
-      _paste(vi_type_,typeId)%assignment                   ;\
-      _paste(vi_type_,typeId)%delete                       ;\
-      
-      _Table_nonPrimitive_types_
-#   undef _np_Type
-    is_initialized = .true.
-  end subroutine
-
-
 # define _implementConstructor_(typeId, baseType)          \
     function _paste(vi_from_,typeId)( val ) result(res)   ;\
       baseType,    intent(in) :: val                      ;\
       baseType,       pointer :: ptr                      ;\
       type(VarItem_t), target :: res                      ;\
-      call vi_reshape( res, _paste(vi_type_,typeId), 0 )  ;\
+      call vi_reshape( res, static_type(val), 0 )         ;\
       call c_f_pointer( c_loc(res%data(1)), ptr )         ;\
       ptr = val                                           ;\
     end function
 
-  _implementConstructor_(bool,     logical)
-  _implementConstructor_(byte,     integer*1)
-  _implementConstructor_(shortInt, integer*2)
-  _implementConstructor_(int32,    integer*4)
-  _implementConstructor_(longInt,  integer*8)
-  _implementConstructor_(float,    real*4)
-  _implementConstructor_(double,   real*8)
-  _implementConstructor_(longDbl,  real*16)
-  _implementConstructor_(cplx,     complex*8)
-  _implementConstructor_(dblCplx,  complex*16)
-  _implementConstructor_(quadCplx, complex*32)
-  _implementConstructor_(cptr,     type(c_ptr))
-  _implementConstructor_(string,   type(DynamicString_t))
-  _implementConstructor_(gref,     type(GenericRef))
+  _implementConstructor_(bool,       logical)
+  _implementConstructor_(int8,       integer*1)
+  _implementConstructor_(int16,      integer*2)
+  _implementConstructor_(int32,      integer*4)
+  _implementConstructor_(int64,      integer*8)
+  _implementConstructor_(real32,     real*4)
+  _implementConstructor_(real64,     real*8)
+  _implementConstructor_(real128,    real*16)
+  _implementConstructor_(complex32,  complex*8)
+  _implementConstructor_(complex64,  complex*16)
+  _implementConstructor_(complex128, complex*32)
+  _implementConstructor_(c_ptr,      type(c_ptr))
+  _implementConstructor_(string,     type(DynamicString_t))
+  _implementConstructor_(gref,       type(GenericRef))
 
 
   function vi_from_charString( val ) result(res)
@@ -182,20 +162,20 @@ module var_item
       call c_f_pointer( c_loc(self%data(1)), res )        ;\
     end function
 
-  _implementGetter_(bool,     logical)
-  _implementGetter_(byte,     integer*1)
-  _implementGetter_(shortInt, integer*2)
-  _implementGetter_(int32,    integer*4)
-  _implementGetter_(longInt,  integer*8)
-  _implementGetter_(float,    real*4)
-  _implementGetter_(double,   real*8)
-  _implementGetter_(longDbl,  real*16)
-  _implementGetter_(cplx,     complex*8)
-  _implementGetter_(dblCplx,  complex*16)
-  _implementGetter_(quadCplx, complex*32)
-  _implementGetter_(cptr,     type(c_ptr))
-  _implementGetter_(string,   type(DynamicString_t))
-  _implementGetter_(gref,     type(GenericRef))
+  _implementGetter_(bool,       logical)
+  _implementGetter_(int8,       integer*1)
+  _implementGetter_(int16,      integer*2)
+  _implementGetter_(int32,      integer*4)
+  _implementGetter_(int64,      integer*8)
+  _implementGetter_(real32,     real*4)
+  _implementGetter_(real64,     real*8)
+  _implementGetter_(real128,    real*16)
+  _implementGetter_(complex32,  complex*8)
+  _implementGetter_(complex64,  complex*16)
+  _implementGetter_(complex128, complex*32)
+  _implementGetter_(c_ptr,      type(c_ptr))
+  _implementGetter_(string,     type(DynamicString_t))
+  _implementGetter_(gref,       type(GenericRef))
 
 
 # define _implementSetter_(typeId, baseType)              \
@@ -208,20 +188,20 @@ module var_item
       ptr = rhs                                          ;\
     end subroutine
 
-  _implementSetter_(bool,     logical)
-  _implementSetter_(byte,     integer*1)
-  _implementSetter_(shortInt, integer*2)
-  _implementSetter_(int32,    integer*4)
-  _implementSetter_(longInt,  integer*8)
-  _implementSetter_(float,    real*4)
-  _implementSetter_(double,   real*8)
-  _implementSetter_(longDbl,  real*16)
-  _implementSetter_(cplx,     complex*8)
-  _implementSetter_(dblCplx,  complex*16)
-  _implementSetter_(quadCplx, complex*32)
-  _implementSetter_(cptr,     type(c_ptr))
-  _implementSetter_(string,   type(DynamicString_t))
-  _implementSetter_(gref,     type(GenericRef))
+  _implementSetter_(bool,       logical)
+  _implementSetter_(int8,       integer*1)
+  _implementSetter_(int16,      integer*2)
+  _implementSetter_(int32,      integer*4)
+  _implementSetter_(int64,      integer*8)
+  _implementSetter_(real32,     real*4)
+  _implementSetter_(real64,     real*8)
+  _implementSetter_(real128,    real*16)
+  _implementSetter_(complex32,  complex*8)
+  _implementSetter_(complex64,  complex*16)
+  _implementSetter_(complex128, complex*32)
+  _implementSetter_(c_ptr,      type(c_ptr))
+  _implementSetter_(string,     type(DynamicString_t))
+  _implementSetter_(gref,       type(GenericRef))
 
 
   subroutine vi_assign_charString( lhs, rhs )
@@ -259,20 +239,20 @@ module var_item
       end if                                                        ;\
     end subroutine
 
-  _implementAssignTo_(bool,     logical)
-  _implementAssignTo_(byte,     integer*1)
-  _implementAssignTo_(shortInt, integer*2)
-  _implementAssignTo_(int32,    integer*4)
-  _implementAssignTo_(longInt,  integer*8)
-  _implementAssignTo_(float,    real*4)
-  _implementAssignTo_(double,   real*8)
-  _implementAssignTo_(longDbl,  real*16)
-  _implementAssignTo_(cplx,     complex*8)
-  _implementAssignTo_(dblCplx,  complex*16)
-  _implementAssignTo_(quadCplx, complex*32)
-  _implementAssignTo_(cptr,     type(c_ptr))
-  _implementAssignTo_(string,   type(DynamicString_t))
-  _implementAssignTo_(gref,     type(GenericRef))
+  _implementAssignTo_(bool,       logical)
+  _implementAssignTo_(int8,       integer*1)
+  _implementAssignTo_(int16,      integer*2)
+  _implementAssignTo_(int32,      integer*4)
+  _implementAssignTo_(int64,      integer*8)
+  _implementAssignTo_(real32,     real*4)
+  _implementAssignTo_(real64,     real*8)
+  _implementAssignTo_(real128,    real*16)
+  _implementAssignTo_(complex32,  complex*8)
+  _implementAssignTo_(complex64,  complex*16)
+  _implementAssignTo_(complex128, complex*32)
+  _implementAssignTo_(c_ptr,      type(c_ptr))
+  _implementAssignTo_(string,     type(DynamicString_t))
+  _implementAssignTo_(gref,       type(GenericRef))
 
 
 # define _implementPredicate_(typeId, baseType)                   \
@@ -281,20 +261,20 @@ module var_item
       res = associated( self%typeInfo, _paste(vi_type_,typeId) ) ;\
     end function
 
-  _implementPredicate_(bool,     logical)
-  _implementPredicate_(byte,     integer*1)
-  _implementPredicate_(shortInt, integer*2)
-  _implementPredicate_(int32,    integer*4)
-  _implementPredicate_(longInt,  integer*8)
-  _implementPredicate_(float,    real*4)
-  _implementPredicate_(double,   real*8)
-  _implementPredicate_(longDbl,  real*16)
-  _implementPredicate_(cplx,     complex*8)
-  _implementPredicate_(dblCplx,  complex*16)
-  _implementPredicate_(quadCplx, complex*32)
-  _implementPredicate_(cptr,     type(c_ptr))
-  _implementPredicate_(string,   type(DynamicString_t))
-  _implementPredicate_(gref,     type(GenericRef))
+  _implementPredicate_(bool,       logical)
+  _implementPredicate_(int8,       integer*1)
+  _implementPredicate_(int16,      integer*2)
+  _implementPredicate_(int32,      integer*4)
+  _implementPredicate_(int64,      integer*8)
+  _implementPredicate_(real32,     real*4)
+  _implementPredicate_(real64,     real*8)
+  _implementPredicate_(real128,    real*16)
+  _implementPredicate_(complex32,  complex*8)
+  _implementPredicate_(complex64,  complex*16)
+  _implementPredicate_(complex128, complex*32)
+  _implementPredicate_(c_ptr,      type(c_ptr))
+  _implementPredicate_(string,     type(DynamicString_t))
+  _implementPredicate_(gref,       type(GenericRef))
 
 
   logical function vi_is_valid( self ) result(res)
@@ -303,7 +283,7 @@ module var_item
   end function
 
 
-  function vi_typeinfo_of( self ) result(res)
+  function vi_dynamic_type( self ) result(res)
     type(VarItem_t), intent(in) :: self
     type(TypeInfo_t),   pointer :: res
 
