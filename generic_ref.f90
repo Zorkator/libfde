@@ -80,12 +80,12 @@ module generic_ref
     type(c_ptr),         intent(in) :: cptr
     integer*4,           intent(in) :: bits
     type(TypeInfo_t),        target :: ti
-    character(len=bits/8),  pointer :: ptr
+    character(len=bits/8),  pointer :: fptr
     logical                         :: needInit
 
-    call c_f_pointer( cptr, ptr )
+    call c_f_pointer( cptr, fptr )
     call bs_set_attribute( self%ref_str, attrib_volatile )
-    call bs_assign_cs( self%ref_str, ptr )
+    call bs_assign_cs( self%ref_str, fptr )
     needInit      = .not. ti%initialized
     self%typeInfo => ti
   end function
