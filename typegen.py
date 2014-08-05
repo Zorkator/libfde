@@ -66,7 +66,7 @@ class ReferenceType(object):
     #
     gen_itf = """
     {access} :: ref
-    {access} :: typeinfo
+    {access} :: static_type
     """,
   
     # parameters:
@@ -78,7 +78,7 @@ class ReferenceType(object):
     interface ref        ; module procedure RefType_encode_{typeId}  ; end interface
     interface {derefName}; module procedure RefType_decode_{typeId}  ; end interface
     interface is_{typeId}; module procedure RefType_is_{typeId}      ; end interface
-    interface typeinfo      ; module procedure RefType_typeinfo_{typeId}; end interface
+    interface static_type; module procedure RefType_typeinfo_{typeId}; end interface
     {access} :: {derefName}
     {access} :: is_{typeId}
     """,
@@ -94,7 +94,7 @@ class ReferenceType(object):
     proc_itf = """
     interface {typeId}_from_ref; module procedure RefType_decode_{typeId}  ; end interface
     interface is_{typeId}      ; module procedure RefType_is_{typeId}      ; end interface
-    interface typeinfo         ; module procedure RefType_typeinfo_{typeId}; end interface
+    interface static_type      ; module procedure RefType_typeinfo_{typeId}; end interface
     {access} :: ref_from_{typeId}
     {access} :: {typeId}_from_ref
     {access} :: is_{typeId}
@@ -113,7 +113,7 @@ class ReferenceType(object):
       type({typeId}_wrap_t),           target :: wrap
     
       wrap%ptr => val
-      call gr_set_TypeReference( res, c_loc(wrap), int(storage_size(wrap),4), typeinfo(val) )
+      call gr_set_TypeReference( res, c_loc(wrap), int(storage_size(wrap),4), static_type(val) )
     end function
     """,
     
@@ -130,7 +130,7 @@ class ReferenceType(object):
       type({typeId}_wrap_t), target :: wrap
     
       wrap%ptr => val
-      call gr_set_TypeReference( res, c_loc(wrap), int(storage_size(wrap),4), typeinfo(val) )
+      call gr_set_TypeReference( res, c_loc(wrap), int(storage_size(wrap),4), static_type(val) )
     end function
     """,
     
@@ -216,7 +216,7 @@ class ReferenceType(object):
     function RefType_is_{typeId}( self ) result(res)
       type(GenericRef_t), intent(in) :: self
       logical                        :: res
-      res = associated( typeOf(self), type_{typeId} )
+      res = associated( dynamic_type(self), type_{typeId} )
     end function
     """,
 

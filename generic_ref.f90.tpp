@@ -19,13 +19,13 @@ module generic_ref
     module procedure gr_assign_gr
   end interface
 
-  interface rank    ; module procedure gr_rank   ; end interface
-  interface shape   ; module procedure gr_shape  ; end interface
-  interface clone   ; module procedure gr_clone  ; end interface
-  interface cptr    ; module procedure gr_cptr   ; end interface
-  interface delete  ; module procedure gr_delete ; end interface
-  interface free    ; module procedure gr_free   ; end interface
-  interface typeOf  ; module procedure gr_typeOf ; end interface
+  interface rank        ; module procedure gr_rank        ; end interface
+  interface shape       ; module procedure gr_shape       ; end interface
+  interface clone       ; module procedure gr_clone       ; end interface
+  interface cptr        ; module procedure gr_cptr        ; end interface
+  interface delete      ; module procedure gr_delete      ; end interface
+  interface free        ; module procedure gr_free        ; end interface
+  interface dynamic_type; module procedure gr_dynamic_type; end interface
 
   ! declare public interfaces 
 
@@ -38,12 +38,12 @@ module generic_ref
   public :: cptr
   public :: delete
   public :: free
-  public :: typeOf
+  public :: dynamic_type
 
   !_TypeReference_declare( public, ref, type(GenericRef_t), scalar, \
   !     assignProc = gr_assign_gr, \
   !     deleteProc = gr_delete,    \
-  !     cloneProc  = ref_cloner,  \
+  !     cloneProc  = ref_cloner,   \
   !     derefName  = deref )
 
 !-----------------
@@ -174,7 +174,7 @@ module generic_ref
   end function
 
   
-  function gr_typeOf( self ) result(res)
+  function gr_dynamic_type( self ) result(res)
     type(GenericRef_t), intent(in) :: self
     type(TypeInfo_t),      pointer :: res
     if (associated( self%typeInfo )) then; res => self%typeInfo

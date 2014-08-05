@@ -59,8 +59,9 @@ program testinger
 
   ds2 = "abcdef"
 
-  buffer = achar(ds2)
-  buffer = achar(ds2, 4)
+  buffer = ' '
+  buffer(:len(ds2)) = achar(ds2)
+  buffer(:4) = achar(ds2, 4)
   buffer = achar(ds2, 10)
   print *, buffer
 
