@@ -16,7 +16,7 @@ module base_types
   !_TypeReference_declare( public, complex32,  complex*8,   scalar )
   !_TypeReference_declare( public, complex64,  complex*16,  scalar )
   !_TypeReference_declare( public, complex128, complex*32,  scalar )
-  !_TypeReference_declare( public, c_ptr,      type(c_ptr), scalar )
+  !_TypeReference_declare( public, c_void_ptr, type(c_ptr), scalar )
 
   contains
 
