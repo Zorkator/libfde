@@ -1,6 +1,5 @@
 
 #include "adt/var_item.fpp"
-#include "adt/ref_status.fpp"
 
 module var_item
   use iso_c_binding
@@ -20,14 +19,18 @@ module var_item
 # define _initType_(typeId, baseType) \
     , storage_size(_paste(typeId,_var))
 
-  integer*4, parameter :: maxBytes = max(0 _Table_varItem_types_)/8
+# define _chunkType   integer*8
+  _chunkType, parameter :: chunk_var = 0
+  integer*4,  parameter :: maxBytes  = max(0 _Table_varItem_types_)/8
+  integer*4,  parameter :: chunkSize = storage_size(chunk_var)/8
+  integer*4,  parameter :: numChunks = ceiling( maxBytes / real(chunkSize) )
 # undef _initType_
 
 
   type, public :: VarItem_t
     private
-    integer*1                 :: data(maxBytes) = 0
-    type(TypeInfo_t), pointer :: typeInfo       => null()
+    _chunkType                :: data(numChunks) = 0
+    type(TypeInfo_t), pointer :: typeInfo        => null()
   end type
 
   ! declare VarItemOf(<type>) interface ...
@@ -82,8 +85,9 @@ module var_item
 # undef _initType_
 
   !_TypeReference_declare( public, VarItem, type(VarItem_t), scalar, \
-  !     assignProc = vi_assign_vi, \
-  !     deleteProc = vi_delete,    \
+  !     initProc   = vi_initialize, \
+  !     assignProc = vi_assign_vi,  \
+  !     deleteProc = vi_delete,     \
   !     cloneProc  = _default )
 
   
@@ -93,6 +97,13 @@ module var_item
 
   !_TypeReference_implementAll()
   
+  
+  subroutine vi_initialize( self )
+    type(VarItem_t) :: self
+    self%data     = 0
+    self%typeInfo => null()
+  end subroutine
+
 
 ! implement constructor routines
 
@@ -304,13 +315,14 @@ module var_item
     integer,                  intent(in) :: hardness
 
     if (.not. associated( self%typeInfo, new_typeInfo )) then
+      ! check if old type needs to be deleted ...
       if (associated( self%typeInfo )) then
         if (associated( self%typeInfo%deleteProc )) &
           call self%typeInfo%deleteProc( self%data )
       end if
-      ! IMPORTANT: the new type might hold a RefStatus (by convention at the structure begin).
-      !   We initialize it according to given hardness
-      _ref_init( self%data, hardness )
+      ! check if new type needs to be initialized ...
+      if (associated( new_typeInfo%initProc )) &
+        call new_typeInfo%initProc( self%data, hardness )
       self%typeInfo => new_typeInfo
     end if
   end subroutine

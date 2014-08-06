@@ -111,8 +111,9 @@ module dynamic_string
 
 
   !_TypeReference_declare( public, DynamicString, type(DynamicString_t), scalar, \
-  !     assignProc = ds_assign_ds, \
-  !     deleteProc = ds_delete,    \
+  !     initProc   = ds_initialize, \
+  !     assignProc = ds_assign_ds,  \
+  !     deleteProc = ds_delete,     \
   !     cloneProc  = _default )
 
 !-----------------
@@ -122,9 +123,10 @@ module dynamic_string
   !_TypeReference_implementAll()
 
 
-  subroutine ds_initialize( ds )
+  subroutine ds_initialize( ds, hardness )
     type(DynamicString_t) :: ds
-    call bs_init( ds%str )
+    integer               :: hardness
+    call bs_init( ds%str, hardness )
   end subroutine
 
 

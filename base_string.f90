@@ -25,12 +25,13 @@ module base_string
 
   contains
 
-  subroutine bs_init( bs )
+  subroutine bs_init( bs, hardness )
     type(BaseString_t) :: bs
+    integer            :: hardness
 
     bs%ptr     => null()
     bs%len     =  0
-    bs%refstat = _ref_HardLent
+    _ref_init( bs%refstat, hardness )
   end subroutine
 
 

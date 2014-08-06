@@ -41,9 +41,10 @@ module generic_ref
   public :: dynamic_type
 
   !_TypeReference_declare( public, ref, type(GenericRef_t), scalar, \
-  !     assignProc = gr_assign_gr, \
-  !     deleteProc = gr_delete,    \
-  !     cloneProc  = _default,     \
+  !     initProc   = gr_initialize, \
+  !     assignProc = gr_assign_gr,  \
+  !     deleteProc = gr_delete,     \
+  !     cloneProc  = _default,      \
   !     derefName  = deref )
 
 !-----------------
@@ -51,6 +52,14 @@ module generic_ref
 !-----------------
 
   !_TypeReference_implementAll()
+
+
+  subroutine gr_initialize( self, hardness )
+    type(GenericRef_t) :: self
+    integer            :: hardness
+    call bs_init( self%ref_str, hardness )
+    self%typeInfo => null()
+  end subroutine
 
 
   subroutine gr_assign_gr( lhs, rhs )

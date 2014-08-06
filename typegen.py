@@ -237,6 +237,7 @@ class ReferenceType(object):
     #   typeId:     type identifier
     #   baseType:   fortran base type | type(...) | procedure(...)
     #   dimType:    ('', ', dimension(:,...)')[has_dimension]
+    #   initProc:   ', initProc = <funcId> | None'
     #   assignProc: ', assignProc = <funcId> | None'
     #   deleteProc: ', deleteProc = <funcId> | None'
     #   shapeProc:  ', shapeProc = <funcId> | None'
@@ -250,7 +251,7 @@ class ReferenceType(object):
       if (.not. res%initialized) &
         call init_TypeInfo( res, '{typeId}', '{baseType}' &
                             , int(storage_size(self),4) &
-                            , size(shape(self)){assignProc}{deleteProc}{shapeProc} &
+                            , size(shape(self)){initProc}{assignProc}{deleteProc}{shapeProc} &
                             , castProc = RefType_c2f_cast_{typeId} &
                             , cloneProc = RefType_clone_{typeId} )
     end function
@@ -303,6 +304,7 @@ class ReferenceType(object):
         print 'WARNING: given type procs %s are ignored for procedure type "%s"' % (self._typeProcs, typeId)
 
 
+    self.initProc    = ', initProc = %s' % self._typeProcs.get('initProc')
     self.assignProc  = ', assignProc = %s' % self._typeProcs.get('assignProc')
     self.deleteProc  = ', deleteProc = %s' % self._typeProcs.get('deleteProc')
     self.shapeProc   = ('', ', shapeProc  = RefType_inspect_%s' % typeId)[self._isArray]
@@ -381,8 +383,8 @@ class ReferenceType(object):
       lineBuf = []
 
       for line in f.readlines():
-        lineBuf.append( line )
-        if line.rstrip().endswith('\\'):
+        lineBuf.append( line.rstrip() )
+        if lineBuf[-1].endswith('\\'):
           continue
         
         lines = '!' + ''.join( _class._purgeLines( lineBuf ) )
@@ -400,7 +402,7 @@ class ReferenceType(object):
               decl[1].implement( outChnl.write )
           
           else:
-            outChnl.write( ''.join( lineBuf ) )
+            outChnl.write( '\n'.join( lineBuf ) + '\n' )
         lineBuf = []
 
       outChnl.close()

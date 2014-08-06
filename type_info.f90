@@ -14,6 +14,7 @@ module type_info
 
     ! type specific subroutines called by generic interfaces 
     procedure(), nopass, pointer :: castProc    => null()
+    procedure(), nopass, pointer :: initProc    => null()
     procedure(), nopass, pointer :: assignProc  => null()
     procedure(), nopass, pointer :: shapeProc   => null()
     procedure(), nopass, pointer :: cloneProc   => null()
@@ -38,6 +39,7 @@ module type_info
   ! @param bitSize     - the storage size of the type in bytes (=> storage_size(type))
   ! @param rank        - the rank of the type
   ! @param castProc    - the subroutine to cast a cptr to fortran: subroutine cast( ptr_c, ptr_f )
+  ! @param initProc    - the subroutine to initialize a variable:  subroutine init( var, hardness )
   ! @param assignProc  - the subroutine to assign a variable: subroutine assign( lhs, rhs )
   ! @param deleteProc  - the subroutine to delete a variable: subroutine delete( var )
   ! @param shapeProc   - the function to inspect the shape  : subroutine shape( var, res, rank )
@@ -45,12 +47,12 @@ module type_info
   !*
   !PROC_EXPORT_1REF( init_TypeInfo, self )
   subroutine init_TypeInfo( self, typeId, baseType, bitSize, rank, &
-                            castProc, assignProc, deleteProc, shapeProc, cloneProc )
+                            castProc, initProc, assignProc, deleteProc, shapeProc, cloneProc )
     type(TypeInfo_t),  intent(inout) :: self
     character(len=*),     intent(in) :: typeId, baseType
     integer*4,            intent(in) :: bitSize
     integer*4,            intent(in) :: rank
-    procedure(),            optional :: castProc, assignProc, deleteProc, shapeProc, cloneProc
+    procedure(),            optional :: castProc, initProc, assignProc, deleteProc, shapeProc, cloneProc
 
     self%typeId   = adjustl(typeId);   self%typeId_term   = 0
     self%baseType = adjustl(baseType); self%baseType_term = 0
@@ -59,12 +61,14 @@ module type_info
 
     ! pre-initialize optional arguments
     self%castProc   => null()
+    self%initProc   => null()
     self%assignProc => null()
     self%deleteProc => null()
     self%shapeProc  => null()
     self%cloneProc  => null()
 
     if (present(castProc))   self%castProc   => castProc
+    if (present(initProc))   self%initProc   => initProc
     if (present(assignProc)) self%assignProc => assignProc
     if (present(deleteProc)) self%deleteProc => deleteProc
     if (present(shapeProc))  self%shapeProc  => shapeProc
