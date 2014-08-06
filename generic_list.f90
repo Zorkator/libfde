@@ -327,7 +327,7 @@ program testinger
   itr = frontInsert(vlist%super)
   do i = 1, 20
     write(buff, '(I1)') i
-    call insert( itr, ValListItem( VarItem( trim(buff) )) )
+    call insert( itr, ValListItem( VarItemOf( trim(buff) )) )
   end do
 
   itr = iterate( vlist%super )

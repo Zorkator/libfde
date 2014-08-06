@@ -79,10 +79,12 @@ program testinger
   strPtr = '  x' // strPtr // 'x  '
   print *, str(ds2)
 
-  gref = ref(strRef)
-  if (is_ref(gref)) then
-    print *, is_DynamicString(deref(gref))
-  end if
+  gref = clone(strRef)
+  !if (is_ref(gref)) then
+    if (is_DynamicString(gref)) &
+      print *, str(DynamicString(gref))
+  !end if
+  call free(gref)
 
   print *, lge( buffer, achar(ds2) )
   print *, lge( ds2, 'abcdef' )

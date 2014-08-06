@@ -25,7 +25,7 @@ class ReferenceType(object):
   _baseType  = '\s*([\w *()]+)'   #< e.g. integer*4, type(Struct), character(*), <interfaceId>, ...
   _dimType   = '\s*([\w ,:()]+)'  #< e.g. scalar, dimension(:,:), procedure
   _keyAssign = '\s*(\w+)\s*=\s*(\w+)\s*'
-  _procItf   = '\s*procedure\s*\(%s\)\s*' % _ident          #< procedure interface
+  _procItf   = '\s*procedure\s*\(\s*\w*\s*\)\s*'            #< procedure interface
   _dimSpec   = '\s*dimension\s*\(\s*:(?:\s*,\s*:)*\s*\)\s*' #< dimension specification
   _keySpecs  = '((?:,\s*\w+\s*=\s*\w+\s*)*)'
   _typeDecl  = '^\s*!\s*_TypeReference_declare\(%s,%s,%s,%s%s\)' % (_ident, _ident, _baseType, _dimType, _keySpecs)
@@ -179,9 +179,22 @@ class ReferenceType(object):
     """,
     
     # parameters:
-    #   clonerFunc: id of clone function
+    #   cloneFuncId: id of clone function
     func_clone = """
-      tgt => {clonerFunc}( src )
+      tgt => {cloneFuncId}( src )
+    """,
+
+    # parameters:
+    #   cloneFuncId: id of clone function
+    #   typeId:      type identifier
+    #   baseType:    fortran base type | type(...)
+    cloneFunc = """
+    function {cloneFuncId}( val ) result(res)
+      {baseType}, intent(in) :: val
+      {baseType},    pointer :: res
+      allocate( res ) !< initializes res as default {typeId}
+      res = val
+    end function
     """,
 
     # parameters:
@@ -269,10 +282,10 @@ class ReferenceType(object):
 
     # sanity check
     if not (self._isScalar ^ self._isArray):
-      raise TypeError('invalid dimension specification "%s"' % dimType)
+      raise TypeError('ERROR at processing type "%s": invalid dimension specification "%s"' % (typeId, dimType))
 
     if access not in ('public', 'private'):
-      raise ValueError('invalid access specification "%s"' % access)
+      raise ValueError('ERROR at processing type "%s": invalid access specification "%s"' % (typeId, access))
 
     self.access    = access
     self.typeId    = typeId
@@ -286,13 +299,26 @@ class ReferenceType(object):
 
     if self._typeProcs:
       self.keySpecs = ', ' + ', '.join( '%s = %s' % i for i in self._keySpecs.items() )
+      if self._isProc:
+        print 'WARNING: given type procs %s are ignored for procedure type "%s"' % (self._typeProcs, typeId)
 
-    self.assignProc = ', assignProc = %s' % self._typeProcs.get('assignProc')
-    self.deleteProc = ', deleteProc = %s' % self._typeProcs.get('deleteProc')
-    self.shapeProc  = ('', ', shapeProc  = RefType_inspect_%s' % typeId)[self._isArray]
-    self.clonerFunc = self._typeProcs.get('cloneProc')
-    self.cloneType  = ('alloc_clone', 'func_clone')[bool(self.clonerFunc)]
-    self.cloneBy    = self._template[self.cloneType].format( **self.__dict__ )
+
+    self.assignProc  = ', assignProc = %s' % self._typeProcs.get('assignProc')
+    self.deleteProc  = ', deleteProc = %s' % self._typeProcs.get('deleteProc')
+    self.shapeProc   = ('', ', shapeProc  = RefType_inspect_%s' % typeId)[self._isArray]
+    self.cloneFuncId = self._typeProcs.get('cloneProc')
+    self.cloneType   = ('alloc_clone', 'func_clone')[bool(self.cloneFuncId)]
+
+    if self.cloneFuncId == '_default':
+      if self._isArray:
+        raise ValueError('ERROR at processing type "%s": _default-cloneProc supports only scalar data types' % typeId)
+
+      self.cloneFuncId = '%s_cloneFunc' % typeId
+      self._cloneFunc  = self._template['cloneFunc']
+    else:
+      self._cloneFunc  = ''
+
+    self.cloneBy     = self._template[self.cloneType].format( **self.__dict__ )
    
     self._info     = self._template['info'] 
     self._type     = self._template['type']
@@ -330,6 +356,7 @@ class ReferenceType(object):
       out( self._c2fCast.format( **self.__dict__ ) )
       out( self._cloner.format( **self.__dict__ ) )
       out( self._inspect.format( **self.__dict__ ) )
+      out( self._cloneFunc.format( **self.__dict__ ) )
       out( self._typeChk.format( **self.__dict__ ) )
       out( self._typeinfo.format( **self.__dict__ ) )
       self._implemented = True

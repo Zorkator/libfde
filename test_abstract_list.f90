@@ -56,6 +56,7 @@ end module
 program testinger
   use var_item
   use abstract_list
+  use base_types
   use mylist
   use iso_c_binding
   implicit none
@@ -63,9 +64,10 @@ program testinger
   type (List) :: l
   integer*4   :: cnt
   type (MyItem_t), pointer :: ptr
+  type (VarItem_t)         :: var
   procedure(), pointer :: castProc => null()
 
-  call al_initialize( l, vi_type_VarItem )
+  call al_initialize( l, static_type(1) )
 
   do cnt = 1, 10
     call al_append_item( l, newItem( cnt ) )

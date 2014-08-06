@@ -43,7 +43,7 @@ module generic_ref
   !_TypeReference_declare( public, ref, type(GenericRef_t), scalar, \
   !     assignProc = gr_assign_gr, \
   !     deleteProc = gr_delete,    \
-  !     cloneProc  = ref_cloner,   \
+  !     cloneProc  = _default,     \
   !     derefName  = deref )
 
 !-----------------
@@ -166,14 +166,6 @@ module generic_ref
   end subroutine
 
 
-  function ref_cloner( val ) result(res)
-    type(GenericRef_t), intent(in) :: val
-    type(GenericRef_t),    pointer :: res
-    allocate( res ) !< initializes res as default GenericRef
-    res = val
-  end function
-
-  
   function gr_dynamic_type( self ) result(res)
     type(GenericRef_t), intent(in) :: self
     type(TypeInfo_t),      pointer :: res

@@ -5,36 +5,36 @@ program testinger
   use var_item
   use generic_ref
   use type_info
+  use base_types
   use dynamic_string
-  use type_references
   implicit none
 
   type(VarItem_t)       :: v1, v2
   type(TypeInfo_t)      :: ti
   integer*4             :: intvar
   type(DynamicString_t) :: ds
-  type(GenericRef)      :: gr, gr2
+  type(GenericRef_t)      :: gr, gr2
 
   print *, "VarItem: ",       storage_size(v1)/8
   print *, "DynamicString: ", storage_size(ds)/8
   print *, "GenericRef: ",    storage_size(gr)/8
 
-  v1 = VarItem(345597)
+  v1 = VarItemOf(345597)
   print *, int32(v1)
-  v1 = VarItem(34.55)
-  print *, float(v1)
+  v1 = VarItemOf(34.55)
+  print *, real32(v1)
 
   print *, is_valid(v1)
-  print *, is_float(v1)
+  print *, is_real32(v1)
 
-  ti = typeinfo_of(v1)
+  ti = dynamic_type(v1)
   print *, ti%typeId
 
-  v1 = VarItem(DynamicString('testinger'))
+  v1 = VarItemOf(DynamicString('testinger'))
   v1 = 5.34
   v1 = DynamicString("testinger")
   v1 = 'bla & text'
-  v1 = VarItem('bla & text')
+  v1 = VarItemOf('bla & text')
   v1 = ref(gr)
 
   v2 = v1
@@ -51,6 +51,9 @@ program testinger
     gr = deref(gr)
   end do
   v1 = int32(gr)
+
+  gr = ref(v1)
+  v2 = VarItem(gr)
 
   call delete(ds)
   call delete(gr)
@@ -82,11 +85,11 @@ end
     _baseType,        pointer :: ptr   ;\
     type(VarItem_t)           :: vi    ;\
     type(TypeInfo_t), pointer :: ti    ;\
-    vi  = VarItem(val)                 ;\
+    vi  = VarItemOf(val)               ;\
     vi  = val                          ;\
     ptr => _typeId(vi)                 ;\
     val = vi                           ;\
-    ti  => typeinfo_of(vi)             ;\
+    ti  => dynamic_type(vi)            ;\
     print *, ti%typeId, ti%baseType    ;\
     print *, _paste(is_,_typeId)( vi ) ;\
     print *, is_valid(vi)              ;\
@@ -95,18 +98,18 @@ end
     _finish(val)                       ;\
   end subroutine
 
-  _implementTest_(bool,     logical, _nop)
-  _implementTest_(byte,     integer*1, _nop)
-  _implementTest_(shortInt, integer*2, _nop)
-  _implementTest_(int32,    integer*4, _nop)
-  _implementTest_(longInt,  integer*8, _nop)
-  _implementTest_(float,    real*4, _nop)
-  _implementTest_(double,   real*8, _nop)
-  _implementTest_(longDbl,  real*16, _nop)
-  _implementTest_(cplx,     complex*8, _nop)
-  _implementTest_(dblCplx,  complex*16, _nop)
-  _implementTest_(quadCplx, complex*32, _nop)
-  _implementTest_(cptr,     type(c_ptr), _nop)
-  _implementTest_(string,   type(DynamicString_t), _delete)
-  _implementTest_(gref,     type(GenericRef), _delete)
+  _implementTest_(bool,       logical, _nop)
+  _implementTest_(int8,       integer*1, _nop)
+  _implementTest_(int16,      integer*2, _nop)
+  _implementTest_(int32,      integer*4, _nop)
+  _implementTest_(int64,      integer*8, _nop)
+  _implementTest_(real32,     real*4, _nop)
+  _implementTest_(real64,     real*8, _nop)
+  _implementTest_(real128,    real*16, _nop)
+  _implementTest_(complex32,  complex*8, _nop)
+  _implementTest_(complex64,  complex*16, _nop)
+  _implementTest_(complex128, complex*32, _nop)
+  _implementTest_(c_void_ptr, type(c_ptr), _nop)
+  _implementTest_(string,     type(DynamicString_t), _delete)
+  _implementTest_(gref,       type(GenericRef_t), _delete)
 

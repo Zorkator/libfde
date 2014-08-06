@@ -47,7 +47,6 @@ module dynamic_string
   public :: str, cptr
   public :: char
   public :: delete
-  public :: ds_initialize, ds_assign_ds, ds_delete
   public :: attrib_permanent, attrib_volatile
 
   public :: adjustl
@@ -111,7 +110,10 @@ module dynamic_string
     call bs_release_weak( ds%str )
 
 
-  !_TypeReference_declare( public, DynamicString, type(DynamicString_t), scalar, assignProc = ds_assign_ds, deleteProc = ds_delete )
+  !_TypeReference_declare( public, DynamicString, type(DynamicString_t), scalar, \
+  !     assignProc = ds_assign_ds, \
+  !     deleteProc = ds_delete,    \
+  !     cloneProc  = _default )
 
 !-----------------
   contains
