@@ -17,7 +17,10 @@ mk_INCLUDE_PATHLIST = -I. -I./include
 
 mk_TAG              = $(F90C).$(CFG).$(ARCH)
 
-BASE_OBJ = type_info.o base_string.o generic_ref.o base_types.o dynamic_string.o
+.SECONDARY:
+
+TPP_FILES = $(wildcard *.tpp)
+BASE_OBJ  = type_info.o base_string.o generic_ref.o base_types.o dynamic_string.o
 
 all: clean dynstring gref varitem alist
 
@@ -39,7 +42,7 @@ alist: $(BASE_OBJ) var_item.o abstract_list.o test_abstract_list.o
 	$(mk_F90C) $(mk_F90_FLAGS) $(mk_INCLUDE_PATHLIST) $? -o $@.$(mk_TAG)
 
 clean:
-	rm -f *.mod *.o *.debug.* *.release.*
+	rm -f *.mod *.o *.debug.* *.release.* $(TPP_FILES:%.tpp=%)
 
 
 %.f90: %.f90.tpp
