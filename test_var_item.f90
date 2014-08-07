@@ -52,8 +52,8 @@ program testinger
   print *, real32(v1)
   intvar = 0
 
-  do i=1,5000
-    do j=1,5000
+  do i=1,500
+    do j=1,500
       v2 = v1
       intvar = intvar + int32(v1)
     end do

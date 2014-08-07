@@ -1,11 +1,11 @@
 
 F90C ?= gfortran
 CFG  ?= debug
-ARCH ?= 64
+ARCH ?= 32
 
 mk_F90_FLAGS_gfortran_debug   = -ggdb -cpp -ffree-line-length-none
 mk_F90_FLAGS_gfortran_release = -O3 -cpp -ffree-line-length-none
-mk_F90C_gfortran              = gfortran
+mk_F90C_gfortran              = gfortran-4.9
 
 mk_F90_FLAGS_ifort_debug      = -g -fpp -allow nofpp-comments 
 mk_F90_FLAGS_ifort_release    = -O3 -fpp -allow nofpp-comments 

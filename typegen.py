@@ -308,7 +308,9 @@ class ReferenceType(object):
     self.assignProc  = ', assignProc = %s' % self._typeProcs.get('assignProc')
     self.deleteProc  = ', deleteProc = %s' % self._typeProcs.get('deleteProc')
     self.shapeProc   = ('', ', shapeProc  = RefType_inspect_%s' % typeId)[self._isArray]
-    self.cloneFuncId = self._typeProcs.get('cloneProc')
+    self.cloneFuncId = self._typeProcs.get('cloneProc', '') 
+    if self.cloneFuncId.title() == 'None':
+      self.cloneFuncId = ''
     self.cloneType   = ('alloc_clone', 'func_clone')[bool(self.cloneFuncId)]
 
     if self.cloneFuncId == '_default':
