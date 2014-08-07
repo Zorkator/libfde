@@ -22,31 +22,22 @@ module type_references
 
   public :: simpleCall, func, sub_a, func_a
 
-  !_TypeReference_declare( public, int32,    integer*4, scalar )
   !_TypeReference_declare( public, intXY,    integer*4, dimension(:,:) )
-  !_TypeReference_declare( public, real32,   real*4,    scalar, cloneProc = float_cloner, deleteProc = float_clear )
   !_TypeReference_declare( public, CallBack, procedure(simpleCall),  scalar )
   !_TypeReference_declare( public, CalcFunc, procedure(func),  scalar )
-  !_TypeReference_declare( public, ADing, type(Ding),  scalar )
+  !_TypeReference_declare( public, ADing, type(Ding),  scalar, cloneProc = _default, deleteProc = ding_clear )
 
   contains
 
   !_TypeReference_implementAll()
 
-  function float_cloner( val ) result(res)
-    real*4, intent(in) :: val
-    real*4,    pointer :: res
-    print *, 'float_cloner'
-    allocate( res )
-    res = val
-  end function
-
-  subroutine float_clear( val )
-    real*4 :: val
-    print *, 'float_clear'
-    val = 0.0
+  subroutine ding_clear( self )
+    type(Ding) :: self
+    print *, 'ding_clear'
+    self%val1 = 0
+    self%val2 = 0
+    self%val3 = 0.0
   end subroutine
-
 
   subroutine sub_a()
     print *, "sub_a was called"

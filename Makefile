@@ -11,13 +11,15 @@ mk_F90_FLAGS_ifort_debug      = -g -fpp -allow nofpp-comments
 mk_F90_FLAGS_ifort_release    = -O3 -fpp -allow nofpp-comments 
 mk_F90C_ifort                 = ifort
 
-mk_F90_FLAGS        = $(mk_F90_FLAGS_$(F90C)_$(CFG)) -m$(ARCH)
+mk_F90C_PP_FLAGS    = $(PP_FLAGS:%=-D%)
+mk_F90_FLAGS        = $(mk_F90_FLAGS_$(F90C)_$(CFG)) -m$(ARCH) $(mk_F90C_PP_FLAGS)
 mk_F90C             = $(mk_F90C_$(F90C))
 mk_INCLUDE_PATHLIST = -I. -I./include
 
 mk_TAG              = $(F90C).$(CFG).$(ARCH)
 
 .SECONDARY:
+.PHONY: clean
 
 TPP_FILES = $(wildcard *.tpp)
 BASE_OBJ  = type_info.o base_string.o generic_ref.o base_types.o dynamic_string.o
@@ -43,6 +45,12 @@ alist: $(BASE_OBJ) var_item.o abstract_list.o test_abstract_list.o
 
 clean:
 	rm -f *.mod *.o *.debug.* *.release.* $(TPP_FILES:%.tpp=%)
+
+test: clean dynstring gref varitem alist
+	./dynstring.$(mk_TAG)
+	./gref.$(mk_TAG)
+	./varitem.$(mk_TAG)
+	./alist.$(mk_TAG)
 
 
 %.f90: %.f90.tpp

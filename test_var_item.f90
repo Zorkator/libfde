@@ -80,11 +80,11 @@ program testinger
   call delete(v2)
 
 
-# define _initType_(typeId, baseType) \
+# define _varitem_type_(typeId, baseType) \
     call _paste(test_,typeId)();
 
-  _Table_varItem_types_
-# undef _initType_
+  _TableOf_varitem_types_
+# undef _varitem_type_
 
 end
 
@@ -103,7 +103,7 @@ end
     _baseType,        pointer :: ptr   ;\
     type(VarItem_t)           :: vi    ;\
     type(TypeInfo_t), pointer :: ti    ;\
-    complex*32, parameter :: cplx = (0.234,-3.4) ;\
+    complex*16, parameter :: cplx = (0.234,-3.4) ;\
     val = _val                         ;\
     vi  = VarItemOf(val)               ;\
     vi  = VarItemOf(_val)              ;\
@@ -129,11 +129,14 @@ end
   _implementTest_(int64,      integer*8, 42, _nop)
   _implementTest_(real32,     real*4, 1.5, _nop)
   _implementTest_(real64,     real*8, 1.5, _nop)
-  _implementTest_(real128,    real*16, 1.5, _nop)
   _implementTest_(complex32,  complex*8, (1.5,2.5), _nop)
   _implementTest_(complex64,  complex*16, (1.5,2.5), _nop)
-  _implementTest_(complex128, complex*32, (1.5,2.5), _nop)
   _implementTest_(c_void_ptr, type(c_ptr), C_NULL_PTR, _nop)
   _implementTest_(string,     type(DynamicString_t), 'testinger string', _delete)
   _implementTest_(gref,       type(GenericRef_t), val, _delete)
+
+# if defined VARITEM_REAL16
+  _implementTest_(real128,    real*16, 1.5, _nop)
+  _implementTest_(complex128, complex*32, (1.5,2.5), _nop)
+# endif
 

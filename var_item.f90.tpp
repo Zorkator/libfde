@@ -11,20 +11,20 @@ module var_item
   private
 
 ! declare dummy variables - used to determine each type's storage_size ...
-# define _initType_(typeId, baseType)   baseType :: _paste(typeId,_var);
-    _Table_varItem_types_
-# undef _initType_
+# define _varitem_type_(typeId, baseType)   baseType :: _paste(typeId,_var);
+    _TableOf_varitem_types_
+# undef _varitem_type_
 
 
-# define _initType_(typeId, baseType) \
+# define _varitem_type_(typeId, baseType) \
     , storage_size(_paste(typeId,_var))
 
 # define _chunkType   integer*8
   _chunkType, parameter :: chunk_var = 0
-  integer*4,  parameter :: maxBytes  = max(0 _Table_varItem_types_)/8
+  integer*4,  parameter :: maxBytes  = max(0 _TableOf_varitem_types_)/8
   integer*4,  parameter :: chunkSize = storage_size(chunk_var)/8
   integer*4,  parameter :: numChunks = ceiling( maxBytes / real(chunkSize) )
-# undef _initType_
+# undef _varitem_type_
 
 
   type, public :: VarItem_t
@@ -35,33 +35,33 @@ module var_item
 
   ! declare VarItemOf(<type>) interface ...
   ! NOTE: It's named VarItemOf to avoid ambiguity with VarItem-interface for type deref.
-# define _initType_(typeId, baseType) \
+# define _varitem_type_(typeId, baseType) \
     , _paste(vi_from_,typeId)
 
   interface VarItemOf
     module procedure vi_from_vi, vi_from_charString &
-                     _Table_varItem_types_
+                     _TableOf_varitem_types_
   end interface
-# undef _initType_
+# undef _varitem_type_
 
 
   ! declare public <typeId>-interfaces for getting type pointers
-# define _initType_(typeId, baseType) \
+# define _varitem_type_(typeId, baseType) \
     interface typeId; module procedure _paste(vi_get_,typeId); end interface; \
     public :: typeId;
-    _Table_varItem_types_
-# undef _initType_
+    _TableOf_varitem_types_
+# undef _varitem_type_
 
 
   ! declare assignment interface
-# define _initType_(typeId, baseType) \
+# define _varitem_type_(typeId, baseType) \
     , _paste(typeId,_assign_vi), _paste(vi_assign_,typeId)
 
   interface assignment(=)
     module procedure vi_assign_vi, vi_assign_charString &
-                     _Table_varItem_types_
+                     _TableOf_varitem_types_
   end interface
-# undef _initType_
+# undef _varitem_type_
 
   ! declare interfaces public
 
@@ -77,12 +77,12 @@ module var_item
 
 
   ! declare public typecheck interfaces ...
-# define _initType_(typeId, baseType) \
+# define _varitem_type_(typeId, baseType) \
     interface _paste(is_,typeId); module procedure _paste(vi_is_,typeId); end interface; \
     public :: _paste(is_,typeId);
 
-    _Table_varItem_types_
-# undef _initType_
+    _TableOf_varitem_types_
+# undef _varitem_type_
 
   !_TypeReference_declare( public, VarItem, type(VarItem_t), scalar, \
   !     initProc   = vi_initialize, \
@@ -124,10 +124,8 @@ module var_item
   _implementConstructor_(int64,      integer*8)
   _implementConstructor_(real32,     real*4)
   _implementConstructor_(real64,     real*8)
-  _implementConstructor_(real128,    real*16)
   _implementConstructor_(complex32,  complex*8)
   _implementConstructor_(complex64,  complex*16)
-  _implementConstructor_(complex128, complex*32)
   _implementConstructor_(c_void_ptr, type(c_ptr))
   _implementConstructor_(string,     type(DynamicString_t))
   _implementConstructor_(gref,       type(GenericRef_t))
@@ -173,10 +171,8 @@ module var_item
   _implementGetter_(int64,      integer*8)
   _implementGetter_(real32,     real*4)
   _implementGetter_(real64,     real*8)
-  _implementGetter_(real128,    real*16)
   _implementGetter_(complex32,  complex*8)
   _implementGetter_(complex64,  complex*16)
-  _implementGetter_(complex128, complex*32)
   _implementGetter_(c_void_ptr, type(c_ptr))
   _implementGetter_(string,     type(DynamicString_t))
   _implementGetter_(gref,       type(GenericRef_t))
@@ -199,10 +195,8 @@ module var_item
   _implementSetter_(int64,      integer*8)
   _implementSetter_(real32,     real*4)
   _implementSetter_(real64,     real*8)
-  _implementSetter_(real128,    real*16)
   _implementSetter_(complex32,  complex*8)
   _implementSetter_(complex64,  complex*16)
-  _implementSetter_(complex128, complex*32)
   _implementSetter_(c_void_ptr, type(c_ptr))
   _implementSetter_(string,     type(DynamicString_t))
   _implementSetter_(gref,       type(GenericRef_t))
@@ -250,35 +244,47 @@ module var_item
   _implementAssignTo_(int64,      integer*8)
   _implementAssignTo_(real32,     real*4)
   _implementAssignTo_(real64,     real*8)
-  _implementAssignTo_(real128,    real*16)
   _implementAssignTo_(complex32,  complex*8)
   _implementAssignTo_(complex64,  complex*16)
-  _implementAssignTo_(complex128, complex*32)
   _implementAssignTo_(c_void_ptr, type(c_ptr))
   _implementAssignTo_(string,     type(DynamicString_t))
   _implementAssignTo_(gref,       type(GenericRef_t))
 
 
-# define _implementPredicate_(typeId, baseType)                            \
+# define _implementTypeCheck_(typeId, baseType)                            \
     logical function _paste(vi_is_,typeId)( self ) result(res)            ;\
       type(VarItem_t), intent(in) :: self                                 ;\
       res = associated( self%typeInfo, static_type(_paste(typeId,_var)) ) ;\
     end function
 
-  _implementPredicate_(bool,       logical)
-  _implementPredicate_(int8,       integer*1)
-  _implementPredicate_(int16,      integer*2)
-  _implementPredicate_(int32,      integer*4)
-  _implementPredicate_(int64,      integer*8)
-  _implementPredicate_(real32,     real*4)
-  _implementPredicate_(real64,     real*8)
-  _implementPredicate_(real128,    real*16)
-  _implementPredicate_(complex32,  complex*8)
-  _implementPredicate_(complex64,  complex*16)
-  _implementPredicate_(complex128, complex*32)
-  _implementPredicate_(c_void_ptr, type(c_ptr))
-  _implementPredicate_(string,     type(DynamicString_t))
-  _implementPredicate_(gref,       type(GenericRef_t))
+  _implementTypeCheck_(bool,       logical)
+  _implementTypeCheck_(int8,       integer*1)
+  _implementTypeCheck_(int16,      integer*2)
+  _implementTypeCheck_(int32,      integer*4)
+  _implementTypeCheck_(int64,      integer*8)
+  _implementTypeCheck_(real32,     real*4)
+  _implementTypeCheck_(real64,     real*8)
+  _implementTypeCheck_(complex32,  complex*8)
+  _implementTypeCheck_(complex64,  complex*16)
+  _implementTypeCheck_(c_void_ptr, type(c_ptr))
+  _implementTypeCheck_(string,     type(DynamicString_t))
+  _implementTypeCheck_(gref,       type(GenericRef_t))
+
+
+# if defined VARITEM_REAL16
+  _implementConstructor_(real128, real*16)
+  _implementAssignTo_(real128,    real*16)
+  _implementGetter_(real128,      real*16)
+  _implementSetter_(real128,      real*16)
+  _implementTypeCheck_(real128,   real*16)
+
+  _implementConstructor_(complex128, complex*32)
+  _implementAssignTo_(complex128,    complex*32)
+  _implementGetter_(complex128,      complex*32)
+  _implementSetter_(complex128,      complex*32)
+  _implementTypeCheck_(complex128,   complex*32)
+# endif
+
 
 
   logical function vi_is_valid( self ) result(res)

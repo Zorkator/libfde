@@ -2,6 +2,7 @@
 program testinger
   use generic_ref
   use type_references
+  use base_types
   use iso_c_binding
   implicit none
 
@@ -18,8 +19,16 @@ program testinger
   procedure(simpleCall), pointer :: sc => null()
   type(Ding)                     :: dong
 
-  type(c_ptr)        :: cpointer
-  type(GenericRef_t) :: ref1, ref2, ref3
+  type(c_ptr)         :: cpointer
+  type(GenericRef_t)  :: ref1, ref2, ref3
+  complex*32          :: cplx
+  complex*32, pointer :: cplx_ptr
+
+  ref1 = ref(cplx)
+
+  cplx_ptr => complex128(ref1)
+  cplx_ptr = (1.0, -3)
+
 
   ref2 = ref(42)
   ref1 = ref(ref2)
