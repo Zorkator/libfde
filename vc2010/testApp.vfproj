@@ -46,6 +46,15 @@
 				<Tool Name="VFManifestTool" SuppressStartupBanner="true"/></Configuration></Configurations>
 	<Files>
 		<Filter Name="Header Files" Filter="fi;fd">
+		<File RelativePath="..\abstract_list.f90.tpp">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFCustomBuildTool" CommandLine="python $(ProjectDir)..\typegen.py $(InputPath) -o $(InputName)" Outputs="$(InputName)"/></FileConfiguration>
+			<FileConfiguration Name="Release|x64">
+				<Tool Name="VFCustomBuildTool" CommandLine="python $(ProjectDir)..\typegen.py $(InputPath) -o $(InputName)" Outputs="$(InputName)"/></FileConfiguration>
+			<FileConfiguration Name="Debug|x64">
+				<Tool Name="VFCustomBuildTool" CommandLine="python $(ProjectDir)..\typegen.py $(InputPath) -o $(InputName)" Outputs="$(InputName)"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFCustomBuildTool" CommandLine="python $(ProjectDir)..\typegen.py $(InputPath) -o $(InputName)" Outputs="$(InputName)"/></FileConfiguration></File>
 		<File RelativePath="..\base_types.f90.tpp">
 			<FileConfiguration Name="Debug|Win32">
 				<Tool Name="VFCustomBuildTool" CommandLine="python $(ProjectDir)..\typegen.py $(InputPath) -o $(InputName)" Outputs="$(InputName)"/></FileConfiguration>
@@ -93,12 +102,13 @@
 				<Tool Name="VFCustomBuildTool" CommandLine="python $(ProjectDir)..\typegen.py $(InputPath) -o $(InputName)" Outputs="$(InputName)"/></FileConfiguration></File></Filter>
 		<Filter Name="Resource Files" Filter="rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe"/>
 		<Filter Name="Source Files" Filter="f90;for;f;fpp;ftn;def;odl;idl">
+		<File RelativePath=".\abstract_list.f90"/>
 		<File RelativePath="..\base_string.f90"/>
 		<File RelativePath=".\base_types.f90"/>
 		<File RelativePath=".\dynamic_string.f90"/>
 		<File RelativePath=".\generic_ref.f90"/>
+		<File RelativePath="..\test_abstract_list.f90"/>
 		<File RelativePath=".\test_type_references.f90"/>
-		<File RelativePath="..\test_var_item.f90"/>
 		<File RelativePath="..\type_info.f90"/>
 		<File RelativePath=".\var_item.f90"/></Filter></Files>
 	<Globals/></VisualStudioProject>
