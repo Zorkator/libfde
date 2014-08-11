@@ -41,9 +41,13 @@ module abstract_list
   interface item_type ; module procedure al_item_type                     ; end interface
 
   interface iterator  ; module procedure al_iterator_node, al_iterator_itr, al_iterator_int; end interface
-  interface inserter  ; module procedure al_inserter                      ; end interface
   interface prev      ; module procedure ali_prev                         ; end interface
   interface next      ; module procedure ali_next                         ; end interface
+  interface get_prev  ; module procedure ali_get_prev                     ; end interface
+  interface get_next  ; module procedure ali_get_next                     ; end interface
+  interface insert    ; module procedure ali_insert_item, ali_insert_list ; end interface
+
+  integer*4, parameter :: first = 1, last = -1, tail = 0
 
   public :: initialize
   public :: len
@@ -56,11 +60,12 @@ module abstract_list
   public :: cback
   public :: delete
   public :: clear
-  public :: prev
-  public :: next
+  public :: prev, get_prev
+  public :: next, get_next
+  public :: insert
+  public :: first, last, tail
 
   public :: iterator
-  public :: inserter
 
   !_TypeReference_declare( public, List, type(List_t), scalar, \
   !     initProc   = al_raw_init, \
@@ -257,6 +262,7 @@ module abstract_list
     type(Item_t),   target, optional :: at
     integer*4,              optional :: step
     type(ListIterator_t)             :: res
+    logical                          :: ok
     res%host => self
     if (present(at))   then; res%node => at
                        else; res%node => self%item%next
@@ -281,48 +287,69 @@ module abstract_list
     integer*4,            intent(in) :: at
     integer*4,              optional :: step
     type(ListIterator_t)             :: res
-    type (Item_t),           pointer :: start
     logical                          :: ok
-
-    if (at < 0) then; start => back(self)
-                else; start => front(self)
-    end if
-    res = al_iterator_node( self, start, step )
-    ok  = ali_advance( res, at )
-  end function
-
-
-  function al_inserter( self, at ) result(res)
-    type(List_t), target, intent(in) :: self
-    type(Item_t),   target, optional :: at
-    type(ListIterator_t)             :: res
     res%host => self
-    res%step =  0
-    if (present(at))   then; res%node => at
-                       else; res%node => self%item
+    res%node => self%item
+    if (present(step)) &
+      res%step = step
+    ok = ali_advance_foot( res, at )
+  end function
+
+
+  subroutine ali_prev( self )
+    type(ListIterator_t), intent(inout) :: self
+    logical                             :: ok
+    ok = ali_advance_head( self, -self%step )
+  end subroutine
+
+
+  function ali_get_prev( self ) result(res)
+    type(ListIterator_t), intent(in) :: self
+    type(ListIterator_t)             :: res
+    logical                          :: ok
+    res = self
+    ok = ali_advance_head( res, -res%step )
+  end function
+
+
+  subroutine ali_next( self )
+    type(ListIterator_t), intent(inout) :: self
+    logical                             :: ok
+    ok = ali_advance_head( self, self%step )
+  end subroutine
+
+
+  function ali_get_next( self ) result(res)
+    type(ListIterator_t), intent(in) :: self
+    type(ListIterator_t)             :: res
+    logical                          :: ok
+    res = self
+    ok = ali_advance_head( res, res%step )
+  end function
+
+
+  logical function ali_advance_foot( self, steps ) result(res)
+    type(ListIterator_t), target, intent(inout) :: self
+    integer*4                                   :: steps, i
+
+    if (steps > 0) then
+      do i = 1, steps
+        self%node => self%node%next
+        if (associated(self%node, self%host%item)) &
+          exit
+      end do
+    else
+      do i = 1, -steps
+        self%node => self%node%prev
+        if (associated(self%node, self%host%item)) &
+          exit
+      end do
     end if
+    res = (i > abs(steps))
   end function
+  
 
-
-  function ali_prev( self ) result(res)
-    type(ListIterator_t), intent(in) :: self
-    type(ListIterator_t)             :: res
-    logical                          :: ok
-    res = self
-    ok  = ali_advance( res, -res%step )
-  end function
-
-
-  function ali_next( self ) result(res)
-    type(ListIterator_t), intent(in) :: self
-    type(ListIterator_t)             :: res
-    logical                          :: ok
-    res = self
-    ok  = ali_advance( res, res%step )
-  end function
-
-
-  logical function ali_advance( self, steps ) result(res)
+  logical function ali_advance_head( self, steps ) result(res)
     type(ListIterator_t), target, intent(inout) :: self
     integer*4                                   :: steps, i
 
@@ -349,6 +376,21 @@ module abstract_list
           associated(self%node) .and. &
     .not. associated(self%node, self%host%item)
   end function
+
   
+  subroutine ali_insert_item( self, node )
+    type(ListIterator_t), intent(in) :: self
+    type(Item_t),             target :: node
+    call al_link_item( node, self%node%prev, self%node )
+    self%host%length = self%host%length + 1
+  end subroutine
+
+
+  subroutine ali_insert_list( self, list )
+    type(ListIterator_t), intent(in) :: self
+    type(List_t),             target :: list
+    !call al_append_list( iterator( self, idx ), node )
+  end subroutine
+
 end module
 

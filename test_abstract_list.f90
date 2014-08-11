@@ -62,7 +62,7 @@ program testinger
   use iso_c_binding
   implicit none
 
-  type (List_t) :: l
+  type (List_t) :: l1, l2
   integer*4   :: cnt
   type (MyItem_t), pointer :: ptr
   type (VarItem_t)         :: var
@@ -70,70 +70,102 @@ program testinger
   type (ListIterator_t)    :: itr
   procedure(), pointer :: castProc => null()
 
-  call initialize( l, static_type(1) )
+  call initialize( l1, static_type(1) )
+  call initialize( l2, static_type(1) )
 
-  print *, is_valid(l)
-  print *, is_valid(l, static_type(1))
-  print *, is_valid(l, static_type(2.3))
-
-  itr = inserter( l )
-  itr = inserter( l, front(l) )
-  itr = inserter( l, back(l) )
+  print *, is_valid(l1)
+  print *, is_valid(l1, static_type(1))
+  print *, is_valid(l1, static_type(2.3))
 
   do cnt = 1, 10
-    call append( l, newItem( cnt ) )
+    call append( l2, newItem( cnt ) )
   end do
 
-  itr = iterator( l, front(l) )
+  call printItems( iterator( l1 ) )
+  call printItems( iterator( l2 ) )
+  call append( l1, l2 )
+  call printItems( iterator( l1 ) )
+  call printItems( iterator( l2 ) )
+
+  itr = iterator( l1, 3 )
+  do cnt = -5, -1
+    call insert( iterator(l1, back(l1)), newItem(cnt) )
+  end do
+    
+
+
+  call printItems( iterator( l1, first ) )
+  call printItems( iterator( l1, first, -1 ) )
+  call printItems( iterator( l1, last ) )
+  call printItems( iterator( l1, last , -1 ) )
+  call printItems( iterator( l1, tail ) )
+  call printItems( iterator( l1, tail ) )
+
+  call printItems( iterator( l1, 5, 1 ) )
+  call printItems( iterator( l1, 5, -1 ) )
+  call printItems( iterator( l1, -5 ) )
+  call printItems( iterator( l1, -10 ) )
+
+  itr = iterator( l1 )
   do while (is_valid(itr))
     print *, MyValue( itr%node )
-    itr = next(itr)
+    call next(itr)
   end do
 
-  itr = iterator( l, back(l), -2 )
+  !itr = iterator( l1, front(l1) )
+  !do while (is_valid(itr))
+  !  print *, MyValue( itr%node )
+  !  call next(itr)
+  !end do
+
+  itr = iterator( l1, back(l1), -2 )
   do while (is_valid(itr))
     print *, MyValue( itr%node )
-    itr = next(itr)
+    itr = get_next(itr)
   end do
 
-  itr = iterator( l, 3 )
+  itr = iterator( l1, tail, -1 )
   do while (is_valid(itr))
     print *, MyValue( itr%node )
-    itr = next(itr)
+    itr = get_next(itr)
   end do
 
-  itr = iterator( l, front(l) )
-  itr = iterator( l, front(l), 2 )
-  itr = iterator( l, front(l), -1 )
-  itr = iterator( l, back(l) )
-  itr = iterator( l, back(l), -1 )
-  itr = iterator( l, back(l), 1 )
-  itr = iterator( l, itr, 1 )
-  itr = iterator( l, itr, 1 )
+  itr = iterator( l1, front(l1) )
+  itr = iterator( l1, front(l1), 2 )
+  itr = iterator( l1, front(l1), -1 )
+  itr = iterator( l1, back(l1) )
+  itr = iterator( l1, back(l1), -1 )
+  itr = iterator( l1, back(l1), 1 )
+  itr = iterator( l1, itr, 1 )
+  itr = iterator( l1, itr, 1 )
 
-  ref1 = ref(l)
+  ref1 = ref(l1)
 
   print *, len(List(ref1))
 
-  print *, MyValue( front(l) )
-
-  !call cast( cfront(l), ptr )
+  print *, MyValue( front(l1) )
 
   !ref1 = clone(ref1)
   !call free( ref1 ) !< segfaults because of shallow copy!
 
-  call clear(l)
-  call delete( l )
+  call clear( l1 )
+  call delete( l1 )
+  call delete( l2 )
 
 
   
   contains
 
-  !subroutine cast( c, f )
-  !  type(c_ptr),              intent(in) :: c
-  !  type(MyItem_t), pointer, intent(out) :: f
-  !  call c_f_pointer( c, f )
-  !end subroutine
+  subroutine printItems( itr )
+    type(ListIterator_t) :: itr
+
+    print *, "items:"
+    do while (is_valid(itr))
+      print *, MyValue( itr%node )
+      call next(itr)
+    end do
+    print *, "########"
+  end subroutine
 
 
 end program
