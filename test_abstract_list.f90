@@ -44,6 +44,8 @@ contains
 end module
 
 
+#define _exp(what)    print *, "exp: " // what
+
 program testinger
   use var_item
   use abstract_list
@@ -71,13 +73,19 @@ program testinger
     call append( l2, newItem( cnt ) )
   end do
 
+  _exp("empty")
   call printItems( iterator( l1 ) )
+  _exp("1..10")
   call printItems( iterator( l2 ) )
   call append( l1, l2 )
+  _exp("1..10")
   call printItems( iterator( l1 ) )
+  _exp("empty")
   call printItems( iterator( l2 ) )
 
+  _exp("1..10")
   call printItems( front(l1) )
+  _exp("empty")
   call printItems( end(l1) )
 
   itr = iterator( l1, 3 )
@@ -86,21 +94,32 @@ program testinger
   end do
     
 
-
+  _exp("1..9, -5..-1, 10")
   call printItems( iterator( l1, first ) )
+  _exp("1")
   call printItems( iterator( l1, first, -1 ) )
+  _exp("10")
   call printItems( iterator( l1, last ) )
+  _exp("10, -1..-5, 9..1")
   call printItems( iterator( l1, last , -1 ) )
+  _exp("empty")
   call printItems( iterator( l1, tail ) )
+  _exp("empty")
   call printItems( iterator( l1, tail ) )
 
+  _exp("5..9, -5..-1, 10")
   call printItems( iterator( l1, 5, 1 ) )
+  _exp("5..1")
   call printItems( iterator( l1, 5, -1 ) )
+  _exp("-4..-1, 10")
   call printItems( iterator( l1, -5 ) )
+  _exp("6..9, -5..-1, 10")
   call printItems( iterator( l1, -10 ) )
 
+  _exp("1..9, -5..-1, 10")
   call printRange( front(l1), end(l1) )
 
+  _exp("1..9, -5..-1, 10")
   itr = iterator( l1 )
   do while (is_valid(itr))
     print *, value(itr)
@@ -113,17 +132,27 @@ program testinger
   !  call next(itr)
   !end do
 
+  _exp("10,-2,-4,9,7,5,3,1")
   itr = iterator( l1, back(l1), -2 )
   do while (is_valid(itr))
     print *, value(itr)
     itr = get_next(itr)
   end do
 
+  _exp("empty")
   itr = iterator( l1, tail, -1 )
   do while (is_valid(itr))
     print *, value(itr)
     itr = get_next(itr)
   end do
+  
+  call insert( front(l2), iterator(l1, 5), back(l1) )
+  _exp("1..4")
+  call printItems( front(l1) )
+  _exp('len 4, 11:'), len(l1), len(l2)
+  _exp("5..9, -5..-1, 10")
+  call printItems( front(l2) )
+  _exp('len 11, 4:'), len(l2), len(l1)
 
   itr = iterator( l1, front(l1) )
   itr = iterator( l1, front(l1), 2 )

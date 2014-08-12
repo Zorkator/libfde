@@ -44,7 +44,7 @@ module abstract_list
   interface next      ; module procedure ali_next                         ; end interface
   interface get_prev  ; module procedure ali_get_prev                     ; end interface
   interface get_next  ; module procedure ali_get_next                     ; end interface
-  interface insert    ; module procedure ali_insert_item, ali_insert_list ; end interface
+  interface insert    ; module procedure ali_insert_item, ali_insert_list, ali_insert_range; end interface
 
   interface operator(==); module procedure ali_eq_ali, ali_eq_item        ; end interface
   interface operator(/=); module procedure ali_ne_ali, ali_ne_item        ; end interface
@@ -118,6 +118,15 @@ module abstract_list
     old%next => null()
   end subroutine
 
+  subroutine al_insert_items( pos_hook, beg_prev, end_next )
+    type(Item_t), target :: pos_hook, beg_prev, end_next
+    pos_hook % prev%next => beg_prev % next
+    beg_prev % next%prev => pos_hook % prev
+    pos_hook % prev      => end_next % prev
+    end_next % prev%next => pos_hook
+    call al_unlink_item( beg_prev, end_next )
+  end subroutine
+
 
   subroutine al_raw_init( self, ignored )
     type(List_t), target :: self
@@ -137,10 +146,21 @@ module abstract_list
   end subroutine
 
   
-  pure function al_length( self ) result(res)
-    type(List_t), intent(in) :: self
-    integer*4                :: res
+  function al_length( self ) result(res)
+    type(List_t), target  :: self
+    integer*4             :: res
+    type(Item_t), pointer :: ptr
+
     res = self%length
+    if (res < 0) then
+      res =  0
+      ptr => self%item%next
+      do while (.not. associated( ptr, self%item ))
+        res = res + 1
+        ptr => ptr%next
+      end do
+      self%length = res
+    end if
   end function
 
 
@@ -161,11 +181,7 @@ module abstract_list
 
   subroutine al_append_list( self, other )
     type (List_t), target :: self, other
-    self%item  % prev%next => other%item % next
-    other%item % next%prev => self%item  % prev
-    self%item  % prev      => other%item % prev
-    other%item % prev%next => self%item
-    call al_initialize_item( other%item )
+    call al_insert_items( self%item, other%item, other%item )
     self%length  = self%length + other%length
     other%length = 0
   end subroutine
@@ -263,21 +279,24 @@ module abstract_list
   function al_front( self ) result(res)
     type(List_t), target, intent(in) :: self
     type(ListIterator_t)             :: res
-    res = iterator( self, first ) 
+    res%host => self
+    res%node => self%item%next
   end function
 
     
   function al_back( self ) result(res)
     type(List_t), target, intent(in) :: self
     type(ListIterator_t)             :: res
-    res = iterator( self, last ) 
+    res%host => self
+    res%node => self%item%prev
   end function
 
 
   function al_end( self ) result(res)
     type(List_t), target, intent(in) :: self
     type(ListIterator_t)             :: res
-    res = iterator( self, tail )
+    res%host => self
+    res%node => self%item
   end function
 
 
@@ -400,7 +419,17 @@ module abstract_list
   subroutine ali_insert_list( self, list )
     type(ListIterator_t), intent(in) :: self
     type(List_t),             target :: list
-    !call al_append_list( iterator( self, idx ), node )
+    call al_insert_items( self%node, list%item, list%item )
+    self%host%length = self%host%length + list%length
+    list%length      = 0
+  end subroutine
+
+  
+  subroutine ali_insert_range( self, beg, end )
+    type(ListIterator_t), intent(in) :: self, beg, end
+    call al_insert_items( self%node, beg%node%prev, end%node%next )
+    self%host%length = -1
+    beg%host%length  = -1
   end subroutine
 
 end module
