@@ -18,11 +18,8 @@ module mylist
     integer*4     :: value
   end type
 
-  !interface MyItem;  module procedure myitem_downcast; end interface
-  interface MyValue; module procedure myitem_value;    end interface
-
-  !public :: MyItem
-  public :: MyValue
+  interface value; module procedure myitem_value;    end interface
+  public :: value
 
 contains
 
@@ -35,19 +32,12 @@ contains
     res => node%super
   end function
 
-  !function myitem_downcast( node ) result(res)
-  !  use iso_c_binding
-  !  type (Item_t),    target :: node
-  !  type (MyItem_t), pointer :: res
-  !  call c_f_pointer( c_loc(node), res )
-  !end function
-
-  function myitem_value( node ) result(res)
+  function myitem_value( itr ) result(res)
     use iso_c_binding
-    type (Item_t),    target :: node
-    integer*4,       pointer :: res
-    type (MyItem_t), pointer :: ptr
-    call c_f_pointer( c_loc(node), ptr )
+    type(ListIterator_t)    :: itr
+    integer*4,      pointer :: res
+    type(MyItem_t), pointer :: ptr
+    call c_f_pointer( c_loc(itr%node), ptr )
     res => ptr%value
   end function
 
@@ -87,6 +77,9 @@ program testinger
   call printItems( iterator( l1 ) )
   call printItems( iterator( l2 ) )
 
+  call printItems( front(l1) )
+  call printItems( end(l1) )
+
   itr = iterator( l1, 3 )
   do cnt = -5, -1
     call insert( iterator(l1, back(l1)), newItem(cnt) )
@@ -106,27 +99,29 @@ program testinger
   call printItems( iterator( l1, -5 ) )
   call printItems( iterator( l1, -10 ) )
 
+  call printRange( front(l1), end(l1) )
+
   itr = iterator( l1 )
   do while (is_valid(itr))
-    print *, MyValue( itr%node )
+    print *, value(itr)
     call next(itr)
   end do
 
   !itr = iterator( l1, front(l1) )
   !do while (is_valid(itr))
-  !  print *, MyValue( itr%node )
+  !  print *, value( itr%node )
   !  call next(itr)
   !end do
 
   itr = iterator( l1, back(l1), -2 )
   do while (is_valid(itr))
-    print *, MyValue( itr%node )
+    print *, value(itr)
     itr = get_next(itr)
   end do
 
   itr = iterator( l1, tail, -1 )
   do while (is_valid(itr))
-    print *, MyValue( itr%node )
+    print *, value(itr)
     itr = get_next(itr)
   end do
 
@@ -143,15 +138,14 @@ program testinger
 
   print *, len(List(ref1))
 
-  print *, MyValue( front(l1) )
+  print *, value( front(l1) )
 
   !ref1 = clone(ref1)
   !call free( ref1 ) !< segfaults because of shallow copy!
 
   call clear( l1 )
   call delete( l1 )
-  call delete( l2 )
-
+  call delete( l2, static_type(l2) )
 
   
   contains
@@ -161,12 +155,23 @@ program testinger
 
     print *, "items:"
     do while (is_valid(itr))
-      print *, MyValue( itr%node )
+      print *, value(itr)
       call next(itr)
     end do
     print *, "########"
   end subroutine
 
+
+  subroutine printRange( beg, end )
+    type(ListIterator_t) :: beg, end
+    
+    print *, "items:"
+    do while (beg /= end)
+      print *, value(beg)
+      call next(beg)
+    end do
+    print *, "########"
+  end subroutine
 
 end program
 

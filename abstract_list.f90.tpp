@@ -33,19 +33,21 @@ module abstract_list
   interface is_empty  ; module procedure al_is_empty                      ; end interface
   interface append    ; module procedure al_append_list, al_append_item   ; end interface
   interface clear     ; module procedure al_clear                         ; end interface
-  interface front     ; module procedure al_front                         ; end interface
-  interface back      ; module procedure al_back                          ; end interface
-  interface cfront    ; module procedure al_cfront                        ; end interface
-  interface cback     ; module procedure al_cback                         ; end interface
   interface delete    ; module procedure al_delete                        ; end interface
   interface item_type ; module procedure al_item_type                     ; end interface
 
   interface iterator  ; module procedure al_iterator_node, al_iterator_itr, al_iterator_int; end interface
+  interface front     ; module procedure al_front                         ; end interface
+  interface back      ; module procedure al_back                          ; end interface
+  interface end       ; module procedure al_end                           ; end interface
   interface prev      ; module procedure ali_prev                         ; end interface
   interface next      ; module procedure ali_next                         ; end interface
   interface get_prev  ; module procedure ali_get_prev                     ; end interface
   interface get_next  ; module procedure ali_get_next                     ; end interface
   interface insert    ; module procedure ali_insert_item, ali_insert_list ; end interface
+
+  interface operator(==); module procedure ali_eq_ali, ali_eq_item        ; end interface
+  interface operator(/=); module procedure ali_ne_ali, ali_ne_item        ; end interface
 
   integer*4, parameter :: first = 1, last = -1, tail = 0
 
@@ -54,18 +56,18 @@ module abstract_list
   public :: is_valid
   public :: is_empty   
   public :: append
-  public :: front
-  public :: back
-  public :: cfront
-  public :: cback
   public :: delete
   public :: clear
+
+  public :: iterator
+  public :: front, back, end
   public :: prev, get_prev
   public :: next, get_next
   public :: insert
   public :: first, last, tail
 
-  public :: iterator
+  public :: operator(==), operator(/=)
+
 
   !_TypeReference_declare( public, List, type(List_t), scalar, \
   !     initProc   = al_raw_init, \
@@ -219,44 +221,6 @@ module abstract_list
   end function
 
 
-  function al_front( self ) result(res)
-    type (List_t), target, intent(in) :: self
-    type (Item_t),            pointer :: res
-    if (associated( self%item%next, self%item )) then; res => null()
-                                                 else; res => self%item%next
-    end if
-  end function
-
-    
-  function al_back( self ) result(res)
-    type (List_t), target, intent(in) :: self
-    type (Item_t),            pointer :: res
-    if (associated( self%item%prev, self%item )) then; res => null()
-                                                 else; res => self%item%prev
-    end if
-  end function
-
-
-  function al_cfront( self ) result(res)
-    use iso_c_binding
-    type (List_t), target, intent(in) :: self
-    type (c_ptr)                      :: res
-    if (associated( self%item%next, self%item )) then; res = C_NULL_PTR
-                                                 else; res = c_loc( self%item%next )
-    end if
-  end function
-
-    
-  function al_cback( self ) result(res)
-    use iso_c_binding
-    type (List_t), target, intent(in) :: self
-    type (c_ptr)                      :: res
-    if (associated( self%item%prev, self%item )) then; res = C_NULL_PTR
-                                                 else; res = c_loc( self%item%prev )
-    end if
-  end function
-
-
   function al_iterator_node( self, at, step ) result(res)
     type(List_t), target, intent(in) :: self
     type(Item_t),   target, optional :: at
@@ -293,6 +257,27 @@ module abstract_list
     if (present(step)) &
       res%step = step
     ok = ali_advance_foot( res, at )
+  end function
+
+
+  function al_front( self ) result(res)
+    type(List_t), target, intent(in) :: self
+    type(ListIterator_t)             :: res
+    res = iterator( self, first ) 
+  end function
+
+    
+  function al_back( self ) result(res)
+    type(List_t), target, intent(in) :: self
+    type(ListIterator_t)             :: res
+    res = iterator( self, last ) 
+  end function
+
+
+  function al_end( self ) result(res)
+    type(List_t), target, intent(in) :: self
+    type(ListIterator_t)             :: res
+    res = iterator( self, tail )
   end function
 
 
@@ -375,6 +360,32 @@ module abstract_list
     res = associated(self%host) .and. &
           associated(self%node) .and. &
     .not. associated(self%node, self%host%item)
+  end function
+
+  
+  pure logical function ali_eq_ali( self, other ) result(res)
+    type(ListIterator_t), intent(in) :: self, other
+    res = associated( self%node, other%node )
+  end function
+
+  
+  pure logical function ali_eq_item( self, item ) result(res)
+    type(ListIterator_t), intent(in) :: self
+    type(Item_t), target, intent(in) :: item
+    res = associated( self%node, item )
+  end function
+
+  
+  pure logical function ali_ne_ali( self, other ) result(res)
+    type(ListIterator_t), intent(in) :: self, other
+    res = .not. associated( self%node, other%node )
+  end function
+
+  
+  pure logical function ali_ne_item( self, item ) result(res)
+    type(ListIterator_t), intent(in) :: self
+    type(Item_t), target, intent(in) :: item
+    res = .not. associated( self%node, item )
   end function
 
   
