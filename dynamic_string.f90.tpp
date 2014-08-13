@@ -111,10 +111,10 @@ module dynamic_string
 
 
   !_TypeReference_declare( public, DynamicString, type(DynamicString_t), scalar, \
-  !     initProc   = ds_initialize, \
-  !     assignProc = ds_assign_ds,  \
-  !     deleteProc = ds_delete,     \
-  !     cloneProc  = _default )
+  !     initProc     = ds_initialize, \
+  !     assignProc   = ds_assign_ds,  \
+  !     deleteProc   = ds_delete,     \
+  !     cloneObjProc = _default )
 
 !-----------------
   contains

@@ -23,13 +23,22 @@ module mylist
 
 contains
 
+  subroutine new_item( tgt, src )
+    type(MyItem_t), pointer, intent(out) :: tgt
+    type(MyItem_t), optional, intent(in) :: src
+    allocate( tgt )
+    if (present(src)) &
+      tgt = src
+  end subroutine
+
   function newItem( val ) result(res)
-    integer*4,    intent(in) :: val
-    type (Item_t),   pointer :: res
-    type (MyItem_t), pointer :: node
-    allocate( node )
-    node%value = val
-    res => node%super
+    integer*4,   intent(in) :: val
+    type(Item_t),   pointer :: res
+    type(MyItem_t), pointer :: tgt => null()
+
+    call new_item( tgt, tgt )
+    tgt%value = val
+    res => tgt%super
   end function
 
   function myitem_value( idx ) result(res)
@@ -186,6 +195,7 @@ program testinger
 
   !ref1 = clone(ref1)
   !call free( ref1 ) !< segfaults because of shallow copy!
+  call delete( ref1 )
 
   call clear( l1 )
   call delete( l1 )

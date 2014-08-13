@@ -41,11 +41,11 @@ module generic_ref
   public :: dynamic_type
 
   !_TypeReference_declare( public, ref, type(GenericRef_t), scalar, \
-  !     initProc   = gr_initialize, \
-  !     assignProc = gr_assign_gr,  \
-  !     deleteProc = gr_delete,     \
-  !     cloneProc  = _default,      \
-  !     derefName  = deref )
+  !     initProc     = gr_initialize, \
+  !     assignProc   = gr_assign_gr,  \
+  !     deleteProc   = gr_delete,     \
+  !     cloneObjProc = _default,      \
+  !     derefName    = deref )
 
 !-----------------
   contains
@@ -124,8 +124,8 @@ module generic_ref
 
     call bs_set_attribute( res%ref_str, attrib_volatile )
     if (associated( self%typeInfo )) then
-      if (associated( self%typeInfo%cloneProc )) then
-        call self%typeInfo%cloneProc( self, res )
+      if (associated( self%typeInfo%cloneRefProc )) then
+        call self%typeInfo%cloneRefProc( res, self )
         return
       end if
     end if

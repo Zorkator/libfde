@@ -85,10 +85,10 @@ module var_item
 # undef _varitem_type_
 
   !_TypeReference_declare( public, VarItem, type(VarItem_t), scalar, \
-  !     initProc   = vi_initialize, \
-  !     assignProc = vi_assign_vi,  \
-  !     deleteProc = vi_delete,     \
-  !     cloneProc  = _default )
+  !     initProc     = vi_initialize, \
+  !     assignProc   = vi_assign_vi,  \
+  !     deleteProc   = vi_delete,     \
+  !     cloneObjProc = _default )
 
   
 !-----------------

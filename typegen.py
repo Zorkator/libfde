@@ -155,18 +155,18 @@ class ReferenceType(object):
     #   typeId:    type identifier
     #   baseType:  fortran base type | type(...) | procedure(...)
     #   dimType:   ('', ', dimension(:,...)')[has_dimension]
-    #   cloneBy:   <cloneCode> [alloc_clone | func_clone]
+    #   cloneBy:   <cloneCode> [alloc_clone | proc_clone]
     #
     cloner = """
-    subroutine RefType_clone_{typeId}( val, res )
+    subroutine RefType_cloneRef_{typeId}( tgt_ref, src_ref )
       use iso_c_binding
-      type(GenericRef_t),          intent(in) :: val
-      type(GenericRef_t)                      :: res
+      type(GenericRef_t)                      :: tgt_ref
+      type(GenericRef_t),          intent(in) :: src_ref
       {baseType}{dimType},            pointer :: src, tgt => null()
       character(len=1), dimension(:), pointer :: tmp
     
-      src => RefType_decode_{typeId}( val ){cloneBy}
-      res =  RefType_encode_{typeId}( tgt )
+      src     => RefType_decode_{typeId}( src_ref ){cloneBy}
+      tgt_ref =  RefType_encode_{typeId}( tgt )
     end subroutine
     """,
     
@@ -179,22 +179,22 @@ class ReferenceType(object):
     """,
     
     # parameters:
-    #   cloneFuncId: id of clone function
-    func_clone = """
-      tgt => {cloneFuncId}( src )
+    #   cloneObjProcId: id of clone function
+    proc_clone = """
+      call {cloneObjProcId}( tgt, src )
     """,
 
     # parameters:
-    #   cloneFuncId: id of clone function
+    #   cloneObjProcId: id of clone function
     #   typeId:      type identifier
     #   baseType:    fortran base type | type(...)
-    cloneFunc = """
-    function {cloneFuncId}( val ) result(res)
-      {baseType}, intent(in) :: val
-      {baseType},    pointer :: res
-      allocate( res ) !< initializes res as default {typeId}
-      res = val
-    end function
+    cloneObjectProc = """
+    subroutine {cloneObjProcId}( tgt, src )
+      {baseType}, pointer, intent(out) :: tgt
+      {baseType}, optional, intent(in) :: src
+      allocate( tgt ) !< initializes res as default {typeId}
+      if (present(src)) tgt = src
+    end subroutine
     """,
 
     # parameters:
@@ -251,9 +251,9 @@ class ReferenceType(object):
       if (.not. res%initialized) &
         call init_TypeInfo( res, '{typeId}', '{baseType}' &
                             , int(storage_size(self),4) &
-                            , size(shape(self)){initProc}{assignProc}{deleteProc}{shapeProc} &
+                            , size(shape(self)){initProc}{assignProc}{deleteProc}{shapeProc}{cloneObjProc} &
                             , castProc = RefType_c2f_cast_{typeId} &
-                            , cloneProc = RefType_clone_{typeId} )
+                            , cloneRefProc = RefType_cloneRef_{typeId} )
     end function
     """,
 
@@ -308,22 +308,27 @@ class ReferenceType(object):
     self.assignProc  = ', assignProc = %s' % self._typeProcs.get('assignProc')
     self.deleteProc  = ', deleteProc = %s' % self._typeProcs.get('deleteProc')
     self.shapeProc   = ('', ', shapeProc  = RefType_inspect_%s' % typeId)[self._isArray]
-    self.cloneFuncId = self._typeProcs.get('cloneProc', '') 
-    if self.cloneFuncId.title() == 'None':
-      self.cloneFuncId = ''
-    self.cloneType   = ('alloc_clone', 'func_clone')[bool(self.cloneFuncId)]
 
-    if self.cloneFuncId == '_default':
+    cloneObjProcId = self._typeProcs.get('cloneObjProc', '')
+
+    if cloneObjProcId.lower() == 'none':
+      self.cloneObjProcId = ''
+      self._cloneObj = ''
+
+    elif cloneObjProcId.lower() == '_default':
       if self._isArray:
-        raise ValueError('ERROR at processing type "%s": _default-cloneProc supports only scalar data types' % typeId)
+        raise ValueError('ERROR at processing type "%s": _default-cloneObjProc supports only scalar data types' % typeId)
+      self.cloneObjProcId = '%s_clone_object' % typeId
+      self._cloneObj = self._template['cloneObjectProc']
 
-      self.cloneFuncId = '%s_cloneFunc' % typeId
-      self._cloneFunc  = self._template['cloneFunc']
     else:
-      self._cloneFunc  = ''
+      self.cloneObjProcId = ''
+      self._cloneObj = ''
 
-    self.cloneBy     = self._template[self.cloneType].format( **self.__dict__ )
-   
+    cloneFragment     = ('alloc_clone', 'proc_clone')[bool(self.cloneObjProcId)]
+    self.cloneBy      = self._template[cloneFragment].format( **self.__dict__ )
+    self.cloneObjProc = ('', ', cloneObjProc = %s' % self.cloneObjProcId)[bool(self.cloneObjProcId)]
+
     self._info     = self._template['info'] 
     self._type     = self._template['type']
     self._itf      = self._template[('ref_itf', 'proc_itf')[self._isProc]]
@@ -360,7 +365,7 @@ class ReferenceType(object):
       out( self._c2fCast.format( **self.__dict__ ) )
       out( self._cloner.format( **self.__dict__ ) )
       out( self._inspect.format( **self.__dict__ ) )
-      out( self._cloneFunc.format( **self.__dict__ ) )
+      out( self._cloneObj.format( **self.__dict__ ) )
       out( self._typeChk.format( **self.__dict__ ) )
       out( self._typeinfo.format( **self.__dict__ ) )
       self._implemented = True

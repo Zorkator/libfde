@@ -13,12 +13,13 @@ module type_info
     logical       :: initialized = .false.
 
     ! type specific subroutines called by generic interfaces 
-    procedure(), nopass, pointer :: castProc    => null()
-    procedure(), nopass, pointer :: initProc    => null()
-    procedure(), nopass, pointer :: assignProc  => null()
-    procedure(), nopass, pointer :: shapeProc   => null()
-    procedure(), nopass, pointer :: cloneProc   => null()
-    procedure(), nopass, pointer :: deleteProc  => null()
+    procedure(), nopass, pointer :: assignProc   => null()
+    procedure(), nopass, pointer :: castProc     => null()
+    procedure(), nopass, pointer :: cloneObjProc => null()
+    procedure(), nopass, pointer :: cloneRefProc => null()
+    procedure(), nopass, pointer :: deleteProc   => null()
+    procedure(), nopass, pointer :: initProc     => null()
+    procedure(), nopass, pointer :: shapeProc    => null()
   end type
 
 
@@ -27,32 +28,33 @@ module type_info
   end type
 
   type(TypeInfo_t), target :: type_void = TypeInfo_t( "void", 0, "", 0, 0, 0, .true., &
-                                                       null(), null(), null(), null(), null(), null() )
+                                                       null(), null(), null(), null(), null(), null(), null() )
 
   contains
 
   !**
   ! init_TypeInfo initializes TypeInfo structure.
-  ! @param self        - the TypeInfo to initialize
-  ! @param typeId      - the type's id string (e.g. double)
-  ! @param baseType    - the type's base string (e.g. real*8)
-  ! @param bitSize     - the storage size of the type in bytes (=> storage_size(type))
-  ! @param rank        - the rank of the type
-  ! @param castProc    - the subroutine to cast a cptr to fortran: subroutine cast( ptr_c, ptr_f )
-  ! @param initProc    - the subroutine to initialize a variable:  subroutine init( var, hardness )
-  ! @param assignProc  - the subroutine to assign a variable: subroutine assign( lhs, rhs )
-  ! @param deleteProc  - the subroutine to delete a variable: subroutine delete( var )
-  ! @param shapeProc   - the function to inspect the shape  : subroutine shape( var, res, rank )
-  ! @param cloneProc   - the function to clone a variable   : subroutine clone( var, res )
+  ! @param self         - the TypeInfo to initialize
+  ! @param typeId       - the type's id string (e.g. double)
+  ! @param baseType     - the type's base string (e.g. real*8)
+  ! @param bitSize      - the storage size of the type in bytes (=> storage_size(type))
+  ! @param rank         - the rank of the type
+  ! @param assignProc   - the subroutine to assign a variable      : subroutine assign( lhs, rhs )
+  ! @param castProc     - the subroutine to cast a cptr to fortran : subroutine cast( ptr_c, ptr_f )
+  ! @param cloneObjProc - the function to clone an object reference: subroutine clone( var, res )
+  ! @param cloneRefProc - the function to clone an object          : subroutine clone( var, res )
+  ! @param deleteProc   - the subroutine to delete a variable      : subroutine delete( var )
+  ! @param initProc     - the subroutine to initialize a variable  : subroutine init( var, hardness )
+  ! @param shapeProc    - the function to inspect the shape        : subroutine shape( var, res, rank )
   !*
   !PROC_EXPORT_1REF( init_TypeInfo, self )
   subroutine init_TypeInfo( self, typeId, baseType, bitSize, rank, &
-                            castProc, initProc, assignProc, deleteProc, shapeProc, cloneProc )
+                            assignProc, castProc, cloneObjProc, cloneRefProc, deleteProc, initProc, shapeProc )
     type(TypeInfo_t),  intent(inout) :: self
     character(len=*),     intent(in) :: typeId, baseType
     integer*4,            intent(in) :: bitSize
     integer*4,            intent(in) :: rank
-    procedure(),            optional :: castProc, initProc, assignProc, deleteProc, shapeProc, cloneProc
+    procedure(),            optional :: assignProc, castProc, cloneObjProc, cloneRefProc, deleteProc, initProc, shapeProc
 
     self%typeId   = adjustl(typeId);   self%typeId_term   = 0
     self%baseType = adjustl(baseType); self%baseType_term = 0
@@ -60,19 +62,21 @@ module type_info
     self%rank     = rank
 
     ! pre-initialize optional arguments
-    self%castProc   => null()
-    self%initProc   => null()
-    self%assignProc => null()
-    self%deleteProc => null()
-    self%shapeProc  => null()
-    self%cloneProc  => null()
+    self%assignProc   => null()
+    self%castProc     => null()
+    self%cloneObjProc => null()
+    self%cloneRefProc => null()
+    self%deleteProc   => null()
+    self%initProc     => null()
+    self%shapeProc    => null()
 
-    if (present(castProc))   self%castProc   => castProc
-    if (present(initProc))   self%initProc   => initProc
-    if (present(assignProc)) self%assignProc => assignProc
-    if (present(deleteProc)) self%deleteProc => deleteProc
-    if (present(shapeProc))  self%shapeProc  => shapeProc
-    if (present(cloneProc))  self%cloneProc  => cloneProc
+    if (present(assignProc))   self%assignProc   => assignProc
+    if (present(castProc))     self%castProc     => castProc
+    if (present(cloneObjProc)) self%cloneObjProc => cloneObjProc
+    if (present(cloneRefProc)) self%cloneRefProc => cloneRefProc
+    if (present(deleteProc))   self%deleteProc   => deleteProc
+    if (present(initProc))     self%initProc     => initProc
+    if (present(shapeProc))    self%shapeProc    => shapeProc
     self%initialized = .true.
   end subroutine
 
