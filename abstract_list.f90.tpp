@@ -72,10 +72,10 @@ module abstract_list
   !public :: al_index
 
   !_TypeReference_declare( public, List, type(List_t), scalar, \
-  !     initProc     = al_raw_init, \
-  !     deleteProc   = al_delete,   \
-  !     assignProc   = None,  \
-  !     cloneObjProc = None )
+  !     initProc   = al_raw_init, \
+  !     deleteProc = al_delete,   \
+  !     assignProc = _none,       \
+  !     cloneProc  = _type )
 
 
 !-----------------

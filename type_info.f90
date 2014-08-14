@@ -41,8 +41,8 @@ module type_info
   ! @param rank         - the rank of the type
   ! @param assignProc   - the subroutine to assign a variable      : subroutine assign( lhs, rhs )
   ! @param castProc     - the subroutine to cast a cptr to fortran : subroutine cast( ptr_c, ptr_f )
-  ! @param cloneObjProc - the function to clone an object reference: subroutine clone( var, res )
-  ! @param cloneRefProc - the function to clone an object          : subroutine clone( var, res )
+  ! @param cloneObjProc - the function to clone an object reference: subroutine clone( tgt, src )
+  ! @param cloneRefProc - the function to clone an object          : subroutine clone( tgt, src )
   ! @param deleteProc   - the subroutine to delete a variable      : subroutine delete( var )
   ! @param initProc     - the subroutine to initialize a variable  : subroutine init( var, hardness )
   ! @param shapeProc    - the function to inspect the shape        : subroutine shape( var, res, rank )

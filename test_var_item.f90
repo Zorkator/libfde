@@ -73,6 +73,11 @@ program testinger
   gr = ref(v1)
   v2 = VarItem(gr)
 
+  gr2 = clone(gr)
+  v2  = VarItem(gr2)
+
+  call free(gr2)
+
   call delete(ds)
   call delete(gr)
   call delete(gr2)

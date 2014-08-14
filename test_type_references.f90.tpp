@@ -25,7 +25,7 @@ module type_references
   !_TypeReference_declare( public, intXY,    integer*4, dimension(:,:) )
   !_TypeReference_declare( public, CallBack, procedure(simpleCall),  scalar )
   !_TypeReference_declare( public, CalcFunc, procedure(func),  scalar )
-  !_TypeReference_declare( public, ADing, type(Ding),  scalar, cloneObjProc = _default, deleteProc = ding_clear )
+  !_TypeReference_declare( public, ADing, type(Ding),  scalar, cloneProc = _type, deleteProc = ding_clear )
 
   contains
 
