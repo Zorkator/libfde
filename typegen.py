@@ -196,7 +196,12 @@ class ReferenceType(object):
       subroutine {typeId}_clone_ptr_( tgt, src )
         {baseType}, pointer, intent(out) :: tgt
         {baseType}, optional, intent(in) :: src
+        type(TypeInfo_t),        pointer :: ti
+
         allocate( tgt ) !< initializes res as default {typeId}
+        ti => static_type( tgt )
+        if (associated( ti%initProc )) &
+          call ti%initProc( tgt, 1 )
         if (present(src)) tgt = src
       end subroutine
       """
