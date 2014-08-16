@@ -1,51 +1,61 @@
 
-! helper macros for extending abstract_list
-! to be provided by #include "adt/abstract_list.fpp"
-! OR
-!  extend refgen.py ?
-
-# define _implementNewItem_( typeId, baseType ) \
-    ...
-# define _implementItemCast_( typeId, baseType ) \
-    ...
-
 module mylist
   use abstract_list
+  use generic_ref
+  use base_types
   implicit none
 
-  type :: MyItem_t
-    type (Item_t) :: super
-    integer*4     :: value
-  end type
+  !_ListItemType_declare( public, int32, integer*4 )
 
-  interface value; module procedure myitem_value;    end interface
+  type, public :: int32_item_t
+    !private
+    type(Item_t) :: super
+    integer*4    :: value
+  end type
+  type(TypeInfo_t), target :: type_int32_item
+
+  interface item_type   ; module procedure int32_itemtype_   ; end interface
+  interface newListItem ; module procedure int32_new_item_   ; end interface
+  interface value       ; module procedure int32_item_value_ ; end interface
   public :: value
 
 contains
 
-  subroutine new_item( tgt, src )
-    type(MyItem_t), pointer, intent(out) :: tgt
-    type(MyItem_t), optional, intent(in) :: src
+  !_ListItemType_implementAll()
+
+  function int32_itemtype_( val ) result(res)
+    integer*4 ,    intent(in) :: val
+    type(TypeInfo_t), pointer :: res
+    type(int32_item_t)        :: item
+    res => type_int32_item
+    if (.not. res%initialized) &
+      call init_TypeInfo( res, 'int32_item', 'type(int32_item_t)', &
+        int(storage_size(item)/4), 0, subtype = static_type(val), cloneObjProc = int32_clone_item )
+  end function
+
+  function int32_new_item_( val ) result(res)
+    integer*4,       intent(in) :: val
+    type(Item_t),       pointer :: res
+    type(int32_item_t), pointer :: tgt => null()
     allocate( tgt )
-    if (present(src)) &
-      tgt = src
-  end subroutine
-
-  function newItem( val ) result(res)
-    integer*4,   intent(in) :: val
-    type(Item_t),   pointer :: res
-    type(MyItem_t), pointer :: tgt => null()
-
-    call new_item( tgt, tgt )
     tgt%value = val
     res => tgt%super
   end function
 
-  function myitem_value( idx ) result(res)
+  subroutine int32_clone_item( tgt, src )
+    type(Item_t),       pointer, intent(out) :: tgt
+    type(int32_item_t),           intent(in) :: src
+    type(int32_item_t), pointer              :: ptr => null()
+    allocate( ptr )
+    ptr%value = src%value
+    tgt => ptr%super
+  end subroutine
+
+  function int32_item_value_( idx ) result(res)
     use iso_c_binding
-    type(ListIndex_t)    :: idx
-    integer*4,      pointer :: res
-    type(MyItem_t), pointer :: ptr
+    type(ListIndex_t)           :: idx
+    integer*4,          pointer :: res
+    type(int32_item_t), pointer :: ptr
     call c_f_pointer( c_loc(idx%node), ptr )
     res => ptr%value
   end function
@@ -57,7 +67,6 @@ end module
 
 program testinger
   use var_item
-  use abstract_list
   use base_types
   use mylist
   use iso_c_binding
@@ -65,23 +74,25 @@ program testinger
 
   type (List_t) :: l1, l2
   integer*4   :: cnt
-  type (MyItem_t), pointer :: ptr
+  !type (MyItem_t), pointer :: ptr
   type (VarItem_t)         :: var
   type (GenericRef_t)      :: ref1
   type (ListIndex_t)       :: idx
   procedure(), pointer :: castProc => null()
   integer*4                :: array(10)
 
-  call initialize( l1, static_type(1) )
-  call initialize( l2, static_type(1) )
+  call initialize( l1, item_type(1) )
+  call initialize( l2, item_type(1) )
+
+  !call initialize( l2, item_type(1) )
 
   print *, is_valid(l1)
-  print *, is_valid(l1, static_type(1))
+  print *, is_valid(l1, item_type(1))
   print *, is_valid(l1, static_type(2.3))
 
   do cnt = 1, 10
     array(cnt) = cnt
-    call append( l2, newItem( cnt ) )
+    call append( l2, newListItem( cnt ) )
   end do
 
   _exp("empty")
@@ -101,7 +112,7 @@ program testinger
 
   idx = index( l1, 3 )
   do cnt = -5, -1
-    call insert( index(l1, last), newItem(cnt) )
+    call insert( index(l1, last), newListItem(cnt) )
   end do
 
   _exp("1..9, -5..-1, 10")
@@ -155,6 +166,15 @@ program testinger
   call printList( l1 )
   call printList( l2 )
 
+  l2 = l1
+  call printList( l1 )
+  call printList( l2 )
+
+  l2 = index(l1, last, -1)
+  call printList( l2 )
+  l2 = index(l2, 1, 2 )
+  call printList( l2 )
+
 
   call insert( index(l1, first, 0), index(l2, last, -1) )
   call append( l2, index(l1, first, 2) )
@@ -172,16 +192,16 @@ program testinger
   idx = index( idx, 1 )
   idx = index( idx, 1 )
 
-  print *, array( 1: )
-  print *, array( 1::5 )
-  print *, array( ::5 )
-  print *, array( ::-2 ) !< leer
-  print *, array( :2 )
-  print *, array( :-2 )
-  print *, array( :-2 )
-  
-  array(::2) = 0
-  print *, array
+  !print *, array( 1: )
+  !print *, array( 1::5 )
+  !print *, array( ::5 )
+  !print *, array( ::-2 ) !< leer
+  !print *, array( :2 )
+  !print *, array( :-2 )
+  !print *, array( :-2 )
+  !
+  !array(::2) = 0
+  !print *, array
 
   ! giving an end makes an index effectively a range
   ! end is not implemented yet ...
@@ -193,16 +213,17 @@ program testinger
 
   print *, value( index(l1) )
 
-  !ref1 = clone(ref1)
-  !call free( ref1 ) !< segfaults because of shallow copy!
-  call delete( ref1 )
+  ref1 = clone(ref1)
+  call printList( List(ref1) )
 
-  call clear( l1 )
+  call free( ref1 )
+  call delete( ref1 )
   call delete( l1 )
-  call delete( l2, static_type(l2) )
+  call delete( l2 )
 
   
   contains
+
 
   subroutine printItems( idx )
     type(ListIndex_t) :: idx
@@ -240,9 +261,9 @@ program testinger
     if (present(end))    end_    = end
     if (present(stride)) stride_ = stride
 
-    call delete( list, static_type(1) )
+    call clear( list, item_type(1) )
     do i = beg_, end_, stride_
-      call append( list, newItem(i) )
+      call append( list, newListItem(i) )
     end do
   end subroutine
 

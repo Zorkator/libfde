@@ -10,6 +10,14 @@ module abstract_list
     type (Item_t), pointer :: prev => null(), next => null()
   end type
 
+  interface
+    subroutine ItemCloner( tgt, src )
+      import Item_t
+      type(Item_t), pointer, intent(out) :: tgt
+      type(Item_t),           intent(in) :: src
+    end subroutine
+  end interface
+
 
   type, public :: List_t
     private
@@ -47,8 +55,9 @@ module abstract_list
   interface insert    ; module procedure ali_insert_range                                ; end interface ! EXPERIMENTAL
   interface remove    ; module procedure ali_remove_idx                                  ; end interface
 
-  interface operator(==); module procedure ali_eq_ali, ali_eq_item                       ; end interface
-  interface operator(/=); module procedure ali_ne_ali, ali_ne_item                       ; end interface
+  interface assignment(=); module procedure al_assign_al, al_assign_idx                  ; end interface
+  interface operator(==) ; module procedure ali_eq_ali, ali_eq_item                      ; end interface
+  interface operator(/=) ; module procedure ali_ne_ali, ali_ne_item                      ; end interface
 
   integer*4, parameter :: first = 1, last = -1, tail = 0
 
@@ -67,15 +76,15 @@ module abstract_list
   public :: insert
   public :: remove
 
-  public :: operator(==), operator(/=)
+  public :: operator(==), operator(/=), assignment(=)
 
   !public :: al_index
 
   !_TypeReference_declare( public, List, type(List_t), scalar, \
-  !     initProc   = al_raw_init, \
-  !     deleteProc = al_delete,   \
-  !     assignProc = _none,       \
-  !     cloneProc  = _type )
+  !     initProc   = al_raw_init,  \
+  !     deleteProc = al_delete,    \
+  !     assignProc = al_assign_al, \
+  !     cloneMode  = _type )
 
 
 !-----------------
@@ -204,37 +213,40 @@ module abstract_list
   end subroutine
 
 
-  subroutine al_clear( self )
+  subroutine al_clear( self, new_item_type )
     type (List_t), target, intent(inout) :: self
-    call al_delete( self, self%typeInfo )
+    type(TypeInfo_t),   optional, target :: new_item_type
+    call al_delete( self )
+    if (present(new_item_type)) &
+      self%typeInfo => new_item_type
   end subroutine
 
   
-  subroutine al_delete( self, item_type )
+  subroutine al_delete( self )
     type(List_t), target, intent(inout) :: self
-    type(TypeInfo_t),  optional, target :: item_type
     type(Item_t),               pointer :: ptr, delPtr
-    procedure(),                pointer :: delItem => null()
+    procedure(),                pointer :: delValue => null()
 
     if (associated( self%typeInfo )) &
-      delItem => self%typeInfo%deleteProc
+      delValue => self%typeInfo%subtype%deleteProc
 
     ptr => self%item%next
     do while (.not. associated( ptr, self%item ))
       delPtr => ptr
       ptr    => ptr%next
-      if (associated( delItem )) &
-        call delItem( delPtr )
+      if (associated( delValue )) &
+        call delValue( delPtr )
       deallocate( delPtr )
     end do
-    call al_typed_init( self, item_type )
+    call al_initialize_item( self%item )
+    self%length = 0
   end subroutine
 
 
   function al_item_type( self ) result(res)
     type(List_t),  intent(in) :: self
     type(TypeInfo_t), pointer :: res
-    if (associated( self%typeInfo )) then; res => self%typeInfo
+    if (associated( self%typeInfo )) then; res => self%typeInfo%subtype
                                      else; res => type_void
     end if
   end function
@@ -463,9 +475,48 @@ module abstract_list
 
 
   subroutine al_assign_al( lhs, rhs )
-    type(List_t), intent(inout) :: lhs
-    type(List_t),    intent(in) :: rhs
-    ! TODO: how to clone items?
+    type(List_t), target, intent(inout) :: lhs
+    type(List_t), target,    intent(in) :: rhs
+    type(Item_t),               pointer :: copy, ptr, base
+    procedure(ItemCloner),      pointer :: cloneItem
+
+    base => rhs%item%next%prev !< sorry, but rhs is a shallow copy!
+    if (.not. associated( base, lhs%item )) then
+      cloneItem => rhs%typeInfo%cloneObjProc
+      ptr       => base%next
+      call clear( lhs, rhs%typeInfo )
+      do while (.not. associated( ptr, base ))
+        call cloneItem( copy, ptr )
+        call append( lhs, copy )
+        ptr => ptr%next
+      end do
+    end if
+  end subroutine
+
+
+  subroutine al_assign_idx( lhs, rhs )
+    type(List_t), target, intent(inout) :: lhs
+    type(ListIndex_t),       intent(in) :: rhs
+    type(ListIndex_t)                   :: idx
+    type(Item_t),               pointer :: copy
+    procedure(ItemCloner),      pointer :: cloneItem
+    type(List_t)                        :: tmp
+
+    if (associated( rhs%host, lhs )) then
+      call initialize( tmp, lhs%typeInfo )
+      call insert( index(tmp, tail, 0), rhs )
+      call clear( lhs, lhs%typeInfo )
+      call append( lhs, tmp )
+    else
+      idx = rhs
+      cloneItem => idx%host%typeInfo%cloneObjProc
+      call clear( lhs, idx%host%typeInfo )
+      do while (is_valid(idx))
+        call cloneItem( copy, idx%node )
+        call append( lhs, copy )
+        call next(idx)
+      end do
+    end if
   end subroutine
 
 end module

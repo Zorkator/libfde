@@ -6,11 +6,12 @@ module type_info
 
 
   type, public :: TypeInfo_t
-    character(32) :: typeId;     integer*2, private :: typeId_term   = 0
-    character(32) :: baseType;   integer*2, private :: baseType_term = 0
-    integer*4     :: byteSize    =  0
-    integer*4     :: rank        =  0
-    logical       :: initialized = .false.
+    character(32)             :: typeId;     integer*2, private :: typeId_term   = 0
+    character(32)             :: baseType;   integer*2, private :: baseType_term = 0
+    integer*4                 :: byteSize    =  0
+    integer*4                 :: rank        =  0
+    type(TypeInfo_t), pointer :: subtype     => null()
+    logical                   :: initialized = .false.
 
     ! type specific subroutines called by generic interfaces 
     procedure(), nopass, pointer :: assignProc   => null()
@@ -27,7 +28,7 @@ module type_info
     integer, pointer :: ptr
   end type
 
-  type(TypeInfo_t), target :: type_void = TypeInfo_t( "void", 0, "", 0, 0, 0, .true., &
+  type(TypeInfo_t), target :: type_void = TypeInfo_t( "void", 0, "", 0, 0, 0, null(), .true., &
                                                        null(), null(), null(), null(), null(), null(), null() )
 
   contains
@@ -48,18 +49,20 @@ module type_info
   ! @param shapeProc    - the function to inspect the shape        : subroutine shape( var, res, rank )
   !*
   !PROC_EXPORT_1REF( init_TypeInfo, self )
-  subroutine init_TypeInfo( self, typeId, baseType, bitSize, rank, &
+  subroutine init_TypeInfo( self, typeId, baseType, bitSize, rank, subtype, &
                             assignProc, castProc, cloneObjProc, cloneRefProc, deleteProc, initProc, shapeProc )
-    type(TypeInfo_t),  intent(inout) :: self
-    character(len=*),     intent(in) :: typeId, baseType
-    integer*4,            intent(in) :: bitSize
-    integer*4,            intent(in) :: rank
-    procedure(),            optional :: assignProc, castProc, cloneObjProc, cloneRefProc, deleteProc, initProc, shapeProc
+    type(TypeInfo_t),    intent(inout) :: self
+    character(len=*),       intent(in) :: typeId, baseType
+    integer*4,              intent(in) :: bitSize
+    integer*4,              intent(in) :: rank
+    type(TypeInfo_t), target, optional :: subtype
+    procedure(),              optional :: assignProc, castProc, cloneObjProc, cloneRefProc, deleteProc, initProc, shapeProc
 
-    self%typeId   = adjustl(typeId);   self%typeId_term   = 0
-    self%baseType = adjustl(baseType); self%baseType_term = 0
-    self%byteSize = bitSize/8
-    self%rank     = rank
+    self%typeId   =  adjustl(typeId);   self%typeId_term   = 0
+    self%baseType =  adjustl(baseType); self%baseType_term = 0
+    self%byteSize =  bitSize/8
+    self%rank     =  rank
+    self%subtype  => subtype
 
     ! pre-initialize optional arguments
     self%assignProc   => null()

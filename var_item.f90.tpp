@@ -3,7 +3,6 @@
 
 module var_item
   use iso_c_binding
-  use type_info
   use generic_ref
   use dynamic_string
   use base_types
@@ -88,7 +87,7 @@ module var_item
   !     initProc   = vi_initialize, \
   !     assignProc = vi_assign_vi,  \
   !     deleteProc = vi_delete,     \
-  !     cloneProc  = _type )
+  !     cloneMode  = _type )
 
   
 !-----------------

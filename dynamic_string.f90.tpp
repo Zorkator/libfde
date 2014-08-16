@@ -3,7 +3,6 @@ module dynamic_string
   use iso_c_binding
   use base_string
   use generic_ref
-  use type_info
   implicit none
   private
 
@@ -114,7 +113,7 @@ module dynamic_string
   !     initProc   = ds_initialize, \
   !     assignProc = ds_assign_ds,  \
   !     deleteProc = ds_delete,     \
-  !     cloneProc  = _type )
+  !     cloneMode  = _type )
 
 !-----------------
   contains

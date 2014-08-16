@@ -2,8 +2,8 @@
 module base_types
   use iso_c_binding
   use generic_ref
-  use type_info
   implicit none
+  private
 
   !_TypeReference_declare( public, bool,       logical,     scalar )
   !_TypeReference_declare( public, int8,       integer*1,   scalar )

@@ -40,11 +40,16 @@ module generic_ref
   public :: free
   public :: dynamic_type
 
+  ! declare type_info necessities public
+
+  public :: TypeInfo_t, init_TypeInfo, type_void, void_t 
+
+
   !_TypeReference_declare( public, ref, type(GenericRef_t), scalar, \
   !     initProc   = gr_initialize, \
   !     assignProc = gr_assign_gr,  \
   !     deleteProc = gr_delete,     \
-  !     cloneProc  = _type,         \
+  !     cloneMode  = _type,         \
   !     derefName  = deref )
 
 !-----------------

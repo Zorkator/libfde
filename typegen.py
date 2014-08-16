@@ -153,17 +153,16 @@ class ReferenceType(object):
     """,
     
     # parameters:
-    #   typeId:    type identifier
-    #   baseType:  fortran base type | type(...) | procedure(...)
-    #   dimType:   ('', ', dimension(:,...)')[has_dimension]
-    #   cloneBy:   <cloneCode> [alloc_clone | proc_clone]
-    #
+    #   typeId:        type identifier
+    #   baseType:      fortran base type | type(...) | procedure(...)
+    #   dimType:       ('', ', dimension(:,...)')[has_dimension]
+    #   code_clonePtr: 'tgt => src' | 'call <typeId>_clone_ptr_( tgt, src )'
     ref_cloner = """
     subroutine {typeId}_clone_ref_( tgt_ref, src_ref )
       use iso_c_binding
       type(GenericRef_t)                      :: tgt_ref
       type(GenericRef_t),          intent(in) :: src_ref
-      {baseType}{dimType},            pointer :: src, tgt
+      {baseType}{dimType},            pointer :: src, tgt => null()
     
       src => {typeId}_decode_ref_( src_ref )
       {code_clonePtr}
@@ -305,18 +304,17 @@ class ReferenceType(object):
     self.valTarget = (', target, intent(in)', '')[self._isProc]
     self.dimType   = ('', ', %s' % dimType)[self._isArray]
     self.shapeArg  = ('', ', shape(src)')[self._isArray]
-    self.keySpecs  = ''
 
-    if self._typeProcs:
-      self.keySpecs = ', ' + ', '.join( '%s = %s' % i for i in self._keySpecs.items() )
-      if self._isProc:
-        print 'WARNING: given type procs %s are ignored for procedure type "%s"' % (self._typeProcs, typeId)
+    if self._keySpecs: self.keySpecs = ', ' + ', '.join( '%s = %s' % i for i in self._keySpecs.items() )
+    else             : self.keySpecs = ''
 
     if self._isArray:
       self._typeProcs.setdefault( 'shapeProc', typeId + '_inspect_' )
 
     if self._isProc:
-      self._typeProcs.setdefault( 'cloneProc', '_none' ) #< disable cloning for procedure types
+      self._keySpecs.setdefault( 'cloneMode', '_none' ) #< if not set explicitly, we disable cloning for procedure types
+      if self._typeProcs:
+        print 'WARNING: given type procs %s are ignored for procedure type "%s"' % (self._typeProcs, typeId)
 
     for procId in ('initProc', 'assignProc', 'deleteProc', 'shapeProc'):
       procArg  = ''
@@ -326,7 +324,7 @@ class ReferenceType(object):
       setattr( self, procId, procArg )
 
     # handle type cloning ...
-    ptrClonerId     = self._typeProcs.get('cloneProc', '_shallow')        #< by default clone via shallow copy
+    ptrClonerId     = self._keySpecs.get('cloneMode', '_shallow')         #< by default clone via shallow copy
     self._ptrCloner = self._template['ptr_cloner'].get( ptrClonerId, '' ) #< get code for default implementation
     
     if self._ptrCloner:
