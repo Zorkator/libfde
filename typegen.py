@@ -58,6 +58,12 @@ class ReferenceType(object):
     type, private :: {typeId}_wrap_t
        {baseType}{baseExtra}{dimType}, pointer :: ptr
     end type
+
+    type, private :: {typeId}_encoder_t
+      type(TypeInfo_t), pointer :: typeInfo
+      type({typeId}_wrap_t)     :: ref_wrap
+    end type
+
     type(TypeInfo_t), target :: type_{typeId}
     """,
 
@@ -65,7 +71,7 @@ class ReferenceType(object):
     #   access: private | public
     #
     gen_itf = """
-    {access} :: ref
+    {access} :: ref_of
     {access} :: static_type
     """,
   
@@ -75,7 +81,7 @@ class ReferenceType(object):
     #   derefName: identifier for dereferencing type
     #
     ref_itf = """
-    interface ref        ; module procedure {typeId}_encode_ref_ ; end interface
+    interface ref_of     ; module procedure {typeId}_encode_ref_ ; end interface
     interface {derefName}; module procedure {typeId}_decode_ref_ ; end interface
     interface is_{typeId}; module procedure {typeId}_in_ref_     ; end interface
     interface static_type; module procedure {typeId}_typeinfo_   ; end interface
@@ -110,11 +116,16 @@ class ReferenceType(object):
     function {typeId}_encode_ref_( val ) result(res)
       use iso_c_binding
       {baseType}{dimType}, target, intent(in) :: val
-      type(GenericRef_t)                      :: res
-      type({typeId}_wrap_t),           target :: wrap
-    
-      wrap%ptr => val
-      call gr_set_TypeReference( res, c_loc(wrap), int(storage_size(wrap),4), static_type(val) )
+      type({typeId}_encoder_t),        target :: encoder
+      real*4,                       parameter :: chunkSize = storage_size(GenericRef_Encoding_t(null()))/8.0
+      integer*4,                    parameter :: bufSize   = ceiling((storage_size(encoder)/8) / chunkSize)
+      type(GenericRef_Encoding_t)             :: res(bufSize)
+      type(GenericRef_Encoding_t), dimension(:), pointer :: fptr
+
+      encoder%typeInfo     => static_type(val)
+      encoder%ref_wrap%ptr => val
+      call c_f_pointer( c_loc(encoder), fptr, (/bufSize/) )
+      res = fptr
     end function
     """,
     

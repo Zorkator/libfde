@@ -13,10 +13,14 @@ module generic_ref
     type(TypeInfo_t), pointer :: typeInfo => null()
   end type
 
+  type, public :: GenericRef_Encoding_t
+    integer, pointer :: ptr
+  end type
+
   ! interface definitions
 
   interface assignment(=)
-    module procedure gr_assign_gr
+    module procedure gr_assign_gr, gr_assign_encoding
   end interface
 
   interface rank        ; module procedure gr_rank        ; end interface
@@ -42,15 +46,14 @@ module generic_ref
 
   ! declare type_info necessities public
 
-  public :: TypeInfo_t, init_TypeInfo, type_void, void_t 
-
+  public :: TypeInfo_t, TypeInfo_ptr_t, init_TypeInfo, type_void, void_t 
 
   !_TypeReference_declare( public, ref, type(GenericRef_t), scalar, \
   !     initProc   = gr_initialize, \
   !     assignProc = gr_assign_gr,  \
   !     deleteProc = gr_delete,     \
-  !     cloneMode  = _type,         \
-  !     derefName  = deref )
+  !     cloneMode  = _type )
+
 
 !-----------------
   contains
@@ -73,6 +76,21 @@ module generic_ref
 
     call bs_assign_bs( lhs%ref_str, rhs%ref_str )
     lhs%typeInfo => rhs%typeInfo
+  end subroutine
+
+
+  subroutine gr_assign_encoding( lhs, rhs )
+    type(GenericRef_t),                             intent(inout) :: lhs
+    type(GenericRef_Encoding_t), dimension(:), target, intent(in) :: rhs
+    character(len=1), dimension(:),                       pointer :: fptr
+    type(TypeInfo_ptr_t)                                          :: tiWrap
+    type(TypeInfo_ptr_t),                                 pointer :: tiPtr
+    integer*4,                                          parameter :: ref_idx = storage_size(tiWrap)/8 + 1
+    
+    call c_f_pointer( c_loc(rhs(1)), fptr, (/ size(rhs) * storage_size(GenericRef_Encoding_t(null()))/8 /) )
+    call c_f_pointer( c_loc(rhs(1)), tiPtr )
+    call bs_assign_buf( lhs%ref_str, fptr(ref_idx:) )
+    lhs%typeInfo => tiPtr%ptr
   end subroutine
 
 

@@ -70,7 +70,7 @@ program testinger
   ds2 = buffer
 
   !print *, cptr(ds2)
-  strRef = ref(ds2)
+  strRef = ref_of(ds2)
   print *, is_DynamicString(strRef)
   ds = DynamicString(strRef)
   print *, char(DynamicString(strRef))

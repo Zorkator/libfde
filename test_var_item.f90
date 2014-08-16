@@ -19,9 +19,9 @@ program testinger
   print *, "DynamicString: ", storage_size(ds)/8
   print *, "GenericRef: ",    storage_size(gr)/8
 
-  v1 = VarItemOf(345597)
+  v1 = VarItem_of(345597)
   print *, int32(v1)
-  v1 = VarItemOf(34.55)
+  v1 = VarItem_of(34.55)
   print *, real32(v1)
 
   print *, is_valid(v1)
@@ -30,13 +30,14 @@ program testinger
   ti = dynamic_type(v1)
   print *, ti%typeId
 
-  v1 = VarItemOf(DynamicString('testinger'))
+  v1 = VarItem_of(DynamicString('testinger'))
   v1 = 5.34
   v1 = DynamicString("testinger")
   v1 = 123
   v1 = 'bla & text'
-  v1 = VarItemOf('bla & text')
-  v1 = ref(gr)
+  v1 = VarItem_of('bla & text')
+  v1 = ref_of(gr)
+  v1 = VarItem_of(ref_of(gr))
 
   v2 = v1
   v1 = v1
@@ -62,15 +63,15 @@ program testinger
   v2 = intvar
   intvar = v1
 
-  gr2 = ref(intvar)
-  gr  = ref(gr2)
+  gr2 = ref_of(intvar)
+  gr  = ref_of(gr2)
 
   do while (is_ref(gr))
-    gr = deref(gr)
+    gr = ref(gr)
   end do
   v1 = int32(gr)
 
-  gr = ref(v1)
+  gr = ref_of(v1)
   v2 = VarItem(gr)
 
   gr2 = clone(gr)
@@ -104,14 +105,15 @@ end
     use type_info                      ;\
     use dynamic_string                 ;\
     use iso_c_binding                  ;\
+    implicit none                      ;\
     _baseType                 :: val   ;\
     _baseType,        pointer :: ptr   ;\
     type(VarItem_t)           :: vi    ;\
     type(TypeInfo_t), pointer :: ti    ;\
     complex*16, parameter :: cplx = (0.234,-3.4) ;\
     val = _val                         ;\
-    vi  = VarItemOf(val)               ;\
-    vi  = VarItemOf(_val)              ;\
+    vi  = VarItem_of(val)              ;\
+    vi  = VarItem_of(_val)             ;\
     vi  = cplx                         ;\
     vi  = _val                         ;\
     vi  = val                          ;\
@@ -138,7 +140,7 @@ end
   _implementTest_(complex64,  complex*16, (1.5,2.5), _nop)
   _implementTest_(c_void_ptr, type(c_ptr), C_NULL_PTR, _nop)
   _implementTest_(string,     type(DynamicString_t), 'testinger string', _delete)
-  _implementTest_(gref,       type(GenericRef_t), val, _delete)
+  _implementTest_(ref,        type(GenericRef_t), val, _delete)
 
 # if defined VARITEM_REAL16
   _implementTest_(real128,    real*16, 1.5, _nop)

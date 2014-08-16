@@ -18,51 +18,68 @@ program testinger
   procedure(func),       pointer :: f  => null()
   procedure(simpleCall), pointer :: sc => null()
   type(Ding)                     :: dong
+  integer*4                      :: i, j
 
   type(c_ptr)         :: cpointer
   type(GenericRef_t)  :: ref1, ref2, ref3
   complex*32          :: cplx
   complex*32, pointer :: cplx_ptr
 
-  ref1 = ref(cplx)
+  intArray = 34
+
+  ref1 = ref_of(intArray)
+  ref2 = ref_of(ref1)
+  ref3 = ref(ref2)
+
+  ptr2d => intXY(ref3)
+
+
+  do i = 1, 300
+    do j = 1, 300
+      ref1 = ref_of(ref2)
+    end do
+  end do
+
+
+  ref1 = ref_of(cplx)
 
   cplx_ptr => complex128(ref1)
   cplx_ptr = (1.0, -3)
 
 
-  ref2 = ref(42)
-  ref1 = ref(ref2)
+  ref2 = ref_of(42)
+  ref1 = ref_of(ref2)
   print *, int32(ref2)
-  print *, int32(deref(ref1))
+  print *, int32(ref(ref1))
 
   if (is_ref(ref1)) then
-    ref3 = deref(ref1)
+    ref3 = ref(ref1)
     if (is_int32(ref3)) &
       print *, int32(ref3)
   end if
 
   ref3 = clone(ref1)
-  print *, int32(deref(ref3))
+  print *, int32(ref(ref3))
   call free( ref3 )
 
-  ref1 = ref(intArray)
+  ref1 = ref_of(intArray)
   ptr2d => intXY(ref1)
   ptr2d = 42
   cpointer = cptr(ref1)
 
-  ref2 = ref(4.23)
+  ref2 = ref_of(4.23)
   ref1 = clone(ref2)
 
   call free(ref1)
 
-  ref1 = ref(dong)
+  ref1 = ref_of(dong)
 
   ref2 = clone(ref1)
 
   call free(ref2)
 
   allocate( ptr2d(4,4) )
-  ref1 = ref(ptr2d)
+  ref1 = ref_of(ptr2d)
 
   ptr2d => null()
   ptr2d => intXY(ref1)

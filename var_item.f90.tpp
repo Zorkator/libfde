@@ -32,13 +32,13 @@ module var_item
     type(TypeInfo_t), pointer :: typeInfo        => null()
   end type
 
-  ! declare VarItemOf(<type>) interface ...
-  ! NOTE: It's named VarItemOf to avoid ambiguity with VarItem-interface for type deref.
+  ! declare VarItem_of(<type>) interface ...
+  ! NOTE: It's named VarItem_of to avoid ambiguity with VarItem-interface for type deref.
 # define _varitem_type_(typeId, baseType) \
     , _paste(vi_from_,typeId)
 
-  interface VarItemOf
-    module procedure vi_from_vi, vi_from_charString &
+  interface VarItem_of
+    module procedure vi_from_vi, vi_from_charString, vi_from_ref_encoding &
                      _TableOf_varitem_types_
   end interface
 # undef _varitem_type_
@@ -57,7 +57,7 @@ module var_item
     , _paste(typeId,_assign_vi), _paste(vi_assign_,typeId)
 
   interface assignment(=)
-    module procedure vi_assign_vi, vi_assign_charString &
+    module procedure vi_assign_vi, vi_assign_charString, vi_assign_ref_encoding &
                      _TableOf_varitem_types_
   end interface
 # undef _varitem_type_
@@ -68,7 +68,7 @@ module var_item
     interface dynamic_type; module procedure vi_dynamic_type; end interface
     interface delete      ; module procedure vi_delete      ; end interface
 
-    public :: VarItemOf
+    public :: VarItem_of
     public :: is_valid
     public :: dynamic_type
     public :: delete
@@ -127,7 +127,7 @@ module var_item
   _implementConstructor_(complex64,  complex*16)
   _implementConstructor_(c_void_ptr, type(c_ptr))
   _implementConstructor_(string,     type(DynamicString_t))
-  _implementConstructor_(gref,       type(GenericRef_t))
+  _implementConstructor_(ref,        type(GenericRef_t))
 
 
   function vi_from_charString( val ) result(res)
@@ -136,6 +136,16 @@ module var_item
     type(VarItem_t),        target :: res
 
     call vi_reshape( res, static_type(string_var), 0 )
+    call c_f_pointer( c_loc(res%data(1)), ptr )
+    ptr = val
+  end function
+
+
+  function vi_from_ref_encoding( val ) result(res)
+    type(GenericRef_Encoding_t), dimension(:), intent(in) :: val
+    type(GenericRef_t),                           pointer :: ptr
+    type(VarItem_t),                               target :: res
+    call vi_reshape( res, static_type(ref_var), 0 )
     call c_f_pointer( c_loc(res%data(1)), ptr )
     ptr = val
   end function
@@ -174,7 +184,7 @@ module var_item
   _implementGetter_(complex64,  complex*16)
   _implementGetter_(c_void_ptr, type(c_ptr))
   _implementGetter_(string,     type(DynamicString_t))
-  _implementGetter_(gref,       type(GenericRef_t))
+  _implementGetter_(ref,        type(GenericRef_t))
 
 
 # define _implementSetter_(typeId, baseType)          \
@@ -198,7 +208,7 @@ module var_item
   _implementSetter_(complex64,  complex*16)
   _implementSetter_(c_void_ptr, type(c_ptr))
   _implementSetter_(string,     type(DynamicString_t))
-  _implementSetter_(gref,       type(GenericRef_t))
+  _implementSetter_(ref,        type(GenericRef_t))
 
 
   subroutine vi_assign_charString( lhs, rhs )
@@ -206,6 +216,16 @@ module var_item
     character(len=*),           intent(in) :: rhs
     type(DynamicString_t),         pointer :: ptr
     call vi_reshape( lhs, static_type(string_var), 1 )
+    call c_f_pointer( c_loc(lhs%data(1)), ptr )
+    ptr = rhs
+  end subroutine
+
+  
+  subroutine vi_assign_ref_encoding( lhs, rhs )
+    type(VarItem_t),                target, intent(inout) :: lhs
+    type(GenericRef_Encoding_t), dimension(:), intent(in) :: rhs
+    type(GenericRef_t),                           pointer :: ptr
+    call vi_reshape( lhs, static_type(ref_var), 1 )
     call c_f_pointer( c_loc(lhs%data(1)), ptr )
     ptr = rhs
   end subroutine
@@ -247,7 +267,7 @@ module var_item
   _implementAssignTo_(complex64,  complex*16)
   _implementAssignTo_(c_void_ptr, type(c_ptr))
   _implementAssignTo_(string,     type(DynamicString_t))
-  _implementAssignTo_(gref,       type(GenericRef_t))
+  _implementAssignTo_(ref,        type(GenericRef_t))
 
 
 # define _implementTypeCheck_(typeId, baseType)                            \
@@ -267,7 +287,7 @@ module var_item
   _implementTypeCheck_(complex64,  complex*16)
   _implementTypeCheck_(c_void_ptr, type(c_ptr))
   _implementTypeCheck_(string,     type(DynamicString_t))
-  _implementTypeCheck_(gref,       type(GenericRef_t))
+  _implementTypeCheck_(ref,        type(GenericRef_t))
 
 
 # if defined VARITEM_REAL16

@@ -23,6 +23,11 @@ module type_info
     procedure(), nopass, pointer :: shapeProc    => null()
   end type
 
+  
+  type, public :: TypeInfo_ptr_t
+    type(TypeInfo_t), pointer :: ptr
+  end type
+
 
   type, public :: void_t
     integer, pointer :: ptr

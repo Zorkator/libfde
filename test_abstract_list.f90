@@ -207,7 +207,7 @@ program testinger
   ! end is not implemented yet ...
   !idx = index( l1, begin, end, stride )
 
-  ref1 = ref(l1)
+  ref1 = ref_of(l1)
 
   print *, len(List(ref1))
 

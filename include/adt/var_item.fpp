@@ -15,7 +15,7 @@
     _varitem_type_(complex64,  complex*16)            \
     _varitem_type_(c_void_ptr, type(c_ptr))           \
     _varitem_type_(string,     type(DynamicString_t)) \
-    _varitem_type_(gref,       type(GenericRef_t))
+    _varitem_type_(ref,        type(GenericRef_t))
 
 
   ! For ifort and gfortran (both, in various versions) using real*16 or complex*32 results in REALLY fragile code!
