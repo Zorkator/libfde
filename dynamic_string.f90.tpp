@@ -3,6 +3,7 @@ module dynamic_string
   use iso_c_binding
   use base_string
   use generic_ref
+  use abstract_list
   implicit none
   private
 
@@ -47,6 +48,7 @@ module dynamic_string
   public :: char
   public :: delete
   public :: attrib_permanent, attrib_volatile
+  public :: permanent_string, temporary_string
 
   public :: adjustl
   public :: adjustr
@@ -115,6 +117,8 @@ module dynamic_string
   !     deleteProc = ds_delete,     \
   !     cloneMode  = _type )
 
+  !_TypeGen_declare_ListItem( public, DynamicString, type(DynamicString_t), scalar )
+
 !-----------------
   contains
 !-----------------
@@ -122,10 +126,14 @@ module dynamic_string
   !_TypeGen_implementAll()
 
 
-  subroutine ds_initialize( ds, hardness )
+  subroutine ds_initialize( ds, has_proto, proto )
     type(DynamicString_t) :: ds
-    integer               :: hardness
-    call bs_init( ds%str, hardness )
+    integer               :: has_proto
+    type(DynamicString_t) :: proto
+
+    if (has_proto /= 0) then; call bs_init( ds%str, proto%str )
+                        else; call bs_init( ds%str )
+    end if
   end subroutine
 
 

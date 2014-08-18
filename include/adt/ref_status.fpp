@@ -21,5 +21,8 @@
 # define _ref_isHardLent(s)   (s(1) >  0 .and. s(2) == 0)
 # define _ref_isHardMine(s)   (s(1) >  0 .and. s(2) >  0)
 
+# define _ref_hardness(s)     s(1)
+# define _ref_ownership(s)    s(2)
+
 #endif
 

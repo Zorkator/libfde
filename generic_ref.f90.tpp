@@ -13,6 +13,10 @@ module generic_ref
     type(TypeInfo_t), pointer :: typeInfo => null()
   end type
 
+  type(GenericRef_t), parameter :: permanent_ref = GenericRef_t( permanent_string, null() )
+  type(GenericRef_t), parameter :: temporary_ref = GenericRef_t( temporary_string, null() )
+
+
   type, public :: GenericRef_Encoding_t
     integer, pointer :: ptr
   end type
@@ -42,6 +46,7 @@ module generic_ref
   public :: delete
   public :: free
   public :: dynamic_type
+  public :: permanent_ref, temporary_ref
 
   ! declare type_info necessities public
 
@@ -61,10 +66,14 @@ module generic_ref
   !_TypeGen_implementAll()
 
 
-  subroutine gr_initialize( self, hardness )
+  subroutine gr_initialize( self, has_proto, proto )
     type(GenericRef_t) :: self
-    integer            :: hardness
-    call bs_init( self%ref_str, hardness )
+    integer            :: has_proto
+    type(GenericRef_t) :: proto
+    
+    if (has_proto /= 0) then; call bs_init( self%ref_str, proto%ref_str )
+                        else; call bs_init( self%ref_str )
+    end if
     self%typeInfo => null()
   end subroutine
 

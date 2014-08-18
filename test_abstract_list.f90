@@ -6,23 +6,24 @@ program testinger
   use base_types
   use abstract_list
   use generic_ref
-  !use mylist
+  use dynamic_string
   use iso_c_binding
   implicit none
 
-  type (List_t) :: l1, l2
+  type (List_t) :: l1, l2, l3, l4, l5
   integer*4   :: cnt
-  !type (MyItem_t), pointer :: ptr
-  type (VarItem_t)         :: var
-  type (GenericRef_t)      :: ref1
-  type (ListIndex_t)       :: idx
+  type(VarItem_t)         :: var
+  type(GenericRef_t)      :: ref1
+  type(ListIndex_t)       :: idx
+  type(DynamicString_t)   :: strg 
   procedure(), pointer :: castProc => null()
   integer*4                :: array(10)
 
   call initialize( l1, item_type(1) )
   call initialize( l2, item_type(1) )
-
-  !call initialize( l2, item_type(1) )
+  call initialize( l3, item_type(l1) )
+  call initialize( l4, item_type(strg) )
+  !call initialize( l5, item_type(ref1) )
 
   print *, is_valid(l1)
   print *, is_valid(l1, item_type(1))
@@ -32,6 +33,18 @@ program testinger
     array(cnt) = cnt
     call append( l2, newListItem( cnt ) )
   end do
+
+  call append( l3, newListItem( l2 ) )
+  call append( l3, newListItem( l2 ) )
+
+  do cnt = 1, 5
+    call append( l4, newListItem(DynamicString('test')) )
+  end do
+
+  ! list of references ... not yet possible
+  !do cnt = 1, 3
+  !  call append( l4, newListItem(ref_of(cnt)) )
+  !end do
 
   _exp("empty")
   call printItems( index( l1 ) )
@@ -158,6 +171,8 @@ program testinger
   call delete( ref1 )
   call delete( l1 )
   call delete( l2 )
+  call delete( l3 )
+  call delete( l4 )
 
   
   contains

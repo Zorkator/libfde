@@ -11,6 +11,9 @@ module base_string
     character(len=1), dimension(:), pointer :: ptr     => null()
   end type
 
+  type(BaseString_t), parameter :: temporary_string = BaseString_t( _ref_WeakLent, 0, null() )
+  type(BaseString_t), parameter :: permanent_string = BaseString_t( _ref_WeakLent, 0, null() )
+
 
   type :: Attribute_t
     private
@@ -25,13 +28,15 @@ module base_string
 
   contains
 
-  subroutine bs_init( bs, hardness )
-    type(BaseString_t) :: bs
-    integer            :: hardness
+  subroutine bs_init( bs, proto )
+    type(BaseString_t)           :: bs
+    type(BaseString_t), optional :: proto
 
-    bs%ptr     => null()
-    bs%len     =  0
-    _ref_init( bs%refstat, hardness )
+    bs%ptr => null()
+    bs%len =  0
+    if (present(proto)) then; _ref_init( bs%refstat, _ref_hardness(proto%refstat) )
+                        else; bs%refstat = _ref_HardLent
+    end if
   end subroutine
 
 

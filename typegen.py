@@ -217,14 +217,14 @@ class RefType(TypeSpec):
       _type = """
       subroutine {typeId}_clone_ptr_( tgt, src )
         {baseType}, pointer, intent(out) :: tgt
-        {baseType}, optional, intent(in) :: src
+        {baseType},           intent(in) :: src
         type(TypeInfo_t),        pointer :: ti
 
         allocate( tgt ) !< initializes res as default {typeId}
         ti => static_type( tgt )
         if (associated( ti%initProc )) &
-          call ti%initProc( tgt, 1 )
-        if (present(src)) tgt = src
+          call ti%initProc( tgt, 1, src )
+        tgt = src
       end subroutine
       """
     ),
@@ -402,7 +402,7 @@ class ListItem(TypeSpec):
       res => type_{typeId}_item
       if (.not. res%initialized) &
         call init_TypeInfo( res, '{typeId}_item', 'type({typeId}_item_t)', &
-          int(storage_size(item),4), 0, subtype = static_type(val), cloneObjProc = {typeId}_clone_item )
+          int(storage_size(item),4), 0, subtype = static_type(val), cloneObjProc = {typeId}_clone_item_ )
     end function
     """,
 
@@ -411,18 +411,28 @@ class ListItem(TypeSpec):
       {baseType}{dimSpec}, intent(in) :: val
       type(Item_t),           pointer :: res
       type({typeId}_item_t),  pointer :: tgt => null()
+      type(TypeInfo_t),       pointer :: ti
+
       allocate( tgt )
+      ti => static_type( val )
+      if (associated( ti%initProc )) &
+        call ti%initProc( tgt%value, 0 ) !< init value as default instance!
       tgt%value = val
       res => tgt%super
     end function
     """,
 
     clone_item = """
-    subroutine {typeId}_clone_item( tgt, src )
+    subroutine {typeId}_clone_item_( tgt, src )
       type(Item_t), pointer, intent(out) :: tgt
       type({typeId}_item_t),  intent(in) :: src
       type({typeId}_item_t),     pointer :: ptr => null()
+      type(TypeInfo_t),          pointer :: ti
+
       allocate( ptr )
+      ti => static_type( ptr%value )
+      if (associated( ti%initProc )) &
+        call ti%initProc( ptr%value, 0 ) !< init value as default instance!
       ptr%value = src%value
       tgt => ptr%super
     end subroutine

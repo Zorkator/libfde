@@ -97,8 +97,10 @@ module var_item
   !_TypeGen_implementAll()
   
   
-  subroutine vi_initialize( self )
+  subroutine vi_initialize( self, has_proto, proto )
     type(VarItem_t) :: self
+    integer         :: has_proto
+    type(VarItem_t) :: proto
     self%data     = 0
     self%typeInfo => null()
   end subroutine
@@ -106,28 +108,30 @@ module var_item
 
 ! implement constructor routines
 
-# define _implementConstructor_(typeId, baseType)          \
+# define _implementConstructor_(typeId, baseType, proto)   \
     function _paste(vi_from_,typeId)( val ) result(res)   ;\
       baseType,    intent(in) :: val                      ;\
       baseType,       pointer :: ptr                      ;\
       type(VarItem_t), target :: res                      ;\
-      call vi_reshape( res, static_type(val), 0 )         ;\
+      if (vi_reshape( res, static_type(val) )) then       ;\
+        call res%typeInfo%initProc( res, 1, proto )       ;\
+      end if                                              ;\
       call c_f_pointer( c_loc(res%data(1)), ptr )         ;\
       ptr = val                                           ;\
     end function
 
-  _implementConstructor_(bool,       logical)
-  _implementConstructor_(int8,       integer*1)
-  _implementConstructor_(int16,      integer*2)
-  _implementConstructor_(int32,      integer*4)
-  _implementConstructor_(int64,      integer*8)
-  _implementConstructor_(real32,     real*4)
-  _implementConstructor_(real64,     real*8)
-  _implementConstructor_(complex32,  complex*8)
-  _implementConstructor_(complex64,  complex*16)
-  _implementConstructor_(c_void_ptr, type(c_ptr))
-  _implementConstructor_(string,     type(DynamicString_t))
-  _implementConstructor_(ref,        type(GenericRef_t))
+  _implementConstructor_(bool,       logical,   0)
+  _implementConstructor_(int8,       integer*1, 0)
+  _implementConstructor_(int16,      integer*2, 0)
+  _implementConstructor_(int32,      integer*4, 0)
+  _implementConstructor_(int64,      integer*8, 0)
+  _implementConstructor_(real32,     real*4,    0)
+  _implementConstructor_(real64,     real*8,    0)
+  _implementConstructor_(complex32,  complex*8, 0)
+  _implementConstructor_(complex64,  complex*16, 0)
+  _implementConstructor_(c_void_ptr, type(c_ptr), 0)
+  _implementConstructor_(string,     type(DynamicString_t), temporary_string)
+  _implementConstructor_(ref,        type(GenericRef_t),    temporary_ref)
 
 
   function vi_from_charString( val ) result(res)
@@ -135,7 +139,8 @@ module var_item
     type(DynamicString_t), pointer :: ptr
     type(VarItem_t),        target :: res
 
-    call vi_reshape( res, static_type(string_var), 0 )
+    if (vi_reshape( res, static_type(string_var) )) &
+      call res%typeInfo%initProc( res%data, 1, temporary_string )
     call c_f_pointer( c_loc(res%data(1)), ptr )
     ptr = val
   end function
@@ -145,7 +150,8 @@ module var_item
     type(GenericRef_Encoding_t), dimension(:), intent(in) :: val
     type(GenericRef_t),                           pointer :: ptr
     type(VarItem_t),                               target :: res
-    call vi_reshape( res, static_type(ref_var), 0 )
+    if (vi_reshape( res, static_type(ref_var) )) &
+      call res%typeInfo%initProc( res%data, 1, temporary_ref )
     call c_f_pointer( c_loc(res%data(1)), ptr )
     ptr = val
   end function
@@ -155,22 +161,27 @@ module var_item
     type(VarItem_t), intent(in) :: val
     type(VarItem_t)             :: res
 
-    call vi_reshape( res, val%typeInfo, 0 )
-    if (associated( res%typeInfo )) then
-      select case (associated( res%typeInfo%assignProc ))
-        case (.true.) ; call res%typeInfo%assignProc( res%data, val%data )
-        case (.false.); res%data = val%data
-      end select
+    if (vi_reshape( res, val%typeInfo )) then
+      res%data = 0 !< setting 0 here implies a temporary instance!
+      call res%typeInfo%initProc( res%data, 1, res%data )
+    end if
+
+    if (associated( res%typeInfo%assignProc )) then
+      call res%typeInfo%assignProc( res%data, val%data )
+    else
+      res%data = val%data
     end if
   end function
 
 
-# define _implementGetter_(typeId, baseType)                        \
-    function _paste(vi_get_,typeId)( self ) result(res)            ;\
-      type(VarItem_t), target, intent(in) :: self                  ;\
-      baseType,                   pointer :: res                   ;\
-      call vi_reshape( self, static_type(_paste(typeId,_var)), 1 ) ;\
-      call c_f_pointer( c_loc(self%data(1)), res )                 ;\
+# define _implementGetter_(typeId, baseType)                          \
+    function _paste(vi_get_,typeId)( self ) result(res)              ;\
+      type(VarItem_t), target, intent(in) :: self                    ;\
+      baseType,                   pointer :: res                     ;\
+      if (vi_reshape( self, static_type(_paste(typeId,_var)) )) then ;\
+        call self%typeInfo%initProc( self, 0 )                  ;\
+      end if                                                         ;\
+      call c_f_pointer( c_loc(self%data(1)), res )                   ;\
     end function
 
   _implementGetter_(bool,       logical)
@@ -192,7 +203,9 @@ module var_item
       type(VarItem_t), target, intent(inout) :: lhs  ;\
       baseType,                   intent(in) :: rhs  ;\
       baseType,                      pointer :: ptr  ;\
-      call vi_reshape( lhs, static_type(rhs), 1 )    ;\
+      if (vi_reshape( lhs, static_type(rhs) )) then  ;\
+        call lhs%typeInfo%initProc( lhs, 0 )    ;\
+      end if                                         ;\
       call c_f_pointer( c_loc(lhs%data(1)), ptr )    ;\
       ptr = rhs                                      ;\
     end subroutine
@@ -215,7 +228,8 @@ module var_item
     type(VarItem_t), target, intent(inout) :: lhs
     character(len=*),           intent(in) :: rhs
     type(DynamicString_t),         pointer :: ptr
-    call vi_reshape( lhs, static_type(string_var), 1 )
+    if (vi_reshape( lhs, static_type(string_var) )) &
+      call lhs%typeInfo%initProc( lhs, 0 )
     call c_f_pointer( c_loc(lhs%data(1)), ptr )
     ptr = rhs
   end subroutine
@@ -225,7 +239,8 @@ module var_item
     type(VarItem_t),                target, intent(inout) :: lhs
     type(GenericRef_Encoding_t), dimension(:), intent(in) :: rhs
     type(GenericRef_t),                           pointer :: ptr
-    call vi_reshape( lhs, static_type(ref_var), 1 )
+    if (vi_reshape( lhs, static_type(ref_var) )) &
+      call lhs%typeInfo%initProc( lhs, 0 )
     call c_f_pointer( c_loc(lhs%data(1)), ptr )
     ptr = rhs
   end subroutine
@@ -237,12 +252,13 @@ module var_item
 
     ! can't prevent self assignment ... (since fortran gives us a shallow copy of rhs)
     ! so in case - just do it and let sensitive types handle it themselves.
-    call vi_reshape( lhs, rhs%typeInfo, 1 ) !< lhs' get's always hard on assignment!
-    if (associated( lhs%typeInfo )) then
-      select case (associated( lhs%typeInfo%assignProc ))
-        case (.true.) ; call lhs%typeInfo%assignProc( lhs%data, rhs%data )
-        case (.false.); lhs%data = rhs%data
-      end select
+    if (vi_reshape( lhs, rhs%typeInfo )) &
+      call lhs%typeInfo%initProc( lhs, 0 )
+
+    if (associated( lhs%typeInfo%assignProc )) then
+      call lhs%typeInfo%assignProc( lhs%data, rhs%data )
+    else
+      lhs%data = rhs%data
     end if
   end subroutine
 
@@ -251,10 +267,17 @@ module var_item
     subroutine _paste(typeId,_assign_vi)( lhs, rhs )         ;\
       baseType,     intent(inout) :: lhs                     ;\
       type(VarItem_t), intent(in) :: rhs                     ;\
-      if (associated( rhs%typeInfo, static_type(lhs) )) then ;\
-        lhs = typeId(rhs)                                    ;\
+      baseType,           pointer :: ptr                     ;\
+      if (associated( static_type(lhs), rhs%typeInfo )) then ;\
+        call c_f_pointer( c_loc(rhs%data(1)), ptr )          ;\
+        lhs = ptr                                            ;\
       end if                                                 ;\
     end subroutine
+  ! CAUTION: Fortran assignment is a real mess - it just copies everything that dares to stand on the
+  !   right side of the assignment. Who came up with that crap?
+  ! For the pointer check (associated) above it is really important to give static_type() as the
+  !   first argument, otherwise Fortrans starts to deref self%typeInfo (WTH!?)
+  !   and compares the pointer returned by static_type() to this copy - which is of course different.
 
   _implementAssignTo_(bool,       logical)
   _implementAssignTo_(int8,       integer*1)
@@ -273,8 +296,11 @@ module var_item
 # define _implementTypeCheck_(typeId, baseType)                            \
     logical function _paste(vi_is_,typeId)( self ) result(res)            ;\
       type(VarItem_t), intent(in) :: self                                 ;\
-      res = associated( self%typeInfo, static_type(_paste(typeId,_var)) ) ;\
+      res = associated( static_type(_paste(typeId,_var)), self%typeInfo ) ;\
     end function
+  ! For the pointer check (associated) above it is really important to give static_type() as the
+  !   first argument, otherwise Fortrans starts to deref self%typeInfo (WTH!?)
+  !   and compares the pointer returned by static_type() to this copy - which is of course different.
 
   _implementTypeCheck_(bool,       logical)
   _implementTypeCheck_(int8,       integer*1)
@@ -333,24 +359,23 @@ module var_item
   end subroutine
  
 
-  subroutine vi_reshape( self, new_typeInfo, hardness )
+  function vi_reshape( self, new_typeInfo ) result(res)
     type(VarItem_t)                      :: self
-    !type(TypeInfo_t), target, intent(in) :: new_typeInfo 
-    type(TypeInfo_t), pointer, intent(in) :: new_typeInfo
-    integer,                  intent(in) :: hardness
+    type(TypeInfo_t), target, intent(in) :: new_typeInfo
+    logical                              :: res
 
+    res = .false.
     if (.not. associated( self%typeInfo, new_typeInfo )) then
       ! check if old type needs to be deleted ...
       if (associated( self%typeInfo )) then
         if (associated( self%typeInfo%deleteProc )) &
           call self%typeInfo%deleteProc( self%data )
       end if
-      ! check if new type needs to be initialized ...
-      if (associated( new_typeInfo%initProc )) &
-        call new_typeInfo%initProc( self%data, hardness )
+      ! return if new type needs to be initialized ...
+      res = associated( new_typeInfo%initProc )
       self%typeInfo => new_typeInfo
     end if
-  end subroutine
+  end function
 
 end module var_item
 

@@ -31,6 +31,9 @@ module base_types
   !_TypeGen_declare_ListItem( public, complex64,  complex*16,  scalar )
   !_TypeGen_declare_ListItem( public, complex128, complex*32,  scalar )
   !_TypeGen_declare_ListItem( public, c_void_ptr, type(c_ptr), scalar )
+  
+  !!_TypeGen_declare_ListItem( public, ref, type(GenericRef_t), scalar )
+  !!_TypeGen_declare_ListItem( public, ref, type(GenericRef_Encoding_t), scalar )
 
   contains
 

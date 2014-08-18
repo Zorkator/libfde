@@ -7,7 +7,13 @@ module abstract_list
 
   type, public :: Item_t
     private
-    type (Item_t), pointer :: prev => null(), next => null()
+    type(Item_t), pointer :: prev => null(), next => null()
+  end type
+
+  type, private :: ValueItem_t
+    private
+    type(Item_t) :: super
+    integer      :: pseudoValue
   end type
 
   interface
@@ -35,25 +41,25 @@ module abstract_list
   end type
 
   
-  interface initialize; module procedure al_typed_init                                   ; end interface
-  interface len       ; module procedure al_length                                       ; end interface
-  interface is_valid  ; module procedure al_is_valid, ali_is_valid                       ; end interface
-  interface is_empty  ; module procedure al_is_empty                                     ; end interface
-  interface append    ; module procedure al_append_list, al_append_item, al_append_idx   ; end interface
-  interface clear     ; module procedure al_clear                                        ; end interface
-  interface delete    ; module procedure al_delete                                       ; end interface
-  interface item_type ; module procedure al_item_type                                    ; end interface
+  interface initialize  ; module procedure al_typed_init                                   ; end interface
+  interface len         ; module procedure al_length                                       ; end interface
+  interface is_valid    ; module procedure al_is_valid, ali_is_valid                       ; end interface
+  interface is_empty    ; module procedure al_is_empty                                     ; end interface
+  interface append      ; module procedure al_append_list, al_append_item, al_append_idx   ; end interface
+  interface clear       ; module procedure al_clear                                        ; end interface
+  interface delete      ; module procedure al_delete                                       ; end interface
+  interface dynamic_type; module procedure al_dynamic_type                                 ; end interface
 
-  interface index     ; module procedure al_index_idx, al_index_int;                     ; end interface
-  interface prev      ; module procedure ali_prev                                        ; end interface
-  interface next      ; module procedure ali_next                                        ; end interface
-  interface set_prev  ; module procedure ali_set_prev                                    ; end interface
-  interface set_next  ; module procedure ali_set_next                                    ; end interface
-  interface get_prev  ; module procedure ali_get_prev                                    ; end interface
-  interface get_next  ; module procedure ali_get_next                                    ; end interface
-  interface insert    ; module procedure ali_insert_item, ali_insert_list, ali_insert_idx; end interface
-  interface insert    ; module procedure ali_insert_range                                ; end interface ! EXPERIMENTAL
-  interface remove    ; module procedure ali_remove_idx                                  ; end interface
+  interface index       ; module procedure al_index_idx, al_index_int;                     ; end interface
+  interface prev        ; module procedure ali_prev                                        ; end interface
+  interface next        ; module procedure ali_next                                        ; end interface
+  interface set_prev    ; module procedure ali_set_prev                                    ; end interface
+  interface set_next    ; module procedure ali_set_next                                    ; end interface
+  interface get_prev    ; module procedure ali_get_prev                                    ; end interface
+  interface get_next    ; module procedure ali_get_next                                    ; end interface
+  interface insert      ; module procedure ali_insert_item, ali_insert_list, ali_insert_idx; end interface
+  interface insert      ; module procedure ali_insert_range                                ; end interface ! EXPERIMENTAL
+  interface remove      ; module procedure ali_remove_idx                                  ; end interface
 
   interface assignment(=); module procedure al_assign_al, al_assign_idx                  ; end interface
   interface operator(==) ; module procedure ali_eq_ali, ali_eq_item                      ; end interface
@@ -81,10 +87,12 @@ module abstract_list
   !public :: al_index
 
   !_TypeGen_declare_RefType( public, List, type(List_t), scalar, \
-  !     initProc   = al_raw_init,  \
-  !     deleteProc = al_delete,    \
-  !     assignProc = al_assign_al, \
+  !     initProc   = al_initialize, \
+  !     deleteProc = al_delete,     \
+  !     assignProc = al_assign_al,  \
   !     cloneMode  = _type )
+
+  !_TypeGen_declare_ListItem( public, List, type(List_t), scalar )
 
 
 !-----------------
@@ -139,20 +147,23 @@ module abstract_list
   end subroutine
 
 
-  subroutine al_raw_init( self, ignored )
+  subroutine al_initialize( self, has_proto, proto )
     type(List_t), target :: self
-    integer              :: ignored
+    integer              :: has_proto
+    type(List_t)         :: proto
     self%item%prev => self%item
     self%item%next => self%item
     self%length    =  0
-    self%typeInfo  => null()
+    if (has_proto /= 0) then; self%typeInfo => proto%typeInfo
+                        else; self%typeInfo => null()
+    end if
   end subroutine
 
 
   subroutine al_typed_init( self, item_type )
     type(List_t),               target :: self
     type(TypeInfo_t), optional, target :: item_type
-    call al_raw_init( self, 0 )
+    call al_initialize( self, 0, self )
     self%typeInfo => item_type
   end subroutine
 
@@ -221,21 +232,29 @@ module abstract_list
       self%typeInfo => new_item_type
   end subroutine
 
-  
+ 
+  recursive &
   subroutine al_delete( self )
+    use iso_c_binding
     type(List_t), target, intent(inout) :: self
     type(Item_t),               pointer :: ptr, delPtr
-    procedure(),                pointer :: delValue => null()
+    type(ValueItem_t),          pointer :: valItemPtr
+    procedure(),                pointer :: delValue !< don't initialize here: would cause re-init on recursion return! WTH?
 
-    if (associated( self%typeInfo )) &
+    if (associated( self%typeInfo )) then
       delValue => self%typeInfo%subtype%deleteProc
+    else
+      delValue => null()
+    end if
 
     ptr => self%item%next
     do while (.not. associated( ptr, self%item ))
       delPtr => ptr
       ptr    => ptr%next
-      if (associated( delValue )) &
-        call delValue( delPtr )
+      if (associated( delValue )) then
+        call c_f_pointer( c_loc(delPtr), valItemPtr )
+        call delValue( valItemPtr%pseudoValue )
+      end if
       deallocate( delPtr )
     end do
     call al_initialize_item( self%item )
@@ -243,7 +262,7 @@ module abstract_list
   end subroutine
 
 
-  function al_item_type( self ) result(res)
+  function al_dynamic_type( self ) result(res)
     type(List_t),  intent(in) :: self
     type(TypeInfo_t), pointer :: res
     if (associated( self%typeInfo )) then; res => self%typeInfo%subtype

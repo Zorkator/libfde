@@ -13,7 +13,8 @@ program testinger
   type(TypeInfo_t)      :: ti
   integer*4             :: intvar, i, j
   type(DynamicString_t) :: ds
-  type(GenericRef_t)      :: gr, gr2
+  type(GenericRef_t)    :: gr, gr2
+  real*4                :: realVal
 
   print *, "VarItem: ",       storage_size(v1)/8
   print *, "DynamicString: ", storage_size(ds)/8
@@ -23,6 +24,9 @@ program testinger
   print *, int32(v1)
   v1 = VarItem_of(34.55)
   print *, real32(v1)
+
+  realVal = v1
+  
 
   print *, is_valid(v1)
   print *, is_real32(v1)
@@ -65,6 +69,7 @@ program testinger
 
   gr2 = ref_of(intvar)
   gr  = ref_of(gr2)
+  v1  = gr2
 
   do while (is_ref(gr))
     gr = ref(gr)
