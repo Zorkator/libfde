@@ -80,7 +80,7 @@ module abstract_list
 
   !public :: al_index
 
-  !_TypeReference_declare( public, List, type(List_t), scalar, \
+  !_TypeGen_declare_RefType( public, List, type(List_t), scalar, \
   !     initProc   = al_raw_init,  \
   !     deleteProc = al_delete,    \
   !     assignProc = al_assign_al, \
@@ -91,7 +91,7 @@ module abstract_list
   contains
 !-----------------
 
-  !_TypeReference_implementAll()
+  !_TypeGen_implementAll()
 
 
   subroutine al_initialize_item( self )

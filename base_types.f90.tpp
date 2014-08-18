@@ -2,25 +2,39 @@
 module base_types
   use iso_c_binding
   use generic_ref
+  use abstract_list
   implicit none
   private
 
-  !_TypeReference_declare( public, bool,       logical,     scalar )
-  !_TypeReference_declare( public, int8,       integer*1,   scalar )
-  !_TypeReference_declare( public, int16,      integer*2,   scalar )
-  !_TypeReference_declare( public, int32,      integer*4,   scalar )
-  !_TypeReference_declare( public, int64,      integer*8,   scalar )
-  !_TypeReference_declare( public, real32,     real*4,      scalar )
-  !_TypeReference_declare( public, real64,     real*8,      scalar )
-  !_TypeReference_declare( public, real128,    real*16,     scalar )
-  !_TypeReference_declare( public, complex32,  complex*8,   scalar )
-  !_TypeReference_declare( public, complex64,  complex*16,  scalar )
-  !_TypeReference_declare( public, complex128, complex*32,  scalar )
-  !_TypeReference_declare( public, c_void_ptr, type(c_ptr), scalar )
+  !_TypeGen_declare_RefType( public, bool,       logical,     scalar )
+  !_TypeGen_declare_RefType( public, int8,       integer*1,   scalar )
+  !_TypeGen_declare_RefType( public, int16,      integer*2,   scalar )
+  !_TypeGen_declare_RefType( public, int32,      integer*4,   scalar )
+  !_TypeGen_declare_RefType( public, int64,      integer*8,   scalar )
+  !_TypeGen_declare_RefType( public, real32,     real*4,      scalar )
+  !_TypeGen_declare_RefType( public, real64,     real*8,      scalar )
+  !_TypeGen_declare_RefType( public, real128,    real*16,     scalar )
+  !_TypeGen_declare_RefType( public, complex32,  complex*8,   scalar )
+  !_TypeGen_declare_RefType( public, complex64,  complex*16,  scalar )
+  !_TypeGen_declare_RefType( public, complex128, complex*32,  scalar )
+  !_TypeGen_declare_RefType( public, c_void_ptr, type(c_ptr), scalar )
+
+  !_TypeGen_declare_ListItem( public, bool,       logical,     scalar )
+  !_TypeGen_declare_ListItem( public, int8,       integer*1,   scalar )
+  !_TypeGen_declare_ListItem( public, int16,      integer*2,   scalar )
+  !_TypeGen_declare_ListItem( public, int32,      integer*4,   scalar )
+  !_TypeGen_declare_ListItem( public, int64,      integer*8,   scalar )
+  !_TypeGen_declare_ListItem( public, real32,     real*4,      scalar )
+  !_TypeGen_declare_ListItem( public, real64,     real*8,      scalar )
+  !_TypeGen_declare_ListItem( public, real128,    real*16,     scalar )
+  !_TypeGen_declare_ListItem( public, complex32,  complex*8,   scalar )
+  !_TypeGen_declare_ListItem( public, complex64,  complex*16,  scalar )
+  !_TypeGen_declare_ListItem( public, complex128, complex*32,  scalar )
+  !_TypeGen_declare_ListItem( public, c_void_ptr, type(c_ptr), scalar )
 
   contains
 
-  !_TypeReference_implementAll()
+  !_TypeGen_implementAll()
 
 end module
 

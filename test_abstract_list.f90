@@ -1,74 +1,12 @@
 
-module mylist
-  use abstract_list
-  use generic_ref
-  use base_types
-  implicit none
-
-  !_ListItemType_declare( public, int32, integer*4 )
-
-  type, public :: int32_item_t
-    !private
-    type(Item_t) :: super
-    integer*4    :: value
-  end type
-  type(TypeInfo_t), target :: type_int32_item
-
-  interface item_type   ; module procedure int32_itemtype_   ; end interface
-  interface newListItem ; module procedure int32_new_item_   ; end interface
-  interface value       ; module procedure int32_item_value_ ; end interface
-  public :: value
-
-contains
-
-  !_ListItemType_implementAll()
-
-  function int32_itemtype_( val ) result(res)
-    integer*4 ,    intent(in) :: val
-    type(TypeInfo_t), pointer :: res
-    type(int32_item_t)        :: item
-    res => type_int32_item
-    if (.not. res%initialized) &
-      call init_TypeInfo( res, 'int32_item', 'type(int32_item_t)', &
-        int(storage_size(item)/4), 0, subtype = static_type(val), cloneObjProc = int32_clone_item )
-  end function
-
-  function int32_new_item_( val ) result(res)
-    integer*4,       intent(in) :: val
-    type(Item_t),       pointer :: res
-    type(int32_item_t), pointer :: tgt => null()
-    allocate( tgt )
-    tgt%value = val
-    res => tgt%super
-  end function
-
-  subroutine int32_clone_item( tgt, src )
-    type(Item_t),       pointer, intent(out) :: tgt
-    type(int32_item_t),           intent(in) :: src
-    type(int32_item_t), pointer              :: ptr => null()
-    allocate( ptr )
-    ptr%value = src%value
-    tgt => ptr%super
-  end subroutine
-
-  function int32_item_value_( idx ) result(res)
-    use iso_c_binding
-    type(ListIndex_t)           :: idx
-    integer*4,          pointer :: res
-    type(int32_item_t), pointer :: ptr
-    call c_f_pointer( c_loc(idx%node), ptr )
-    res => ptr%value
-  end function
-
-end module
-
-
 #define _exp(what)    print *, "exp: " // what
 
 program testinger
   use var_item
   use base_types
-  use mylist
+  use abstract_list
+  use generic_ref
+  !use mylist
   use iso_c_binding
   implicit none
 
@@ -211,7 +149,7 @@ program testinger
 
   print *, len(List(ref1))
 
-  print *, value( index(l1) )
+  print *, int32( index(l1) )
 
   ref1 = clone(ref1)
   call printList( List(ref1) )
@@ -230,7 +168,7 @@ program testinger
 
     print *, "items:"
     do while (is_valid(idx))
-      print *, value(idx)
+      print *, int32(idx)
       call next(idx)
     end do
     print *, "########"
@@ -242,7 +180,7 @@ program testinger
     
     print *, "items:"
     do while (beg /= end)
-      print *, value(beg)
+      print *, int32(beg)
       call next(beg)
     end do
     print *, "########"
@@ -261,9 +199,9 @@ program testinger
     if (present(end))    end_    = end
     if (present(stride)) stride_ = stride
 
-    call clear( list, item_type(1) )
+    call clear( list, item_type(1.0) )
     do i = beg_, end_, stride_
-      call append( list, newListItem(i) )
+      call append( list, newListItem(real(i,4)) )
     end do
   end subroutine
 
@@ -274,7 +212,7 @@ program testinger
 
     idx = index(list)
     do while (is_valid(idx))
-      write(*,'(I4)',advance="no") value(idx)
+      write(*,'(F6.1)',advance="no") real32(idx)
       call next(idx)
     end do
     print *, ''

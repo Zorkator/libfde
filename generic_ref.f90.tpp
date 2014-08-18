@@ -34,8 +34,7 @@ module generic_ref
   ! declare public interfaces 
 
   public :: assignment(=)
-  public :: gr_set_TypeReference  !< needed by generated code
-  public :: gr_get_TypeReference  !<            "
+  public :: gr_get_TypeReference  !< needed by generated code
   public :: rank
   public :: shape
   public :: clone
@@ -48,7 +47,7 @@ module generic_ref
 
   public :: TypeInfo_t, TypeInfo_ptr_t, init_TypeInfo, type_void, void_t 
 
-  !_TypeReference_declare( public, ref, type(GenericRef_t), scalar, \
+  !_TypeGen_declare_RefType( public, ref, type(GenericRef_t), scalar, \
   !     initProc   = gr_initialize, \
   !     assignProc = gr_assign_gr,  \
   !     deleteProc = gr_delete,     \
@@ -59,7 +58,7 @@ module generic_ref
   contains
 !-----------------
 
-  !_TypeReference_implementAll()
+  !_TypeGen_implementAll()
 
 
   subroutine gr_initialize( self, hardness )
@@ -91,20 +90,6 @@ module generic_ref
     call c_f_pointer( c_loc(rhs(1)), tiPtr )
     call bs_assign_buf( lhs%ref_str, fptr(ref_idx:) )
     lhs%typeInfo => tiPtr%ptr
-  end subroutine
-
-
-  subroutine gr_set_TypeReference( self, cptr, bits, ti )
-    type(GenericRef_t), intent(inout) :: self
-    type(c_ptr),           intent(in) :: cptr
-    integer*4,             intent(in) :: bits
-    type(TypeInfo_t),          target :: ti
-    character(len=bits/8),    pointer :: fptr
-
-    call c_f_pointer( cptr, fptr )
-    call bs_set_attribute( self%ref_str, attrib_volatile )
-    call bs_assign_cs( self%ref_str, fptr )
-    self%typeInfo => ti
   end subroutine
 
 

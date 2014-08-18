@@ -83,7 +83,7 @@ module var_item
     _TableOf_varitem_types_
 # undef _varitem_type_
 
-  !_TypeReference_declare( public, VarItem, type(VarItem_t), scalar, \
+  !_TypeGen_declare_RefType( public, VarItem, type(VarItem_t), scalar, \
   !     initProc   = vi_initialize, \
   !     assignProc = vi_assign_vi,  \
   !     deleteProc = vi_delete,     \
@@ -94,7 +94,7 @@ module var_item
   contains
 !-----------------
 
-  !_TypeReference_implementAll()
+  !_TypeGen_implementAll()
   
   
   subroutine vi_initialize( self )

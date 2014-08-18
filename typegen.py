@@ -17,46 +17,86 @@ from docopt import docopt
 import sys, re
 
 
-class ReferenceType(object):
+class TypeSpec(object):
 
-  Scope = dict()
-  
-  _ident     = '\s*(\w+)\s*'      #< some type identifier
-  _baseType  = '\s*([\w *()]+)'   #< e.g. integer*4, type(Struct), character(*), <interfaceId>, ...
-  _dimType   = '\s*([\w ,:()]+)'  #< e.g. scalar, dimension(:,:), procedure
-  _keyAssign = '\s*(\w+)\s*=\s*(\w+)\s*'
-  _procItf   = '\s*procedure\s*\(\s*\w*\s*\)\s*'            #< procedure interface
-  _dimSpec   = '\s*dimension\s*\(\s*:(?:\s*,\s*:)*\s*\)\s*' #< dimension specification
-  _keySpecs  = '((?:,\s*\w+\s*=\s*\w+\s*)*)'
-  _typeDecl  = '^\s*!\s*_TypeReference_declare\(%s,%s,%s,%s%s\)' % (_ident, _ident, _baseType, _dimType, _keySpecs)
-  _typeImpl  = '^\s*!\s*_TypeReference_implement\(%s\)' % _ident
-  _typeImplA = '^\s*!\s*_TypeReference_implementAll\(\)'
-  
-  typeDeclMatch    = re.compile( _typeDecl ).match
-  typeImplMatch    = re.compile( _typeImpl ).match
-  typeImplAllMatch = re.compile( _typeImplA ).match
-  procItfMatch     = re.compile( _procItf ).match
-  dimSpecMatch     = re.compile( _dimSpec ).match
+  _procItf     = '\s*procedure\s*\(\s*\w*\s*\)\s*'
+  _dimSize     = '(?::|\d+)'
+  _dimSpec     = '\s*dimension\s*\(\s*%s(?:\s*,\s*%s)*\s*\)\s*' % (_dimSize, _dimSize)
+  _keyAssign   = '\s*(\w+)\s*=\s*(\w+)\s*'
+  procItfMatch = re.compile( _procItf ).match
+  dimSpecMatch = re.compile( _dimSpec ).match
+  declWatcher  = dict()
 
-  _template  = dict(
-    info = """
-    !@ _TypeReference_declare( {access}, {typeId}, {baseType}{dimType}{keySpecs} )""",
-
+  _template = dict(
     header = """
     !#################################
     !# {typeId}
     !#################################
     """,
 
+    access_decl = """
+    {access} :: {ident}
+    """
+  )
+
+  def __init__( self, access, typeId, baseType, dimType ):
+    self._isProc   = bool(self.procItfMatch( baseType ))
+    self._isScalar = dimType == 'scalar'
+    self._isArray  = bool(self.dimSpecMatch( dimType ))
+
+    # sanity checks
+    if access not in ('public', 'private'):
+      raise ValueError('ERROR at processing type "%s": invalid access specification "%s"' % (typeId, access))
+
+    if not (self._isScalar ^ self._isArray):
+      raise TypeError('ERROR at processing type "%s": invalid dimension specification "%s"' % (typeId, dimType))
+
+    self.access    = access
+    self.typeId    = typeId
+    self.baseType  = baseType
+    self.dimType   = dimType
+    self.dimSize   = ('', ', %s' % dimType)[self._isArray]
+    self.dimSpec   = ('', ', dimension(%s)' % ','.join( [':'] * (dimType.count(',')+1) ))[self._isArray]
+    self.baseExtra = ('', ', nopass')[self._isProc]
+    self.valAttrib = (', target, intent(in)', '')[self._isProc]
+    self.shapeArg  = ('', ', shape(src)')[self._isArray]
+
+    self._declared    = False
+    self._implemented = False
+
+
+  def expand( self, out, *args ):
+    for what in filter( None, args ):
+      out( self._template[what].format( **self.__dict__ ) )
+
+  
+  def expandAccess( self, out, access, *identList ):
+    for ident in filter( None, identList ):
+      if ident not in self.declWatcher:
+        out( self._template['access_decl'].format( access = access, ident = ident ) )
+        self.declWatcher[ident] = access
+
+
+  def expandAccessString( self, out, access, accessString ):
+    self.expandAccess( out, access, *accessString.format( **self.__dict__ ).split(', ') )
+
+
+
+class RefType(TypeSpec):
+
+  _template  = dict( TypeSpec._template,
+    info = """
+    !@ _TypeGen_declare_RefType( {access}, {typeId}, {baseType}, {dimType}{keySpecStr} )""",
+
     # parameters:
     #   typeId:    type identifier
     #   baseType:  fortran base type | type(...) | procedure(...) [needs baseExtra: , nopass]
     #   baseExtra: ('', ', nopass')[is_procedure] 
-    #   dimType:   ('', ', dimension(:,...)')[has_dimension]
+    #   dimSpec:   ('', ', dimension(:,...)')[has_dimension]
     #
     type = """
     type, private :: {typeId}_wrap_t
-       {baseType}{baseExtra}{dimType}, pointer :: ptr
+       {baseType}{baseExtra}{dimSpec}, pointer :: ptr
     end type
 
     type, private :: {typeId}_encoder_t
@@ -68,26 +108,17 @@ class ReferenceType(object):
     """,
 
     # parameters:
-    #   access: private | public
-    #
-    gen_itf = """
-    {access} :: ref_of
-    {access} :: static_type
-    """,
-  
-    # parameters:
     #   access:    private | public
     #   typeId:    type identifier
-    #   derefName: identifier for dereferencing type
     #
     ref_itf = """
     interface ref_of     ; module procedure {typeId}_encode_ref_ ; end interface
-    interface {derefName}; module procedure {typeId}_decode_ref_ ; end interface
+    interface {typeId}   ; module procedure {typeId}_decode_ref_ ; end interface
     interface is_{typeId}; module procedure {typeId}_in_ref_     ; end interface
     interface static_type; module procedure {typeId}_typeinfo_   ; end interface
-    {access} :: {derefName}
-    {access} :: is_{typeId}
     """,
+
+    access_ref = "{typeId}, is_{typeId}",
   
     # parameters:
     #   access: private | public
@@ -102,60 +133,41 @@ class ReferenceType(object):
     interface {typeId}_from_ref; module procedure {typeId}_decode_ref_ ; end interface
     interface is_{typeId}      ; module procedure {typeId}_in_ref_     ; end interface
     interface static_type      ; module procedure {typeId}_typeinfo_   ; end interface
-    {access} :: ref_from_{typeId}
-    {access} :: {typeId}_from_ref
-    {access} :: is_{typeId}
     """,
+
+    access_proc = "ref_from_{typeId}, {typeId}_from_ref, is_{typeId}",
   
     # parameters:
     #   typeId:     type identifier
     #   baseType:   fortran base type | type(...) | procedure(...)
-    #   dimType:    ('', ', dimension(:,...)')[has_dimension]
+    #   dimSpec:    ('', ', dimension(:,...)')[has_dimension]
     #
     ref_encoder = """
     function {typeId}_encode_ref_( val ) result(res)
       use iso_c_binding
-      {baseType}{dimType}, target, intent(in) :: val
+      {baseType}{dimSpec}{valAttrib} :: val
       type({typeId}_encoder_t),        target :: encoder
-      real*4,                       parameter :: chunkSize = storage_size(GenericRef_Encoding_t(null()))/8.0
-      integer*4,                    parameter :: bufSize   = ceiling((storage_size(encoder)/8) / chunkSize)
-      type(GenericRef_Encoding_t)             :: res(bufSize)
+      type(GenericRef_Encoding_t)             :: dummy
+      type(GenericRef_Encoding_t)             :: res( ceiling( storage_size(encoder) / real(storage_size(dummy)) ) )
       type(GenericRef_Encoding_t), dimension(:), pointer :: fptr
 
       encoder%typeInfo     => static_type(val)
       encoder%ref_wrap%ptr => val
-      call c_f_pointer( c_loc(encoder), fptr, (/bufSize/) )
+      call c_f_pointer( c_loc(encoder), fptr, shape(res) )
       res = fptr
-    end function
-    """,
-    
-    # parameters:
-    #   typeId:     type identifier
-    #   baseType:   fortran base type | type(...) | procedure(...)
-    #   dimType:    ('', ', dimension(:,...)')[has_dimension]
-    #
-    proc_encoder = """
-    function {typeId}_encode_ref_( val ) result(res)
-      use iso_c_binding
-      {baseType}{dimType}           :: val
-      type(GenericRef_t)            :: res
-      type({typeId}_wrap_t), target :: wrap
-    
-      wrap%ptr => val
-      call gr_set_TypeReference( res, c_loc(wrap), int(storage_size(wrap),4), static_type(val) )
     end function
     """,
     
     # parameters:
     #   typeId:    type identifier
     #   baseType:  fortran base type | type(...) | procedure(...)
-    #   dimType:   ('', ', dimension(:,...)')[has_dimension]
+    #   dimSpec:   ('', ', dimension(:,...)')[has_dimension]
     #
-    decoder = """
+    ref_decoder = """
     function {typeId}_decode_ref_( val ) result(res)
       use iso_c_binding
       type(GenericRef_t), intent(in) :: val
-      {baseType}{dimType},   pointer :: res
+      {baseType}{dimSpec},   pointer :: res
       type({typeId}_wrap_t), pointer :: wrap
       
       call c_f_pointer( gr_get_TypeReference(val), wrap )
@@ -166,14 +178,14 @@ class ReferenceType(object):
     # parameters:
     #   typeId:        type identifier
     #   baseType:      fortran base type | type(...) | procedure(...)
-    #   dimType:       ('', ', dimension(:,...)')[has_dimension]
+    #   dimSpec:       ('', ', dimension(:,...)')[has_dimension]
     #   code_clonePtr: 'tgt => src' | 'call <typeId>_clone_ptr_( tgt, src )'
     ref_cloner = """
     subroutine {typeId}_clone_ref_( tgt_ref, src_ref )
       use iso_c_binding
       type(GenericRef_t)                      :: tgt_ref
       type(GenericRef_t),          intent(in) :: src_ref
-      {baseType}{dimType},            pointer :: src, tgt => null()
+      {baseType}{dimSpec},            pointer :: src, tgt => null()
     
       src => {typeId}_decode_ref_( src_ref )
       {code_clonePtr}
@@ -185,13 +197,13 @@ class ReferenceType(object):
       # parameters:
       #   typeId:   type identifier
       #   baseType: fortran base type | type(...)
-      #   dimType:  ('', ', dimension(:,...)')[has_dimension]
+      #   dimSpec:  ('', ', dimension(:,...)')[has_dimension]
       #   shapeArg: (", shape(src)" | "")[is_scalar]
       _shallow = """
       subroutine {typeId}_clone_ptr_( tgt, src )
         use iso_c_binding
-        {baseType}{dimType}, pointer, intent(out) :: tgt
-        {baseType}{dimType},           intent(in) :: src
+        {baseType}{dimSpec}, pointer, intent(out) :: tgt
+        {baseType}{dimSpec},           intent(in) :: src
         character(len=1), dimension(:),   pointer :: tmp
         allocate( tmp( product(shape(src)) * storage_size(src)/8 ) )
         call c_f_pointer( c_loc(tmp(1)), tgt{shapeArg} )
@@ -220,12 +232,12 @@ class ReferenceType(object):
     # parameters:
     #   typeId:    type identifier
     #   baseType:  fortran base type | type(...) | procedure(...)
-    #   dimType:   ('', ', dimension(:,...)')[has_dimension]
+    #   dimSpec:   ('', ', dimension(:,...)')[has_dimension]
     c2f_caster = """
     subroutine {typeId}_c2f_cast_( ptr_c, ptr_f )
       use iso_c_binding
       type(c_ptr),                   intent(in) :: ptr_c
-      {baseType}{dimType}, pointer, intent(out) :: ptr_f
+      {baseType}{dimSpec}, pointer, intent(out) :: ptr_f
       type({typeId}_wrap_t),            pointer :: wrap
       call c_f_pointer( ptr_c, wrap )
       ptr_f => wrap%ptr
@@ -256,14 +268,14 @@ class ReferenceType(object):
     # parameters:
     #   typeId:     type identifier
     #   baseType:   fortran base type | type(...) | procedure(...)
-    #   dimType:    ('', ', dimension(:,...)')[has_dimension]
+    #   dimSpec:    ('', ', dimension(:,...)')[has_dimension]
     #   initProc:   ', initProc = <funcId>'
     #   assignProc: ', assignProc = <funcId>'
     #   deleteProc: ', deleteProc = <funcId>'
     #   shapeProc:  ', shapeProc = <funcId>'
     ref_typeinfo = """
     function {typeId}_typeinfo_( self ) result(res)
-      {baseType}{dimType}       :: self
+      {baseType}{dimSpec}       :: self
       type(TypeInfo_t), pointer :: res
 
       res => type_{typeId}
@@ -279,10 +291,10 @@ class ReferenceType(object):
     # parameters:
     #   typeId:     type identifier
     #   baseType:   fortran base type | type(...) | procedure(...)
-    #   dimType:    ('', ', dimension(:,...)')[has_dimension]
+    #   dimSpec:    ('', ', dimension(:,...)')[has_dimension]
     proc_typeinfo = """
     function {typeId}_typeinfo_( self ) result(res)
-      {baseType}{dimType}       :: self
+      {baseType}{dimSpec}       :: self
       type(TypeInfo_t), pointer :: res
 
       res => type_{typeId}
@@ -294,48 +306,31 @@ class ReferenceType(object):
 
 
   def __init__( self, access, typeId, baseType, dimType, keySpecs ):
-    self._isProc    = bool(self.procItfMatch( baseType ))
-    self._isScalar  = dimType == 'scalar'
-    self._isArray   = bool(self.dimSpecMatch( dimType ))
-    self._keySpecs  = dict( re.findall( self._keyAssign, keySpecs ) )
-    self._typeProcs = dict( (k,v) for k,v in self._keySpecs.items() if k.endswith('Proc') )
+    super(RefType, self).__init__( access, typeId, baseType, dimType )
 
-    # sanity check
-    if not (self._isScalar ^ self._isArray):
-      raise TypeError('ERROR at processing type "%s": invalid dimension specification "%s"' % (typeId, dimType))
+    keySpecs  = dict( re.findall( self._keyAssign, keySpecs ) )
+    typeProcs = dict( (k,v) for k,v in keySpecs.items() if k.endswith('Proc') )
 
-    if access not in ('public', 'private'):
-      raise ValueError('ERROR at processing type "%s": invalid access specification "%s"' % (typeId, access))
-
-    self.access    = access
-    self.typeId    = typeId
-    self.derefName = self._keySpecs.get('derefName', typeId)
-    self.baseType  = baseType
-    self.baseExtra = ('', ', nopass')[self._isProc]
-    self.valTarget = (', target, intent(in)', '')[self._isProc]
-    self.dimType   = ('', ', %s' % dimType)[self._isArray]
-    self.shapeArg  = ('', ', shape(src)')[self._isArray]
-
-    if self._keySpecs: self.keySpecs = ', ' + ', '.join( '%s = %s' % i for i in self._keySpecs.items() )
-    else             : self.keySpecs = ''
+    if keySpecs: self.keySpecStr = ', ' + ', '.join( '%s = %s' % i for i in keySpecs.items() )
+    else       : self.keySpecStr = ''
 
     if self._isArray:
-      self._typeProcs.setdefault( 'shapeProc', typeId + '_inspect_' )
+      typeProcs.setdefault( 'shapeProc', typeId + '_inspect_' )
 
     if self._isProc:
-      self._keySpecs.setdefault( 'cloneMode', '_none' ) #< if not set explicitly, we disable cloning for procedure types
-      if self._typeProcs:
-        print 'WARNING: given type procs %s are ignored for procedure type "%s"' % (self._typeProcs, typeId)
+      keySpecs.setdefault( 'cloneMode', '_none' ) #< if not set explicitly, we disable cloning for procedure types
+      if typeProcs:
+        print 'WARNING: given type procs %s are ignored for procedure type "%s"' % (typeProcs, typeId)
 
     for procId in ('initProc', 'assignProc', 'deleteProc', 'shapeProc'):
       procArg  = ''
-      procName = self._typeProcs.get( procId, '' )
+      procName = typeProcs.get( procId, '' )
       if procName not in ('', '_none'):
         procArg = ',%s = %s' % (procId, procName)
       setattr( self, procId, procArg )
 
     # handle type cloning ...
-    ptrClonerId     = self._keySpecs.get('cloneMode', '_shallow')         #< by default clone via shallow copy
+    ptrClonerId     = keySpecs.get('cloneMode', '_shallow')               #< by default clone via shallow copy
     self._ptrCloner = self._template['ptr_cloner'].get( ptrClonerId, '' ) #< get code for default implementation
     
     if self._ptrCloner:
@@ -352,46 +347,140 @@ class ReferenceType(object):
       self.code_clonePtr = 'tgt => src'
       self.cloneProc  = ''
 
-    self._info      = self._template['info'] 
-    self._type      = self._template['type']
-    self._itf       = self._template[('ref_itf', 'proc_itf')[self._isProc]]
-    self._encoder   = self._template[('ref_encoder', 'proc_encoder')[self._isProc]]
-    self._decoder   = self._template['decoder']
-    self._c2fCast   = self._template['c2f_caster']
-    self._refCloner = (self._template['ref_cloner'], '')[self._isProc]
-    self._inspector = (self._template['ref_inspector'], '')[self._isProc]
-    self._typecheck = self._template['ref_typechecker']
-    self._typeinfo  = self._template[('ref_typeinfo', 'proc_typeinfo')[self._isProc]]
-
-    self._declared    = False
-    self._implemented = False
-
-    ReferenceType.Scope[typeId] = self
+    self._itf       = ('ref_itf',       'proc_itf'     )[self._isProc]
+    self._access    = ('access_ref',    'access_proc'  )[self._isProc]
+    self._refCloner = ('ref_cloner',    ''             )[self._isProc]
+    self._inspector = ('ref_inspector', ''             )[self._isProc]
+    self._typeinfo  = ('ref_typeinfo',  'proc_typeinfo')[self._isProc]
 
 
   def declare( self, out ):
     if not self._declared:
-      out( self._info.format( **self.__dict__ ) )
-      out( self._type.format( **self.__dict__ ) )
-      out( self._itf.format( **self.__dict__ ) )
-      if len(ReferenceType.Scope) == 1:
-        out( self._template['gen_itf'].format( **self.__dict__ ) )
-
+      self.expand( out, 'info', 'type', self._itf )
+      self.expandAccess( out, self.access, 'ref_of', 'static_type' )
+      self.expandAccessString( out, self.access, self._template[self._access] )
+      TypeGenerator.setDeclaration( self.typeId + '.1.ref', self )
       self._declared = True
 
 
   def implement( self, out ):
     if not self._implemented:
-      out( self._template['header'].format( **self.__dict__ ) )
-      out( self._encoder.format( **self.__dict__ ) )
-      out( self._decoder.format( **self.__dict__ ) )
-      out( self._c2fCast.format( **self.__dict__ ) )
-      out( self._refCloner.format( **self.__dict__ ) )
+      self.expand( out, 'header', 'ref_encoder', 'ref_decoder', 'c2f_caster', 'ref_typechecker',
+                   self._refCloner, self._inspector, self._typeinfo )
       out( self._ptrCloner.format( **self.__dict__ ) )
-      out( self._inspector.format( **self.__dict__ ) )
-      out( self._typecheck.format( **self.__dict__ ) )
-      out( self._typeinfo.format( **self.__dict__ ) )
       self._implemented = True
+
+
+  
+class ListItem(TypeSpec):
+  
+  _template  = dict( TypeSpec._template,
+    info = """
+    !@ _TypeGen_declare_ListItem( {access}, {typeId}, {baseType}, {dimType} )""",
+
+    type = """
+    type, private :: {typeId}_item_t
+      type(Item_t)        :: super
+      {baseType}{dimSize} :: value
+    end type
+    type(TypeInfo_t), target :: type_{typeId}_item
+    """,
+
+    item_itf = """
+    interface newListItem ; module procedure {typeId}_new_item_   ; end interface
+    interface item_type   ; module procedure {typeId}_itemtype_   ; end interface
+    interface {typeId}    ; module procedure {typeId}_item_value_ ; end interface
+    """,
+
+    access_itf = "newListItem, item_type, {typeId}",
+
+    item_type = """
+    function {typeId}_itemtype_( val ) result(res)
+      {baseType}{dimSpec}, intent(in) :: val
+      type(TypeInfo_t),       pointer :: res
+      type({typeId}_item_t)           :: item
+      res => type_{typeId}_item
+      if (.not. res%initialized) &
+        call init_TypeInfo( res, '{typeId}_item', 'type({typeId}_item_t)', &
+          int(storage_size(item),4), 0, subtype = static_type(val), cloneObjProc = {typeId}_clone_item )
+    end function
+    """,
+
+    new_item = """
+    function {typeId}_new_item_( val ) result(res)
+      {baseType}{dimSpec}, intent(in) :: val
+      type(Item_t),           pointer :: res
+      type({typeId}_item_t),  pointer :: tgt => null()
+      allocate( tgt )
+      tgt%value = val
+      res => tgt%super
+    end function
+    """,
+
+    clone_item = """
+    subroutine {typeId}_clone_item( tgt, src )
+      type(Item_t), pointer, intent(out) :: tgt
+      type({typeId}_item_t),  intent(in) :: src
+      type({typeId}_item_t),     pointer :: ptr => null()
+      allocate( ptr )
+      ptr%value = src%value
+      tgt => ptr%super
+    end subroutine
+    """,
+
+    item_value = """
+    function {typeId}_item_value_( idx ) result(res)
+      use iso_c_binding
+      type(ListIndex_t)              :: idx
+      {baseType}{dimSpec},   pointer :: res
+      type({typeId}_item_t), pointer :: ptr
+      call c_f_pointer( c_loc(idx%node), ptr )
+      res => ptr%value
+    end function
+    """
+  )
+
+  def __init__( self, access, typeId, baseType, dimType ):
+    super(ListItem, self).__init__( access, typeId, baseType, dimType )
+
+
+  def declare( self, out ):
+    if not self._declared:
+      self.expand( out, 'info', 'type', 'item_itf' )
+      self.expandAccessString( out, self.access, self._template['access_itf'] )
+      TypeGenerator.setDeclaration( self.typeId + '.2.item', self )
+      self._declared = True
+
+
+  def implement( self, out ):
+    if not self._implemented:
+      self.expand( out, 'item_type', 'new_item', 'clone_item', 'item_value' )
+      self._implemented = True
+
+
+
+class TypeGenerator(object):
+
+  scope = dict()
+
+  _ident     = '\s*(\w+)\s*'      #< some type identifier
+  _baseType  = '\s*([\w *()]+)'   #< e.g. integer*4, type(Struct), character(*), <interfaceId>, ...
+  _dimType   = '\s*([\w ,:()]+)'  #< e.g. scalar, dimension(:,:), procedure
+  _keySpecs  = '((?:,\s*\w+\s*=\s*\w+\s*)*)'
+  _typeDecl  = '^\s*!\s*_TypeGen_declare_RefType\(%s,%s,%s,%s%s\)' % (_ident, _ident, _baseType, _dimType, _keySpecs)
+  _itemDecl  = '^\s*!\s*_TypeGen_declare_ListItem\(%s,%s,%s,%s\)' % (_ident, _ident, _baseType, _dimType)
+  _typeImpl  = '^\s*!\s*_TypeGen_implement\(%s\)' % _ident
+  _typeImplA = '^\s*!\s*_TypeGen_implementAll\(\)'
+  
+  typeDeclMatch    = re.compile( _typeDecl ).match
+  itemDeclMatch    = re.compile( _itemDecl ).match
+  typeImplMatch    = re.compile( _typeImpl ).match
+  typeImplAllMatch = re.compile( _typeImplA ).match
+
+  
+  @classmethod
+  def setDeclaration( _class, key, decl ):
+    _class.scope[key] = decl
 
 
   @staticmethod
@@ -417,28 +506,36 @@ class ReferenceType(object):
         if lineBuf[-1].endswith('\\'):
           continue
         
-        lines = '!' + ''.join( _class._purgeLines( lineBuf ) )
+        bufStr  = '\n'.join( lineBuf ) + '\n'
+        lines   = '!' + ''.join( _class._purgeLines( lineBuf ) )
+        lineBuf = []
+
         match = _class.typeDeclMatch( lines )
         if match:
-          _class( *map( str.strip, match.groups() ) ).declare( outChnl.write )
+          RefType( *map( str.strip, match.groups() ) ).declare( outChnl.write )
+          continue
 
-        else:
-          match = _class.typeImplMatch( lines )
-          if match:
-            _class.Scope[ match.groups()[0] ].implement( outChnl.write )
+        match = _class.itemDeclMatch( lines )
+        if match:
+          ListItem( *map( str.strip, match.groups() ) ).declare( outChnl.write )
+          continue
 
-          elif _class.typeImplAllMatch( lines ):
-            for decl in sorted( _class.Scope.items() ):
-              decl[1].implement( outChnl.write )
-          
-          else:
-            outChnl.write( '\n'.join( lineBuf ) + '\n' )
-        lineBuf = []
+        match = _class.typeImplMatch( lines )
+        if match:
+          _class.scope[ match.groups()[0] ].implement( outChnl.write )
+          continue
+
+        if _class.typeImplAllMatch( lines ):
+          for decl in sorted( _class.scope.items() ):
+            decl[1].implement( outChnl.write )
+          continue
+
+        outChnl.write( bufStr )
 
       outChnl.close()
 
 
 if __name__ == '__main__':
-  ReferenceType.convert( docopt( __doc__ ) )
+  TypeGenerator.convert( docopt( __doc__ ) )
 
 

@@ -109,7 +109,7 @@ module dynamic_string
     call bs_release_weak( ds%str )
 
 
-  !_TypeReference_declare( public, DynamicString, type(DynamicString_t), scalar, \
+  !_TypeGen_declare_RefType( public, DynamicString, type(DynamicString_t), scalar, \
   !     initProc   = ds_initialize, \
   !     assignProc = ds_assign_ds,  \
   !     deleteProc = ds_delete,     \
@@ -119,7 +119,7 @@ module dynamic_string
   contains
 !-----------------
 
-  !_TypeReference_implementAll()
+  !_TypeGen_implementAll()
 
 
   subroutine ds_initialize( ds, hardness )

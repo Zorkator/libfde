@@ -1,7 +1,7 @@
 
 module type_references
   use generic_ref
-  use type_info
+  use abstract_list
   implicit none
   private
 
@@ -22,14 +22,16 @@ module type_references
 
   public :: simpleCall, func, sub_a, func_a
 
-  !_TypeReference_declare( public, intXY,    integer*4, dimension(:,:) )
-  !_TypeReference_declare( public, CallBack, procedure(simpleCall),  scalar )
-  !_TypeReference_declare( public, CalcFunc, procedure(func),  scalar )
-  !_TypeReference_declare( public, ADing, type(Ding),  scalar, cloneMode = _type, deleteProc = ding_clear )
+  !_TypeGen_declare_ListItem( public, intXY, integer*4, dimension(5,4) )
+
+  !_TypeGen_declare_RefType( public, intXY,    integer*4, dimension(:,:) )
+  !_TypeGen_declare_RefType( public, CallBack, procedure(simpleCall),  scalar )
+  !_TypeGen_declare_RefType( public, CalcFunc, procedure(func),  scalar )
+  !_TypeGen_declare_RefType( public, ADing, type(Ding),  scalar, cloneMode = _type, deleteProc = ding_clear )
 
   contains
 
-  !_TypeReference_implementAll()
+  !_TypeGen_implementAll()
 
   subroutine ding_clear( self )
     type(Ding) :: self
