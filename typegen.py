@@ -45,11 +45,11 @@ class TypeSpec(object):
     self._isArray  = bool(self.dimSpecMatch( dimType ))
 
     # sanity checks
-    if access not in ('public', 'private'):
-      raise ValueError('ERROR at processing type "%s": invalid access specification "%s"' % (typeId, access))
-
     if not (self._isScalar ^ self._isArray):
       raise TypeError('ERROR at processing type "%s": invalid dimension specification "%s"' % (typeId, dimType))
+
+    if access not in ('public', 'private'):
+      raise ValueError('ERROR at processing type "%s": invalid access specification "%s"' % (typeId, access))
 
     self.access    = access
     self.typeId    = typeId
@@ -65,9 +65,9 @@ class TypeSpec(object):
     self._implemented = False
 
 
-  def expand( self, out, *args ):
+  def expand( self, out, *args, **kwArgs ):
     for what in filter( None, args ):
-      out( self._template[what].format( **self.__dict__ ) )
+      out( self._template[what].format( **dict( self.__dict__, **kwArgs ) ) )
 
   
   def expandAccess( self, out, access, *identList ):
@@ -359,7 +359,7 @@ class RefType(TypeSpec):
       self.expand( out, 'info', 'type', self._itf )
       self.expandAccess( out, self.access, 'ref_of', 'static_type' )
       self.expandAccessString( out, self.access, self._template[self._access] )
-      TypeGenerator.setDeclaration( self.typeId + '.1.ref', self )
+      TypeGenerator.setDeclaration( self.typeId, self )
       self._declared = True
 
 
@@ -392,6 +392,10 @@ class ListItem(TypeSpec):
     interface {typeId}    ; module procedure {typeId}_item_value_ ; end interface
     """,
 
+    alias_itf = """
+    interface newListItem ; module procedure {typeId}{aliasId}_new_item_ ; end interface
+    """,
+
     access_itf = "newListItem, item_type, {typeId}",
 
     item_type = """
@@ -407,14 +411,14 @@ class ListItem(TypeSpec):
     """,
 
     new_item = """
-    function {typeId}_new_item_( val ) result(res)
+    function {typeId}{aliasId}_new_item_( val ) result(res)
       {baseType}{dimSpec}, intent(in) :: val
       type(Item_t),           pointer :: res
       type({typeId}_item_t),  pointer :: tgt => null()
       type(TypeInfo_t),       pointer :: ti
 
       allocate( tgt )
-      ti => static_type( val )
+      ti => static_type( tgt%value )
       if (associated( ti%initProc )) &
         call ti%initProc( tgt%value, 0 ) !< init value as default instance!
       tgt%value = val
@@ -451,20 +455,28 @@ class ListItem(TypeSpec):
   )
 
   def __init__( self, access, typeId, baseType, dimType ):
+    if access != 'alias':
+      self.aliasId = ''
+    else:
+      self.aliasId = '_alias%d' % TypeGenerator.getAliasCount( typeId, self )
+      access = 'private'
     super(ListItem, self).__init__( access, typeId, baseType, dimType )
 
 
   def declare( self, out ):
     if not self._declared:
-      self.expand( out, 'info', 'type', 'item_itf' )
+      if self.aliasId: self.expand( out, 'info', 'alias_itf' )
+      else           : self.expand( out, 'info', 'type', 'item_itf' )
       self.expandAccessString( out, self.access, self._template['access_itf'] )
-      TypeGenerator.setDeclaration( self.typeId + '.2.item', self )
+      TypeGenerator.setDeclaration( self.typeId, self )
       self._declared = True
 
 
   def implement( self, out ):
     if not self._implemented:
-      self.expand( out, 'item_type', 'new_item', 'clone_item', 'item_value' )
+      self.expand( out, 'new_item' )
+      if not self.aliasId:
+        self.expand( out, 'item_type', 'clone_item', 'item_value' )
       self._implemented = True
 
 
@@ -472,9 +484,10 @@ class ListItem(TypeSpec):
 class TypeGenerator(object):
 
   scope = dict()
+  count = dict()
 
   _ident     = '\s*(\w+)\s*'      #< some type identifier
-  _baseType  = '\s*([\w *()]+)'   #< e.g. integer*4, type(Struct), character(*), <interfaceId>, ...
+  _baseType  = '\s*([\w *=()]+)'  #< e.g. integer*4, type(Struct), character(len=*), <interfaceId>, ...
   _dimType   = '\s*([\w ,:()]+)'  #< e.g. scalar, dimension(:,:), procedure
   _keySpecs  = '((?:,\s*\w+\s*=\s*\w+\s*)*)'
   _typeDecl  = '^\s*!\s*_TypeGen_declare_RefType\(%s,%s,%s,%s%s\)' % (_ident, _ident, _baseType, _dimType, _keySpecs)
@@ -490,7 +503,14 @@ class TypeGenerator(object):
   
   @classmethod
   def setDeclaration( _class, key, decl ):
-    _class.scope[key] = decl
+    key = '%s.%s' % (key, type(decl).__name__)
+    _class.count[key] = cnt = _class.count.get( key, 0 ) + 1
+    _class.scope['%s.%d' % (key, cnt)] = decl
+
+
+  @classmethod
+  def getAliasCount( _class, key, decl ):
+    return _class.count.get( '%s.%s' % (key, type(decl).__name__), 0 )
 
 
   @staticmethod

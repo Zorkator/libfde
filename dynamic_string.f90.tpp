@@ -3,7 +3,6 @@ module dynamic_string
   use iso_c_binding
   use base_string
   use generic_ref
-  use abstract_list
   implicit none
   private
 
@@ -116,8 +115,6 @@ module dynamic_string
   !     assignProc = ds_assign_ds,  \
   !     deleteProc = ds_delete,     \
   !     cloneMode  = _type )
-
-  !_TypeGen_declare_ListItem( public, DynamicString, type(DynamicString_t), scalar )
 
 !-----------------
   contains

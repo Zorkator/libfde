@@ -3,6 +3,7 @@ module base_types
   use iso_c_binding
   use generic_ref
   use abstract_list
+  use dynamic_string
   implicit none
   private
 
@@ -32,8 +33,11 @@ module base_types
   !_TypeGen_declare_ListItem( public, complex128, complex*32,  scalar )
   !_TypeGen_declare_ListItem( public, c_void_ptr, type(c_ptr), scalar )
   
-  !!_TypeGen_declare_ListItem( public, ref, type(GenericRef_t), scalar )
-  !!_TypeGen_declare_ListItem( public, ref, type(GenericRef_Encoding_t), scalar )
+  !_TypeGen_declare_ListItem( public, ref, type(GenericRef_t), scalar )
+  !_TypeGen_declare_ListItem( alias, ref, type(GenericRef_Encoding_t), dimension(:) )
+
+  !_TypeGen_declare_ListItem( public, DynamicString, type(DynamicString_t), scalar )
+  !_TypeGen_declare_ListItem( alias, DynamicString, character(len=*), scalar )
 
   contains
 

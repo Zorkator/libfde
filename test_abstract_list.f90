@@ -23,7 +23,7 @@ program testinger
   call initialize( l2, item_type(1) )
   call initialize( l3, item_type(l1) )
   call initialize( l4, item_type(strg) )
-  !call initialize( l5, item_type(ref1) )
+  call initialize( l5, item_type(ref1) )
 
   print *, is_valid(l1)
   print *, is_valid(l1, item_type(1))
@@ -39,12 +39,14 @@ program testinger
 
   do cnt = 1, 5
     call append( l4, newListItem(DynamicString('test')) )
+    call append( l4, newListItem('test') )
   end do
 
   ! list of references ... not yet possible
-  !do cnt = 1, 3
-  !  call append( l4, newListItem(ref_of(cnt)) )
-  !end do
+  do cnt = 1, 3
+    call append( l4, newListItem(ref1) )
+    call append( l4, newListItem(ref_of(cnt)) )
+  end do
 
   _exp("empty")
   call printItems( index( l1 ) )
@@ -173,6 +175,7 @@ program testinger
   call delete( l2 )
   call delete( l3 )
   call delete( l4 )
+  call delete( l5 )
 
   
   contains

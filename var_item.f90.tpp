@@ -265,9 +265,9 @@ module var_item
 
 # define _implementAssignTo_(typeId, baseType)                \
     subroutine _paste(typeId,_assign_vi)( lhs, rhs )         ;\
-      baseType,     intent(inout) :: lhs                     ;\
-      type(VarItem_t), intent(in) :: rhs                     ;\
-      baseType,           pointer :: ptr                     ;\
+      baseType,             intent(inout) :: lhs             ;\
+      type(VarItem_t), target, intent(in) :: rhs             ;\
+      baseType,                   pointer :: ptr             ;\
       if (associated( static_type(lhs), rhs%typeInfo )) then ;\
         call c_f_pointer( c_loc(rhs%data(1)), ptr )          ;\
         lhs = ptr                                            ;\

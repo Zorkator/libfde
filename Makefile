@@ -22,7 +22,7 @@ mk_TAG              = $(F90C).$(CFG).$(ARCH)
 .PHONY: clean
 
 TPP_FILES = $(wildcard *.tpp)
-BASE_OBJ  = type_info.o base_string.o generic_ref.o abstract_list.o base_types.o dynamic_string.o
+BASE_OBJ  = type_info.o base_string.o generic_ref.o dynamic_string.o abstract_list.o base_types.o
 
 all: clean dynstring gref varitem alist
 
