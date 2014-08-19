@@ -10,7 +10,7 @@ program testinger
   use iso_c_binding
   implicit none
 
-  type (List_t) :: l1, l2, l3, l4, l5, l6
+  type (List_t) :: l1, l2, l3, l4, l5, l6, l7
   integer*4   :: cnt
   type(VarItem_t)         :: var
   type(GenericRef_t)      :: ref1
@@ -25,12 +25,15 @@ program testinger
   call initialize( l4, item_type(strg) )
   call initialize( l5, item_type(ref1) )
   call initialize( l6, item_type(var) )
+  call initialize( l7 ) 
 
   var = 42
   call append( l6, newListItem(var) )
   call append( l6, newListItem(VarItem_of(42)) )
   call append( l6, newListItem(VarItem_of('string')) )
   call append( l6, newListItem(VarItem_of(ref_of(var))) )
+
+  l7 = l6
 
   print *, is_valid(l1)
   print *, is_valid(l1, item_type(1))
@@ -191,6 +194,7 @@ program testinger
   call delete( l4 )
   call delete( l5 )
   call delete( l6 )
+  call delete( l7 )
 
   
   contains

@@ -34,9 +34,9 @@ module abstract_list
 
   type, public :: ListIndex_t
     private
-    type (Item_t), pointer :: node   => null()
-    type (List_t), pointer :: host   => null()
-    integer*4              :: stride = 1
+    type (Item_t), public, pointer :: node   => null()
+    type (List_t),         pointer :: host   => null()
+    integer*4                      :: stride = 1
   end type
 
   
@@ -73,6 +73,7 @@ module abstract_list
   public :: append
   public :: delete
   public :: clear
+  public :: dynamic_type
 
   public :: index
   public :: first, last, tail

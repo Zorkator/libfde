@@ -27,6 +27,7 @@ module dynamic_string
   interface char         ; module procedure ds_char, ds_char_l              ; end interface
   interface achar        ; module procedure ds_achar, ds_achar_l            ; end interface
   interface delete       ; module procedure ds_delete                       ; end interface
+  interface set_attribute; module procedure ds_set_attribute                ; end interface
 
   interface adjustl      ; module procedure ds_adjustl                      ; end interface
   interface adjustr      ; module procedure ds_adjustr                      ; end interface
@@ -46,7 +47,7 @@ module dynamic_string
   public :: str, cptr
   public :: char
   public :: delete
-  public :: attrib_permanent, attrib_volatile
+  public :: attrib_permanent, attrib_volatile, set_attribute
   public :: permanent_string, temporary_string
 
   public :: adjustl
@@ -73,7 +74,7 @@ module dynamic_string
   ! assignment and operators
 
   interface assignment(=)
-    module procedure ds_assign_cs, cs_assign_ds, ds_assign_ds, ds_assign_buf, ds_assign_attrib
+    module procedure ds_assign_cs, cs_assign_ds, ds_assign_ds, ds_assign_buf
   end interface
 
   interface operator(//)
@@ -253,7 +254,7 @@ module dynamic_string
   end subroutine
 
 
-  subroutine ds_assign_attrib( lhs, rhs )
+  subroutine ds_set_attribute( lhs, rhs )
     type(DynamicString_t),  intent(inout) :: lhs
     type(Attribute_t),         intent(in) :: rhs
     call bs_set_attribute( lhs%str, rhs )

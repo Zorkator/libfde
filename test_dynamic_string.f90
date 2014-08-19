@@ -17,8 +17,8 @@ program testinger
 
   integer :: i, idx, jdx
 
-  tmp = attrib_volatile
-  tmp = attrib_permanent
+  call set_attribute( tmp, attrib_volatile )
+  call set_attribute( tmp, attrib_permanent )
 
   ds = DynamicString("test string")
   print *, str(ds), len(ds)   !< print string and its length

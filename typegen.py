@@ -326,7 +326,7 @@ class RefType(TypeSpec):
       procArg  = ''
       procName = typeProcs.get( procId, '' )
       if procName not in ('', '_none'):
-        procArg = ',%s = %s' % (procId, procName)
+        procArg = ', %s = %s' % (procId, procName)
       setattr( self, procId, procArg )
 
     # handle type cloning ...

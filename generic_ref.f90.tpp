@@ -25,6 +25,15 @@ module generic_ref
   end type
 
 
+  type :: RefControl_t
+    private
+    integer*1 :: val = 0
+  end type
+
+  type(RefControl_t), parameter :: release_reference = RefControl_t(0)
+  type(RefControl_t), parameter :: accept_reference  = RefControl_t(1)
+
+
   ! interface definitions
 
   interface assignment(=)
@@ -38,6 +47,7 @@ module generic_ref
   interface delete      ; module procedure gr_delete      ; end interface
   interface free        ; module procedure gr_free        ; end interface
   interface dynamic_type; module procedure gr_dynamic_type; end interface
+  interface ref_control ; module procedure gr_ref_control ; end interface
 
   ! declare public interfaces 
 
@@ -51,6 +61,7 @@ module generic_ref
   public :: free
   public :: dynamic_type
   public :: permanent_ref, temporary_ref
+  public :: release_reference, accept_reference, ref_control
 
   ! declare type_info necessities public
 
@@ -222,6 +233,13 @@ module generic_ref
                                      else; res => type_void
     end if
   end function
+
+  
+  subroutine gr_ref_control( self, ctrl )
+    type(GenericRef_t), intent(inout) :: self
+    type(RefControl_t),    intent(in) :: ctrl
+    _ref_setMine( self%refstat, ctrl%val )
+  end subroutine
 
 end module
 

@@ -25,6 +25,8 @@ program testinger
   complex*32          :: cplx
   complex*32, pointer :: cplx_ptr
 
+  i = 0; j = 1
+
   ref1 = ref_of(i)
   call delete(ref1)
 
@@ -98,6 +100,7 @@ program testinger
 
   allocate( ptr2d(4,4) )
   ref1 = ref_of(ptr2d)
+  call ref_control( ref1, accept_reference )
 
   ptr2d => null()
   ptr2d => intXY(ref1)
