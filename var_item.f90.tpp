@@ -350,6 +350,7 @@ module var_item
   end function
 
 
+  recursive &
   subroutine vi_delete( self )
     type(VarItem_t) :: self
     

@@ -1,4 +1,6 @@
 
+#include "adt/ref_status.fpp"
+
 module generic_ref
   use base_string
   use type_info
@@ -9,12 +11,13 @@ module generic_ref
 
   type, public :: GenericRef_t
     private
+    _RefStatus                :: refstat = _ref_HardLent
     type(BaseString_t)        :: ref_str
     type(TypeInfo_t), pointer :: typeInfo => null()
   end type
 
-  type(GenericRef_t), parameter :: permanent_ref = GenericRef_t( permanent_string, null() )
-  type(GenericRef_t), parameter :: temporary_ref = GenericRef_t( temporary_string, null() )
+  type(GenericRef_t), parameter :: permanent_ref = GenericRef_t( _ref_HardLent, permanent_string, null() )
+  type(GenericRef_t), parameter :: temporary_ref = GenericRef_t( _ref_WeakLent, temporary_string, null() )
 
 
   type, public :: GenericRef_Encoding_t
@@ -72,8 +75,12 @@ module generic_ref
     integer            :: has_proto
     type(GenericRef_t) :: proto
     
-    if (has_proto /= 0) then; call bs_init( self%ref_str, proto%ref_str )
-                        else; call bs_init( self%ref_str )
+    if (has_proto /= 0) then;
+      _ref_init( self%refstat, _ref_hardness(proto%refstat) )
+      call bs_init( self%ref_str, proto%ref_str )
+    else;
+      self%refstat = _ref_HardLent
+      call bs_init( self%ref_str )
     end if
     self%typeInfo => null()
   end subroutine
@@ -83,8 +90,14 @@ module generic_ref
     type(GenericRef_t), intent(inout) :: lhs
     type(GenericRef_t),    intent(in) :: rhs
 
-    call bs_assign_bs( lhs%ref_str, rhs%ref_str )
-    lhs%typeInfo => rhs%typeInfo
+    if (.not. associated(lhs%ref_str%ptr, rhs%ref_str%ptr)) then
+      call gr_free( lhs )
+      call bs_assign_bs( lhs%ref_str, rhs%ref_str )
+      lhs%typeInfo => rhs%typeInfo
+
+      if (_ref_isWeakMine( rhs%refstat )) &
+        _ref_setMine( lhs%refstat, 1 )
+    end if
   end subroutine
 
 
@@ -97,6 +110,7 @@ module generic_ref
     type(TypeInfo_ptr_t),                   pointer :: typeInfo
     type(c_ptr)                                     :: encoding
     
+    call gr_free( lhs )
     encoding = c_loc(rhs(1))
     call c_f_pointer( encoding, typeInfo )
     call c_f_pointer( encoding, stream, (/ size(rhs) * size_encoding /) )
@@ -146,6 +160,7 @@ module generic_ref
     if (associated( self%typeInfo )) then
       if (associated( self%typeInfo%cloneRefProc )) then
         call self%typeInfo%cloneRefProc( res, self )
+        res%refstat = _ref_WeakMine
         return
       end if
     end if
@@ -166,32 +181,37 @@ module generic_ref
   end function
 
 
+  recursive &
   subroutine gr_delete( self )
     type(GenericRef_t) :: self
 
+    call gr_free( self )
     call bs_delete( self%ref_str )
     self%typeInfo => null()
   end subroutine
 
 
+  recursive &
   subroutine gr_free( self )
     type(GenericRef_t)    :: self
     type(void_t), pointer :: wrap
     type(c_ptr)           :: cptr
 
-    cptr = gr_get_TypeReference(self)
-    if (c_associated( cptr )) then
-      call c_f_pointer( cptr, wrap )
+    if (_ref_isMine( self%refstat )) then
+      cptr = gr_get_TypeReference(self)
+      if (c_associated( cptr )) then
+        call c_f_pointer( cptr, wrap )
 
-      if (associated( wrap%ptr )) then
-        if (associated( self%typeInfo )) then
-          if (associated( self%typeInfo%deleteProc )) &
-            call self%typeInfo%deleteProc( wrap%ptr )
+        if (associated( wrap%ptr )) then
+          if (associated( self%typeInfo )) then
+            if (associated( self%typeInfo%deleteProc )) &
+              call self%typeInfo%deleteProc( wrap%ptr )
+          end if
+          deallocate( wrap%ptr )
         end if
-        deallocate( wrap%ptr )
       end if
+      _ref_setMine( self%refstat, 0 )
     end if
-    call delete( self )
   end subroutine
 
 

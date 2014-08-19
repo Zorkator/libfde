@@ -25,6 +25,24 @@ program testinger
   complex*32          :: cplx
   complex*32, pointer :: cplx_ptr
 
+  ref1 = ref_of(i)
+  call delete(ref1)
+
+  ref1 = ref_of(i)
+  ref2 = ref_of(ref1)
+  call delete(ref1)
+
+  ref1 = ref_of(i)
+  ref2 = ref_of(j)
+
+  ref2 = clone(ref1)
+  call delete(ref2)
+
+  ref2 = clone(ref1)
+  ref2 = ref_of(j)
+  call delete(ref2)
+
+
   intArray = 34
 
   ref1 = ref_of(intArray)
@@ -60,7 +78,7 @@ program testinger
 
   ref3 = clone(ref1)
   print *, int32(ref(ref3))
-  call free( ref3 )
+  call delete( ref3 )
 
   ref1 = ref_of(intArray)
   ptr2d => intXY(ref1)
@@ -76,7 +94,7 @@ program testinger
 
   ref2 = clone(ref1)
 
-  call free(ref2)
+  !call free(ref2)
 
   allocate( ptr2d(4,4) )
   ref1 = ref_of(ptr2d)
@@ -104,9 +122,9 @@ program testinger
   print *, shape(ref2)
   print *, intXY(ref2)
 
-  call free(ref1)
-  call free(ref2)
-  call delete( ref1 )
+  call delete(ref1)
+  call delete(ref2)
+  call delete(ref3)
 
 end
 

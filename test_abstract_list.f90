@@ -49,7 +49,7 @@ program testinger
     call append( l4, newListItem('test') )
   end do
 
-  ! list of references ... not yet possible
+  ! list of references ... 
   ref1 = ref_of(cnt)
   do cnt = 1, 3
     call append( l5, newListItem(ref1) )
