@@ -21,6 +21,7 @@ module generic_ref
     integer, pointer :: ptr
   end type
 
+
   ! interface definitions
 
   interface assignment(=)
@@ -88,17 +89,19 @@ module generic_ref
 
 
   subroutine gr_assign_encoding( lhs, rhs )
-    type(GenericRef_t),                             intent(inout) :: lhs
-    type(GenericRef_Encoding_t), dimension(:), target, intent(in) :: rhs
-    character(len=1), dimension(:),                       pointer :: fptr
-    type(TypeInfo_ptr_t)                                          :: tiWrap
-    type(TypeInfo_ptr_t),                                 pointer :: tiPtr
-    integer*4,                                          parameter :: ref_idx = storage_size(tiWrap)/8 + 1
+    type(GenericRef_t),               intent(inout) :: lhs
+    type(GenericRef_Encoding_t), target, intent(in) :: rhs(:)
+    integer*4,                            parameter :: size_typeInfo = storage_size(TypeInfo_ptr_t(null())) / 8
+    integer*4,                            parameter :: size_encoding = storage_size(GenericRef_Encoding_t(null())) / 8
+    character(len=1), dimension(:),         pointer :: stream
+    type(TypeInfo_ptr_t),                   pointer :: typeInfo
+    type(c_ptr)                                     :: encoding
     
-    call c_f_pointer( c_loc(rhs(1)), fptr, (/ size(rhs) * storage_size(GenericRef_Encoding_t(null()))/8 /) )
-    call c_f_pointer( c_loc(rhs(1)), tiPtr )
-    call bs_assign_buf( lhs%ref_str, fptr(ref_idx:) )
-    lhs%typeInfo => tiPtr%ptr
+    encoding = c_loc(rhs(1))
+    call c_f_pointer( encoding, typeInfo )
+    call c_f_pointer( encoding, stream, (/ size(rhs) * size_encoding /) )
+    call bs_assign_buf( lhs%ref_str, stream(size_typeInfo + 1:) )
+    lhs%typeInfo => typeInfo%ptr
   end subroutine
 
 

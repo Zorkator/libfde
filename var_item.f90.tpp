@@ -6,6 +6,7 @@ module var_item
   use generic_ref
   use dynamic_string
   use base_types
+  use abstract_list
   implicit none
   private
 
@@ -89,6 +90,7 @@ module var_item
   !     deleteProc = vi_delete,     \
   !     cloneMode  = _type )
 
+  !_TypeGen_declare_ListItem( public, VarItem, type(VarItem_t), scalar )
   
 !-----------------
   contains

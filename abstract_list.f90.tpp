@@ -1,6 +1,5 @@
 
 module abstract_list
-  use type_info
   use generic_ref
   implicit none
   private
@@ -50,20 +49,20 @@ module abstract_list
   interface delete      ; module procedure al_delete                                       ; end interface
   interface dynamic_type; module procedure al_dynamic_type                                 ; end interface
 
-  interface index       ; module procedure al_index_idx, al_index_int;                     ; end interface
+  interface index       ; module procedure ali_index_idx, al_index_int;                    ; end interface
   interface prev        ; module procedure ali_prev                                        ; end interface
   interface next        ; module procedure ali_next                                        ; end interface
   interface set_prev    ; module procedure ali_set_prev                                    ; end interface
   interface set_next    ; module procedure ali_set_next                                    ; end interface
   interface get_prev    ; module procedure ali_get_prev                                    ; end interface
   interface get_next    ; module procedure ali_get_next                                    ; end interface
-  interface insert      ; module procedure ali_insert_item, ali_insert_list, ali_insert_idx; end interface
-  interface insert      ; module procedure ali_insert_range                                ; end interface ! EXPERIMENTAL
+  interface insert      ; module procedure ali_insert_list, ali_insert_item, ali_insert_idx; end interface
+  interface insert      ; module procedure ali_insert_range                                ; end interface
   interface remove      ; module procedure ali_remove_idx                                  ; end interface
 
-  interface assignment(=); module procedure al_assign_al, al_assign_idx                  ; end interface
-  interface operator(==) ; module procedure ali_eq_ali, ali_eq_item                      ; end interface
-  interface operator(/=) ; module procedure ali_ne_ali, ali_ne_item                      ; end interface
+  interface assignment(=) ; module procedure al_assign_al, al_assign_idx                   ; end interface
+  interface operator(==)  ; module procedure ali_eq_ali, ali_eq_item                       ; end interface
+  interface operator(/=)  ; module procedure ali_ne_ali, ali_ne_item                       ; end interface
 
   integer*4, parameter :: first = 1, last = -1, tail = 0
 
@@ -294,7 +293,7 @@ module abstract_list
   end function
 
 
-  function al_index_idx( self, stride ) result(res)
+  function ali_index_idx( self, stride ) result(res)
     type(ListIndex_t), intent(in) :: self
     integer*4,           optional :: stride
     type(ListIndex_t)             :: res
@@ -439,20 +438,20 @@ module abstract_list
   end function
 
   
-  subroutine ali_insert_item( self, node )
-    type(ListIndex_t), intent(in) :: self
-    type(Item_t),          target :: node
-    call al_link_item( node, self%node%prev, self%node )
-    self%host%length = self%host%length + 1
-  end subroutine
-
-
   subroutine ali_insert_list( self, list )
     type(ListIndex_t), intent(in) :: self
     type(List_t),          target :: list
     call al_insert_items( self%node, list%item, list%item )
     self%host%length = self%host%length + list%length
     list%length      = 0
+  end subroutine
+
+
+  subroutine ali_insert_item( self, node )
+    type(ListIndex_t), intent(in) :: self
+    type(Item_t),          target :: node
+    call al_link_item( node, self%node%prev, self%node )
+    self%host%length = self%host%length + 1
   end subroutine
 
 
@@ -473,7 +472,7 @@ module abstract_list
     end do
   end subroutine
 
-  ! EXPERIMENTAL
+
   subroutine ali_insert_range( self, beg, end )
     type(ListIndex_t), intent(in) :: self, beg, end
     call al_insert_items( self%node, beg%node%prev, end%node%next )

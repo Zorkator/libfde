@@ -10,7 +10,7 @@ program testinger
   use iso_c_binding
   implicit none
 
-  type (List_t) :: l1, l2, l3, l4, l5
+  type (List_t) :: l1, l2, l3, l4, l5, l6
   integer*4   :: cnt
   type(VarItem_t)         :: var
   type(GenericRef_t)      :: ref1
@@ -24,6 +24,13 @@ program testinger
   call initialize( l3, item_type(l1) )
   call initialize( l4, item_type(strg) )
   call initialize( l5, item_type(ref1) )
+  call initialize( l6, item_type(var) )
+
+  var = 42
+  call append( l6, newListItem(var) )
+  call append( l6, newListItem(VarItem_of(42)) )
+  call append( l6, newListItem(VarItem_of('string')) )
+  call append( l6, newListItem(VarItem_of(ref_of(var))) )
 
   print *, is_valid(l1)
   print *, is_valid(l1, item_type(1))
@@ -43,9 +50,16 @@ program testinger
   end do
 
   ! list of references ... not yet possible
+  ref1 = ref_of(cnt)
   do cnt = 1, 3
-    call append( l4, newListItem(ref1) )
-    call append( l4, newListItem(ref_of(cnt)) )
+    call append( l5, newListItem(ref1) )
+    call append( l5, newListItem(ref_of(cnt)) )
+  end do
+
+  idx = index(l5)
+  do while (is_valid(idx))
+    print *, int32(ref(idx))
+    call next(idx)
   end do
 
   _exp("empty")
@@ -156,7 +170,7 @@ program testinger
   !array(::2) = 0
   !print *, array
 
-  ! giving an end makes an index effectively a range
+  ! giving an end turns index effectively into a range
   ! end is not implemented yet ...
   !idx = index( l1, begin, end, stride )
 
@@ -176,6 +190,7 @@ program testinger
   call delete( l3 )
   call delete( l4 )
   call delete( l5 )
+  call delete( l6 )
 
   
   contains
