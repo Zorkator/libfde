@@ -4,9 +4,9 @@
 program testinger
   use var_item
   use base_types
+  use dynamic_string
   use abstract_list
   use generic_ref
-  use dynamic_string
   use iso_c_binding
   implicit none
 
