@@ -28,10 +28,10 @@ program testinger
   call initialize( l7 ) 
 
   var = 42
-  call append( l6, newListItem(var) )
-  call append( l6, newListItem(VarItem_of(42)) )
-  call append( l6, newListItem(VarItem_of('string')) )
-  call append( l6, newListItem(VarItem_of(ref_of(var))) )
+  call append( l6, new_ListItem_of(var) )
+  call append( l6, new_ListItem_of(VarItem_of(42)) )
+  call append( l6, new_ListItem_of(VarItem_of('string')) )
+  call append( l6, new_ListItem_of(VarItem_of(ref_of(var))) )
 
   l7 = l6
 
@@ -41,22 +41,22 @@ program testinger
 
   do cnt = 1, 10
     array(cnt) = cnt
-    call append( l2, newListItem( cnt ) )
+    call append( l2, new_ListItem_of( cnt ) )
   end do
 
-  call append( l3, newListItem( l2 ) )
-  call append( l3, newListItem( l2 ) )
+  call append( l3, new_ListItem_of( l2 ) )
+  call append( l3, new_ListItem_of( l2 ) )
 
   do cnt = 1, 5
-    call append( l4, newListItem(DynamicString('test')) )
-    call append( l4, newListItem('test') )
+    call append( l4, new_ListItem_of(DynamicString('test')) )
+    call append( l4, new_ListItem_of('test') )
   end do
 
   ! list of references ... 
   ref1 = ref_of(cnt)
   do cnt = 1, 3
-    call append( l5, newListItem(ref1) )
-    call append( l5, newListItem(ref_of(cnt)) )
+    call append( l5, new_ListItem_of(ref1) )
+    call append( l5, new_ListItem_of(ref_of(cnt)) )
   end do
 
   idx = index(l5)
@@ -82,7 +82,7 @@ program testinger
 
   idx = index( l1, 3 )
   do cnt = -5, -1
-    call insert( index(l1, last), newListItem(cnt) )
+    call insert( index(l1, last), new_ListItem_of(cnt) )
   end do
 
   _exp("1..9, -5..-1, 10")
@@ -151,6 +151,15 @@ program testinger
 
   call remove( index(l1, 2, 0) )
   call remove( index(l1, 2, 2) )
+
+  call fill( l2, 1, 10 )
+  idx = index(l2)
+  call pop( idx )
+  print *, int32(idx)
+
+  idx = get_pop( l2, first )
+  print *, int32(idx)
+  print *, int32( get_pop( l2, last ) )
 
 
   idx = index( l1 )
@@ -238,7 +247,7 @@ program testinger
 
     call clear( list, item_type(1.0) )
     do i = beg_, end_, stride_
-      call append( list, newListItem(real(i,4)) )
+      call append( list, new_ListItem_of(real(i,4)) )
     end do
   end subroutine
 

@@ -38,6 +38,7 @@ module base_types
 
   !_TypeGen_declare_ListItem( public, DynamicString, type(DynamicString_t), scalar )
   !_TypeGen_declare_ListItem( alias, DynamicString, character(len=*), scalar )
+  !_TypeGen_declare_ListItem( alias, DynamicString, character(len=1), dimension(:) )
 
   contains
 

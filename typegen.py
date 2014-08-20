@@ -387,16 +387,17 @@ class ListItem(TypeSpec):
     """,
 
     item_itf = """
-    interface newListItem ; module procedure {typeId}_new_item_   ; end interface
-    interface item_type   ; module procedure {typeId}_itemtype_   ; end interface
-    interface {typeId}    ; module procedure {typeId}_item_value_ ; end interface
+    interface new_ListItem    ; module procedure {typeId}_new_item_    ; end interface
+    interface new_ListItem_of ; module procedure {typeId}_new_item_of_ ; end interface
+    interface item_type       ; module procedure {typeId}_itemtype_    ; end interface
+    interface {typeId}        ; module procedure {typeId}_item_value_  ; end interface
     """,
 
     alias_itf = """
-    interface newListItem ; module procedure {typeId}{aliasId}_new_item_ ; end interface
+    interface new_ListItem_of ; module procedure {typeId}{aliasId}_new_item_of_ ; end interface
     """,
 
-    access_itf = "newListItem, item_type, {typeId}",
+    access_itf = "new_ListItem, new_ListItem_of, item_type, {typeId}",
 
     item_type = """
     function {typeId}_itemtype_( val ) result(res)
@@ -411,18 +412,38 @@ class ListItem(TypeSpec):
     """,
 
     new_item = """
-    function {typeId}{aliasId}_new_item_( val ) result(res)
-      {baseType}{dimSpec}, intent(in) :: val
-      type(Item_t),           pointer :: res
-      type({typeId}_item_t),  pointer :: tgt => null()
-      type(TypeInfo_t),       pointer :: ti
+    function {typeId}_new_item_( valPtr ) result(res)
+      {baseType}{dimSpec}, pointer, intent(out) :: valPtr
+      type(Item_t),                     pointer :: res
+      type({typeId}_item_t),            pointer :: tgt => null()
+      type(TypeInfo_t),                 pointer :: ti
 
       allocate( tgt )
       ti => static_type( tgt%value )
       if (associated( ti%initProc )) &
         call ti%initProc( tgt%value, 0 ) !< init value as default instance!
-      tgt%value = val
-      res => tgt%super
+      valPtr => tgt%value
+      res    => tgt%super
+    end function
+    """,
+
+    new_item_of = """
+    function {typeId}_new_item_of_( val ) result(res)
+      {baseType}{dimSpec}, intent(in) :: val
+      type(Item_t),           pointer :: res
+      {baseType}{dimSpec},    pointer :: val_ptr
+      res     => {typeId}_new_item_( val_ptr )
+      val_ptr =  val
+    end function
+    """,
+
+    new_item_of_alias = """
+    function {typeId}{aliasId}_new_item_of_( val ) result(res)
+      {baseType}{dimSpec},        intent(in) :: val
+      type(Item_t),                  pointer :: res
+      {aliasBaseType}{aliasDimSpec}, pointer :: val_ptr
+      res     => {typeId}_new_item_( val_ptr )
+      val_ptr =  val
     end function
     """,
 
@@ -474,9 +495,11 @@ class ListItem(TypeSpec):
 
   def implement( self, out ):
     if not self._implemented:
-      self.expand( out, 'new_item' )
-      if not self.aliasId:
-        self.expand( out, 'item_type', 'clone_item', 'item_value' )
+      if self.aliasId:
+        alias = TypeGenerator.getBaseDeclaration( self.typeId, self )
+        self.expand( out, 'new_item_of_alias', aliasBaseType = alias.baseType, aliasDimSpec = alias.dimSpec )
+      else:
+        self.expand( out, 'new_item', 'new_item_of', 'item_type', 'clone_item', 'item_value' )
       self._implemented = True
 
 
@@ -504,8 +527,15 @@ class TypeGenerator(object):
   @classmethod
   def setDeclaration( _class, key, decl ):
     key = '%s.%s' % (key, type(decl).__name__)
-    _class.count[key] = cnt = _class.count.get( key, 0 ) + 1
-    _class.scope['%s.%d' % (key, cnt)] = decl
+    _class.count[key] = idx = _class.count.get( key, 0 ) + 1
+    if not getattr( decl, 'aliasId', None ):
+      idx = 'base'
+    _class.scope['%s.%s' % (key, idx)] = decl
+
+
+  @classmethod
+  def getBaseDeclaration( _class, key, decl ):
+    return _class.scope[ '%s.%s.base' % (key, type(decl).__name__) ]
 
 
   @classmethod

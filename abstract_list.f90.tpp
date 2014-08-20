@@ -15,6 +15,7 @@ module abstract_list
     integer      :: pseudoValue
   end type
 
+
   interface
     subroutine ItemCloner( tgt, src )
       import Item_t
@@ -39,6 +40,14 @@ module abstract_list
     integer*4                      :: stride = 1
   end type
 
+
+  type, private :: TypedItemRef_t
+    type(ValueItem_t), pointer :: item     => null()
+    type(TypeInfo_t),  pointer :: typeInfo => null()
+  end type
+
+  type(TypedItemRef_t) :: al_stale_item
+
   
   interface initialize  ; module procedure al_typed_init                                   ; end interface
   interface len         ; module procedure al_length                                       ; end interface
@@ -59,6 +68,8 @@ module abstract_list
   interface insert      ; module procedure ali_insert_list, ali_insert_item, ali_insert_idx; end interface
   interface insert      ; module procedure ali_insert_range                                ; end interface
   interface remove      ; module procedure ali_remove_idx                                  ; end interface
+  interface pop         ; module procedure ali_pop_idx                                     ; end interface
+  interface get_pop     ; module procedure al_get_pop_int                                  ; end interface
 
   interface assignment(=) ; module procedure al_assign_al, al_assign_idx                   ; end interface
   interface operator(==)  ; module procedure ali_eq_ali, ali_eq_item                       ; end interface
@@ -81,6 +92,7 @@ module abstract_list
   public :: next, set_next, get_next
   public :: insert
   public :: remove
+  public :: pop, get_pop
 
   public :: operator(==), operator(/=), assignment(=)
 
@@ -491,6 +503,50 @@ module abstract_list
     if (delList%length > 0) &
       call delete( delList )
   end subroutine
+
+  
+  subroutine ali_pop_idx( self )
+    use iso_c_binding
+    type(ListIndex_t) :: self
+  
+    if (is_valid(self)) then
+      if (associated( al_stale_item%item )) then
+        if (associated( al_stale_item%typeInfo%deleteProc )) &
+          call al_stale_item%typeInfo%deleteProc( al_stale_item%item%pseudoValue )
+          deallocate( al_stale_item%item )
+      end if
+      call c_f_pointer( c_loc(self%node), al_stale_item%item )
+      al_stale_item%typeInfo => self%host%typeInfo
+
+      call al_remove_item( self%node )
+      self%host%length = self%host%length - 1
+      self%host => null()
+    end if
+  end subroutine
+
+
+  subroutine ali_stash( idx )
+    use iso_c_binding
+    type(ListIndex_t), optional :: idx
+    
+    if (associated( al_stale_item%item )) then
+      if (associated( al_stale_item%typeInfo%deleteProc )) &
+        call al_stale_item%typeInfo%deleteProc( al_stale_item%item%pseudoValue )
+      deallocate( al_stale_item%item )
+    end if
+    call c_f_pointer( c_loc(idx%node), al_stale_item%item )
+    al_stale_item%typeInfo => idx%host%typeInfo
+  end subroutine
+
+
+
+  function al_get_pop_int( self, at ) result(res)
+    type(List_t), target :: self
+    integer*4,  optional :: at
+    type(ListIndex_t)    :: res
+    res = index( self, at )
+    call ali_pop_idx( res )
+  end function
 
 
   subroutine al_assign_al( lhs, rhs )

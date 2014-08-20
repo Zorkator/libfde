@@ -36,14 +36,16 @@ module hash_map
   public :: clear
   public :: delete
 
-  !_TypeGen_declare_RefType( private, mapItem, type(HashMapItem_t), scalar )
-  !_TypeGen_declare_ListItem( private, mapItem, type(HashMapItem_t), scalar )
+  !_TypeGen_declare_RefType( private, HashMapItem, type(HashMapItem_t), scalar )
+  !_TypeGen_declare_ListItem( private, HashMapItem, type(HashMapItem_t), scalar )
 
-  !_TypeGen_declare_RefType( public, map, type(HashMap_t), scalar, \
+  !_TypeGen_declare_RefType( public, HashMap, type(HashMap_t), scalar, \
   !     initProc   = hm_initialize_proto, \
   !     assignProc = hm_assign_hm,        \
   !     deleteProc = hm_delete,           \
   !     cloneMode  = _type )
+
+  !_TypeGen_declare_ListItem( public, HashMap, type(HashMap_t), scalar )
 
 contains
 
@@ -73,7 +75,8 @@ contains
     integer                        :: index_min, index_max
     type(HashMapItem_t)            :: item
 
-    self%indexLimits = (/ index_min, index_max /)
+    self%indexLimits(1) = max(1, index_min)
+    self%indexLimits(2) = max(1, index_min, index_max)
     if (.not. is_valid(hm_nodeCache)) &
       call initialize( hm_nodeCache, item_type(item%value) )
     call hm_setup_index( self, self%indexLimits(1) )
@@ -148,6 +151,78 @@ contains
 
   subroutine hm_clear_cache()
     call clear( hm_nodeCache )
+  end subroutine
+
+
+  function hm_get_bucketIndex( self, key ) result(res)
+    use hash_code
+    type(HashMap_t),  intent(in) :: self
+    character(len=*), intent(in) :: key
+    type(ListIndex_t)            :: res
+    integer                      :: idx, n
+    
+    n = size( self%indexVector )
+    idx = mod( hash(key), n )
+    ! have to fix negativ indices since fortran doesn't know unsigned integers >:(
+    if (idx < 0) &
+      idx = idx + n
+    res = index( self%indexVector(idx) )
+  end function
+
+
+  logical &
+  function hm_locate_item( self, key, idx ) result(res)
+    type(HashMap_t), intent(inout) :: self
+    character(len=*),   intent(in) :: key
+    type(ListIndex_t), intent(out) :: idx
+    type(HashMapItem_t),   pointer :: item
+    
+    if (self%indexLimits(1) < self%indexLimits(2)) &
+      call hm_reindex( self )
+    
+    idx = hm_get_bucketIndex( self, key )
+    do while (is_valid(idx))
+      item => HashMapItem(idx)
+      if (item%key /= key) then; call next(idx)
+                           else; exit
+      end if
+    end do
+    res = is_valid(idx)
+  end function
+
+
+  subroutine hm_set( self, key, val )
+    type(HashMap_t), intent(inout) :: self
+    character(len=*),   intent(in) :: key
+    type(VarItem_t),    intent(in) :: val
+    type(HashMapItem_t),   pointer :: item
+    
+    type(ListIndex_t)              :: idx
+
+    if (.not. hm_locate_item( self, key, idx )) then
+      call insert( idx, new_ListItem( item ) )
+      item%key   = key
+      self%items = self%items + 1
+    else
+      item => HashMapItem(idx)
+    end if
+    item%value = val
+  end subroutine
+
+
+  function newHashNode( self, key, valPtr ) result(res)
+    type(HashMap_t)                                 :: self
+    character(len=*),                    intent(in) :: key
+    type(VarItem_t), optional, pointer, intent(out) :: valPtr
+    type(Item_t),                           pointer :: res
+    type(HashMapItem_t),                    pointer :: itemPtr
+    
+    res => new_ListItem( itemPtr )
+  end function
+
+
+  subroutine hm_reindex( self )
+    type(HashMap_t), intent(inout) :: self
   end subroutine
 
   !_TypeGen_implementAll()

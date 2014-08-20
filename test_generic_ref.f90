@@ -21,7 +21,7 @@ program testinger
   integer*4                      :: i, j
 
   type(c_ptr)         :: cpointer
-  type(GenericRef_t)  :: ref1, ref2, ref3
+  type(GenericRef_t)  :: ref1, ref2, ref3, ref4
   complex*32          :: cplx
   complex*32, pointer :: cplx_ptr
 
@@ -43,6 +43,11 @@ program testinger
   ref2 = clone(ref1)
   ref2 = ref_of(j)
   call delete(ref2)
+
+  ref2 = ref_of(ref1)
+  ref3 = ref_of(ref2)
+  ref4 = clone(ref3)
+  call delete(ref4)
 
 
   intArray = 34
