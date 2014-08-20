@@ -40,17 +40,21 @@ varitem: $(BASE_OBJ) var_item.o test_var_item.o
 glist: generic_list.o
 	$(mk_F90C) $(mk_F90_FLAGS) $(mk_INCLUDE_PATHLIST) $? -o $@.$(mk_TAG)
 
-alist: $(BASE_OBJ) var_item.o abstract_list.o test_abstract_list.o
+alist: $(BASE_OBJ) var_item.o test_abstract_list.o
+	$(mk_F90C) $(mk_F90_FLAGS) $(mk_INCLUDE_PATHLIST) $? -o $@.$(mk_TAG)
+
+map: $(BASE_OBJ) var_item.o hash_map.o test_hash_map.o
 	$(mk_F90C) $(mk_F90_FLAGS) $(mk_INCLUDE_PATHLIST) $? -o $@.$(mk_TAG)
 
 clean:
 	rm -f *.mod *.o *.debug.* *.release.* $(TPP_FILES:%.tpp=%)
 
-test: clean dynstring gref varitem alist
+test: clean dynstring gref varitem alist map
 	./dynstring.$(mk_TAG)
 	./gref.$(mk_TAG)
 	./varitem.$(mk_TAG)
 	./alist.$(mk_TAG)
+	./map.$(mk_TAG)
 
 
 %.f90: %.f90.tpp

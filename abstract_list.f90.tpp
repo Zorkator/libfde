@@ -93,6 +93,7 @@ module abstract_list
   public :: insert
   public :: remove
   public :: pop, get_pop
+  public :: al_clear_stash
 
   public :: operator(==), operator(/=), assignment(=)
 
@@ -270,6 +271,7 @@ module abstract_list
       deallocate( delPtr )
     end do
     call al_initialize_item( self%item )
+    call al_clear_stash()
     self%length = 0
   end subroutine
 
@@ -505,41 +507,6 @@ module abstract_list
   end subroutine
 
   
-  subroutine ali_pop_idx( self )
-    use iso_c_binding
-    type(ListIndex_t) :: self
-  
-    if (is_valid(self)) then
-      if (associated( al_stale_item%item )) then
-        if (associated( al_stale_item%typeInfo%deleteProc )) &
-          call al_stale_item%typeInfo%deleteProc( al_stale_item%item%pseudoValue )
-          deallocate( al_stale_item%item )
-      end if
-      call c_f_pointer( c_loc(self%node), al_stale_item%item )
-      al_stale_item%typeInfo => self%host%typeInfo
-
-      call al_remove_item( self%node )
-      self%host%length = self%host%length - 1
-      self%host => null()
-    end if
-  end subroutine
-
-
-  subroutine ali_stash( idx )
-    use iso_c_binding
-    type(ListIndex_t), optional :: idx
-    
-    if (associated( al_stale_item%item )) then
-      if (associated( al_stale_item%typeInfo%deleteProc )) &
-        call al_stale_item%typeInfo%deleteProc( al_stale_item%item%pseudoValue )
-      deallocate( al_stale_item%item )
-    end if
-    call c_f_pointer( c_loc(idx%node), al_stale_item%item )
-    al_stale_item%typeInfo => idx%host%typeInfo
-  end subroutine
-
-
-
   function al_get_pop_int( self, at ) result(res)
     type(List_t), target :: self
     integer*4,  optional :: at
@@ -548,6 +515,41 @@ module abstract_list
     call ali_pop_idx( res )
   end function
 
+
+  subroutine ali_pop_idx( self )
+    use iso_c_binding
+    type(ListIndex_t) :: self
+  
+    if (is_valid(self)) then
+      call ali_stash_idx( self )
+    else
+      self%node => null()
+    end if
+  end subroutine
+
+
+  subroutine ali_stash_idx( self )
+    use iso_c_binding
+    type(ListIndex_t) :: self
+
+    call al_clear_stash()
+    call c_f_pointer( c_loc(self%node), al_stale_item%item )
+    al_stale_item%typeInfo => self%host%typeInfo
+
+    call al_remove_item( self%node )
+    self%host%length = self%host%length - 1
+    self%host => null()
+  end subroutine
+
+
+  subroutine al_clear_stash()
+    if (associated( al_stale_item%item )) then
+      if (associated( al_stale_item%typeInfo%deleteProc )) &
+        call al_stale_item%typeInfo%deleteProc( al_stale_item%item%pseudoValue )
+      deallocate( al_stale_item%item )
+    end if
+  end subroutine
+  
 
   subroutine al_assign_al( lhs, rhs )
     type(List_t), target, intent(inout) :: lhs

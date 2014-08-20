@@ -155,12 +155,11 @@ program testinger
   call fill( l2, 1, 10 )
   idx = index(l2)
   call pop( idx )
-  print *, int32(idx)
+  print *, real32(idx)
 
   idx = get_pop( l2, first )
-  print *, int32(idx)
-  print *, int32( get_pop( l2, last ) )
-
+  print *, real32(idx)
+  print *, real32( get_pop( l2, last ) )
 
   idx = index( l1 )
   idx = index( idx, 2 )
@@ -190,7 +189,7 @@ program testinger
 
   print *, len(List(ref1))
 
-  print *, int32( index(l1) )
+  print *, real32( index(l1) )
 
   ref1 = clone(ref1)
   call printList( List(ref1) )

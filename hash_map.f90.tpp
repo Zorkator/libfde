@@ -31,10 +31,14 @@ module hash_map
   interface initialize ; module procedure hm_initialize, hm_initialize_default ; end interface
   interface clear      ; module procedure hm_clear                             ; end interface
   interface delete     ; module procedure hm_delete                            ; end interface
+  interface get        ; module procedure hm_get_value_ref                     ; end interface
+  interface set        ; module procedure hm_set                               ; end interface
 
   public :: initialize
   public :: clear
   public :: delete
+  public :: get, set
+  public :: hm_clear_cache
 
   !_TypeGen_declare_RefType( private, HashMapItem, type(HashMapItem_t), scalar )
   !_TypeGen_declare_ListItem( private, HashMapItem, type(HashMapItem_t), scalar )
@@ -130,7 +134,7 @@ contains
     if (associated( self%indexVector )) then
       call hm_clear( self )
       deallocate( self%indexVector )
-    end if       
+    end if
   end subroutine
 
 
@@ -151,6 +155,7 @@ contains
 
   subroutine hm_clear_cache()
     call clear( hm_nodeCache )
+    call al_clear_stash()
   end subroutine
 
 
@@ -195,29 +200,54 @@ contains
     type(HashMap_t), intent(inout) :: self
     character(len=*),   intent(in) :: key
     type(VarItem_t),    intent(in) :: val
-    type(HashMapItem_t),   pointer :: item
-    
-    type(ListIndex_t)              :: idx
+    type(VarItem_t),       pointer :: valPtr
 
-    if (.not. hm_locate_item( self, key, idx )) then
-      call insert( idx, new_ListItem( item ) )
-      item%key   = key
-      self%items = self%items + 1
-    else
-      item => HashMapItem(idx)
-    end if
-    item%value = val
+    valPtr => hm_get_value_ref( self, key )
+    valPtr = val
   end subroutine
 
 
-  function newHashNode( self, key, valPtr ) result(res)
-    type(HashMap_t)                                 :: self
-    character(len=*),                    intent(in) :: key
-    type(VarItem_t), optional, pointer, intent(out) :: valPtr
-    type(Item_t),                           pointer :: res
-    type(HashMapItem_t),                    pointer :: itemPtr
-    
-    res => new_ListItem( itemPtr )
+  function hm_get_value_ref( self, key ) result(res)
+    type(HashMap_t)              :: self
+    character(len=*), intent(in) :: key
+    type(VarItem_t),     pointer :: res
+    type(Item_t),        pointer :: item
+    type(HashMapItem_t), pointer :: mapItem
+    type(ListIndex_t)            :: bucket, idx
+  
+    if (hm_locate_item( self, key, bucket )) then
+      ! hash node exists ...
+      mapItem => HashMapItem(bucket)
+    else
+      ! need to add new hash node
+      idx = get_pop( hm_nodeCache, first )
+      if (associated( idx%node )) then
+        item    => idx%node
+        mapItem => HashMapItem(idx)
+      else
+        item => new_ListItem( mapItem )
+      end if
+      mapItem%key = key
+      call insert( bucket, item )
+      self%items = self%items + 1
+    end if
+    res => mapItem%value
+  end function
+
+  
+  function hm_get_value_ptr( self, key ) result(res)
+    type(HashMap_t)              :: self
+    character(len=*), intent(in) :: key
+    type(VarItem_t),     pointer :: res
+    type(HashMapItem_t), pointer :: mapItem
+    type(ListIndex_t)            :: bucket
+  
+    if (hm_locate_item( self, key, bucket )) then
+      mapItem => HashMapItem( bucket )
+      res => mapItem%value
+    else
+      res => null()
+    end if
   end function
 
 
