@@ -65,15 +65,16 @@ module var_item
 
   ! declare interfaces public
 
-    interface is_valid    ; module procedure vi_is_valid    ; end interface
-    interface dynamic_type; module procedure vi_dynamic_type; end interface
-    interface delete      ; module procedure vi_delete      ; end interface
+    interface is_valid     ; module procedure vi_is_valid     ; end interface
+    interface dynamic_type ; module procedure vi_dynamic_type ; end interface
+    interface delete       ; module procedure vi_delete       ; end interface
+    interface assign       ; module procedure vi_assign_vi    ; end interface
 
     public :: VarItem_of
     public :: is_valid
     public :: dynamic_type
     public :: delete
-    public :: assignment (=)
+    public :: assignment(=)
 
 
   ! declare public typecheck interfaces ...
@@ -112,7 +113,7 @@ module var_item
 
 # define _implementConstructor_(typeId, baseType, proto)   \
     function _paste(vi_from_,typeId)( val ) result(res)   ;\
-      baseType,    intent(in) :: val                      ;\
+      baseType                :: val                      ;\
       baseType,       pointer :: ptr                      ;\
       type(VarItem_t), target :: res                      ;\
       if (vi_reshape( res, static_type(val) )) then       ;\
@@ -137,31 +138,31 @@ module var_item
 
 
   function vi_from_charString( val ) result(res)
-    character(len=*),   intent(in) :: val
+    character(len=*)               :: val
     type(DynamicString_t), pointer :: ptr
     type(VarItem_t),        target :: res
 
     if (vi_reshape( res, static_type(string_var) )) &
       call res%typeInfo%initProc( res%data, 1, temporary_string )
     call c_f_pointer( c_loc(res%data(1)), ptr )
-    ptr = val
+    call assign( ptr, val )
   end function
 
 
   function vi_from_ref_encoding( val ) result(res)
-    type(GenericRef_Encoding_t), dimension(:), intent(in) :: val
-    type(GenericRef_t),                           pointer :: ptr
-    type(VarItem_t),                               target :: res
+    type(GenericRef_Encoding_t), dimension(:) :: val
+    type(GenericRef_t),               pointer :: ptr
+    type(VarItem_t),                   target :: res
     if (vi_reshape( res, static_type(ref_var) )) &
       call res%typeInfo%initProc( res%data, 1, temporary_ref )
     call c_f_pointer( c_loc(res%data(1)), ptr )
-    ptr = val
+    call assign( ptr, val )
   end function
 
 
   function vi_from_vi( val ) result(res)
-    type(VarItem_t), intent(in) :: val
-    type(VarItem_t)             :: res
+    type(VarItem_t) :: val
+    type(VarItem_t) :: res
 
     if (vi_reshape( res, val%typeInfo )) then
       res%data = 0 !< setting 0 here implies a temporary instance!
@@ -178,10 +179,10 @@ module var_item
 
 # define _implementGetter_(typeId, baseType)                          \
     function _paste(vi_get_,typeId)( self ) result(res)              ;\
-      type(VarItem_t), target, intent(in) :: self                    ;\
-      baseType,                   pointer :: res                     ;\
+      type(VarItem_t), target :: self                                ;\
+      baseType,       pointer :: res                                 ;\
       if (vi_reshape( self, static_type(_paste(typeId,_var)) )) then ;\
-        call self%typeInfo%initProc( self, 0 )                  ;\
+        call self%typeInfo%initProc( self, 0 )                       ;\
       end if                                                         ;\
       call c_f_pointer( c_loc(self%data(1)), res )                   ;\
     end function
@@ -233,7 +234,7 @@ module var_item
     if (vi_reshape( lhs, static_type(string_var) )) &
       call lhs%typeInfo%initProc( lhs, 0 )
     call c_f_pointer( c_loc(lhs%data(1)), ptr )
-    ptr = rhs
+    call assign( ptr, rhs )
   end subroutine
 
   
@@ -244,7 +245,7 @@ module var_item
     if (vi_reshape( lhs, static_type(ref_var) )) &
       call lhs%typeInfo%initProc( lhs, 0 )
     call c_f_pointer( c_loc(lhs%data(1)), ptr )
-    ptr = rhs
+    call assign( ptr, rhs )
   end subroutine
 
 
@@ -267,9 +268,9 @@ module var_item
 
 # define _implementAssignTo_(typeId, baseType)                \
     subroutine _paste(typeId,_assign_vi)( lhs, rhs )         ;\
-      baseType,             intent(inout) :: lhs             ;\
-      type(VarItem_t), target, intent(in) :: rhs             ;\
-      baseType,                   pointer :: ptr             ;\
+      baseType, intent(inout) :: lhs                         ;\
+      type(VarItem_t), target :: rhs                         ;\
+      baseType,       pointer :: ptr                         ;\
       if (associated( static_type(lhs), rhs%typeInfo )) then ;\
         call c_f_pointer( c_loc(rhs%data(1)), ptr )          ;\
         lhs = ptr                                            ;\

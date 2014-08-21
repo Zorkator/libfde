@@ -4,6 +4,7 @@
 module base_string
   use iso_c_binding
   implicit none
+  private
   
   type, public :: BaseString_t
     _RefStatus                              :: refstat = _ref_HardLent
@@ -11,24 +12,47 @@ module base_string
     character(len=1), dimension(:), pointer :: ptr     => null()
   end type
 
-  type(BaseString_t), parameter :: temporary_string = BaseString_t( _ref_WeakLent, 0, null() )
-  type(BaseString_t), parameter :: permanent_string = BaseString_t( _ref_WeakLent, 0, null() )
 
-
-  type :: Attribute_t
+  type, public :: Attribute_t
     private
     integer*1 :: val = 0
   end type
 
-  type(Attribute_t), parameter :: attrib_volatile  = Attribute_t(0)
-  type(Attribute_t), parameter :: attrib_permanent = Attribute_t(1)
+
+  type(BaseString_t), parameter :: temporary_string = BaseString_t( _ref_WeakLent, 0, null() )
+  type(BaseString_t), parameter :: permanent_string = BaseString_t( _ref_WeakLent, 0, null() )
+  type(Attribute_t),  parameter :: attrib_volatile  = Attribute_t(0)
+  type(Attribute_t),  parameter :: attrib_permanent = Attribute_t(1)
+
+  ! interface definitions
+
+  interface initialize    ; module procedure bs_init_by_proto, bs_init_by_cs, bs_init_by_buf ; end interface
+  interface assign        ; module procedure bs_assign_cs, bs_assign_bs, bs_assign_buf       ; end interface
+  interface delete        ; module procedure bs_delete                                       ; end interface
+  interface ptr           ; module procedure bs_ptr                                          ; end interface
+  interface c_void_ptr    ; module procedure bs_cptr                                         ; end interface
+  interface set_attribute ; module procedure bs_set_attribute                                ; end interface
+  interface len_ref       ; module procedure bs_len_ref                                      ; end interface
+  interface release_weak  ; module procedure bs_release_weak                                 ; end interface
+  
+
+  ! interface visibility
+
+  public :: temporary_string, permanent_string
+  public :: attrib_volatile, attrib_permanent
+  public :: initialize
+  public :: assign
+  public :: delete
+  public :: ptr, c_void_ptr
+  public :: set_attribute
+  public :: len_ref
+  public :: release_weak
 
 
-  interface ptr ; module procedure bs_ptr ; end interface
+contains
 
-  contains
 
-  subroutine bs_init( bs, proto )
+  subroutine bs_init_by_proto( bs, proto )
     type(BaseString_t)           :: bs
     type(BaseString_t), optional :: proto
 
@@ -37,13 +61,6 @@ module base_string
     if (present(proto)) then; _ref_init( bs%refstat, _ref_hardness(proto%refstat) )
                         else; bs%refstat = _ref_HardLent
     end if
-  end subroutine
-
-
-  subroutine bs_set_attribute( bs, attr )
-    type(BaseString_t)            :: bs
-    type(Attribute_t), intent(in) :: attr
-    _ref_setHard( bs%refstat, attr%val )
   end subroutine
 
 
@@ -72,6 +89,13 @@ module base_string
       allocate( bs%ptr(bs%len) )
       bs%ptr = buf
     end if
+  end subroutine
+
+
+  subroutine bs_set_attribute( bs, attr )
+    type(BaseString_t)            :: bs
+    type(Attribute_t), intent(in) :: attr
+    _ref_setHard( bs%refstat, attr%val )
   end subroutine
 
 
@@ -121,7 +145,8 @@ module base_string
   end function
 
 
-  pure function bs_ref_len( bs ) result(res)
+  pure &
+  function bs_len_ref( bs ) result(res)
     type(BaseString_t), intent(in) :: bs
     integer                        :: res
 

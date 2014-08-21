@@ -32,8 +32,16 @@ program testinger
   call append( l6, new_ListItem_of(VarItem_of(42)) )
   call append( l6, new_ListItem_of(VarItem_of('string')) )
   call append( l6, new_ListItem_of(VarItem_of(ref_of(var))) )
-
   l7 = l6
+
+  call append( l6, new_ListItem_of(VarItem_of(ref_of(var))) )
+  call assign( l6, l7 )
+
+  var = "testinger"
+  strg = var
+  var = VarItem_of(strg)
+  var = VarItem_of(ref1)
+
 
   print *, is_valid(l1)
   print *, is_valid(l1, item_type(1))

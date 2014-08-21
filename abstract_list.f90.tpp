@@ -71,6 +71,7 @@ module abstract_list
   interface pop         ; module procedure ali_pop_idx                                     ; end interface
   interface get_pop     ; module procedure al_get_pop_int                                  ; end interface
 
+  interface assign        ; module procedure al_assign_al, al_assign_idx                   ; end interface
   interface assignment(=) ; module procedure al_assign_al, al_assign_idx                   ; end interface
   interface operator(==)  ; module procedure ali_eq_ali, ali_eq_item                       ; end interface
   interface operator(/=)  ; module procedure ali_ne_ali, ali_ne_item                       ; end interface
@@ -93,7 +94,6 @@ module abstract_list
   public :: insert
   public :: remove
   public :: pop, get_pop
-  public :: al_clear_stash
 
   public :: operator(==), operator(/=), assignment(=)
 
@@ -233,7 +233,7 @@ module abstract_list
   subroutine al_append_idx( self, idx )
     type (List_t), target :: self
     type (ListIndex_t)    :: idx
-    call insert( index(self, tail, 0), idx )
+    call ali_insert_idx( index(self, tail, 0), idx )
   end subroutine
 
 
@@ -292,7 +292,6 @@ module abstract_list
   !  integer*4 :: a,b,c
   !  a = min( begin, end )
   !end function
-
 
   function al_index_node( self, at, stride ) result(res)
     type(List_t), target, intent(in) :: self
@@ -421,9 +420,9 @@ module abstract_list
 
   pure logical function ali_is_valid( self ) result(res)
     type(ListIndex_t), target, intent(in) :: self
-    res = associated(self%host) .and. &
-          associated(self%node) .and. &
-    .not. associated(self%node, self%host%item)
+    res = associated(self%host) .and. associated(self%node)
+    if (res) &
+      res = .not. associated(self%node, self%host%item)
   end function
 
   
@@ -467,6 +466,10 @@ module abstract_list
     type(Item_t),          target :: node
     call al_link_item( node, self%node%prev, self%node )
     self%host%length = self%host%length + 1
+
+    ! if stashed item gets reinserted ...
+    if (associated( al_stale_item%item, node )) &
+      al_stale_item%item => null()
   end subroutine
 
 
@@ -501,7 +504,7 @@ module abstract_list
     type(List_t)      :: delList
   
     call initialize( delList, self%host%typeInfo )
-    call insert( index(delList, tail, 0), self )
+    call ali_insert_idx( index(delList, tail, 0), self )
     if (delList%length > 0) &
       call delete( delList )
   end subroutine
@@ -581,7 +584,7 @@ module abstract_list
 
     if (associated( rhs%host, lhs )) then
       call initialize( tmp, lhs%typeInfo )
-      call insert( index(tmp, tail, 0), rhs )
+      call ali_insert_idx( index(tmp, tail, 0), rhs )
       call clear( lhs, lhs%typeInfo )
       call append( lhs, tmp )
     else

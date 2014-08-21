@@ -11,11 +11,17 @@ module hash_map
   integer, parameter :: max_indexSize = 100000
 
 
-  type, public :: HashMapItem_t
+  type, private :: HashNode_t
     private
     type(DynamicString_t) :: key
     type(VarItem_t)       :: value
   end type
+
+  !_TypeGen_declare_RefType( private, HashNode, type(HashNode_t), scalar, \
+  !     deleteProc = hmi_delete, \
+  !     cloneMode  = _type )
+
+  !_TypeGen_declare_ListItem( private, HashNode, type(HashNode_t), scalar )
 
 
   type, public :: HashMap_t
@@ -23,6 +29,14 @@ module hash_map
     integer*4                           :: items          =  0
     integer*4                           :: indexLimits(2) = (/ min_indexSize, max_indexSize /)
   end type
+
+  !_TypeGen_declare_RefType( public, HashMap, type(HashMap_t), scalar, \
+  !     initProc   = hm_initialize_proto, \
+  !     assignProc = hm_assign_hm,        \
+  !     deleteProc = hm_delete,           \
+  !     cloneMode  = _type )
+
+  !_TypeGen_declare_ListItem( public, HashMap, type(HashMap_t), scalar )
 
   
   type(List_t), target :: hm_nodeCache
@@ -34,24 +48,24 @@ module hash_map
   interface get        ; module procedure hm_get_value_ref                     ; end interface
   interface set        ; module procedure hm_set                               ; end interface
 
+  interface assign     ; module procedure hm_assign_hm                         ; end interface
+
   public :: initialize
   public :: clear
   public :: delete
   public :: get, set
   public :: hm_clear_cache
 
-  !_TypeGen_declare_RefType( private, HashMapItem, type(HashMapItem_t), scalar )
-  !_TypeGen_declare_ListItem( private, HashMapItem, type(HashMapItem_t), scalar )
-
-  !_TypeGen_declare_RefType( public, HashMap, type(HashMap_t), scalar, \
-  !     initProc   = hm_initialize_proto, \
-  !     assignProc = hm_assign_hm,        \
-  !     deleteProc = hm_delete,           \
-  !     cloneMode  = _type )
-
-  !_TypeGen_declare_ListItem( public, HashMap, type(HashMap_t), scalar )
-
 contains
+
+
+  subroutine hmi_delete( self )
+    type(HashNode_t), intent(inout) :: self
+    
+    call delete( self%key )
+    call delete( self%value )
+  end subroutine
+
 
   subroutine hm_initialize_proto( self, has_proto, proto )
     type(HashMap_t)     :: self
@@ -77,12 +91,12 @@ contains
   subroutine hm_initialize( self, index_min, index_max )
     type(HashMap_t), intent(inout) :: self
     integer                        :: index_min, index_max
-    type(HashMapItem_t)            :: item
+    type(HashNode_t)               :: item
 
     self%indexLimits(1) = max(1, index_min)
     self%indexLimits(2) = max(1, index_min, index_max)
     if (.not. is_valid(hm_nodeCache)) &
-      call initialize( hm_nodeCache, item_type(item%value) )
+      call initialize( hm_nodeCache, item_type(item) )
     call hm_setup_index( self, self%indexLimits(1) )
   end subroutine
 
@@ -155,7 +169,6 @@ contains
 
   subroutine hm_clear_cache()
     call clear( hm_nodeCache )
-    call al_clear_stash()
   end subroutine
 
 
@@ -180,14 +193,14 @@ contains
     type(HashMap_t), intent(inout) :: self
     character(len=*),   intent(in) :: key
     type(ListIndex_t), intent(out) :: idx
-    type(HashMapItem_t),   pointer :: item
+    type(HashNode_t),      pointer :: item
     
     if (self%indexLimits(1) < self%indexLimits(2)) &
       call hm_reindex( self )
     
     idx = hm_get_bucketIndex( self, key )
     do while (is_valid(idx))
-      item => HashMapItem(idx)
+      item => HashNode(idx)
       if (item%key /= key) then; call next(idx)
                            else; exit
       end if
@@ -203,7 +216,7 @@ contains
     type(VarItem_t),       pointer :: valPtr
 
     valPtr => hm_get_value_ref( self, key )
-    valPtr = val
+    call assign( valPtr, val )
   end subroutine
 
 
@@ -211,24 +224,22 @@ contains
     type(HashMap_t)              :: self
     character(len=*), intent(in) :: key
     type(VarItem_t),     pointer :: res
-    type(Item_t),        pointer :: item
-    type(HashMapItem_t), pointer :: mapItem
+    type(HashNode_t),    pointer :: mapItem
     type(ListIndex_t)            :: bucket, idx
   
     if (hm_locate_item( self, key, bucket )) then
       ! hash node exists ...
-      mapItem => HashMapItem(bucket)
+      mapItem => HashNode(bucket)
     else
       ! need to add new hash node
       idx = get_pop( hm_nodeCache, first )
       if (associated( idx%node )) then
-        item    => idx%node
-        mapItem => HashMapItem(idx)
+        mapItem => HashNode(idx)
       else
-        item => new_ListItem( mapItem )
+        idx%node => new_ListItem( mapItem )
       end if
-      mapItem%key = key
-      call insert( bucket, item )
+      call assign( mapItem%key, key )
+      call insert( bucket, idx%node )
       self%items = self%items + 1
     end if
     res => mapItem%value
@@ -239,11 +250,11 @@ contains
     type(HashMap_t)              :: self
     character(len=*), intent(in) :: key
     type(VarItem_t),     pointer :: res
-    type(HashMapItem_t), pointer :: mapItem
+    type(HashNode_t),    pointer :: mapItem
     type(ListIndex_t)            :: bucket
   
     if (hm_locate_item( self, key, bucket )) then
-      mapItem => HashMapItem( bucket )
+      mapItem => HashNode( bucket )
       res => mapItem%value
     else
       res => null()

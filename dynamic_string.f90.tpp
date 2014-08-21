@@ -15,8 +15,14 @@ module dynamic_string
 #   define _len(self)       self%str%len
 #   define _ptr(self)       ptr(self%str)
 #   define _array(self)     self%str%ptr(:self%str%len)
-#   define _reflen(self)    bs_ref_len( self%str )
+#   define _reflen(self)    len_ref( self%str )
   end type
+
+  !_TypeGen_declare_RefType( public, DynamicString, type(DynamicString_t), scalar, \
+  !     initProc   = ds_initialize, \
+  !     assignProc = ds_assign_ds,  \
+  !     deleteProc = ds_delete,     \
+  !     cloneMode  = _type )
 
 
   ! interface definitions
@@ -41,9 +47,21 @@ module dynamic_string
   interface lle          ; module procedure ds_lle_cs, cs_lle_ds, ds_lle_ds ; end interface
   interface llt          ; module procedure ds_llt_cs, cs_llt_ds, ds_llt_ds ; end interface
 
+  ! assignment and operators
+
+  interface assign        ; module procedure ds_assign_cs, cs_assign_ds, ds_assign_ds, ds_assign_buf ; end interface
+  interface assignment(=) ; module procedure ds_assign_cs, cs_assign_ds, ds_assign_ds, ds_assign_buf ; end interface
+  interface operator(//)  ; module procedure ds_concat_cs, cs_concat_ds, ds_concat_ds                ; end interface
+  interface operator(==)  ; module procedure ds_eq_cs, cs_eq_ds, ds_eq_ds                            ; end interface 
+  interface operator(/=)  ; module procedure ds_ne_cs, cs_ne_ds, ds_ne_ds                            ; end interface 
+  interface operator(<)   ; module procedure ds_lt_cs, cs_lt_ds, ds_lt_ds                            ; end interface 
+  interface operator(<=)  ; module procedure ds_le_cs, cs_le_ds, ds_le_ds                            ; end interface 
+  interface operator(>)   ; module procedure ds_gt_cs, cs_gt_ds, ds_gt_ds                            ; end interface 
+  interface operator(>=)  ; module procedure ds_ge_cs, cs_ge_ds, ds_ge_ds                            ; end interface
+
   ! declare public interfaces 
 
-  !public :: DynamicString <= will be declared public later ...
+  !public :: DynamicString <= is set public by RefType declaration!
   public :: str, cptr
   public :: char
   public :: delete
@@ -71,51 +89,10 @@ module dynamic_string
   public :: operator(>)
   public :: operator(>=)
   
-  ! assignment and operators
-
-  interface assignment(=)
-    module procedure ds_assign_cs, cs_assign_ds, ds_assign_ds, ds_assign_buf
-  end interface
-
-  interface operator(//)
-    module procedure ds_concat_cs, cs_concat_ds, ds_concat_ds
-  end interface
-
-  ! comparison operators
-
-  interface operator(==)
-    module procedure ds_eq_cs, cs_eq_ds, ds_eq_ds
-  end interface
-
-  interface operator(/=)
-    module procedure ds_ne_cs, cs_ne_ds, ds_ne_ds
-  end interface
-
-  interface operator(<)
-    module procedure ds_lt_cs, cs_lt_ds, ds_lt_ds
-  end interface
-
-  interface operator(<=)
-    module procedure ds_le_cs, cs_le_ds, ds_le_ds
-  end interface
-
-  interface operator(>)
-    module procedure ds_gt_cs, cs_gt_ds, ds_gt_ds
-  end interface
-
-  interface operator(>=)
-    module procedure ds_ge_cs, cs_ge_ds, ds_ge_ds
-  end interface
 
 # define _release_weak( ds ) \
-    call bs_release_weak( ds%str )
+    call release_weak( ds%str )
 
-
-  !_TypeGen_declare_RefType( public, DynamicString, type(DynamicString_t), scalar, \
-  !     initProc   = ds_initialize, \
-  !     assignProc = ds_assign_ds,  \
-  !     deleteProc = ds_delete,     \
-  !     cloneMode  = _type )
 
 !-----------------
   contains
@@ -129,8 +106,8 @@ module dynamic_string
     integer               :: has_proto
     type(DynamicString_t) :: proto
 
-    if (has_proto /= 0) then; call bs_init( ds%str, proto%str )
-                        else; call bs_init( ds%str )
+    if (has_proto /= 0) then; call initialize( ds%str, proto%str )
+                        else; call initialize( ds%str )
     end if
   end subroutine
 
@@ -139,14 +116,14 @@ module dynamic_string
   function ds_from_cs( cs ) result(ds)
     character(len=*),    intent(in) :: cs
     type(DynamicString_t)           :: ds
-    call bs_init_by_cs( ds%str, cs )
+    call initialize( ds%str, cs )
   end function
 
 
   function ds_from_buf( buf ) result(ds)
     character(len=1), dimension(:), intent(in) :: buf
     type(DynamicString_t)                      :: ds
-    call bs_init_by_buf( ds%str, buf )
+    call initialize( ds%str, buf )
   end function
 
 
@@ -155,7 +132,7 @@ module dynamic_string
     type(DynamicString_t)               :: ds
     character(len=_reflen(ds)), pointer :: res
     type(c_ptr)                         :: cptr
-    cptr = bs_cptr( ds%str )
+    cptr = c_void_ptr( ds%str )
     if (c_associated( cptr )) then; call c_f_pointer( cptr, res )
                               else; res => null()
     end if
@@ -166,7 +143,7 @@ module dynamic_string
   function ds_cptr( ds ) result(res)
     type(DynamicString_t) :: ds
     type(c_ptr)           :: res
-    res = bs_cptr( ds%str )
+    res = c_void_ptr( ds%str )
   end function
 
 
@@ -219,7 +196,7 @@ module dynamic_string
   ! delete
   subroutine ds_delete( ds )
     type(DynamicString_t) :: ds
-    call bs_delete( ds%str )
+    call delete( ds%str )
   end subroutine
 
 
@@ -228,7 +205,7 @@ module dynamic_string
   subroutine ds_assign_cs( lhs, rhs )
     type(DynamicString_t), intent(inout) :: lhs
     character(len=*),         intent(in) :: rhs
-    call bs_assign_cs( lhs%str, rhs )
+    call assign( lhs%str, rhs )
   end subroutine
 
 
@@ -243,21 +220,21 @@ module dynamic_string
   subroutine ds_assign_ds( lhs, rhs )
     type(DynamicString_t), intent(inout) :: lhs
     type(DynamicString_t),    intent(in) :: rhs
-    call bs_assign_bs( lhs%str, rhs%str )
+    call assign( lhs%str, rhs%str )
   end subroutine
 
 
   subroutine ds_assign_buf( lhs, rhs )
     type(DynamicString_t),       intent(inout) :: lhs
     character(len=1), dimension(:), intent(in) :: rhs
-    call bs_assign_buf( lhs%str, rhs )
+    call assign( lhs%str, rhs )
   end subroutine
 
 
   subroutine ds_set_attribute( lhs, rhs )
     type(DynamicString_t),  intent(inout) :: lhs
     type(Attribute_t),         intent(in) :: rhs
-    call bs_set_attribute( lhs%str, rhs )
+    call set_attribute( lhs%str, rhs )
   end subroutine
 
 

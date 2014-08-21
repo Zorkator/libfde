@@ -25,6 +25,13 @@ program testinger
   s => string(val)
   print *, str(s)
 
+  call set( map, 'val-ref', VarItem_of(ref_of(val)) )
+
+  val => get( map, 'val-ref' )
+  s => DynamicString( ref(val) )
+  print *, str(s)
+  val = 'replace ref by text'
+
   call clear( map )
 
   val => get( map, 'bla & text' )
@@ -32,6 +39,6 @@ program testinger
   call set( map, 'key', VarItem_of('value') )
 
   call delete( map )
-  call hm_clear_cache() !< FIXME: double delete by list stash!!
+  call hm_clear_cache()
 end
 

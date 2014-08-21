@@ -16,8 +16,11 @@ module generic_ref
     type(TypeInfo_t), pointer :: typeInfo => null()
   end type
 
-  type(GenericRef_t), parameter :: permanent_ref = GenericRef_t( _ref_HardLent, permanent_string, null() )
-  type(GenericRef_t), parameter :: temporary_ref = GenericRef_t( _ref_WeakLent, temporary_string, null() )
+  !_TypeGen_declare_RefType( public, ref, type(GenericRef_t), scalar, \
+  !     initProc   = gr_initialize, \
+  !     assignProc = gr_assign_gr,  \
+  !     deleteProc = gr_delete,     \
+  !     cloneMode  = _type )
 
 
   type, public :: GenericRef_Encoding_t
@@ -25,29 +28,33 @@ module generic_ref
   end type
 
 
-  type :: RefControl_t
+  type, private :: RefControl_t
     private
     integer*1 :: val = 0
   end type
 
+
+  type(GenericRef_t), parameter :: permanent_ref     = GenericRef_t( _ref_HardLent, permanent_string, null() )
+  type(GenericRef_t), parameter :: temporary_ref     = GenericRef_t( _ref_WeakLent, temporary_string, null() )
   type(RefControl_t), parameter :: release_reference = RefControl_t(0)
   type(RefControl_t), parameter :: accept_reference  = RefControl_t(1)
 
 
   ! interface definitions
 
-  interface assignment(=)
-    module procedure gr_assign_gr, gr_assign_encoding
-  end interface
+  interface rank        ; module procedure gr_rank                          ; end interface
+  interface shape       ; module procedure gr_shape                         ; end interface
+  interface clone       ; module procedure gr_clone                         ; end interface
+  interface cptr        ; module procedure gr_cptr                          ; end interface
+  interface delete      ; module procedure gr_delete                        ; end interface
+  interface free        ; module procedure gr_free                          ; end interface
+  interface dynamic_type; module procedure gr_dynamic_type                  ; end interface
+  interface ref_control ; module procedure gr_ref_control                   ; end interface
 
-  interface rank        ; module procedure gr_rank        ; end interface
-  interface shape       ; module procedure gr_shape       ; end interface
-  interface clone       ; module procedure gr_clone       ; end interface
-  interface cptr        ; module procedure gr_cptr        ; end interface
-  interface delete      ; module procedure gr_delete      ; end interface
-  interface free        ; module procedure gr_free        ; end interface
-  interface dynamic_type; module procedure gr_dynamic_type; end interface
-  interface ref_control ; module procedure gr_ref_control ; end interface
+  ! assignment and operators
+
+  interface assign        ; module procedure gr_assign_gr, gr_assign_encoding ; end interface
+  interface assignment(=) ; module procedure gr_assign_gr, gr_assign_encoding ; end interface
 
   ! declare public interfaces 
 
@@ -67,13 +74,6 @@ module generic_ref
 
   public :: TypeInfo_t, TypeInfo_ptr_t, init_TypeInfo, type_void, void_t 
 
-  !_TypeGen_declare_RefType( public, ref, type(GenericRef_t), scalar, \
-  !     initProc   = gr_initialize, \
-  !     assignProc = gr_assign_gr,  \
-  !     deleteProc = gr_delete,     \
-  !     cloneMode  = _type )
-
-
 !-----------------
   contains
 !-----------------
@@ -88,10 +88,10 @@ module generic_ref
     
     if (has_proto /= 0) then;
       _ref_init( self%refstat, _ref_hardness(proto%refstat) )
-      call bs_init( self%ref_str, proto%ref_str )
+      call initialize( self%ref_str, proto%ref_str )
     else;
       self%refstat = _ref_HardLent
-      call bs_init( self%ref_str )
+      call initialize( self%ref_str )
     end if
     self%typeInfo => null()
   end subroutine
@@ -103,7 +103,7 @@ module generic_ref
 
     if (.not. associated(lhs%ref_str%ptr, rhs%ref_str%ptr)) then
       call gr_free( lhs )
-      call bs_assign_bs( lhs%ref_str, rhs%ref_str )
+      call assign( lhs%ref_str, rhs%ref_str )
       lhs%typeInfo => rhs%typeInfo
 
       if (_ref_isWeakMine( rhs%refstat )) &
@@ -125,7 +125,7 @@ module generic_ref
     encoding = c_loc(rhs(1))
     call c_f_pointer( encoding, typeInfo )
     call c_f_pointer( encoding, stream, (/ size(rhs) * size_encoding /) )
-    call bs_assign_buf( lhs%ref_str, stream(size_typeInfo + 1:) )
+    call assign( lhs%ref_str, stream(size_typeInfo + 1:) )
     lhs%typeInfo => typeInfo%ptr
   end subroutine
 
@@ -133,7 +133,7 @@ module generic_ref
   function gr_get_TypeReference( self ) result(res)
     type(GenericRef_t), intent(in) :: self
     type(c_ptr)                    :: res
-    res = bs_cptr( self%ref_str )
+    res = c_void_ptr( self%ref_str )
   end function
 
 
@@ -167,7 +167,7 @@ module generic_ref
     type(GenericRef_t), intent(in) :: self
     type(GenericRef_t)             :: res
 
-    call bs_set_attribute( res%ref_str, attrib_volatile )
+    call set_attribute( res%ref_str, attrib_volatile )
     if (associated( self%typeInfo )) then
       if (associated( self%typeInfo%cloneRefProc )) then
         call self%typeInfo%cloneRefProc( res, self )
@@ -197,7 +197,7 @@ module generic_ref
     type(GenericRef_t) :: self
 
     call gr_free( self )
-    call bs_delete( self%ref_str )
+    call delete( self%ref_str )
     self%typeInfo => null()
   end subroutine
 
