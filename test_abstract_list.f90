@@ -19,12 +19,12 @@ program testinger
   procedure(), pointer :: castProc => null()
   integer*4                :: array(10)
 
-  call initialize( l1, item_type(1) )
-  call initialize( l2, item_type(1) )
-  call initialize( l3, item_type(l1) )
-  call initialize( l4, item_type(strg) )
-  call initialize( l5, item_type(ref1) )
-  call initialize( l6, item_type(var) )
+  call initialize( l1 )
+  call initialize( l2 )
+  call initialize( l3 )
+  call initialize( l4 )
+  call initialize( l5 )
+  call initialize( l6 )
   call initialize( l7 ) 
 
   var = 42
@@ -44,8 +44,8 @@ program testinger
 
 
   print *, is_valid(l1)
-  print *, is_valid(l1, item_type(1))
-  print *, is_valid(l1, static_type(2.3))
+  print *, is_valid(l1)
+  print *, is_valid(l1)
 
   do cnt = 1, 10
     array(cnt) = cnt
@@ -252,7 +252,7 @@ program testinger
     if (present(end))    end_    = end
     if (present(stride)) stride_ = stride
 
-    call clear( list, item_type(1.0) )
+    call clear( list )
     do i = beg_, end_, stride_
       call append( list, new_ListItem_of(real(i,4)) )
     end do

@@ -424,6 +424,7 @@ class ListItem(TypeSpec):
         call ti%initProc( tgt%value, 0 ) !< init value as default instance!
       valPtr => tgt%value
       res    => tgt%super
+      res%typeInfo => item_type(valPtr)
     end function
     """,
 
@@ -460,6 +461,7 @@ class ListItem(TypeSpec):
         call ti%initProc( ptr%value, 0 ) !< init value as default instance!
       ptr%value = src%value
       tgt => ptr%super
+      tgt%typeInfo => item_type(src%value)
     end subroutine
     """,
 

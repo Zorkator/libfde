@@ -5,8 +5,8 @@ module abstract_list
   private
 
   type, public :: Item_t
-    private
-    type(Item_t), pointer :: prev => null(), next => null()
+    type(Item_t),     pointer :: prev => null(), next => null()
+    type(TypeInfo_t), pointer :: typeInfo => null()
   end type
 
   type, private :: ValueItem_t
@@ -15,6 +15,21 @@ module abstract_list
     integer      :: pseudoValue
   end type
 
+  type, public :: List_t
+    private
+    type(Item_t) :: item
+    integer*4    :: length   =  0
+  end type
+
+  type, public :: ListIndex_t
+    private
+    type (Item_t), public, pointer :: node   => null()
+    type (List_t),         pointer :: host   => null()
+    integer*4                      :: stride = 1
+  end type
+
+  type(List_t) :: al_stale_list
+  
 
   interface
     subroutine ItemCloner( tgt, src )
@@ -25,38 +40,14 @@ module abstract_list
   end interface
 
 
-  type, public :: List_t
-    private
-    type(Item_t)              :: item
-    integer*4                 :: length   =  0
-    type(TypeInfo_t), pointer :: typeInfo => null()
-  end type
-
-
-  type, public :: ListIndex_t
-    private
-    type (Item_t), public, pointer :: node   => null()
-    type (List_t),         pointer :: host   => null()
-    integer*4                      :: stride = 1
-  end type
-
-
-  type, private :: TypedItemRef_t
-    type(ValueItem_t), pointer :: item     => null()
-    type(TypeInfo_t),  pointer :: typeInfo => null()
-  end type
-
-  type(TypedItemRef_t) :: al_stale_item
-
-  
-  interface initialize  ; module procedure al_typed_init                                   ; end interface
+  interface initialize  ; module procedure al_initialize_list                              ; end interface
   interface len         ; module procedure al_length                                       ; end interface
   interface is_valid    ; module procedure al_is_valid, ali_is_valid                       ; end interface
   interface is_empty    ; module procedure al_is_empty                                     ; end interface
   interface append      ; module procedure al_append_list, al_append_item, al_append_idx   ; end interface
-  interface clear       ; module procedure al_clear                                        ; end interface
+  interface clear       ; module procedure al_delete                                       ; end interface
   interface delete      ; module procedure al_delete                                       ; end interface
-  interface dynamic_type; module procedure al_dynamic_type                                 ; end interface
+  interface dynamic_type; module procedure ali_dynamic_type                                ; end interface
 
   interface index       ; module procedure ali_index_idx, al_index_int;                    ; end interface
   interface prev        ; module procedure ali_prev                                        ; end interface
@@ -116,10 +107,12 @@ module abstract_list
   !_TypeGen_implementAll()
 
 
-  subroutine al_initialize_item( self )
-    type (Item_t), target :: self
-    self%prev => self
-    self%next => self
+  subroutine al_initialize_item( self, item_type )
+    type (Item_t),              target :: self
+    type(TypeInfo_t), optional, target :: item_type
+    self%prev     => self
+    self%next     => self
+    self%typeInfo => item_type
   end subroutine
 
   subroutine al_link_item( node, prev, next )
@@ -165,20 +158,18 @@ module abstract_list
     type(List_t), target :: self
     integer              :: has_proto
     type(List_t)         :: proto
-    self%item%prev => self%item
-    self%item%next => self%item
-    self%length    =  0
-    if (has_proto /= 0) then; self%typeInfo => proto%typeInfo
-                        else; self%typeInfo => null()
-    end if
+    call al_initialize_list( self )
   end subroutine
 
 
-  subroutine al_typed_init( self, item_type )
+  subroutine al_initialize_list( self )
     type(List_t),               target :: self
-    type(TypeInfo_t), optional, target :: item_type
-    call al_initialize( self, 0, self )
-    self%typeInfo => item_type
+    call al_initialize_item( self%item )
+    self%length = 0
+    if (.not. al_is_valid( al_stale_list )) then
+      call al_initialize_item( al_stale_list%item )
+      al_stale_list%length = 0
+    end if
   end subroutine
 
   
@@ -200,12 +191,9 @@ module abstract_list
   end function
 
 
-  pure logical function al_is_valid( self, item_type ) result(res)
-    type(List_t),               target, intent(in) :: self
-    type(TypeInfo_t), optional, target, intent(in) :: item_type
+  pure logical function al_is_valid( self ) result(res)
+    type(List_t), target, intent(in) :: self
     res = associated(self%item%prev) .and. associated(self%item%next)
-    if (present( item_type )) &
-      res = res .and. associated(self%typeInfo, item_type)
   end function
 
 
@@ -238,51 +226,40 @@ module abstract_list
   end subroutine
 
 
-  subroutine al_clear( self, new_item_type )
+  subroutine al_delete( self )
     type (List_t), target, intent(inout) :: self
-    type(TypeInfo_t),   optional, target :: new_item_type
-    call al_delete( self )
-    if (present(new_item_type)) &
-      self%typeInfo => new_item_type
+    call al_delete_list( self )
+    call al_delete_list( al_stale_list )
   end subroutine
 
- 
+  
   recursive &
-  subroutine al_delete( self )
+  subroutine al_delete_list( self )
     use iso_c_binding
     type(List_t), target, intent(inout) :: self
     type(Item_t),               pointer :: ptr, delPtr
     type(ValueItem_t),          pointer :: valItemPtr
-    procedure(),                pointer :: delValue !< don't initialize here: would cause re-init on recursion return! WTH?
-
-    if (associated( self%typeInfo )) then
-      delValue => self%typeInfo%subtype%deleteProc
-    else
-      delValue => null()
-    end if
 
     ptr => self%item%next
     do while (.not. associated( ptr, self%item ))
       delPtr => ptr
       ptr    => ptr%next
-      if (associated( delValue )) then
+      if (associated( delPtr%typeInfo%deleteProc )) then
         call c_f_pointer( c_loc(delPtr), valItemPtr )
-        call delValue( valItemPtr%pseudoValue )
+        call delPtr%typeInfo%deleteProc( valItemPtr%pseudoValue )
       end if
       deallocate( delPtr )
     end do
-    call al_initialize_item( self%item )
-    call al_clear_stash()
-    self%length = 0
+    call al_initialize_list( self )
   end subroutine
 
 
-  function al_dynamic_type( self ) result(res)
-    type(List_t),  intent(in) :: self
-    type(TypeInfo_t), pointer :: res
-    if (associated( self%typeInfo )) then; res => self%typeInfo%subtype
-                                     else; res => type_void
-    end if
+  function ali_dynamic_type( self ) result(res)
+    type(ListIndex_t), intent(in) :: self
+    type(TypeInfo_t),     pointer :: res
+    res => self%node%typeInfo
+    if (.not. associated(res)) &
+      res => type_void
   end function
 
 
@@ -377,7 +354,8 @@ module abstract_list
   end function
 
 
-  logical function ali_advance_foot( self, steps ) result(res)
+  logical &
+  function ali_advance_foot( self, steps ) result(res)
     type(ListIndex_t), target, intent(inout) :: self
     integer*4                                :: steps, i
 
@@ -398,7 +376,8 @@ module abstract_list
   end function
   
 
-  logical function ali_advance_head( self, steps ) result(res)
+  logical &
+  function ali_advance_head( self, steps ) result(res)
     type(ListIndex_t), target, intent(inout) :: self
     integer*4                                :: steps, i
 
@@ -419,7 +398,8 @@ module abstract_list
   end function
   
 
-  pure logical function ali_is_valid( self ) result(res)
+  pure logical &
+  function ali_is_valid( self ) result(res)
     type(ListIndex_t), target, intent(in) :: self
     res = associated(self%host) .and. associated(self%node)
     if (res) &
@@ -427,26 +407,30 @@ module abstract_list
   end function
 
   
-  pure logical function ali_eq_ali( self, other ) result(res)
+  pure logical &
+  function ali_eq_ali( self, other ) result(res)
     type(ListIndex_t), intent(in) :: self, other
     res = associated( self%node, other%node )
   end function
 
   
-  pure logical function ali_eq_item( self, item ) result(res)
+  pure logical &
+  function ali_eq_item( self, item ) result(res)
     type(ListIndex_t),    intent(in) :: self
     type(Item_t), target, intent(in) :: item
     res = associated( self%node, item )
   end function
 
   
-  pure logical function ali_ne_ali( self, other ) result(res)
+  pure logical &
+  function ali_ne_ali( self, other ) result(res)
     type(ListIndex_t), intent(in) :: self, other
     res = .not. associated( self%node, other%node )
   end function
 
   
-  pure logical function ali_ne_item( self, item ) result(res)
+  pure logical &
+  function ali_ne_item( self, item ) result(res)
     type(ListIndex_t),    intent(in) :: self
     type(Item_t), target, intent(in) :: item
     res = .not. associated( self%node, item )
@@ -469,13 +453,6 @@ module abstract_list
 
     call al_link_item( node, self%node%prev, self%node )
     self%host%length = self%host%length + 1
-
-    ! if stashed item gets reinserted ...
-    if (associated( al_stale_item%item )) then
-      ptr => al_stale_item%item%super
-      if (associated( ptr, node )) &
-        al_stale_item%item => null()
-    end if
   end subroutine
 
 
@@ -507,12 +484,8 @@ module abstract_list
 
   subroutine ali_remove_idx( self )
     type(ListIndex_t) :: self
-    type(List_t)      :: delList
-  
-    call initialize( delList, self%host%typeInfo )
-    call ali_insert_idx( index(delList, tail, 0), self )
-    if (delList%length > 0) &
-      call delete( delList )
+    call ali_insert_idx( index(al_stale_list, tail, 0), self )
+    call al_delete_list( al_stale_list )
   end subroutine
 
   
@@ -520,45 +493,18 @@ module abstract_list
     type(List_t), target :: self
     integer*4,  optional :: at
     type(ListIndex_t)    :: res
-    res = index( self, at )
-    call ali_pop_idx( res )
+    res = index( self, at, 0 )
+    call ali_insert_idx( index(al_stale_list, tail, 0), res )
   end function
 
 
   subroutine ali_pop_idx( self )
     use iso_c_binding
     type(ListIndex_t) :: self
-  
-    if (is_valid(self)) then
-      call ali_stash_idx( self )
-    else
-      self%node => null()
-    end if
+    self%stride = 0
+    call ali_insert_idx( index(al_stale_list, tail, 0), self )
   end subroutine
 
-
-  subroutine ali_stash_idx( self )
-    use iso_c_binding
-    type(ListIndex_t) :: self
-
-    call al_clear_stash()
-    call c_f_pointer( c_loc(self%node), al_stale_item%item )
-    al_stale_item%typeInfo => self%host%typeInfo
-
-    call al_remove_item( self%node )
-    self%host%length = self%host%length - 1
-    self%host => null()
-  end subroutine
-
-
-  subroutine al_clear_stash()
-    if (associated( al_stale_item%item )) then
-      if (associated( al_stale_item%typeInfo%deleteProc )) &
-        call al_stale_item%typeInfo%deleteProc( al_stale_item%item%pseudoValue )
-      deallocate( al_stale_item%item )
-    end if
-  end subroutine
-  
 
   subroutine al_assign_al( lhs, rhs )
     type(List_t), target, intent(inout) :: lhs
@@ -568,10 +514,10 @@ module abstract_list
 
     base => rhs%item%next%prev !< sorry, but rhs is a shallow copy!
     if (.not. associated( base, lhs%item )) then
-      cloneItem => rhs%typeInfo%cloneObjProc
-      ptr       => base%next
-      call clear( lhs, rhs%typeInfo )
+      call clear( lhs )
+      ptr => base%next
       do while (.not. associated( ptr, base ))
+        cloneItem => ptr%typeInfo%cloneObjProc
         call cloneItem( copy, ptr )
         call append( lhs, copy )
         ptr => ptr%next
@@ -588,16 +534,16 @@ module abstract_list
     procedure(ItemCloner),      pointer :: cloneItem
     type(List_t)                        :: tmp
 
-    if (associated( rhs%host, lhs )) then
-      call initialize( tmp, lhs%typeInfo )
-      call ali_insert_idx( index(tmp, tail, 0), rhs )
-      call clear( lhs, lhs%typeInfo )
+    idx = rhs
+    if (associated( idx%host, lhs )) then
+      call initialize( tmp )
+      call ali_insert_idx( index(tmp, tail, 0), idx )
+      call clear( lhs )
       call append( lhs, tmp )
     else
-      idx = rhs
-      cloneItem => idx%host%typeInfo%cloneObjProc
-      call clear( lhs, idx%host%typeInfo )
+      call clear( lhs )
       do while (is_valid(idx))
+        cloneItem => idx%node%typeInfo%cloneObjProc
         call cloneItem( copy, idx%node )
         call append( lhs, copy )
         call next(idx)
