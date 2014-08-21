@@ -80,7 +80,7 @@ module dynamic_string
   public :: lgt
   public :: lle
   public :: llt
-  public :: assignment(=)
+  public :: assign, assignment(=)
   public :: operator(//)
   public :: operator(==)
   public :: operator(/=)

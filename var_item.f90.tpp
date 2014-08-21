@@ -74,7 +74,7 @@ module var_item
     public :: is_valid
     public :: dynamic_type
     public :: delete
-    public :: assignment(=)
+    public :: assign, assignment(=)
 
 
   ! declare public typecheck interfaces ...

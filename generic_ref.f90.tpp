@@ -58,7 +58,7 @@ module generic_ref
 
   ! declare public interfaces 
 
-  public :: assignment(=)
+  public :: assign, assignment(=)
   public :: gr_get_TypeReference  !< needed by generated code
   public :: rank
   public :: shape

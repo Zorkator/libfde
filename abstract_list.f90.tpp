@@ -95,7 +95,8 @@ module abstract_list
   public :: remove
   public :: pop, get_pop
 
-  public :: operator(==), operator(/=), assignment(=)
+  public :: operator(==), operator(/=)
+  public :: assign, assignment(=)
 
   !public :: al_index
 
@@ -464,12 +465,17 @@ module abstract_list
   subroutine ali_insert_item( self, node )
     type(ListIndex_t), intent(in) :: self
     type(Item_t),          target :: node
+    type(Item_t),         pointer :: ptr
+
     call al_link_item( node, self%node%prev, self%node )
     self%host%length = self%host%length + 1
 
     ! if stashed item gets reinserted ...
-    if (associated( al_stale_item%item, node )) &
-      al_stale_item%item => null()
+    if (associated( al_stale_item%item )) then
+      ptr => al_stale_item%item%super
+      if (associated( ptr, node )) &
+        al_stale_item%item => null()
+    end if
   end subroutine
 
 
