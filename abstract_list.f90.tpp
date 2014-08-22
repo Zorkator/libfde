@@ -449,8 +449,6 @@ module abstract_list
   subroutine ali_insert_item( self, node )
     type(ListIndex_t), intent(in) :: self
     type(Item_t),          target :: node
-    type(Item_t),         pointer :: ptr
-
     call al_link_item( node, self%node%prev, self%node )
     self%host%length = self%host%length + 1
   end subroutine
@@ -467,8 +465,13 @@ module abstract_list
       call al_insert_items( self%node, node%prev, node%next )
       self%host%length = self%host%length + 1
       idx%host%length  = idx%host%length - 1
-      if (done) then; exit
-                else; call next(self)
+
+      if (done) then;
+        if (idx%stride == 0) &
+          idx%host => self%host
+        exit
+      else
+        call next(self)
       end if
     end do
   end subroutine
@@ -519,7 +522,7 @@ module abstract_list
       do while (.not. associated( ptr, base ))
         cloneItem => ptr%typeInfo%cloneObjProc
         call cloneItem( copy, ptr )
-        call append( lhs, copy )
+        call al_append_item( lhs, copy )
         ptr => ptr%next
       end do
     end if
@@ -539,13 +542,13 @@ module abstract_list
       call initialize( tmp )
       call ali_insert_idx( index(tmp, tail, 0), idx )
       call clear( lhs )
-      call append( lhs, tmp )
+      call al_append_list( lhs, tmp )
     else
       call clear( lhs )
       do while (is_valid(idx))
         cloneItem => idx%node%typeInfo%cloneObjProc
         call cloneItem( copy, idx%node )
-        call append( lhs, copy )
+        call al_append_item( lhs, copy )
         call next(idx)
       end do
     end if

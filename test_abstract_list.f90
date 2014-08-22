@@ -17,7 +17,6 @@ program testinger
   type(ListIndex_t)       :: idx
   type(DynamicString_t)   :: strg 
   procedure(), pointer :: castProc => null()
-  integer*4                :: array(10)
 
   call initialize( l1 )
   call initialize( l2 )
@@ -48,7 +47,6 @@ program testinger
   print *, is_valid(l1)
 
   do cnt = 1, 10
-    array(cnt) = cnt
     call append( l2, new_ListItem_of( cnt ) )
   end do
 
@@ -169,6 +167,53 @@ program testinger
   print *, real32(idx)
   print *, real32( get_pop( l2, last ) )
 
+  call clear( l1 )
+  call fill( l2, 1, 10 )
+  idx = index(l2, first) !< striding index
+  print *, is_valid(idx) !< should be valid!
+  call insert( index(l1), idx )
+  print *, is_valid(idx) !< should be invalid!
+  call printList(l1) !< 1-10
+  call printList(l2) !< empty
+
+  idx = index(l2, first) !< invalid index
+  print *, is_valid(idx) !< should be invalid!
+  call insert( index(l1), idx )
+  print *, is_valid(idx) !< should be invalid!
+  call printList(l1) !< 1-10
+  call printList(l2) !< empty
+  
+  idx = index(l1, first, 0) !< fixed index
+  print *, is_valid(idx) !< should be valid!
+  call insert( index(l2), idx )
+  print *, is_valid(idx) !< should still be valid!
+  call printList(l1) !< 2-10
+  call printList(l2) !< 1
+
+  call clear( l1 )
+  call fill( l2, 1, 10 )
+  call insert( index(l1,tail), index(l2,stride=2) )
+  call printList(l1) !< 1,3,5,7,9
+  call printList(l2) !< 2,4,6,8,10
+
+  call insert( index(l1,stride=1), index(l2) )
+  call printList(l1) !< 2,1,4,3,6,5,8,7,10,9
+  call printList(l2) !< empty
+
+  idx = get_pop( l1 ) !< pop first
+  print *, is_valid(idx) !< should be valid!
+  call printList(l1) !< 1,4,3,6,5,8,7,10,9
+  print *, real32(idx) !< 2.0
+  call insert( index(l2, tail), idx )
+  print *, is_valid(idx) !< should still be valid!
+  call printList(l1) !< 1,4,3,6,5,8,7,10,9
+  call printList(l2) !< 2
+
+  call insert( index(l2,tail), get_pop(l1) )
+  call printList(l1) !< 4,3,6,5,8,7,10,9
+  call printList(l2) !< 2,1
+
+
   idx = index( l1 )
   idx = index( idx, 2 )
   idx = index( idx, -1 )
@@ -177,17 +222,6 @@ program testinger
   idx = index( l1, last, 1 )
   idx = index( idx, 1 )
   idx = index( idx, 1 )
-
-  !print *, array( 1: )
-  !print *, array( 1::5 )
-  !print *, array( ::5 )
-  !print *, array( ::-2 ) !< leer
-  !print *, array( :2 )
-  !print *, array( :-2 )
-  !print *, array( :-2 )
-  !
-  !array(::2) = 0
-  !print *, array
 
   ! giving an end turns index effectively into a range
   ! end is not implemented yet ...

@@ -118,7 +118,7 @@
 		<File RelativePath=".\generic_ref.f90"/>
 		<File RelativePath="..\hash_code.f90"/>
 		<File RelativePath=".\hash_map.f90"/>
-		<File RelativePath="..\test_abstract_list.f90"/>
+		<File RelativePath="..\test_hash_map.f90"/>
 		<File RelativePath=".\test_type_references.f90"/>
 		<File RelativePath="..\type_info.f90"/>
 		<File RelativePath=".\var_item.f90"/></Filter></Files>

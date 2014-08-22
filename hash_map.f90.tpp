@@ -91,12 +91,11 @@ contains
   subroutine hm_initialize( self, index_min, index_max )
     type(HashMap_t), intent(inout) :: self
     integer                        :: index_min, index_max
-    type(HashNode_t)               :: item
 
     self%indexLimits(1) = max(1, index_min)
     self%indexLimits(2) = max(1, index_min, index_max)
     if (.not. is_valid(hm_nodeCache)) &
-      call initialize( hm_nodeCache, item_type(item) )
+      call initialize( hm_nodeCache )
     call hm_setup_index( self, self%indexLimits(1) )
   end subroutine
 
@@ -105,7 +104,6 @@ contains
     type(HashMap_t), intent(inout) :: self
     integer*4,          intent(in) :: indexSize
     type(List_t),         optional :: tgtList
-    type(TypeInfo_t),      pointer :: itemType
     integer*4                      :: i
 
     call hm_clear( self, tgtList )
@@ -114,10 +112,9 @@ contains
         deallocate( self%indexVector )
 
       allocate( self%indexVector(0 : indexSize - 1) )
-      itemType => dynamic_type( hm_nodeCache )
       !DEC$ parallel
       do i = 0, indexSize - 1
-        call initialize( self%indexVector(i), itemType )
+        call initialize( self%indexVector(i) )
       end do
     end if
   end subroutine
@@ -233,13 +230,13 @@ contains
     else
       ! need to add new hash node
       idx = get_pop( hm_nodeCache, first )
-      if (associated( idx%node )) then
+      if (is_valid(idx)) then
         mapItem => HashNode(idx)
+        call insert( bucket, idx )
       else
-        idx%node => new_ListItem( mapItem )
+        call insert( bucket, new_ListItem( mapItem ) )
       end if
       call assign( mapItem%key, key )
-      call insert( bucket, idx%node )
       self%items = self%items + 1
     end if
     res => mapItem%value
