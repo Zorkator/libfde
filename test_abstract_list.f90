@@ -245,6 +245,7 @@ program testinger
   call delete( l5 )
   call delete( l6 )
   call delete( l7 )
+  call delete( strg )
 
   
   contains

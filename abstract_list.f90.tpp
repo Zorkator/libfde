@@ -7,6 +7,7 @@ module abstract_list
   type, public :: Item_t
     type(Item_t),     pointer :: prev => null(), next => null()
     type(TypeInfo_t), pointer :: typeInfo => null()
+		type(void_t)              :: padding
   end type
 
   type, private :: ValueItem_t
@@ -244,9 +245,9 @@ module abstract_list
     do while (.not. associated( ptr, self%item ))
       delPtr => ptr
       ptr    => ptr%next
-      if (associated( delPtr%typeInfo%deleteProc )) then
+      if (associated( delPtr%typeInfo%subtype%deleteProc )) then
         call c_f_pointer( c_loc(delPtr), valItemPtr )
-        call delPtr%typeInfo%deleteProc( valItemPtr%pseudoValue )
+        call delPtr%typeInfo%subtype%deleteProc( valItemPtr%pseudoValue )
       end if
       deallocate( delPtr )
     end do

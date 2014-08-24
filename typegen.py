@@ -415,16 +415,16 @@ class ListItem(TypeSpec):
     function {typeId}_new_item_( valPtr ) result(res)
       {baseType}{dimSpec}, pointer, intent(out) :: valPtr
       type(Item_t),                     pointer :: res
-      type({typeId}_item_t),            pointer :: tgt => null()
+      type({typeId}_item_t),            pointer :: node => null()
       type(TypeInfo_t),                 pointer :: ti
 
-      allocate( tgt )
-      ti => static_type( tgt%value )
+      allocate( node )
+      ti => static_type( node%value )
       if (associated( ti%initProc )) &
-        call ti%initProc( tgt%value, 0 ) !< init value as default instance!
-      valPtr => tgt%value
-      res    => tgt%super
-      res%typeInfo => ti !item_type(valPtr)
+        call ti%initProc( node%value, 0 ) !< init value as default instance!
+      valPtr => node%value
+      res    => node%super
+      res%typeInfo => item_type(valPtr)
     end function
     """,
 
@@ -452,16 +452,16 @@ class ListItem(TypeSpec):
     subroutine {typeId}_clone_item_( tgt, src )
       type(Item_t), pointer, intent(out) :: tgt
       type({typeId}_item_t),  intent(in) :: src
-      type({typeId}_item_t),     pointer :: ptr => null()
+      type({typeId}_item_t),     pointer :: node => null()
       type(TypeInfo_t),          pointer :: ti
 
-      allocate( ptr )
-      ti => static_type( ptr%value )
+      allocate( node )
+      ti => static_type( node%value )
       if (associated( ti%initProc )) &
-        call ti%initProc( ptr%value, 0 ) !< init value as default instance!
-      ptr%value = src%value
-      tgt => ptr%super
-      tgt%typeInfo => ti !item_type(src%value)
+        call ti%initProc( node%value, 0 ) !< init value as default instance!
+      node%value = src%value
+      tgt => node%super
+      tgt%typeInfo => item_type(src%value)
     end subroutine
     """,
 
