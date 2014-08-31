@@ -34,6 +34,11 @@ program testinger
   print *, str(s)
   val = 'replace ref by text'
 
+  val => setdefault( map, 'bool' )
+  val => setdefault( map, 'float', VarItem_of(4.234) )
+  val => setdefault( map, 'string', VarItem_of('char string') )
+  val => setdefault( map, 'float', VarItem_of('char string') )
+
   call clear( map )
 
   call set( map, 'four', VarItem_of(4) )
@@ -53,6 +58,10 @@ program testinger
   val => get( map, 'bla & text' )
   val = 7.34
   call set( map, 'key', VarItem_of('value') )
+
+  print *, hasKey( map, 'key' )
+  call remove( map, 'key' )
+  print *, hasKey( map, 'key' )
 
   map = map2
 

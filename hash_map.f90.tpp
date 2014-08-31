@@ -51,6 +51,8 @@ module hash_map
   interface remove     ; module procedure hm_remove_key                        ; end interface
   interface unset      ; module procedure hm_unset_key                         ; end interface
   interface pop        ; module procedure hm_pop_key                           ; end interface
+  interface setDefault ; module procedure hm_set_default                       ; end interface
+  interface hasKey     ; module procedure hm_has_key                           ; end interface
 
   interface assign        ; module procedure hm_assign_hm                      ; end interface
   interface assignment(=) ; module procedure hm_assign_hm                      ; end interface
@@ -59,6 +61,7 @@ module hash_map
   public :: clear
   public :: delete
   public :: get, set, remove, unset, pop
+  public :: setDefault, hasKey
   public :: hm_clear_cache
   public :: assign, assignment(=)
 
@@ -345,8 +348,8 @@ contains
     type(HashMap_t),                  intent(inout) :: self
     character(len=*),                    intent(in) :: key
     type(VarItem_t), optional, pointer, intent(out) :: valTgt
+    type(HashNode_t),          pointer              :: mapItem
     type(ListIndex_t)                               :: bucket
-    type(HashNode_t),                       pointer :: mapItem
 
     res = hm_locate_item( self, key, bucket )
     if (res) then
@@ -356,6 +359,30 @@ contains
         valTgt  => mapItem%value
       end if
     end if
+  end function
+
+  
+  function hm_set_default( self, key, defaultVal ) result(res)
+    type(HashMap_t),        intent(inout) :: self
+    character(len=*),          intent(in) :: key
+    type(VarItem_t), optional, intent(in) :: defaultVal
+    type(VarItem_t),              pointer :: res
+
+    res => hm_get_value_ref( self, key, .true. )
+    if (present(defaultVal)) then
+      if (.not. is_valid(res)) then; call assign( res, defaultVal )
+                               else; call delete( defaultVal )
+      end if
+    end if
+  end function
+
+  
+  logical &
+  function hm_has_key( self, key ) result(res)
+    type(HashMap_t)              :: self
+    character(len=*), intent(in) :: key
+    type(ListIndex_t)            :: bucket
+    res = hm_locate_item( self, key, bucket )
   end function
 
 end
