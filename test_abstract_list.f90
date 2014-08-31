@@ -159,13 +159,13 @@ program testinger
   call remove( index(l1, 2, 2) )
 
   call fill( l2, 1, 10 )
-  idx = index(l2)
-  call pop( idx )
+  idx = index(l2, last)
+  idx = pop( idx )
   print *, real32(idx)
 
-  idx = get_pop( l2, first )
+  idx = pop( l2, first )
   print *, real32(idx)
-  print *, real32( get_pop( l2, last ) )
+  print *, real32( pop( l2, last ) )
 
   call clear( l1 )
   call fill( l2, 1, 10 )
@@ -200,7 +200,7 @@ program testinger
   call printList(l1) !< 2,1,4,3,6,5,8,7,10,9
   call printList(l2) !< empty
 
-  idx = get_pop( l1 ) !< pop first
+  idx = pop( l1, first ) !< pop first
   print *, is_valid(idx) !< should be valid!
   call printList(l1) !< 1,4,3,6,5,8,7,10,9
   print *, real32(idx) !< 2.0
@@ -209,7 +209,7 @@ program testinger
   call printList(l1) !< 1,4,3,6,5,8,7,10,9
   call printList(l2) !< 2
 
-  call insert( index(l2,tail), get_pop(l1) )
+  call insert( index(l2,tail), pop(l1, first) )
   call printList(l1) !< 4,3,6,5,8,7,10,9
   call printList(l2) !< 2,1
 

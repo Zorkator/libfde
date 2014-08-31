@@ -30,7 +30,7 @@ class TypeSpec(object):
   _template = dict(
     header = """
     !#################################
-    !# {typeId}
+    !# {typeId} - {typegenId}
     !#################################
     """,
 
@@ -60,6 +60,7 @@ class TypeSpec(object):
     self.baseExtra = ('', ', nopass')[self._isProc]
     self.valAttrib = (', target, intent(in)', '')[self._isProc]
     self.shapeArg  = ('', ', shape(src)')[self._isArray]
+    self.typegenId = type(self).__name__
 
     self._declared    = False
     self._implemented = False
@@ -230,21 +231,6 @@ class RefType(TypeSpec):
     ),
 
     # parameters:
-    #   typeId:    type identifier
-    #   baseType:  fortran base type | type(...) | procedure(...)
-    #   dimSpec:   ('', ', dimension(:,...)')[has_dimension]
-    c2f_caster = """
-    subroutine {typeId}_c2f_cast_( ptr_c, ptr_f )
-      use iso_c_binding
-      type(c_ptr),                   intent(in) :: ptr_c
-      {baseType}{dimSpec}, pointer, intent(out) :: ptr_f
-      type({typeId}_wrap_t),            pointer :: wrap
-      call c_f_pointer( ptr_c, wrap )
-      ptr_f => wrap%ptr
-    end subroutine
-    """,
-
-    # parameters:
     #   typeId: type identifier
     #
     ref_inspector = """
@@ -283,7 +269,6 @@ class RefType(TypeSpec):
         call init_TypeInfo( res, '{typeId}', '{baseType}' &
                             , int(storage_size(self),4) &
                             , size(shape(self)){initProc}{assignProc}{deleteProc}{shapeProc}{cloneProc} &
-                            , castProc = {typeId}_c2f_cast_ &
                             , cloneRefProc = {typeId}_clone_ref_ )
     end function
     """,
@@ -365,7 +350,7 @@ class RefType(TypeSpec):
 
   def implement( self, out ):
     if not self._implemented:
-      self.expand( out, 'header', 'ref_encoder', 'ref_decoder', 'c2f_caster', 'ref_typechecker',
+      self.expand( out, 'header', 'ref_encoder', 'ref_decoder', 'ref_typechecker',
                    self._refCloner, self._inspector, self._typeinfo )
       out( self._ptrCloner.format( **self.__dict__ ) )
       self._implemented = True
@@ -497,6 +482,7 @@ class ListItem(TypeSpec):
 
   def implement( self, out ):
     if not self._implemented:
+      self.expand( out, 'header' )
       if self.aliasId:
         alias = TypeGenerator.getBaseDeclaration( self.typeId, self )
         self.expand( out, 'new_item_of_alias', aliasBaseType = alias.baseType, aliasDimSpec = alias.dimSpec )

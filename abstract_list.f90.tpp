@@ -60,8 +60,7 @@ module abstract_list
   interface insert      ; module procedure ali_insert_list, ali_insert_item, ali_insert_idx; end interface
   interface insert      ; module procedure ali_insert_range                                ; end interface
   interface remove      ; module procedure ali_remove_idx                                  ; end interface
-  interface pop         ; module procedure ali_pop_idx                                     ; end interface
-  interface get_pop     ; module procedure al_get_pop_int                                  ; end interface
+  interface pop         ; module procedure ali_pop_idx, al_pop_int                     ; end interface
 
   interface assign        ; module procedure al_assign_al, al_assign_idx                   ; end interface
   interface assignment(=) ; module procedure al_assign_al, al_assign_idx                   ; end interface
@@ -85,7 +84,7 @@ module abstract_list
   public :: next, set_next, get_next
   public :: insert
   public :: remove
-  public :: pop, get_pop
+  public :: pop
 
   public :: operator(==), operator(/=)
   public :: assign, assignment(=)
@@ -456,23 +455,29 @@ module abstract_list
 
 
   subroutine ali_insert_idx( self, idx )
-    type(ListIndex_t)     :: self, idx
-    type(Item_t), pointer :: node
-    logical               :: done
+    type(ListIndex_t) :: self, idx
+    integer*4         :: cnt
+    call ali_insert_idx_cnt( self, idx, cnt )
+  end subroutine
 
+
+  subroutine ali_insert_idx_cnt( self, idx, cnt )
+    type(ListIndex_t)      :: self, idx
+    integer*4, intent(out) :: cnt
+    type(Item_t),  pointer :: node
+    logical                :: done
+
+    cnt = 0
     do while (is_valid( idx ))
       node => idx%node
       done = .not. set_next(idx)
+      cnt  = cnt + 1
       call al_insert_items( self%node, node%prev, node%next )
       self%host%length = self%host%length + 1
       idx%host%length  = idx%host%length - 1
 
-      if (done) then;
-        if (idx%stride == 0) &
-          idx%host => self%host
-        exit
-      else
-        call next(self)
+      if (done) then; exit
+                else; call next(self)
       end if
     end do
   end subroutine
@@ -489,25 +494,23 @@ module abstract_list
   subroutine ali_remove_idx( self )
     type(ListIndex_t) :: self
     call ali_insert_idx( index(al_stale_list, tail, 0), self )
-    call al_delete_list( al_stale_list )
   end subroutine
 
   
-  function al_get_pop_int( self, at ) result(res)
+  function al_pop_int( self, at ) result(res)
     type(List_t), target :: self
-    integer*4,  optional :: at
+    integer*4            :: at
     type(ListIndex_t)    :: res
-    res = index( self, at, 0 )
-    call ali_insert_idx( index(al_stale_list, tail, 0), res )
+    res = index( ali_pop_idx( index( self, at, 0 ) ), 0 )
   end function
 
 
-  subroutine ali_pop_idx( self )
-    use iso_c_binding
-    type(ListIndex_t) :: self
-    self%stride = 0
-    call ali_insert_idx( index(al_stale_list, tail, 0), self )
-  end subroutine
+  function ali_pop_idx( self ) result(res)
+    type(ListIndex_t) :: self, res
+    integer*4         :: cnt
+    call ali_insert_idx_cnt( index(al_stale_list, tail, 0), self, cnt )
+    res = index( al_stale_list, -cnt )
+  end function
 
 
   subroutine al_assign_al( lhs, rhs )
