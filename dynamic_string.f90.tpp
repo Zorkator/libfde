@@ -1,8 +1,12 @@
 
 module dynamic_string
   use iso_c_binding
-  use base_string
   use generic_ref
+  use base_string, only: BaseString_t, Attribute_t,          &
+                         attrib_permanent, attrib_volatile,  &
+                         permanent_string, temporary_string, &
+                         basestring_len_ref, basestring_ptr, &
+                         basestring_release_weak
   implicit none
   private
 
@@ -13,15 +17,56 @@ module dynamic_string
 
 #   define _refstat(self)   self%str%refstat
 #   define _len(self)       self%str%len
-#   define _ptr(self)       ptr(self%str)
+#   define _ptr(self)       basestring_ptr(self%str)
 #   define _array(self)     self%str%ptr(:self%str%len)
-#   define _reflen(self)    len_ref( self%str )
+#   define _reflen(self)    basestring_len_ref( self%str )
   end type
 
+
+  ! redefine base_string interfaces for reusal
+  
+  interface set_attribute
+    subroutine basestring_set_attribute( ds, attrib )
+      import DynamicString_t, Attribute_t
+      type(DynamicString_t),  intent(inout) :: ds
+      type(Attribute_t),         intent(in) :: attrib
+    end subroutine
+  end interface
+
+  interface
+    subroutine basestring_init_by_proto( ds, has_proto, proto )
+      import DynamicString_t
+      type(DynamicString_t), intent(inout) :: ds
+      integer,               intent(in)    :: has_proto
+      type(DynamicString_t), intent(in)    :: proto
+    end subroutine
+
+    subroutine basestring_assign_bs( lhs, rhs )
+      import DynamicString_t
+      type(DynamicString_t), intent(inout) :: lhs
+      type(DynamicString_t),    intent(in) :: rhs
+    end subroutine
+  end interface
+
+  interface cptr
+    function basestring_cptr( ds ) result(res)
+      import DynamicString_t, c_ptr
+      type(DynamicString_t), intent(in) :: ds
+      type(c_ptr)                       :: res
+    end function
+  end interface
+
+  interface delete
+    subroutine basestring_delete( ds )
+      import DynamicString_t
+      type(DynamicString_t), intent(inout) :: ds
+    end subroutine
+  end interface
+
   !_TypeGen_declare_RefType( public, DynamicString, type(DynamicString_t), scalar, \
-  !     initProc   = ds_initialize, \
-  !     assignProc = ds_assign_ds,  \
-  !     deleteProc = ds_delete,     \
+  !     initProc   = basestring_init_by_proto, \
+  !     assignProc = basestring_assign_bs,  \
+  !     deleteProc = basestring_delete, \
   !     cloneMode  = _type )
 
 
@@ -29,11 +74,10 @@ module dynamic_string
 
   interface DynamicString; module procedure ds_from_cs, ds_from_buf         ; end interface
   interface str          ; module procedure ds_str                          ; end interface
-  interface cptr         ; module procedure ds_cptr                         ; end interface
+  !interface cptr         ; module procedure ds_cptr                         ; end interface
   interface char         ; module procedure ds_char, ds_char_l              ; end interface
   interface achar        ; module procedure ds_achar, ds_achar_l            ; end interface
-  interface delete       ; module procedure ds_delete                       ; end interface
-  interface set_attribute; module procedure ds_set_attribute                ; end interface
+  !interface delete       ; module procedure ds_delete                       ; end interface
 
   interface adjustl      ; module procedure ds_adjustl                      ; end interface
   interface adjustr      ; module procedure ds_adjustr                      ; end interface
@@ -49,8 +93,26 @@ module dynamic_string
 
   ! assignment and operators
 
-  interface assign        ; module procedure ds_assign_cs, cs_assign_ds, ds_assign_ds, ds_assign_buf ; end interface
-  interface assignment(=) ; module procedure ds_assign_cs, cs_assign_ds, ds_assign_ds, ds_assign_buf ; end interface
+  interface assign
+    module procedure ds_assign_cs, cs_assign_ds, ds_assign_ds, ds_assign_buf
+  end interface
+
+  interface assignment(=)
+    module procedure cs_assign_ds, ds_assign_ds
+
+    subroutine basestring_assign_cs( bs, cs )
+      import DynamicString_t
+      type(DynamicString_t), intent(inout) :: bs
+      character(len=*),   intent(in)    :: cs
+    end subroutine
+
+    subroutine basestring_assign_buf( lhs, rhs )
+      import DynamicString_t
+      type(DynamicString_t),             intent(inout) :: lhs
+      character(len=1), dimension(:), intent(in)    :: rhs
+    end subroutine
+  end interface
+
   interface operator(//)  ; module procedure ds_concat_cs, cs_concat_ds, ds_concat_ds                ; end interface
   interface operator(==)  ; module procedure ds_eq_cs, cs_eq_ds, ds_eq_ds                            ; end interface 
   interface operator(/=)  ; module procedure ds_ne_cs, cs_ne_ds, ds_ne_ds                            ; end interface 
@@ -91,7 +153,7 @@ module dynamic_string
   
 
 # define _release_weak( ds ) \
-    call release_weak( ds%str )
+    call basestring_release_weak( ds%str )
 
 
 !-----------------
@@ -101,29 +163,31 @@ module dynamic_string
   !_TypeGen_implementAll()
 
 
-  subroutine ds_initialize( ds, has_proto, proto )
-    type(DynamicString_t) :: ds
-    integer               :: has_proto
-    type(DynamicString_t) :: proto
+  !subroutine ds_initialize( ds, has_proto, proto )
+  !  type(DynamicString_t) :: ds
+  !  integer               :: has_proto
+  !  type(DynamicString_t) :: proto
 
-    if (has_proto /= 0) then; call initialize( ds%str, proto%str )
-                        else; call initialize( ds%str )
-    end if
-  end subroutine
+  !  if (has_proto /= 0) then; call initialize( ds%str, proto%str )
+  !                      else; call initialize( ds%str )
+  !  end if
+  !end subroutine
 
 
   ! DynamicString
   function ds_from_cs( cs ) result(ds)
+    use base_string, only: basestring_init_by_cs
     character(len=*),    intent(in) :: cs
     type(DynamicString_t)           :: ds
-    call initialize( ds%str, cs )
+    call basestring_init_by_cs( ds%str, cs )
   end function
 
 
   function ds_from_buf( buf ) result(ds)
+    use base_string, only: basestring_init_by_buf
     character(len=1), dimension(:), intent(in) :: buf
     type(DynamicString_t)                      :: ds
-    call initialize( ds%str, buf )
+    call basestring_init_by_buf( ds%str, buf )
   end function
 
 
@@ -131,20 +195,20 @@ module dynamic_string
   function ds_str( ds ) result(res)
     type(DynamicString_t)               :: ds
     character(len=_reflen(ds)), pointer :: res
-    type(c_ptr)                         :: cptr
-    cptr = c_void_ptr( ds%str )
-    if (c_associated( cptr )) then; call c_f_pointer( cptr, res )
-                              else; res => null()
+    type(c_ptr)                         :: ptr
+    ptr = cptr( ds )
+    if (c_associated( ptr )) then; call c_f_pointer( ptr, res )
+                             else; res => null()
     end if
   end function
 
 
-  ! cptr
-  function ds_cptr( ds ) result(res)
-    type(DynamicString_t) :: ds
-    type(c_ptr)           :: res
-    res = c_void_ptr( ds%str )
-  end function
+  !! cptr
+  !function ds_cptr( ds ) result(res)
+  !  type(DynamicString_t) :: ds
+  !  type(c_ptr)           :: res
+  !  res = basestring_cptr( ds%str )
+  !end function
 
 
   ! char
@@ -193,11 +257,11 @@ module dynamic_string
   end function
 
 
-  ! delete
-  subroutine ds_delete( ds )
-    type(DynamicString_t) :: ds
-    call delete( ds%str )
-  end subroutine
+  !! delete
+  !subroutine ds_delete( ds )
+  !  type(DynamicString_t) :: ds
+  !  call delete( ds%str )
+  !end subroutine
 
 
   ! assignments
@@ -205,7 +269,7 @@ module dynamic_string
   subroutine ds_assign_cs( lhs, rhs )
     type(DynamicString_t), intent(inout) :: lhs
     character(len=*),         intent(in) :: rhs
-    call assign( lhs%str, rhs )
+    call basestring_assign_cs( lhs, rhs )
   end subroutine
 
 
@@ -220,21 +284,14 @@ module dynamic_string
   subroutine ds_assign_ds( lhs, rhs )
     type(DynamicString_t), intent(inout) :: lhs
     type(DynamicString_t),    intent(in) :: rhs
-    call assign( lhs%str, rhs%str )
+    call basestring_assign_bs( lhs, rhs )
   end subroutine
 
 
   subroutine ds_assign_buf( lhs, rhs )
     type(DynamicString_t),       intent(inout) :: lhs
     character(len=1), dimension(:), intent(in) :: rhs
-    call assign( lhs%str, rhs )
-  end subroutine
-
-
-  subroutine ds_set_attribute( lhs, rhs )
-    type(DynamicString_t),  intent(inout) :: lhs
-    type(Attribute_t),         intent(in) :: rhs
-    call set_attribute( lhs%str, rhs )
+    call basestring_assign_buf( lhs, rhs )
   end subroutine
 
 

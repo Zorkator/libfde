@@ -3,12 +3,12 @@ F90C ?= gfortran
 CFG  ?= debug
 ARCH ?= 32
 
-mk_F90_FLAGS_gfortran_debug   = -ggdb -cpp -ffree-line-length-none
-mk_F90_FLAGS_gfortran_release = -O3 -cpp -ffree-line-length-none
+mk_F90_FLAGS_gfortran_debug   = -ggdb -cpp -ffree-line-length-none $(_F90_FLAGS)
+mk_F90_FLAGS_gfortran_release = -O3 -cpp -ffree-line-length-none $(_F90_FLAGS)
 mk_F90C_gfortran              = gfortran-4.9
 
-mk_F90_FLAGS_ifort_debug      = -g -fpp -allow nofpp-comments 
-mk_F90_FLAGS_ifort_release    = -O3 -fpp -allow nofpp-comments 
+mk_F90_FLAGS_ifort_debug      = -g -fpp -allow nofpp-comments $(_F90_FLAGS)
+mk_F90_FLAGS_ifort_release    = -O3 -fpp -allow nofpp-comments $(_F90_FLAGS)
 mk_F90C_ifort                 = ifort
 
 mk_F90C_PP_FLAGS    = $(PP_FLAGS:%=-D%)
@@ -22,11 +22,16 @@ mk_TAG              = $(F90C).$(CFG).$(ARCH)
 .PHONY: clean
 
 TPP_FILES = $(wildcard *.tpp)
-BASE_OBJ  = hash_code.o type_info.o base_string.o generic_ref.o dynamic_string.o abstract_list.o base_types.o
+BASE_OBJ  = hash_code.o type_info.o base_string.o generic_ref.o dynamic_string.o \
+						abstract_list.o base_types.o var_item.o hash_map.o
 
-all: clean dynstring gref varitem alist
+all: clean dynstring gref varitem alist map
 
 base: $(BASE_OBJ)
+
+libadt: clean
+	$(MAKE) _F90_FLAGS=-fpic base
+	$(mk_F90C) -shared $(BASE_OBJ) -o $@.$(mk_TAG).so
 
 dynstring: $(BASE_OBJ) test_dynamic_string.o
 	$(mk_F90C) $(mk_F90_FLAGS) $(mk_INCLUDE_PATHLIST) $? -o $@.$(mk_TAG)
@@ -34,16 +39,13 @@ dynstring: $(BASE_OBJ) test_dynamic_string.o
 gref: $(BASE_OBJ) test_type_references.o test_generic_ref.o
 	$(mk_F90C) $(mk_F90_FLAGS) $(mk_INCLUDE_PATHLIST) $? -o $@.$(mk_TAG)
 
-varitem: $(BASE_OBJ) var_item.o test_var_item.o
+varitem: $(BASE_OBJ) test_var_item.o
 	$(mk_F90C) $(mk_F90_FLAGS) $(mk_INCLUDE_PATHLIST) $? -o $@.$(mk_TAG)
 
-glist: generic_list.o
+alist: $(BASE_OBJ) test_abstract_list.o
 	$(mk_F90C) $(mk_F90_FLAGS) $(mk_INCLUDE_PATHLIST) $? -o $@.$(mk_TAG)
 
-alist: $(BASE_OBJ) var_item.o test_abstract_list.o
-	$(mk_F90C) $(mk_F90_FLAGS) $(mk_INCLUDE_PATHLIST) $? -o $@.$(mk_TAG)
-
-map: $(BASE_OBJ) var_item.o hash_map.o test_hash_map.o
+map: $(BASE_OBJ) test_hash_map.o
 	$(mk_F90C) $(mk_F90_FLAGS) $(mk_INCLUDE_PATHLIST) $? -o $@.$(mk_TAG)
 
 clean:

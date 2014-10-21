@@ -14,7 +14,6 @@ module base_string
 
 
   type, public :: Attribute_t
-    private
     integer*1 :: val = 0
   end type
 
@@ -26,45 +25,122 @@ module base_string
 
   ! interface definitions
 
-  interface initialize    ; module procedure bs_init_by_proto, bs_init_by_cs, bs_init_by_buf ; end interface
-  interface assign        ; module procedure bs_assign_cs, bs_assign_bs, bs_assign_buf       ; end interface
-  interface delete        ; module procedure bs_delete                                       ; end interface
-  interface ptr           ; module procedure bs_ptr                                          ; end interface
-  interface c_void_ptr    ; module procedure bs_cptr                                         ; end interface
-  interface set_attribute ; module procedure bs_set_attribute                                ; end interface
-  interface len_ref       ; module procedure bs_len_ref                                      ; end interface
-  interface release_weak  ; module procedure bs_release_weak                                 ; end interface
-  
+  interface
+    subroutine basestring_init_by_proto( bs, has_proto, proto )
+      import BaseString_t
+      type(BaseString_t), intent(inout) :: bs
+      integer,            intent(in)    :: has_proto
+      type(BaseString_t), intent(in)    :: proto
+    end subroutine
+
+    subroutine basestring_init_by_cs( bs, cs )
+      import BaseString_t
+      type(BaseString_t), intent(inout) :: bs
+      character(len=*),   intent(in)    :: cs
+    end subroutine
+
+    subroutine basestring_init_by_buf( bs, buf )
+      import BaseString_t
+      type(BaseString_t),             intent(inout) :: bs
+      character(len=1), dimension(:), intent(in)    :: buf
+    end subroutine
+
+    subroutine basestring_set_attribute( bs, attr )
+      import BaseString_t, Attribute_t
+      type(BaseString_t), intent(inout) :: bs
+      type(Attribute_t),  intent(in)    :: attr
+    end subroutine
+
+    subroutine basestring_release_weak( bs )
+      import BaseString_t
+      type(BaseString_t) :: bs
+    end subroutine
+
+    subroutine basestring_delete( bs )
+      import BaseString_t
+      type(BaseString_t), intent(inout) :: bs
+    end subroutine
+
+    function basestring_ptr( bs ) result(res)
+      import BaseString_t
+      type(BaseString_t), intent(in) :: bs
+      character(len=bs%len), pointer :: res
+    end function
+
+    function basestring_cptr( bs ) result(res)
+      import BaseString_t, c_ptr
+      type(BaseString_t), intent(in) :: bs
+      type(c_ptr)                    :: res
+    end function
+
+    pure &
+    function basestring_len_ref( bs ) result(res)
+      import BaseString_t
+      type(BaseString_t), intent(in) :: bs
+      integer                        :: res
+    end function
+
+    subroutine basestring_assign_cs( bs, cs )
+      import BaseString_t
+      type(BaseString_t), intent(inout) :: bs
+      character(len=*),   intent(in)    :: cs
+    end subroutine
+
+    subroutine basestring_assign_buf( lhs, rhs )
+      import BaseString_t
+      type(BaseString_t),             intent(inout) :: lhs
+      character(len=1), dimension(:), intent(in)    :: rhs
+    end subroutine
+
+    subroutine basestring_assign_bs( lhs, rhs )
+      import BaseString_t
+      type(BaseString_t), intent(inout) :: lhs
+      type(BaseString_t),    intent(in) :: rhs
+    end subroutine
+  end interface
 
   ! interface visibility
 
+  public :: basestring_init_by_proto!( bs, has_proto, proto )
+  public :: basestring_init_by_cs!( bs, cs )
+  public :: basestring_init_by_buf!( bs, buf )
+  public :: basestring_set_attribute!( bs, attrib )
+  public :: basestring_release_weak!( bs )
+  public :: basestring_delete!( bs )
+  public :: basestring_ptr!( bs ) result(res)
+  public :: basestring_cptr!( bs ) result(res)
+  public :: basestring_len_ref!( bs ) result(res)
+  public :: basestring_assign_cs!( bs, cs )
+  public :: basestring_assign_buf!( lhs, rhs )
+  public :: basestring_assign_bs!( lhs, rhs )
+
   public :: temporary_string, permanent_string
   public :: attrib_volatile, attrib_permanent
-  public :: initialize
-  public :: assign
-  public :: delete
-  public :: ptr, c_void_ptr
-  public :: set_attribute
-  public :: len_ref
-  public :: release_weak
-
 
 contains
 
+end module
 
-  subroutine bs_init_by_proto( bs, proto )
-    type(BaseString_t)           :: bs
-    type(BaseString_t), optional :: proto
+
+  subroutine basestring_init_by_proto( bs, has_proto, proto )
+    use base_string, only: BaseString_t
+    implicit none
+    type(BaseString_t), intent(inout) :: bs
+    integer,            intent(in)    :: has_proto
+    type(BaseString_t), intent(in)    :: proto
 
     bs%ptr => null()
     bs%len =  0
-    if (present(proto)) then; _ref_init( bs%refstat, _ref_hardness(proto%refstat) )
+    if (has_proto /= 0) then; _ref_init( bs%refstat, _ref_hardness(proto%refstat) )
                         else; bs%refstat = _ref_HardLent
     end if
   end subroutine
 
 
-  subroutine bs_init_by_cs( bs, cs )
+  subroutine basestring_init_by_cs( bs, cs )
+    use base_string, only: BaseString_t
+    use iso_c_binding
+    implicit none
     type(BaseString_t)              :: bs
     character(len=*),    intent(in) :: cs
     character(len=len(cs)), pointer :: tgt
@@ -79,7 +155,9 @@ contains
   end subroutine
 
   
-  subroutine bs_init_by_buf( bs, buf )
+  subroutine basestring_init_by_buf( bs, buf )
+    use base_string, only: BaseString_t
+    implicit none
     type(BaseString_t)                         :: bs
     character(len=1), dimension(:), intent(in) :: buf
 
@@ -92,22 +170,29 @@ contains
   end subroutine
 
 
-  subroutine bs_set_attribute( bs, attr )
+  subroutine basestring_set_attribute( bs, attr )
+    use base_string, only: BaseString_t, Attribute_t
+    implicit none
     type(BaseString_t)            :: bs
     type(Attribute_t), intent(in) :: attr
+  
     _ref_setHard( bs%refstat, attr%val )
   end subroutine
 
 
-  subroutine bs_release_weak( bs )
+  subroutine basestring_release_weak( bs )
+    use base_string, only: BaseString_t
+    implicit none
     type(BaseString_t) :: bs
-
+  
     if (_ref_isWeakMine( bs%refstat )) &
       deallocate( bs%ptr )
   end subroutine
 
 
-  subroutine bs_delete( bs )
+  subroutine basestring_delete( bs )
+    use base_string, only: BaseString_t
+    implicit none
     type(BaseString_t) :: bs
 
     bs%len = 0
@@ -120,7 +205,10 @@ contains
   end subroutine
 
 
-  function bs_ptr( bs ) result(res)
+  function basestring_ptr( bs ) result(res)
+    use base_string, only: BaseString_t
+    use iso_c_binding
+    implicit none
     type(BaseString_t), intent(in) :: bs
     character(len=bs%len), pointer :: res
 
@@ -132,7 +220,10 @@ contains
   end function
 
 
-  function bs_cptr( bs ) result(res)
+  function basestring_cptr( bs ) result(res)
+    use base_string, only: BaseString_t
+    use iso_c_binding
+    implicit none
     type(BaseString_t) :: bs
     type(c_ptr)        :: res
 
@@ -146,7 +237,9 @@ contains
 
 
   pure &
-  function bs_len_ref( bs ) result(res)
+  function basestring_len_ref( bs ) result(res)
+    use base_string, only: BaseString_t
+    implicit none
     type(BaseString_t), intent(in) :: bs
     integer                        :: res
 
@@ -156,7 +249,10 @@ contains
   end function
   
 
-  subroutine bs_assign_cs( bs, cs )
+  subroutine basestring_assign_cs( bs, cs )
+    use base_string, only: BaseString_t
+    use iso_c_binding
+    implicit none
     type(BaseString_t)              :: bs
     character(len=*),    intent(in) :: cs
     character(len=len(cs)), pointer :: tgt
@@ -181,7 +277,9 @@ contains
   end subroutine
 
 
-  subroutine bs_assign_buf( lhs, rhs )
+  subroutine basestring_assign_buf( lhs, rhs )
+    use base_string, only: BaseString_t
+    implicit none
     type(BaseString_t),          intent(inout) :: lhs
     character(len=1), dimension(:), intent(in) :: rhs
 
@@ -204,7 +302,9 @@ contains
   end subroutine
 
 
-  subroutine bs_assign_bs( lhs, rhs )
+  subroutine basestring_assign_bs( lhs, rhs )
+    use base_string, only: BaseString_t, basestring_ptr
+    implicit none
     type(BaseString_t), intent(inout) :: lhs
     type(BaseString_t),    intent(in) :: rhs
 
@@ -222,10 +322,8 @@ contains
 
       ! assigning from hard rhs
       else
-        call bs_assign_cs( lhs, ptr(rhs) ) !< use ptr interface to get the right length!
+        call basestring_assign_cs( lhs, basestring_ptr(rhs) ) !< use ptr function to get the right length!
       end if
     end if
   end subroutine
-
-end module
 

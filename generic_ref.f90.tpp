@@ -88,10 +88,10 @@ module generic_ref
     
     if (has_proto /= 0) then;
       _ref_init( self%refstat, _ref_hardness(proto%refstat) )
-      call initialize( self%ref_str, proto%ref_str )
+      call basestring_init_by_proto( self%ref_str, 1, proto%ref_str )
     else;
       self%refstat = _ref_HardLent
-      call initialize( self%ref_str )
+      call basestring_init_by_proto( self%ref_str, 0, self%ref_str )
     end if
     self%typeInfo => null()
   end subroutine
@@ -103,7 +103,7 @@ module generic_ref
 
     if (.not. associated(lhs%ref_str%ptr, rhs%ref_str%ptr)) then
       call gr_free( lhs )
-      call assign( lhs%ref_str, rhs%ref_str )
+      call basestring_assign_bs( lhs%ref_str, rhs%ref_str )
       lhs%typeInfo => rhs%typeInfo
 
       if (_ref_isWeakMine( rhs%refstat )) &
@@ -125,7 +125,7 @@ module generic_ref
     encoding = c_loc(rhs(1))
     call c_f_pointer( encoding, typeInfo )
     call c_f_pointer( encoding, stream, (/ size(rhs) * size_encoding /) )
-    call assign( lhs%ref_str, stream(size_typeInfo + 1:) )
+    call basestring_assign_buf( lhs%ref_str, stream(size_typeInfo + 1:) )
     lhs%typeInfo => typeInfo%ptr
   end subroutine
 
@@ -133,7 +133,7 @@ module generic_ref
   function gr_get_TypeReference( self ) result(res)
     type(GenericRef_t), intent(in) :: self
     type(c_ptr)                    :: res
-    res = c_void_ptr( self%ref_str )
+    res = basestring_cptr( self%ref_str )
   end function
 
 
@@ -167,7 +167,7 @@ module generic_ref
     type(GenericRef_t), intent(in) :: self
     type(GenericRef_t)             :: res
 
-    call set_attribute( res%ref_str, attrib_volatile )
+    call basestring_set_attribute( res%ref_str, attrib_volatile )
     if (associated( self%typeInfo )) then
       if (associated( self%typeInfo%cloneRefProc )) then
         call self%typeInfo%cloneRefProc( res, self )
@@ -197,7 +197,7 @@ module generic_ref
     type(GenericRef_t) :: self
 
     call gr_free( self )
-    call delete( self%ref_str )
+    call basestring_delete( self%ref_str )
     self%typeInfo => null()
   end subroutine
 
