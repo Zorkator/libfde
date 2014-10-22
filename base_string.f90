@@ -12,16 +12,10 @@ module base_string
     character(len=1), dimension(:), pointer :: ptr     => null()
   end type
 
-
-  type, public :: Attribute_t
-    integer*1 :: val = 0
-  end type
-
-
-  type(BaseString_t), parameter :: temporary_string = BaseString_t( _ref_WeakLent, 0, null() )
-  type(BaseString_t), parameter :: permanent_string = BaseString_t( _ref_WeakLent, 0, null() )
-  type(Attribute_t),  parameter :: attrib_volatile  = Attribute_t(0)
-  type(Attribute_t),  parameter :: attrib_permanent = Attribute_t(1)
+  type(BaseString_t), parameter :: temporary_string    = BaseString_t( _ref_WeakLent, 0, null() )
+  type(BaseString_t), parameter :: permanent_string    = BaseString_t( _ref_WeakLent, 0, null() )
+  integer(kind=1),    parameter :: attribute_volatile  = 0
+  integer(kind=1),    parameter :: attribute_permanent = 1
 
   ! interface definitions
 
@@ -46,9 +40,9 @@ module base_string
     end subroutine
 
     subroutine basestring_set_attribute( bs, attr )
-      import BaseString_t, Attribute_t
+      import BaseString_t
       type(BaseString_t), intent(inout) :: bs
-      type(Attribute_t),  intent(in)    :: attr
+      integer(kind=1),    intent(in)    :: attr
     end subroutine
 
     subroutine basestring_release_weak( bs )
@@ -101,23 +95,21 @@ module base_string
 
   ! interface visibility
 
-  public :: basestring_init_by_proto!( bs, has_proto, proto )
-  public :: basestring_init_by_cs!( bs, cs )
-  public :: basestring_init_by_buf!( bs, buf )
-  public :: basestring_set_attribute!( bs, attrib )
-  public :: basestring_release_weak!( bs )
-  public :: basestring_delete!( bs )
-  public :: basestring_ptr!( bs ) result(res)
-  public :: basestring_cptr!( bs ) result(res)
-  public :: basestring_len_ref!( bs ) result(res)
-  public :: basestring_assign_cs!( bs, cs )
-  public :: basestring_assign_buf!( lhs, rhs )
-  public :: basestring_assign_bs!( lhs, rhs )
+  public :: basestring_init_by_proto
+  public :: basestring_init_by_cs
+  public :: basestring_init_by_buf
+  public :: basestring_set_attribute
+  public :: basestring_release_weak
+  public :: basestring_delete
+  public :: basestring_ptr
+  public :: basestring_cptr
+  public :: basestring_len_ref
+  public :: basestring_assign_cs
+  public :: basestring_assign_buf
+  public :: basestring_assign_bs
 
   public :: temporary_string, permanent_string
-  public :: attrib_volatile, attrib_permanent
-
-contains
+  public :: attribute_volatile, attribute_permanent
 
 end module
 
@@ -171,12 +163,12 @@ end module
 
 
   subroutine basestring_set_attribute( bs, attr )
-    use base_string, only: BaseString_t, Attribute_t
+    use base_string, only: BaseString_t
     implicit none
-    type(BaseString_t)            :: bs
-    type(Attribute_t), intent(in) :: attr
+    type(BaseString_t)          :: bs
+    integer(kind=1), intent(in) :: attr
   
-    _ref_setHard( bs%refstat, attr%val )
+    _ref_setHard( bs%refstat, attr )
   end subroutine
 
 

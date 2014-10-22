@@ -167,7 +167,7 @@ module generic_ref
     type(GenericRef_t), intent(in) :: self
     type(GenericRef_t)             :: res
 
-    call basestring_set_attribute( res%ref_str, attrib_volatile )
+    call basestring_set_attribute( res%ref_str, attribute_volatile )
     if (associated( self%typeInfo )) then
       if (associated( self%typeInfo%cloneRefProc )) then
         call self%typeInfo%cloneRefProc( res, self )
