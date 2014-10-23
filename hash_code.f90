@@ -4,15 +4,30 @@
 module hash_code
   implicit none
 
-  interface hash; module procedure hash_memory, hash_cmemory, hash_string; end interface
+  interface hash
+    function hash_memory( byteArray, bytes ) bind(c,name='hash_memory_') result(code)
+      use iso_c_binding
+      integer(kind=c_size_t), intent(in) :: bytes
+      integer(kind=c_int8_t), intent(in) :: byteArray(bytes)
+      integer(kind=c_int32_t)            :: code, i
+    end function
 
-  contains
+    function hash_string( str ) result(code)
+      use iso_c_binding
+      character(len=*), target, intent(in) :: str
+      integer(kind=c_int32_t)              :: code
+    end function
+  end interface
 
-  !PROC_EXPORT_2REF( hash_memory, byteArray, bytes )
-  function hash_memory( byteArray, bytes ) result(code)
-    integer,   intent(in) :: bytes
-    integer*1, intent(in) :: byteArray(bytes)
-    integer               :: code, i
+end
+
+
+  !PROC_EXPORT(hash_memory)
+  function hash_memory( byteArray, bytes ) bind(c,name='hash_memory_') result(code)
+    use iso_c_binding
+    integer(kind=c_size_t), intent(in) :: bytes
+    integer(kind=c_int8_t), intent(in) :: byteArray(bytes)
+    integer(kind=c_int32_t)            :: code, i
 
     code = bytes
     do i = 1, bytes
@@ -26,26 +41,11 @@ module hash_code
   end function
 
 
-  !PROC_EXPORT_2REF( hash_cmemory, cptr, bytes )
-  function hash_cmemory( cptr, bytes ) result(code)
-    use iso_c_binding
-    type (c_ptr),         intent(in) :: cptr
-    integer,              intent(in) :: bytes
-    integer                          :: code
-    integer*1, dimension(:), pointer :: dataPtr
-
-    call c_f_pointer( cptr, dataPtr, (/bytes/) )
-    code = hash_memory( dataPtr, bytes )
-  end function
-
-
-  !PROC_EXPORT_1REF( hash_string, str )
+  !PROC_EXPORT(hash_string)
   function hash_string( str ) result(code)
     use iso_c_binding
     character(len=*), target, intent(in) :: str
-    integer                              :: code
-    code = hash_cmemory( c_loc(str), len_trim(str) )
+    integer(kind=c_int32_t)              :: code, hash_memory
+    code = hash_memory( str(1:1), len_trim(str) )
   end function
-
-end
 
