@@ -1,69 +1,50 @@
 
-#include "adt/itfUtil.fpp"
+!!
+!!  COPYRIGHT (C) 1986 Gary S. Brown.  You may use this program, or
+!!  code or tables extracted from it, as desired without restriction.
+!!
+!!  First, the polynomial itself and its table of feedback terms.  The
+!!  polynomial is
+!!  X^32+X^26+X^23+X^22+X^16+X^12+X^11+X^10+X^8+X^7+X^5+X^4+X^2+X^1+X^0
+!!
+!!  Note that we take it "backwards" and put the highest-order term in
+!!  the lowest-order bit.  The X^32 term is "implied"; the LSB is the
+!!  X^31 term, etc.  The X^0 term (usually shown as "+1") results in
+!!  the MSB being 1
+!!
+!!  Note that the usual hardware shift register implementation, which
+!!  is what we're using (we're merely optimizing it by doing eight-bit
+!!  chunks at a time) shifts bits into the lowest-order term.  In our
+!!  implementation, that means shifting towards the right.  Why do we
+!!  do it this way?  Because the calculated CRC must be transmitted in
+!!  order from highest-order term to lowest-order term.  UARTs transmit
+!!  characters in order from LSB to MSB.  By storing the CRC this way
+!!  we hand it to the UART in the order low-byte to high-byte; the UART
+!!  sends each low-bit to hight-bit; and the result is transmission bit
+!!  by bit from highest- to lowest-order term without requiring any bit
+!!  shuffling on our part.  Reception works similarly
+!!
+!!  The feedback terms table consists of 256, 32-bit entries.  Notes
+!!
+!!      The table can be generated at runtime if desired; code to do so
+!!      is shown later.  It might not be obvious, but the feedback
+!!      terms simply represent the results of eight shift/xor opera
+!!      tions for all combinations of data and CRC register values
+!!
+!!      The values must be right-shifted by eight bits by the "updcrc
+!!      logic; the shift must be unsigned (bring in zeroes).  On some
+!!      hardware you could probably optimize the shift in assembler by
+!!      using byte-swap instructions
+!!      polynomial $edb88320
+!!
+!!
+!! CRC32 code derived from work by Gary S. Brown.
+!!
 
-module hash_code
-  use iso_c_binding
-  implicit none
-
-  interface hash
-    function hash_memory( byteArray, bytes ) bind(c,name='hash_memory_') result(code)
-      use iso_c_binding
-      integer(kind=c_size_t), intent(in) :: bytes
-      integer(kind=c_int8_t), intent(in) :: byteArray(bytes)
-      integer(kind=c_int32_t)            :: code, i
-    end function
-
-    function hash_string( str ) result(code)
-      use iso_c_binding
-      character(len=*), target, intent(in) :: str
-      integer(kind=c_int32_t)              :: code
-    end function
-
-    function hash_crc32( crc, buf, size ) bind(c,name='hash_crc32_') result(crc_)
-      use iso_c_binding
-      integer(kind=c_int32_t), intent(in) :: crc
-      integer(kind=c_size_t),  intent(in) :: size
-      integer(kind=c_int8_t),  intent(in) :: buf(size)
-    end function
-  end interface
-
-end
-  
-
-
-  !PROC_EXPORT(hash_memory)
-  function hash_memory( byteArray, bytes ) bind(c,name='hash_memory_') result(code)
+!PROC_EXPORT(crc32_bytebuffer)
+  function crc32_bytebuffer( seed, buf, size ) bind(c,name='crc32_bytebuffer_') result(crc_)
     use iso_c_binding
-    integer(kind=c_size_t), intent(in) :: bytes
-    integer(kind=c_int8_t), intent(in) :: byteArray(bytes)
-    integer(kind=c_int32_t)            :: code, i
-
-    code = bytes
-    do i = 1, bytes
-      code = code + byteArray(i)
-      code = code + code * (2**10)
-      code = ieor( code, code / (2**6) )
-    end do
-    code = code + code * (2**3)
-    code = ieor( code, code * (2**11) )
-    code = code + code * (2**15)
-  end function
-
-
-  !PROC_EXPORT(hash_string)
-  function hash_string( str ) result(code)
-    use iso_c_binding
-    character(len=*), target, intent(in) :: str
-    integer(kind=c_int32_t)              :: code, hash_memory
-    code = hash_memory( str(1:1), len_trim(str) )
-  end function
-
-
-
-  function hash_crc32( crc, buf, size ) bind(c,name='hash_crc32_') result(crc_)
-    use iso_c_binding
-    !use hash_code, only: crc32_tab
-    integer(kind=c_int32_t), intent(in) :: crc
+    integer(kind=c_int32_t), intent(in) :: seed
     integer(kind=c_size_t),  intent(in) :: size
     integer(kind=c_int8_t),  intent(in) :: buf(size)
     integer(kind=c_int32_t)             :: crc_, tabIdx
@@ -114,11 +95,32 @@ end
       z'54de5729', z'23d967bf', z'b3667a2e', z'c4614ab8', z'5d681b02', z'2a6f2b94', &
       z'b40bbe37', z'c30c8ea1', z'5a05df1b', z'2d02ef8d' /)
 
-    crc_ = ieor( crc, z'ffffffff' )
+    crc_ = ieor( seed, z'ffffffff' )
     do idx = 1, size
       tabIdx = iand( ieor( crc_, buf(idx) ), z'000000ff' )
       crc_   = ieor( crc32_tab(tabIdx), ishft( crc_, -8 ) )
     end do
     crc_ = ieor( crc_, z'ffffffff' )
+  end function
+
+
+!PROC_EXPORT(crc32_string)
+  function crc32_string( str ) result(crc_)
+    use iso_c_binding
+    character(len=*), target, intent(in) :: str
+    integer(kind=c_int32_t)              :: crc_, crc32_bytebuffer
+    crc_ = crc32_bytebuffer( 0, str(1:1), len_trim(str) )
+  end function
+
+
+!PROC_EXPORT(crc32_c_ptr)
+  function crc32_c_ptr( cptr, size ) result(crc_)
+    use iso_c_binding
+    type (c_ptr),           intent(in) :: cptr
+    integer(kind=c_size_t), intent(in) :: size
+    integer(kind=c_int32_t)            :: crc_, crc32_bytebuffer
+    integer(kind=c_int8_t),    pointer :: buf
+    call c_f_pointer( cptr, buf )
+    crc_ = crc32_bytebuffer( 0, buf, size )
   end function
 

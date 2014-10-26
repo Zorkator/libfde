@@ -22,8 +22,15 @@ mk_TAG              = $(F90C).$(CFG).$(ARCH)
 .PHONY: clean
 
 TPP_FILES = $(wildcard *.tpp)
-BASE_OBJ  = hash_code.o type_info.o base_string.o generic_ref.o dynamic_string.o \
+BASE_OBJ  = crc.o crc_impl.o hash_code.o type_info.o base_string.o generic_ref.o dynamic_string.o \
 						abstract_list.o base_types.o var_item.o hash_map.o
+
+# file specific compiler flags ...
+crc_impl_F90_FLAGS_gfortran  = -fno-range-check
+crc_impl_F90_FLAGS_ifort     = -assume noold_boz
+hash_code_F90_FLAGS_gfortran = -fno-range-check
+hash_code_F90_FLAGS_ifort    = -assume noold_boz
+
 
 all: clean dynstring gref varitem alist map
 
@@ -32,6 +39,9 @@ base: $(BASE_OBJ)
 libadt: clean
 	$(MAKE) _F90_FLAGS=-fpic base
 	$(mk_F90C) -shared $(BASE_OBJ) -o $@.$(mk_TAG).so
+
+libcall: libadt test_lib_call.o
+	$(mk_F90C) test_lib_call.o -L. -ladt.$(mk_TAG) -lcrc -o $@.$(mk_TAG)
 
 dynstring: $(BASE_OBJ) test_dynamic_string.o
 	$(mk_F90C) $(mk_F90_FLAGS) $(mk_INCLUDE_PATHLIST) $? -o $@.$(mk_TAG)
@@ -63,5 +73,5 @@ test: clean dynstring gref varitem alist map
 	python typegen.py $< -o $@
 
 %.o: %.f90
-	$(mk_F90C) $(mk_F90_FLAGS) $(mk_INCLUDE_PATHLIST) -c $< -o $@
+	$(mk_F90C) $(mk_F90_FLAGS) $($(notdir $*)_F90_FLAGS_$(F90C)) $(mk_INCLUDE_PATHLIST) -c $< -o $@
 
