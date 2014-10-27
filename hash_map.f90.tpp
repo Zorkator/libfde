@@ -202,7 +202,7 @@ contains
 
 
   function hm_get_bucketIndex( self, key ) result(res)
-    use crc
+    use adt_crc
     type(HashMap_t),  intent(in) :: self
     character(len=*), intent(in) :: key
     type(ListIndex_t)            :: res

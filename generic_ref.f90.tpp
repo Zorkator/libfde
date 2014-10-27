@@ -2,7 +2,7 @@
 #include "adt/ref_status.fpp"
 
 module generic_ref
-  use base_string
+  use adt_basestring
   use type_info
   use iso_c_binding
   implicit none

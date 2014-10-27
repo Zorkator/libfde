@@ -41,6 +41,9 @@
 !! CRC32 code derived from work by Gary S. Brown.
 !!
 
+#include "adt/itfUtil.fpp"
+
+
 !PROC_EXPORT(crc32_bytebuffer)
   function crc32_bytebuffer( seed, buf, size ) bind(c,name='crc32_bytebuffer_') result(crc_)
     use iso_c_binding

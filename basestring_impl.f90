@@ -1,121 +1,11 @@
 
+#include "adt/itfUtil.fpp"
 #include "adt/ref_status.fpp"
 
-module base_string
-  use iso_c_binding
-  implicit none
-  private
-  
-  type, public :: BaseString_t
-    _RefStatus                              :: refstat = _ref_HardLent
-    integer*4                               :: len     = 0
-    character(len=1), dimension(:), pointer :: ptr     => null()
-  end type
 
-  type(BaseString_t), parameter :: temporary_string    = BaseString_t( _ref_WeakLent, 0, null() )
-  type(BaseString_t), parameter :: permanent_string    = BaseString_t( _ref_WeakLent, 0, null() )
-  integer(kind=1),    parameter :: attribute_volatile  = 0
-  integer(kind=1),    parameter :: attribute_permanent = 1
-
-  ! interface definitions
-
-  interface
-    subroutine basestring_init_by_proto( bs, has_proto, proto )
-      import BaseString_t
-      type(BaseString_t), intent(inout) :: bs
-      integer,            intent(in)    :: has_proto
-      type(BaseString_t), intent(in)    :: proto
-    end subroutine
-
-    subroutine basestring_init_by_cs( bs, cs )
-      import BaseString_t
-      type(BaseString_t), intent(inout) :: bs
-      character(len=*),   intent(in)    :: cs
-    end subroutine
-
-    subroutine basestring_init_by_buf( bs, buf )
-      import BaseString_t
-      type(BaseString_t),             intent(inout) :: bs
-      character(len=1), dimension(:), intent(in)    :: buf
-    end subroutine
-
-    subroutine basestring_set_attribute( bs, attr )
-      import BaseString_t
-      type(BaseString_t), intent(inout) :: bs
-      integer(kind=1),    intent(in)    :: attr
-    end subroutine
-
-    subroutine basestring_release_weak( bs )
-      import BaseString_t
-      type(BaseString_t) :: bs
-    end subroutine
-
-    subroutine basestring_delete( bs )
-      import BaseString_t
-      type(BaseString_t), intent(inout) :: bs
-    end subroutine
-
-    function basestring_ptr( bs ) result(res)
-      import BaseString_t
-      type(BaseString_t), intent(in) :: bs
-      character(len=bs%len), pointer :: res
-    end function
-
-    function basestring_cptr( bs ) result(res)
-      import BaseString_t, c_ptr
-      type(BaseString_t), intent(in) :: bs
-      type(c_ptr)                    :: res
-    end function
-
-    pure &
-    function basestring_len_ref( bs ) result(res)
-      import BaseString_t
-      type(BaseString_t), intent(in) :: bs
-      integer                        :: res
-    end function
-
-    subroutine basestring_assign_cs( bs, cs )
-      import BaseString_t
-      type(BaseString_t), intent(inout) :: bs
-      character(len=*),   intent(in)    :: cs
-    end subroutine
-
-    subroutine basestring_assign_buf( lhs, rhs )
-      import BaseString_t
-      type(BaseString_t),             intent(inout) :: lhs
-      character(len=1), dimension(:), intent(in)    :: rhs
-    end subroutine
-
-    subroutine basestring_assign_bs( lhs, rhs )
-      import BaseString_t
-      type(BaseString_t), intent(inout) :: lhs
-      type(BaseString_t),    intent(in) :: rhs
-    end subroutine
-  end interface
-
-  ! interface visibility
-
-  public :: basestring_init_by_proto
-  public :: basestring_init_by_cs
-  public :: basestring_init_by_buf
-  public :: basestring_set_attribute
-  public :: basestring_release_weak
-  public :: basestring_delete
-  public :: basestring_ptr
-  public :: basestring_cptr
-  public :: basestring_len_ref
-  public :: basestring_assign_cs
-  public :: basestring_assign_buf
-  public :: basestring_assign_bs
-
-  public :: temporary_string, permanent_string
-  public :: attribute_volatile, attribute_permanent
-
-end module
-
-
+!PROC_EXPORT(basestring_init_by_proto)
   subroutine basestring_init_by_proto( bs, has_proto, proto )
-    use base_string, only: BaseString_t
+    use adt_basestring, only: BaseString_t
     implicit none
     type(BaseString_t), intent(inout) :: bs
     integer,            intent(in)    :: has_proto
@@ -129,8 +19,9 @@ end module
   end subroutine
 
 
+!PROC_EXPORT(basestring_init_by_cs)
   subroutine basestring_init_by_cs( bs, cs )
-    use base_string, only: BaseString_t
+    use adt_basestring, only: BaseString_t
     use iso_c_binding
     implicit none
     type(BaseString_t)              :: bs
@@ -147,8 +38,9 @@ end module
   end subroutine
 
   
+!PROC_EXPORT(basestring_init_by_buf)
   subroutine basestring_init_by_buf( bs, buf )
-    use base_string, only: BaseString_t
+    use adt_basestring, only: BaseString_t
     implicit none
     type(BaseString_t)                         :: bs
     character(len=1), dimension(:), intent(in) :: buf
@@ -162,8 +54,9 @@ end module
   end subroutine
 
 
+!PROC_EXPORT(basestring_set_attribute)
   subroutine basestring_set_attribute( bs, attr )
-    use base_string, only: BaseString_t
+    use adt_basestring, only: BaseString_t
     implicit none
     type(BaseString_t)          :: bs
     integer(kind=1), intent(in) :: attr
@@ -172,8 +65,9 @@ end module
   end subroutine
 
 
+!PROC_EXPORT(basestring_release_weak)
   subroutine basestring_release_weak( bs )
-    use base_string, only: BaseString_t
+    use adt_basestring, only: BaseString_t
     implicit none
     type(BaseString_t) :: bs
   
@@ -182,8 +76,9 @@ end module
   end subroutine
 
 
+!PROC_EXPORT(basestring_delete)
   subroutine basestring_delete( bs )
-    use base_string, only: BaseString_t
+    use adt_basestring, only: BaseString_t
     implicit none
     type(BaseString_t) :: bs
 
@@ -197,8 +92,9 @@ end module
   end subroutine
 
 
+!PROC_EXPORT(basestring_ptr)
   function basestring_ptr( bs ) result(res)
-    use base_string, only: BaseString_t
+    use adt_basestring, only: BaseString_t
     use iso_c_binding
     implicit none
     type(BaseString_t), intent(in) :: bs
@@ -212,8 +108,9 @@ end module
   end function
 
 
+!PROC_EXPORT(basestring_cptr)
   function basestring_cptr( bs ) result(res)
-    use base_string, only: BaseString_t
+    use adt_basestring, only: BaseString_t
     use iso_c_binding
     implicit none
     type(BaseString_t) :: bs
@@ -228,9 +125,10 @@ end module
   end function
 
 
+!PROC_EXPORT(basestring_len_ref)
   pure &
   function basestring_len_ref( bs ) result(res)
-    use base_string, only: BaseString_t
+    use adt_basestring, only: BaseString_t
     implicit none
     type(BaseString_t), intent(in) :: bs
     integer                        :: res
@@ -241,8 +139,9 @@ end module
   end function
   
 
+!PROC_EXPORT(basestring_assign_cs)
   subroutine basestring_assign_cs( bs, cs )
-    use base_string, only: BaseString_t
+    use adt_basestring, only: BaseString_t
     use iso_c_binding
     implicit none
     type(BaseString_t)              :: bs
@@ -269,8 +168,9 @@ end module
   end subroutine
 
 
+!PROC_EXPORT(basestring_assign_buf)
   subroutine basestring_assign_buf( lhs, rhs )
-    use base_string, only: BaseString_t
+    use adt_basestring, only: BaseString_t
     implicit none
     type(BaseString_t),          intent(inout) :: lhs
     character(len=1), dimension(:), intent(in) :: rhs
@@ -294,8 +194,9 @@ end module
   end subroutine
 
 
+!PROC_EXPORT(basestring_assign_bs)
   subroutine basestring_assign_bs( lhs, rhs )
-    use base_string, only: BaseString_t, basestring_ptr
+    use adt_basestring, only: BaseString_t, basestring_ptr
     implicit none
     type(BaseString_t), intent(inout) :: lhs
     type(BaseString_t),    intent(in) :: rhs

@@ -1,5 +1,5 @@
 
-module crc
+module adt_crc
   implicit none
   private
 

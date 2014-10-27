@@ -2,9 +2,9 @@
 module dynamic_string
   use iso_c_binding
   use generic_ref
-  use base_string, only: BaseString_t, &
-                         attribute_permanent, attribute_volatile, permanent_string, temporary_string, &
-                         basestring_len_ref, basestring_ptr, basestring_release_weak
+  use adt_basestring, only: BaseString_t, &
+                            attribute_permanent, attribute_volatile, permanent_string, temporary_string, &
+                            basestring_len_ref, basestring_ptr, basestring_release_weak
   implicit none
   private
 
@@ -47,7 +47,7 @@ module dynamic_string
   interface llt          ; module procedure ds_llt_cs, cs_llt_ds, ds_llt_ds ; end interface
 
 
-  ! redefine base_string interfaces for reusage
+  ! redefine adt_basestring interfaces for reusage
   
   interface
     subroutine basestring_init_by_proto( ds, has_proto, proto )
@@ -159,7 +159,7 @@ module dynamic_string
 
   ! DynamicString
   function ds_from_cs( cs ) result(ds)
-    use base_string, only: basestring_init_by_cs
+    use adt_basestring, only: basestring_init_by_cs
     character(len=*),    intent(in) :: cs
     type(DynamicString_t)           :: ds
     call basestring_init_by_cs( ds%str, cs )
@@ -167,7 +167,7 @@ module dynamic_string
 
 
   function ds_from_buf( buf ) result(ds)
-    use base_string, only: basestring_init_by_buf
+    use adt_basestring, only: basestring_init_by_buf
     character(len=1), dimension(:), intent(in) :: buf
     type(DynamicString_t)                      :: ds
     call basestring_init_by_buf( ds%str, buf )
