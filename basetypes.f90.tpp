@@ -1,5 +1,5 @@
 
-module base_types
+module adt_basetypes
   use iso_c_binding
   use generic_ref
   use abstract_list

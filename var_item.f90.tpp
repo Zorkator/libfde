@@ -5,7 +5,7 @@ module var_item
   use iso_c_binding
   use generic_ref
   use dynamic_string
-  use base_types
+  use adt_basetypes
   use abstract_list
   implicit none
   private

@@ -2,7 +2,7 @@
 program testinger
   use generic_ref
   use type_references
-  use base_types
+  use adt_basetypes
   use iso_c_binding
   implicit none
 

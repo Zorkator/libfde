@@ -5,7 +5,7 @@ program testinger
   use var_item
   use generic_ref
   use type_info
-  use base_types
+  use adt_basetypes
   use dynamic_string
   implicit none
 
