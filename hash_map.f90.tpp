@@ -202,14 +202,14 @@ contains
 
 
   function hm_get_bucketIndex( self, key ) result(res)
-    use hash_code
+    use crc
     type(HashMap_t),  intent(in) :: self
     character(len=*), intent(in) :: key
     type(ListIndex_t)            :: res
     integer                      :: idx, n
     
     n = size( self%indexVector )
-    idx = mod( hash(key), n )
+    idx = mod( crc32(key), n )
     ! have to fix negativ indices since fortran doesn't know unsigned integers >:(
     if (idx < 0) &
       idx = idx + n

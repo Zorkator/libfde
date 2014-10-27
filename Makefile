@@ -22,14 +22,12 @@ mk_TAG              = $(F90C).$(CFG).$(ARCH)
 .PHONY: clean
 
 TPP_FILES = $(wildcard *.tpp)
-BASE_OBJ  = crc.o crc_impl.o hash_code.o type_info.o base_string.o generic_ref.o dynamic_string.o \
+BASE_OBJ  = crc.o crc_impl.o type_info.o base_string.o generic_ref.o dynamic_string.o \
 						abstract_list.o base_types.o var_item.o hash_map.o
 
 # file specific compiler flags ...
 crc_impl_F90_FLAGS_gfortran  = -fno-range-check
 crc_impl_F90_FLAGS_ifort     = -assume noold_boz
-hash_code_F90_FLAGS_gfortran = -fno-range-check
-hash_code_F90_FLAGS_ifort    = -assume noold_boz
 
 
 all: clean dynstring gref varitem alist map
