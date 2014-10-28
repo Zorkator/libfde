@@ -112,7 +112,7 @@
     use iso_c_binding
     character(len=*), target, intent(in) :: str
     integer(kind=c_int32_t)              :: crc_, crc32_bytebuffer
-    crc_ = crc32_bytebuffer( 0, str(1:1), len_trim(str) )
+    crc_ = crc32_bytebuffer( 0, str(1:1), int(len_trim(str), c_size_t) )
   end function
 
 
