@@ -1,26 +1,25 @@
 
 program testinger
-  use dynamic_string
-  use generic_ref
+  use adt_string
+  use adt_ref
   implicit none
 
-  type(DynamicString_t)          :: tmp
-  type(DynamicString_t)          :: ds, ds2, ds3
-  type(DynamicString_t)          :: strings(4)
-  type(DynamicString_t), pointer :: strPtr => null()
-  type(GenericRef_t)             :: strRef, gref
-  character                      :: buffer(10), bufferB(10)
-  character                      :: buffer2(5)
-
-  character(len=32)              :: stringArray(20)
-  character(len=10)              :: strMat(10,20)
+  type(String_t)          :: tmp
+  type(String_t)          :: ds, ds2, ds3
+  type(String_t)          :: strings(4)
+  type(String_t), pointer :: strPtr => null()
+  type(Ref_t)             :: strRef, gref
+  character               :: buffer(10), bufferB(10)
+  character               :: buffer2(5)
+  character(len=32)       :: stringArray(20)
+  character(len=10)       :: strMat(10,20)
 
   integer :: i, idx, jdx
 
   call set_attribute( tmp, attribute_volatile )
   call set_attribute( tmp, attribute_permanent )
 
-  ds = DynamicString("test string")
+  ds = String("test string")
   print *, str(ds), len(ds)   !< print string and its length
   print *, str(ds2), len(ds2) !< print null string and its length
   ds2 = ds                    !< assignment to null string
@@ -38,9 +37,9 @@ program testinger
   print *, "prefix " // ds2
   print *, ds2 // ds2
 
-  print *, ds3 .eq. DynamicString("foo")
+  print *, ds3 .eq. String("foo")
   print *, "bar" == ds3
-  print *, ds2 // 'bla' .eq. DynamicString(char(ds3))
+  print *, ds2 // 'bla' .eq. String(char(ds3))
 
   ds2 = "some long test string of more than ten characters ..."
   print *, char(ds2)
@@ -54,8 +53,8 @@ program testinger
   print *, ichar(ds2)
   print *, "#" // adjustr(ds2) // '#'
   print *, "#" // adjustl(ds2) // '#' 
-  print *, "#" // adjustr(DynamicString('text')) // '#'
-  print *, "#" // adjustl(DynamicString('       text ')) // '#' // DynamicString('usw')
+  print *, "#" // adjustr(String('text')) // '#'
+  print *, "#" // adjustl(String('       text ')) // '#' // String('usw')
 
   ds2 = "abcdef"
 
@@ -65,24 +64,24 @@ program testinger
   buffer = achar(ds2, 10)
   print *, buffer
 
-  print *, str(DynamicString('testinger'))
-  ds2 = DynamicString( buffer ) // " appendix"
+  print *, str(String('testinger'))
+  ds2 = String( buffer ) // " appendix"
   ds2 = buffer
 
   !print *, cptr(ds2)
   strRef = ref_of(ds2)
-  print *, is_DynamicString(strRef)
-  ds = DynamicString(strRef)
-  print *, char(DynamicString(strRef))
+  print *, is_String(strRef)
+  ds = String(strRef)
+  print *, char(String(strRef))
 
-  strPtr => DynamicString(strRef)
+  strPtr => String(strRef)
   strPtr = '  x' // strPtr // 'x  '
   print *, str(ds2)
 
   gref = clone(strRef)
   !if (is_ref(gref)) then
-    if (is_DynamicString(gref)) &
-      print *, str(DynamicString(gref))
+    if (is_String(gref)) &
+      print *, str(String(gref))
   !end if
   call free(gref)
 
@@ -98,7 +97,7 @@ program testinger
       strings(jdx) = strings(idx)
       strings(idx) = "another string"
     else
-      strings(jdx) = DynamicString("long test string, converted to soft DynamicString")
+      strings(jdx) = String("long test string, converted to soft String")
       strings(idx) = "yet another test string"
     end if
   end do

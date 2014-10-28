@@ -22,15 +22,15 @@ mk_TAG              = $(F90C).$(CFG).$(ARCH)
 .PHONY: clean
 
 TPP_FILES = $(wildcard *.tpp)
-BASE_OBJ  = crc.o crc_impl.o type_info.o basestring.o basestring_impl.o generic_ref.o dynamic_string.o \
-						abstract_list.o basetypes.o var_item.o hash_map.o
+BASE_OBJ  = crc.o crc_impl.o typeinfo.o typeinfo_impl.o basestring.o basestring_impl.o ref.o string.o \
+						list.o basetypes.o item.o hash_map.o
 
 # file specific compiler flags ...
 crc_impl_F90_FLAGS_gfortran  = -fno-range-check
 crc_impl_F90_FLAGS_ifort     = -assume noold_boz
 
 
-all: clean dynstring gref varitem alist map
+all: clean dynstring gref item alist map
 
 base: $(BASE_OBJ)
 
@@ -41,13 +41,13 @@ libadt: clean
 libcall: libadt test_lib_call.o
 	$(mk_F90C) test_lib_call.o -L. -ladt.$(mk_TAG) -lcrc -o $@.$(mk_TAG)
 
-dynstring: $(BASE_OBJ) test_dynamic_string.o
+dynstring: $(BASE_OBJ) test_string.o
 	$(mk_F90C) $(mk_F90_FLAGS) $(mk_INCLUDE_PATHLIST) $? -o $@.$(mk_TAG)
 
-gref: $(BASE_OBJ) test_type_references.o test_generic_ref.o
+gref: $(BASE_OBJ) test_type_references.o test_ref.o
 	$(mk_F90C) $(mk_F90_FLAGS) $(mk_INCLUDE_PATHLIST) $? -o $@.$(mk_TAG)
 
-varitem: $(BASE_OBJ) test_var_item.o
+item: $(BASE_OBJ) test_item.o
 	$(mk_F90C) $(mk_F90_FLAGS) $(mk_INCLUDE_PATHLIST) $? -o $@.$(mk_TAG)
 
 alist: $(BASE_OBJ) test_abstract_list.o
@@ -59,10 +59,10 @@ map: $(BASE_OBJ) test_hash_map.o
 clean:
 	rm -f *.mod *.o *.debug.* *.release.* $(TPP_FILES:%.tpp=%)
 
-test: clean dynstring gref varitem alist map
+test: clean dynstring gref item alist map
 	./dynstring.$(mk_TAG)
 	./gref.$(mk_TAG)
-	./varitem.$(mk_TAG)
+	./item.$(mk_TAG)
 	./alist.$(mk_TAG)
 	./map.$(mk_TAG)
 

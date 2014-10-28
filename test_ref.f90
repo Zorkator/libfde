@@ -1,6 +1,6 @@
 
 program testinger
-  use generic_ref
+  use adt_ref
   use type_references
   use adt_basetypes
   use iso_c_binding
@@ -21,7 +21,7 @@ program testinger
   integer*4                      :: i, j
 
   type(c_ptr)         :: cpointer
-  type(GenericRef_t)  :: ref1, ref2, ref3, ref4
+  type(Ref_t)         :: ref1, ref2, ref3, ref4
   complex*32          :: cplx
   complex*32, pointer :: cplx_ptr
 

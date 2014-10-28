@@ -2,20 +2,20 @@
 #define _exp(what)    print *, "exp: " // what
 
 program testinger
-  use var_item
+  use adt_item
   use adt_basetypes
-  use dynamic_string
-  use abstract_list
-  use generic_ref
+  use adt_string
+  use adt_list
+  use adt_ref
   use iso_c_binding
   implicit none
 
-  type (List_t) :: l1, l2, l3, l4, l5, l6, l7
-  integer*4   :: cnt
-  type(VarItem_t)         :: var
-  type(GenericRef_t)      :: ref1
-  type(ListIndex_t)       :: idx
-  type(DynamicString_t)   :: strg 
+  type (List_t)        :: l1, l2, l3, l4, l5, l6, l7
+  integer*4            :: cnt
+  type(Item_t)         :: var
+  type(Ref_t)          :: ref1
+  type(ListIndex_t)    :: idx
+  type(String_t)       :: strg 
   procedure(), pointer :: castProc => null()
 
   call initialize( l1 )
@@ -27,19 +27,19 @@ program testinger
   call initialize( l7 ) 
 
   var = 42
-  call append( l6, new_ListItem_of(var) )
-  call append( l6, new_ListItem_of(VarItem_of(42)) )
-  call append( l6, new_ListItem_of(VarItem_of('string')) )
-  call append( l6, new_ListItem_of(VarItem_of(ref_of(var))) )
+  call append( l6, new_ListNode_of(var) )
+  call append( l6, new_ListNode_of(Item_of(42)) )
+  call append( l6, new_ListNode_of(Item_of('string')) )
+  call append( l6, new_ListNode_of(Item_of(ref_of(var))) )
   l7 = l6
 
-  call append( l6, new_ListItem_of(VarItem_of(ref_of(var))) )
+  call append( l6, new_ListNode_of(Item_of(ref_of(var))) )
   call assign( l6, l7 )
 
   var = "testinger"
   strg = var
-  var = VarItem_of(strg)
-  var = VarItem_of(ref1)
+  var = Item_of(strg)
+  var = Item_of(ref1)
 
 
   print *, is_valid(l1)
@@ -47,22 +47,22 @@ program testinger
   print *, is_valid(l1)
 
   do cnt = 1, 10
-    call append( l2, new_ListItem_of( cnt ) )
+    call append( l2, new_ListNode_of( cnt ) )
   end do
 
-  call append( l3, new_ListItem_of( l2 ) )
-  call append( l3, new_ListItem_of( l2 ) )
+  call append( l3, new_ListNode_of( l2 ) )
+  call append( l3, new_ListNode_of( l2 ) )
 
   do cnt = 1, 5
-    call append( l4, new_ListItem_of(DynamicString('test')) )
-    call append( l4, new_ListItem_of('test') )
+    call append( l4, new_ListNode_of(String('test')) )
+    call append( l4, new_ListNode_of('test') )
   end do
 
   ! list of references ... 
   ref1 = ref_of(cnt)
   do cnt = 1, 3
-    call append( l5, new_ListItem_of(ref1) )
-    call append( l5, new_ListItem_of(ref_of(cnt)) )
+    call append( l5, new_ListNode_of(ref1) )
+    call append( l5, new_ListNode_of(ref_of(cnt)) )
   end do
 
   idx = index(l5)
@@ -88,7 +88,7 @@ program testinger
 
   idx = index( l1, 3 )
   do cnt = -5, -1
-    call insert( index(l1, last), new_ListItem_of(cnt) )
+    call insert( index(l1, last), new_ListNode_of(cnt) )
   end do
 
   _exp("1..9, -5..-1, 10")
@@ -289,7 +289,7 @@ program testinger
 
     call clear( list )
     do i = beg_, end_, stride_
-      call append( list, new_ListItem_of(real(i,4)) )
+      call append( list, new_ListNode_of(real(i,4)) )
     end do
   end subroutine
 

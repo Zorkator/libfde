@@ -1,7 +1,7 @@
 
 module type_references
-  use generic_ref
-  use abstract_list
+  use adt_ref
+  use adt_list
   implicit none
   private
 
@@ -22,7 +22,7 @@ module type_references
 
   public :: simpleCall, func, sub_a, func_a
 
-  !_TypeGen_declare_ListItem( public, intXY, integer*4, dimension(5,4) )
+  !_TypeGen_declare_ListNode( public, intXY, integer*4, dimension(5,4) )
 
   !_TypeGen_declare_RefType( public, intXY,    integer*4, dimension(:,:) )
   !_TypeGen_declare_RefType( public, CallBack, procedure(simpleCall),  scalar )

@@ -146,11 +146,11 @@ class RefType(TypeSpec):
     ref_encoder = """
     function {typeId}_encode_ref_( val ) result(res)
       use iso_c_binding
-      {baseType}{dimSpec}{valAttrib} :: val
-      type({typeId}_encoder_t),        target :: encoder
-      type(GenericRef_Encoding_t)             :: dummy
-      type(GenericRef_Encoding_t)             :: res( ceiling( storage_size(encoder) / real(storage_size(dummy)) ) )
-      type(GenericRef_Encoding_t), dimension(:), pointer :: fptr
+      {baseType}{dimSpec}{valAttrib}   :: val
+      type({typeId}_encoder_t), target :: encoder
+      type(RefEncoding_t)              :: dummy
+      type(RefEncoding_t)              :: res( ceiling( storage_size(encoder) / real(storage_size(dummy)) ) )
+      type(RefEncoding_t), dimension(:), pointer :: fptr
 
       encoder%typeInfo     => static_type(val)
       encoder%ref_wrap%ptr => val
@@ -167,7 +167,7 @@ class RefType(TypeSpec):
     ref_decoder = """
     function {typeId}_decode_ref_( val ) result(res)
       use iso_c_binding
-      type(GenericRef_t), intent(in) :: val
+      type(Ref_t),        intent(in) :: val
       {baseType}{dimSpec},   pointer :: res
       type({typeId}_wrap_t), pointer :: wrap
       
@@ -184,9 +184,9 @@ class RefType(TypeSpec):
     ref_cloner = """
     subroutine {typeId}_clone_ref_( tgt_ref, src_ref )
       use iso_c_binding
-      type(GenericRef_t)                      :: tgt_ref
-      type(GenericRef_t),          intent(in) :: src_ref
-      {baseType}{dimSpec},            pointer :: src, tgt => null()
+      type(Ref_t)                  :: tgt_ref
+      type(Ref_t),      intent(in) :: src_ref
+      {baseType}{dimSpec}, pointer :: src, tgt => null()
     
       src => {typeId}_decode_ref_( src_ref )
       {code_clonePtr}
@@ -235,9 +235,9 @@ class RefType(TypeSpec):
     #
     ref_inspector = """
     subroutine {typeId}_inspect_( val, res, n )
-      type(GenericRef_t), intent(in) :: val
-      integer                        :: n
-      integer                        :: res(n)
+      type(Ref_t), intent(in) :: val
+      integer                 :: n
+      integer                 :: res(n)
       res(:n) = shape( {typeId}_decode_ref_( val ) )
     end subroutine
     """,
@@ -245,8 +245,8 @@ class RefType(TypeSpec):
     # parameters:
     ref_typechecker = """
     function {typeId}_in_ref_( self ) result(res)
-      type(GenericRef_t), intent(in) :: self
-      logical                        :: res
+      type(Ref_t), intent(in) :: self
+      logical                 :: res
       res = associated( dynamic_type(self), type_{typeId} )
     end function
     """,
@@ -357,50 +357,50 @@ class RefType(TypeSpec):
 
 
   
-class ListItem(TypeSpec):
+class ListNode(TypeSpec):
   
   _template  = dict( TypeSpec._template,
     info = """
-    !@ _TypeGen_declare_ListItem( {access}, {typeId}, {baseType}, {dimType} )""",
+    !@ _TypeGen_declare_ListNode( {access}, {typeId}, {baseType}, {dimType} )""",
 
     type = """
-    type, private :: {typeId}_item_t
-      type(Item_t)        :: super
+    type, private :: {typeId}_node_t
+      type(Node_t)        :: super
       {baseType}{dimSize} :: value
     end type
-    type(TypeInfo_t), target :: type_{typeId}_item
+    type(TypeInfo_t), target :: type_{typeId}_node
     """,
 
-    item_itf = """
-    interface new_ListItem    ; module procedure {typeId}_new_item_    ; end interface
-    interface new_ListItem_of ; module procedure {typeId}_new_item_of_ ; end interface
-    interface item_type       ; module procedure {typeId}_itemtype_    ; end interface
-    interface {typeId}        ; module procedure {typeId}_item_value_  ; end interface
+    node_itf = """
+    interface new_ListNode    ; module procedure {typeId}_new_node_    ; end interface
+    interface new_ListNode_of ; module procedure {typeId}_new_node_of_ ; end interface
+    interface node_type       ; module procedure {typeId}_nodetype_    ; end interface
+    interface {typeId}        ; module procedure {typeId}_node_value_  ; end interface
     """,
 
     alias_itf = """
-    interface new_ListItem_of ; module procedure {typeId}{aliasId}_new_item_of_ ; end interface
+    interface new_ListNode_of ; module procedure {typeId}{aliasId}_new_node_of_ ; end interface
     """,
 
-    access_itf = "new_ListItem, new_ListItem_of, item_type, {typeId}",
+    access_itf = "new_ListNode, new_ListNode_of, node_type, {typeId}",
 
-    item_type = """
-    function {typeId}_itemtype_( val ) result(res)
+    node_type = """
+    function {typeId}_nodetype_( val ) result(res)
       {baseType}{dimSpec}, intent(in) :: val
       type(TypeInfo_t),       pointer :: res
-      type({typeId}_item_t)           :: item
-      res => type_{typeId}_item
+      type({typeId}_node_t)           :: node
+      res => type_{typeId}_node
       if (.not. res%initialized) &
-        call init_TypeInfo( res, '{typeId}_item', 'type({typeId}_item_t)', &
-          int(storage_size(item),4), 0, subtype = static_type(val), cloneObjProc = {typeId}_clone_item_ )
+        call init_TypeInfo( res, '{typeId}_node', 'type({typeId}_node_t)', &
+          int(storage_size(node),4), 0, subtype = static_type(val), cloneObjProc = {typeId}_clone_node_ )
     end function
     """,
 
-    new_item = """
-    function {typeId}_new_item_( valPtr ) result(res)
+    new_node = """
+    function {typeId}_new_node_( valPtr ) result(res)
       {baseType}{dimSpec}, pointer, intent(out) :: valPtr
-      type(Item_t),                     pointer :: res
-      type({typeId}_item_t),            pointer :: node => null()
+      type(Node_t),                     pointer :: res
+      type({typeId}_node_t),            pointer :: node => null()
       type(TypeInfo_t),                 pointer :: ti
 
       allocate( node )
@@ -409,35 +409,35 @@ class ListItem(TypeSpec):
         call ti%initProc( node%value, 0 ) !< init value as default instance!
       valPtr => node%value
       res    => node%super
-      res%typeInfo => item_type(valPtr)
+      res%typeInfo => node_type(valPtr)
     end function
     """,
 
-    new_item_of = """
-    function {typeId}_new_item_of_( val ) result(res)
+    new_node_of = """
+    function {typeId}_new_node_of_( val ) result(res)
       {baseType}{dimSpec}, intent(in) :: val
-      type(Item_t),           pointer :: res
+      type(Node_t),           pointer :: res
       {baseType}{dimSpec},    pointer :: val_ptr
-      res     => {typeId}_new_item_( val_ptr )
+      res     => {typeId}_new_node_( val_ptr )
       val_ptr =  val
     end function
     """,
 
-    new_item_of_alias = """
-    function {typeId}{aliasId}_new_item_of_( val ) result(res)
+    new_node_of_alias = """
+    function {typeId}{aliasId}_new_node_of_( val ) result(res)
       {baseType}{dimSpec},        intent(in) :: val
-      type(Item_t),                  pointer :: res
+      type(Node_t),                  pointer :: res
       {aliasBaseType}{aliasDimSpec}, pointer :: val_ptr
-      res     => {typeId}_new_item_( val_ptr )
+      res     => {typeId}_new_node_( val_ptr )
       val_ptr =  val
     end function
     """,
 
-    clone_item = """
-    subroutine {typeId}_clone_item_( tgt, src )
-      type(Item_t), pointer, intent(out) :: tgt
-      type({typeId}_item_t),  intent(in) :: src
-      type({typeId}_item_t),     pointer :: node => null()
+    clone_node = """
+    subroutine {typeId}_clone_node_( tgt, src )
+      type(Node_t), pointer, intent(out) :: tgt
+      type({typeId}_node_t),  intent(in) :: src
+      type({typeId}_node_t),     pointer :: node => null()
       type(TypeInfo_t),          pointer :: ti
 
       allocate( node )
@@ -446,16 +446,16 @@ class ListItem(TypeSpec):
         call ti%initProc( node%value, 0 ) !< init value as default instance!
       node%value = src%value
       tgt => node%super
-      tgt%typeInfo => item_type(src%value)
+      tgt%typeInfo => node_type(src%value)
     end subroutine
     """,
 
-    item_value = """
-    function {typeId}_item_value_( idx ) result(res)
+    node_value = """
+    function {typeId}_node_value_( idx ) result(res)
       use iso_c_binding
       type(ListIndex_t)              :: idx
       {baseType}{dimSpec},   pointer :: res
-      type({typeId}_item_t), pointer :: ptr
+      type({typeId}_node_t), pointer :: ptr
       call c_f_pointer( c_loc(idx%node), ptr )
       res => ptr%value
     end function
@@ -468,13 +468,13 @@ class ListItem(TypeSpec):
     else:
       self.aliasId = '_alias%d' % TypeGenerator.getAliasCount( typeId, self )
       access = 'private'
-    super(ListItem, self).__init__( access, typeId, baseType, dimType )
+    super(ListNode, self).__init__( access, typeId, baseType, dimType )
 
 
   def declare( self, out ):
     if not self._declared:
       if self.aliasId: self.expand( out, 'info', 'alias_itf' )
-      else           : self.expand( out, 'info', 'type', 'item_itf' )
+      else           : self.expand( out, 'info', 'type', 'node_itf' )
       self.expandAccessString( out, self.access, self._template['access_itf'] )
       TypeGenerator.setDeclaration( self.typeId, self )
       self._declared = True
@@ -485,9 +485,9 @@ class ListItem(TypeSpec):
       self.expand( out, 'header' )
       if self.aliasId:
         alias = TypeGenerator.getBaseDeclaration( self.typeId, self )
-        self.expand( out, 'new_item_of_alias', aliasBaseType = alias.baseType, aliasDimSpec = alias.dimSpec )
+        self.expand( out, 'new_node_of_alias', aliasBaseType = alias.baseType, aliasDimSpec = alias.dimSpec )
       else:
-        self.expand( out, 'new_item', 'new_item_of', 'item_type', 'clone_item', 'item_value' )
+        self.expand( out, 'new_node', 'new_node_of', 'node_type', 'clone_node', 'node_value' )
       self._implemented = True
 
 
@@ -502,12 +502,12 @@ class TypeGenerator(object):
   _dimType   = '\s*([\w ,:()]+)'  #< e.g. scalar, dimension(:,:), procedure
   _keySpecs  = '((?:,\s*\w+\s*=\s*\w+\s*)*)'
   _typeDecl  = '^\s*!\s*_TypeGen_declare_RefType\(%s,%s,%s,%s%s\)' % (_ident, _ident, _baseType, _dimType, _keySpecs)
-  _itemDecl  = '^\s*!\s*_TypeGen_declare_ListItem\(%s,%s,%s,%s\)' % (_ident, _ident, _baseType, _dimType)
+  _nodeDecl  = '^\s*!\s*_TypeGen_declare_ListNode\(%s,%s,%s,%s\)' % (_ident, _ident, _baseType, _dimType)
   _typeImpl  = '^\s*!\s*_TypeGen_implement\(%s\)' % _ident
   _typeImplA = '^\s*!\s*_TypeGen_implementAll\(\)'
   
   typeDeclMatch    = re.compile( _typeDecl ).match
-  itemDeclMatch    = re.compile( _itemDecl ).match
+  nodeDeclMatch    = re.compile( _nodeDecl ).match
   typeImplMatch    = re.compile( _typeImpl ).match
   typeImplAllMatch = re.compile( _typeImplA ).match
 
@@ -563,9 +563,9 @@ class TypeGenerator(object):
           RefType( *map( str.strip, match.groups() ) ).declare( outChnl.write )
           continue
 
-        match = _class.itemDeclMatch( lines )
+        match = _class.nodeDeclMatch( lines )
         if match:
-          ListItem( *map( str.strip, match.groups() ) ).declare( outChnl.write )
+          ListNode( *map( str.strip, match.groups() ) ).declare( outChnl.write )
           continue
 
         match = _class.typeImplMatch( lines )

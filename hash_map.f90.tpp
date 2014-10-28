@@ -1,9 +1,9 @@
 
 module hash_map
-  use abstract_list
-  use var_item
-  use dynamic_string
-  use generic_ref
+  use adt_list
+  use adt_item
+  use adt_string
+  use adt_ref
   implicit none
   private
 
@@ -13,15 +13,15 @@ module hash_map
 
   type, private :: HashNode_t
     private
-    type(DynamicString_t) :: key
-    type(VarItem_t)       :: value
+    type(String_t) :: key
+    type(Item_t)   :: value
   end type
 
   !_TypeGen_declare_RefType( private, HashNode, type(HashNode_t), scalar, \
   !     deleteProc = hn_delete, \
   !     cloneMode  = _type )
 
-  !_TypeGen_declare_ListItem( private, HashNode, type(HashNode_t), scalar )
+  !_TypeGen_declare_ListNode( private, HashNode, type(HashNode_t), scalar )
 
 
   type, public :: HashMap_t
@@ -36,7 +36,7 @@ module hash_map
   !     deleteProc = hm_delete,           \
   !     cloneMode  = _type )
 
-  !_TypeGen_declare_ListItem( public, HashMap, type(HashMap_t), scalar )
+  !_TypeGen_declare_ListNode( public, HashMap, type(HashMap_t), scalar )
 
   
   type(List_t), target :: hm_nodeCache
@@ -241,8 +241,8 @@ contains
   subroutine hm_set( self, key, val )
     type(HashMap_t), intent(inout) :: self
     character(len=*),   intent(in) :: key
-    type(VarItem_t),    intent(in) :: val
-    type(VarItem_t),       pointer :: valPtr
+    type(Item_t),       intent(in) :: val
+    type(Item_t),          pointer :: valPtr
 
     valPtr => hm_get_value_ref( self, key, .false. )
     call assign( valPtr, val )
@@ -252,7 +252,7 @@ contains
   function hm_get( self, key ) result(res)
     type(HashMap_t)              :: self
     character(len=*), intent(in) :: key
-    type(VarItem_t),     pointer :: res
+    type(Item_t),        pointer :: res
     res => hm_get_value_ref( self, key, .true. )
   end function
 
@@ -261,7 +261,7 @@ contains
     type(HashMap_t)              :: self
     character(len=*), intent(in) :: key
     logical                      :: clearStale
-    type(VarItem_t),     pointer :: res
+    type(Item_t),        pointer :: res
     type(HashNode_t),    pointer :: mapItem
     type(ListIndex_t)            :: bucket, idx
   
@@ -277,7 +277,7 @@ contains
         if (clearStale) &
           call delete( mapItem%value )
       else
-        call insert( bucket, new_ListItem( mapItem ) )
+        call insert( bucket, new_ListNode( mapItem ) )
       end if
       call assign( mapItem%key, key )
       self%items = self%items + 1
@@ -289,7 +289,7 @@ contains
   function hm_get_value_ptr( self, key ) result(res)
     type(HashMap_t)              :: self
     character(len=*), intent(in) :: key
-    type(VarItem_t),     pointer :: res
+    type(Item_t),        pointer :: res
     type(HashNode_t),    pointer :: mapItem
     type(ListIndex_t)            :: bucket
   
@@ -312,7 +312,7 @@ contains
     type(HashNode_t), pointer :: mapItem
     missing = numItems - len( hm_nodeCache )
     do while (missing > 0)
-      call append( hm_nodeCache, new_ListItem( mapItem ) )
+      call append( hm_nodeCache, new_ListNode( mapItem ) )
       missing = missing - 1
     end do
   end subroutine
@@ -337,7 +337,7 @@ contains
   function hm_pop_key( self, key ) result(res)
     type(HashMap_t), intent(inout) :: self
     character(len=*),   intent(in) :: key
-    type(VarItem_t),       pointer :: res
+    type(Item_t),          pointer :: res
     if (.not. hm_unset_( self, key, res )) &
       res => null()
   end function
@@ -345,11 +345,11 @@ contains
 
   logical &
   function hm_unset_( self, key, valTgt ) result(res)
-    type(HashMap_t),                  intent(inout) :: self
-    character(len=*),                    intent(in) :: key
-    type(VarItem_t), optional, pointer, intent(out) :: valTgt
-    type(HashNode_t),          pointer              :: mapItem
-    type(ListIndex_t)                               :: bucket
+    type(HashMap_t),               intent(inout) :: self
+    character(len=*),                 intent(in) :: key
+    type(Item_t), optional, pointer, intent(out) :: valTgt
+    type(HashNode_t),       pointer              :: mapItem
+    type(ListIndex_t)                            :: bucket
 
     res = hm_locate_item( self, key, bucket )
     if (res) then
@@ -363,10 +363,10 @@ contains
 
   
   function hm_set_default( self, key, defaultVal ) result(res)
-    type(HashMap_t),        intent(inout) :: self
-    character(len=*),          intent(in) :: key
-    type(VarItem_t), optional, intent(in) :: defaultVal
-    type(VarItem_t),              pointer :: res
+    type(HashMap_t),     intent(inout) :: self
+    character(len=*),       intent(in) :: key
+    type(Item_t), optional, intent(in) :: defaultVal
+    type(Item_t),              pointer :: res
 
     res => hm_get_value_ref( self, key, .true. )
     if (present(defaultVal)) then

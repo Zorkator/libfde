@@ -1,28 +1,28 @@
 
-#include "adt/var_item.fpp"
+#include "adt/item.fpp"
 
 program testinger
-  use var_item
-  use generic_ref
-  use type_info
+  use adt_item
+  use adt_ref
+  use adt_typeinfo
   use adt_basetypes
-  use dynamic_string
+  use adt_string
   implicit none
 
-  type(VarItem_t)       :: v1, v2
-  type(TypeInfo_t)      :: ti
-  integer*4             :: intvar, i, j
-  type(DynamicString_t) :: ds
-  type(GenericRef_t)    :: gr, gr2
+  type(Item_t)     :: v1, v2
+  type(TypeInfo_t) :: ti
+  integer*4        :: intvar, i, j
+  type(String_t)   :: ds
+  type(Ref_t)      :: gr, gr2
   real*4                :: realVal
 
-  print *, "VarItem: ",       storage_size(v1)/8
-  print *, "DynamicString: ", storage_size(ds)/8
-  print *, "GenericRef: ",    storage_size(gr)/8
+  print *, "Item: ",       storage_size(v1)/8
+  print *, "String: ", storage_size(ds)/8
+  print *, "Ref: ",    storage_size(gr)/8
 
-  v1 = VarItem_of(345597)
+  v1 = Item_of(345597)
   print *, int32(v1)
-  v1 = VarItem_of(34.55)
+  v1 = Item_of(34.55)
   print *, real32(v1)
 
   realVal = v1
@@ -34,14 +34,14 @@ program testinger
   ti = dynamic_type(v1)
   print *, ti%typeId
 
-  v1 = VarItem_of(DynamicString('testinger'))
+  v1 = Item_of(String('testinger'))
   v1 = 5.34
-  v1 = DynamicString("testinger")
+  v1 = String("testinger")
   v1 = 123
   v1 = 'bla & text'
-  v1 = VarItem_of('bla & text')
+  v1 = Item_of('bla & text')
   v1 = ref_of(gr)
-  v1 = VarItem_of(ref_of(gr))
+  v1 = Item_of(ref_of(gr))
 
   v2 = v1
   v1 = v1
@@ -77,10 +77,10 @@ program testinger
   v1 = int32(gr)
 
   gr = ref_of(v1)
-  v2 = VarItem(gr)
+  v2 = Item(gr)
 
   gr2 = clone(gr)
-  v2  = VarItem(gr2)
+  v2  = Item(gr2)
 
   call free(gr2)
 
@@ -91,11 +91,11 @@ program testinger
   call delete(v2)
 
 
-# define _varitem_type_(typeId, baseType) \
+# define _item_type_(typeId, baseType) \
     call _paste(test_,typeId)();
 
-  _TableOf_varitem_types_
-# undef _varitem_type_
+  _TableOf_item_types_
+# undef _item_type_
 
 end
 
@@ -105,20 +105,20 @@ end
 
 # define _implementTest_(_typeId, _baseType, _val, _finish) \
   subroutine _paste(test_,_typeId)()   ;\
-    use var_item                       ;\
-    use generic_ref                    ;\
-    use type_info                      ;\
-    use dynamic_string                 ;\
+    use adt_item                       ;\
+    use adt_ref                        ;\
+    use adt_typeinfo                   ;\
+    use adt_string                     ;\
     use iso_c_binding                  ;\
     implicit none                      ;\
     _baseType                 :: val   ;\
     _baseType,        pointer :: ptr   ;\
-    type(VarItem_t)           :: vi    ;\
+    type(Item_t)              :: vi    ;\
     type(TypeInfo_t), pointer :: ti    ;\
     complex*16, parameter :: cplx = (0.234,-3.4) ;\
     val = _val                         ;\
-    vi  = VarItem_of(val)              ;\
-    vi  = VarItem_of(_val)             ;\
+    vi  = Item_of(val)                 ;\
+    vi  = Item_of(_val)                ;\
     vi  = cplx                         ;\
     vi  = _val                         ;\
     vi  = val                          ;\
@@ -144,10 +144,10 @@ end
   _implementTest_(complex32,  complex*8, (1.5,2.5), _nop)
   _implementTest_(complex64,  complex*16, (1.5,2.5), _nop)
   _implementTest_(c_void_ptr, type(c_ptr), C_NULL_PTR, _nop)
-  _implementTest_(string,     type(DynamicString_t), 'testinger string', _delete)
-  _implementTest_(ref,        type(GenericRef_t), val, _delete)
+  _implementTest_(string,     type(String_t), 'testinger string', _delete)
+  _implementTest_(ref,        type(Ref_t), val, _delete)
 
-# if defined VARITEM_REAL16
+# if defined ITEM_REAL16
   _implementTest_(real128,    real*16, 1.5, _nop)
   _implementTest_(complex128, complex*32, (1.5,2.5), _nop)
 # endif

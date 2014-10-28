@@ -1,29 +1,29 @@
 
 #include "adt/ref_status.fpp"
 
-module generic_ref
+module adt_ref
   use adt_basestring
-  use type_info
+  use adt_typeinfo
   use iso_c_binding
   implicit none
   private
 
 
-  type, public :: GenericRef_t
+  type, public :: Ref_t
     private
     _RefStatus                :: refstat = _ref_HardLent
     type(BaseString_t)        :: ref_str
     type(TypeInfo_t), pointer :: typeInfo => null()
   end type
 
-  !_TypeGen_declare_RefType( public, ref, type(GenericRef_t), scalar, \
+  !_TypeGen_declare_RefType( public, ref, type(Ref_t), scalar, \
   !     initProc   = gr_initialize, \
   !     assignProc = gr_assign_gr,  \
   !     deleteProc = gr_delete,     \
   !     cloneMode  = _type )
 
 
-  type, public :: GenericRef_Encoding_t
+  type, public :: RefEncoding_t
     integer, pointer :: ptr
   end type
 
@@ -34,8 +34,8 @@ module generic_ref
   end type
 
 
-  type(GenericRef_t), parameter :: permanent_ref     = GenericRef_t( _ref_HardLent, permanent_string, null() )
-  type(GenericRef_t), parameter :: temporary_ref     = GenericRef_t( _ref_WeakLent, temporary_string, null() )
+  type(Ref_t),        parameter :: permanent_ref     = Ref_t( _ref_HardLent, permanent_string, null() )
+  type(Ref_t),        parameter :: temporary_ref     = Ref_t( _ref_WeakLent, temporary_string, null() )
   type(RefControl_t), parameter :: release_reference = RefControl_t(0)
   type(RefControl_t), parameter :: accept_reference  = RefControl_t(1)
 
@@ -70,7 +70,7 @@ module generic_ref
   public :: permanent_ref, temporary_ref
   public :: release_reference, accept_reference, ref_control
 
-  ! declare type_info necessities public
+  ! declare TypeInfo necessities public
 
   public :: TypeInfo_t, TypeInfo_ptr_t, init_TypeInfo, type_void, void_t 
 
@@ -82,9 +82,9 @@ module generic_ref
 
 
   subroutine gr_initialize( self, has_proto, proto )
-    type(GenericRef_t) :: self
-    integer            :: has_proto
-    type(GenericRef_t) :: proto
+    type(Ref_t) :: self
+    integer     :: has_proto
+    type(Ref_t) :: proto
     
     if (has_proto /= 0) then;
       _ref_init( self%refstat, _ref_hardness(proto%refstat) )
@@ -98,8 +98,8 @@ module generic_ref
 
 
   subroutine gr_assign_gr( lhs, rhs )
-    type(GenericRef_t), intent(inout) :: lhs
-    type(GenericRef_t),    intent(in) :: rhs
+    type(Ref_t), intent(inout) :: lhs
+    type(Ref_t),    intent(in) :: rhs
 
     if (.not. associated(lhs%ref_str%ptr, rhs%ref_str%ptr)) then
       call gr_free( lhs )
@@ -113,13 +113,13 @@ module generic_ref
 
 
   subroutine gr_assign_encoding( lhs, rhs )
-    type(GenericRef_t),               intent(inout) :: lhs
-    type(GenericRef_Encoding_t), target, intent(in) :: rhs(:)
-    integer*4,                            parameter :: size_typeInfo = storage_size(TypeInfo_ptr_t(null())) / 8
-    integer*4,                            parameter :: size_encoding = storage_size(GenericRef_Encoding_t(null())) / 8
-    character(len=1), dimension(:),         pointer :: stream
-    type(TypeInfo_ptr_t),                   pointer :: typeInfo
-    type(c_ptr)                                     :: encoding
+    type(Ref_t),              intent(inout) :: lhs
+    type(RefEncoding_t), target, intent(in) :: rhs(:)
+    integer*4,                    parameter :: size_typeInfo = storage_size(TypeInfo_ptr_t(null())) / 8
+    integer*4,                    parameter :: size_encoding = storage_size(RefEncoding_t(null())) / 8
+    character(len=1), dimension(:), pointer :: stream
+    type(TypeInfo_ptr_t),           pointer :: typeInfo
+    type(c_ptr)                             :: encoding
     
     call gr_free( lhs )
     encoding = c_loc(rhs(1))
@@ -131,15 +131,15 @@ module generic_ref
 
 
   function gr_get_TypeReference( self ) result(res)
-    type(GenericRef_t), intent(in) :: self
-    type(c_ptr)                    :: res
+    type(Ref_t), intent(in) :: self
+    type(c_ptr)             :: res
     res = basestring_cptr( self%ref_str )
   end function
 
 
   pure function gr_rank( self ) result(res)
-    type(GenericRef_t), intent(in) :: self
-    integer                        :: res
+    type(Ref_t), intent(in) :: self
+    integer                 :: res
 
     if (associated( self%typeInfo )) then
       res = self%typeInfo%rank
@@ -150,8 +150,8 @@ module generic_ref
 
 
   pure function gr_shape( self ) result(res)
-    type(GenericRef_t), intent(in) :: self
-    integer                        :: res(rank(self))
+    type(Ref_t), intent(in) :: self
+    integer                 :: res(rank(self))
 
     if (associated( self%typeInfo )) then
       if (associated( self%typeInfo%shapeProc )) then
@@ -164,8 +164,8 @@ module generic_ref
 
 
   function gr_clone( self ) result(res)
-    type(GenericRef_t), intent(in) :: self
-    type(GenericRef_t)             :: res
+    type(Ref_t), intent(in) :: self
+    type(Ref_t)             :: res
 
     call basestring_set_attribute( res%ref_str, attribute_volatile )
     if (associated( self%typeInfo )) then
@@ -180,9 +180,9 @@ module generic_ref
 
 
   function gr_cptr( self ) result(res)
-    type(GenericRef_t), intent(in) :: self
-    type(c_ptr)                    :: res
-    type(void_t),          pointer :: wrap
+    type(Ref_t), intent(in) :: self
+    type(c_ptr)             :: res
+    type(void_t),   pointer :: wrap
 
     res = gr_get_TypeReference(self)
     if (c_associated(res)) then
@@ -194,7 +194,7 @@ module generic_ref
 
   recursive &
   subroutine gr_delete( self )
-    type(GenericRef_t) :: self
+    type(Ref_t) :: self
 
     call gr_free( self )
     call basestring_delete( self%ref_str )
@@ -204,7 +204,7 @@ module generic_ref
 
   recursive &
   subroutine gr_free( self )
-    type(GenericRef_t)    :: self
+    type(Ref_t)           :: self
     type(void_t), pointer :: wrap
     type(c_ptr)           :: cptr
 
@@ -227,8 +227,8 @@ module generic_ref
 
 
   function gr_dynamic_type( self ) result(res)
-    type(GenericRef_t), intent(in) :: self
-    type(TypeInfo_t),      pointer :: res
+    type(Ref_t),   intent(in) :: self
+    type(TypeInfo_t), pointer :: res
     if (associated( self%typeInfo )) then; res => self%typeInfo
                                      else; res => type_void
     end if
@@ -236,8 +236,8 @@ module generic_ref
 
   
   subroutine gr_ref_control( self, ctrl )
-    type(GenericRef_t), intent(inout) :: self
-    type(RefControl_t),    intent(in) :: ctrl
+    type(Ref_t),     intent(inout) :: self
+    type(RefControl_t), intent(in) :: ctrl
     _ref_setMine( self%refstat, ctrl%val )
   end subroutine
 
