@@ -1,8 +1,8 @@
 
 module hash_map
+  use adt_string
   use adt_list
   use adt_item
-  use adt_string
   use adt_ref
   implicit none
   private

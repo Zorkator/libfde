@@ -110,20 +110,22 @@
 !PROC_EXPORT(crc32_string)
   function crc32_string( str ) result(crc_)
     use iso_c_binding
-    character(len=*), target, intent(in) :: str
-    integer(kind=c_int32_t)              :: crc_, crc32_bytebuffer
-    crc_ = crc32_bytebuffer( 0, str(1:1), int(len_trim(str), c_size_t) )
+    character(len=*),          target, intent(in) :: str
+    integer(kind=c_int32_t)                       :: crc_, crc32_bytebuffer
+    integer(kind=c_int8_t), dimension(:), pointer :: buf
+    call c_f_pointer( c_loc(str(1:1)), buf, (/len_trim(str)/) )
+    crc_ = crc32_bytebuffer( 0, buf, int(size(buf), c_size_t) )
   end function
 
 
 !PROC_EXPORT(crc32_c_ptr)
   function crc32_c_ptr( cptr, size ) result(crc_)
     use iso_c_binding
-    type (c_ptr),           intent(in) :: cptr
-    integer(kind=c_size_t), intent(in) :: size
-    integer(kind=c_int32_t)            :: crc_, crc32_bytebuffer
-    integer(kind=c_int8_t),    pointer :: buf
-    call c_f_pointer( cptr, buf )
+    type (c_ptr),                      intent(in) :: cptr
+    integer(kind=c_size_t),            intent(in) :: size
+    integer(kind=c_int32_t)                       :: crc_, crc32_bytebuffer
+    integer(kind=c_int8_t), dimension(:), pointer :: buf
+    call c_f_pointer( cptr, buf, (/size/) )
     crc_ = crc32_bytebuffer( 0, buf, size )
   end function
 
