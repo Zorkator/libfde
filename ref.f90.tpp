@@ -10,16 +10,16 @@ module adt_ref
 
 
   type, public :: Ref_t
-    private
+    !private
     _RefStatus                :: refstat = _ref_HardLent
     type(BaseString_t)        :: ref_str
     type(TypeInfo_t), pointer :: typeInfo => null()
   end type
 
   !_TypeGen_declare_RefType( public, ref, type(Ref_t), scalar, \
-  !     initProc   = gr_initialize, \
-  !     assignProc = gr_assign_gr,  \
-  !     deleteProc = gr_delete,     \
+  !     initProc   = ref_initialize, \
+  !     assignProc = ref_assign_ref, \
+  !     deleteProc = ref_delete,     \
   !     cloneMode  = _type )
 
 
@@ -42,24 +42,107 @@ module adt_ref
 
   ! interface definitions
 
-  interface rank        ; module procedure gr_rank                          ; end interface
-  interface shape       ; module procedure gr_shape                         ; end interface
-  interface clone       ; module procedure gr_clone                         ; end interface
-  interface cptr        ; module procedure gr_cptr                          ; end interface
-  interface delete      ; module procedure gr_delete                        ; end interface
-  interface free        ; module procedure gr_free                          ; end interface
-  interface dynamic_type; module procedure gr_dynamic_type                  ; end interface
-  interface ref_control ; module procedure gr_ref_control                   ; end interface
+  interface
+    subroutine ref_initialize( self, has_proto, proto )
+      import Ref_t
+      type(Ref_t) :: self, proto
+      integer     :: has_proto
+    end subroutine
+
+    function ref_get_TypeReference( self ) result(res)
+      import Ref_t, c_ptr
+      type(Ref_t), intent(in) :: self
+      type(c_ptr)             :: res
+    end function
+  end interface
+
+  interface rank
+    pure &
+    function ref_rank( self ) result(res)
+      import Ref_t
+      type(Ref_t), intent(in) :: self
+      integer                 :: res
+    end function
+  end interface
+
+  interface shape
+    pure &
+    function ref_shape( self ) result(res)
+      import Ref_t, rank
+      type(Ref_t), intent(in) :: self
+      integer                 :: res(rank(self))
+    end function
+  end interface
+
+  interface clone
+    function ref_clone( self ) result(res)
+      import Ref_t
+      type(Ref_t), intent(in) :: self
+      type(Ref_t)             :: res
+    end function
+  end interface
+
+  interface cptr
+    function ref_cptr( self ) result(res)
+      import Ref_t, c_ptr
+      type(Ref_t), intent(in) :: self
+      type(c_ptr)             :: res
+    end function
+  end interface
+
+  interface delete
+    recursive &
+    subroutine ref_delete( self )
+      import Ref_t
+      type(Ref_t) :: self
+    end subroutine
+  end interface
+
+  interface free
+    recursive &
+    subroutine ref_free( self )
+      import Ref_t
+      type(Ref_t)           :: self
+    end subroutine
+  end interface
+
+  interface dynamic_type
+    function ref_dynamic_type( self ) result(res)
+      import Ref_t, TypeInfo_t
+      type(Ref_t),   intent(in) :: self
+      type(TypeInfo_t), pointer :: res
+    end function
+  end interface
+
+  interface ref_control
+    module procedure ref_control_ref
+  end interface
 
   ! assignment and operators
 
-  interface assign        ; module procedure gr_assign_gr, gr_assign_encoding ; end interface
-  interface assignment(=) ; module procedure gr_assign_gr, gr_assign_encoding ; end interface
+  interface assign
+    subroutine ref_assign_ref( lhs, rhs )
+      import Ref_t
+      type(Ref_t), intent(inout) :: lhs
+      type(Ref_t),    intent(in) :: rhs
+    end subroutine
+
+    subroutine ref_assign_encoding( lhs, rhs )
+      import Ref_t, RefEncoding_t
+      type(Ref_t),              intent(inout) :: lhs
+      type(RefEncoding_t), target, intent(in) :: rhs(:)
+    end subroutine
+  end interface
+
+  interface assignment(=)
+    module procedure ref_assign_ref_private, ref_assign_encoding_private
+  end interface
+
 
   ! declare public interfaces 
 
   public :: assign, assignment(=)
-  public :: gr_get_TypeReference  !< needed by generated code
+  public :: ref_get_TypeReference  !< needed by generated code
   public :: rank
   public :: shape
   public :: clone
@@ -80,162 +163,19 @@ module adt_ref
 
   !_TypeGen_implementAll()
 
-
-  subroutine gr_initialize( self, has_proto, proto )
-    type(Ref_t) :: self
-    integer     :: has_proto
-    type(Ref_t) :: proto
-    
-    if (has_proto /= 0) then;
-      _ref_init( self%refstat, _ref_hardness(proto%refstat) )
-      call basestring_init_by_proto( self%ref_str, 1, proto%ref_str )
-    else;
-      self%refstat = _ref_HardLent
-      call basestring_init_by_proto( self%ref_str, 0, self%ref_str )
-    end if
-    self%typeInfo => null()
-  end subroutine
-
-
-  subroutine gr_assign_gr( lhs, rhs )
+  subroutine ref_assign_ref_private( lhs, rhs )
     type(Ref_t), intent(inout) :: lhs
     type(Ref_t),    intent(in) :: rhs
-
-    if (.not. associated(lhs%ref_str%ptr, rhs%ref_str%ptr)) then
-      call gr_free( lhs )
-      call basestring_assign_bs( lhs%ref_str, rhs%ref_str )
-      lhs%typeInfo => rhs%typeInfo
-
-      if (_ref_isWeakMine( rhs%refstat )) &
-        _ref_setMine( lhs%refstat, 1 )
-    end if
+    call assign( lhs, rhs )
   end subroutine
 
-
-  subroutine gr_assign_encoding( lhs, rhs )
+  subroutine ref_assign_encoding_private( lhs, rhs )
     type(Ref_t),              intent(inout) :: lhs
     type(RefEncoding_t), target, intent(in) :: rhs(:)
-    integer*4,                    parameter :: size_typeInfo = storage_size(TypeInfo_ptr_t(null())) / 8
-    integer*4,                    parameter :: size_encoding = storage_size(RefEncoding_t(null())) / 8
-    character(len=1), dimension(:), pointer :: stream
-    type(TypeInfo_ptr_t),           pointer :: typeInfo
-    type(c_ptr)                             :: encoding
-    
-    call gr_free( lhs )
-    encoding = c_loc(rhs(1))
-    call c_f_pointer( encoding, typeInfo )
-    call c_f_pointer( encoding, stream, (/ size(rhs) * size_encoding /) )
-    call basestring_assign_buf( lhs%ref_str, stream(size_typeInfo + 1:) )
-    lhs%typeInfo => typeInfo%ptr
+    call assign( lhs, rhs )
   end subroutine
 
-
-  function gr_get_TypeReference( self ) result(res)
-    type(Ref_t), intent(in) :: self
-    type(c_ptr)             :: res
-    res = basestring_cptr( self%ref_str )
-  end function
-
-
-  pure function gr_rank( self ) result(res)
-    type(Ref_t), intent(in) :: self
-    integer                 :: res
-
-    if (associated( self%typeInfo )) then
-      res = self%typeInfo%rank
-    else
-      res = 0
-    end if
-  end function
-
-
-  pure function gr_shape( self ) result(res)
-    type(Ref_t), intent(in) :: self
-    integer                 :: res(rank(self))
-
-    if (associated( self%typeInfo )) then
-      if (associated( self%typeInfo%shapeProc )) then
-        call self%typeInfo%shapeProc( self, res, self%typeInfo%rank )
-        return
-      end if
-    end if
-    res = 0
-  end function
-
-
-  function gr_clone( self ) result(res)
-    type(Ref_t), intent(in) :: self
-    type(Ref_t)             :: res
-
-    call basestring_set_attribute( res%ref_str, attribute_volatile )
-    if (associated( self%typeInfo )) then
-      if (associated( self%typeInfo%cloneRefProc )) then
-        call self%typeInfo%cloneRefProc( res, self )
-        res%refstat = _ref_WeakMine
-        return
-      end if
-    end if
-    res = self
-  end function
-
-
-  function gr_cptr( self ) result(res)
-    type(Ref_t), intent(in) :: self
-    type(c_ptr)             :: res
-    type(void_t),   pointer :: wrap
-
-    res = gr_get_TypeReference(self)
-    if (c_associated(res)) then
-      call c_f_pointer( res, wrap )
-      res = c_loc(wrap%ptr)
-    end if
-  end function
-
-
-  recursive &
-  subroutine gr_delete( self )
-    type(Ref_t) :: self
-
-    call gr_free( self )
-    call basestring_delete( self%ref_str )
-    self%typeInfo => null()
-  end subroutine
-
-
-  recursive &
-  subroutine gr_free( self )
-    type(Ref_t)           :: self
-    type(void_t), pointer :: wrap
-    type(c_ptr)           :: cptr
-
-    if (_ref_isMine( self%refstat )) then
-      cptr = gr_get_TypeReference(self)
-      if (c_associated( cptr )) then
-        call c_f_pointer( cptr, wrap )
-
-        if (associated( wrap%ptr )) then
-          if (associated( self%typeInfo )) then
-            if (associated( self%typeInfo%deleteProc )) &
-              call self%typeInfo%deleteProc( wrap%ptr )
-          end if
-          deallocate( wrap%ptr )
-        end if
-      end if
-      _ref_setMine( self%refstat, 0 )
-    end if
-  end subroutine
-
-
-  function gr_dynamic_type( self ) result(res)
-    type(Ref_t),   intent(in) :: self
-    type(TypeInfo_t), pointer :: res
-    if (associated( self%typeInfo )) then; res => self%typeInfo
-                                     else; res => type_void
-    end if
-  end function
-
-  
-  subroutine gr_ref_control( self, ctrl )
+  subroutine ref_control_ref( self, ctrl )
     type(Ref_t),     intent(inout) :: self
     type(RefControl_t), intent(in) :: ctrl
     _ref_setMine( self%refstat, ctrl%val )

@@ -22,7 +22,7 @@ mk_TAG              = $(F90C).$(CFG).$(ARCH)
 .PHONY: clean
 
 TPP_FILES = $(wildcard *.tpp)
-BASE_OBJ  = crc.o crc_impl.o typeinfo.o typeinfo_impl.o basestring.o basestring_impl.o ref.o string.o \
+BASE_OBJ  = crc.o crc_impl.o typeinfo.o typeinfo_impl.o basestring.o basestring_impl.o ref.o ref_impl.o string.o \
 						list.o basetypes.o item.o hash_map.o
 
 # file specific compiler flags ...
