@@ -75,7 +75,7 @@ module adt_string
   end interface
 
   interface delete
-    subroutine basestring_delete( ds ) bind(c,name="basestring_delete_")
+    subroutine basestring_delete( ds )
       import String_t
       type(String_t), intent(inout) :: ds
     end subroutine
@@ -83,13 +83,9 @@ module adt_string
   ! assignment and operators
 
   interface assign
-    module procedure cs_assign_ds, ds_assign_cs, ds_assign_ds, ds_assign_buf
-  end interface
-
-  interface assignment(=)
     module procedure cs_assign_ds
 
-    subroutine basestring_assign_bs( lhs, rhs ) bind(c,name="basestring_assign_bs_")
+    subroutine basestring_assign_bs( lhs, rhs )
       import String_t
       type(String_t), intent(inout) :: lhs
       type(String_t),    intent(in) :: rhs
@@ -106,6 +102,10 @@ module adt_string
       type(String_t),                 intent(inout) :: lhs
       character(len=1), dimension(:), intent(in)    :: rhs
     end subroutine
+  end interface
+
+  interface assignment(=)
+    module procedure cs_assign_ds, ds_assign_cs, ds_assign_ds, ds_assign_buf
   end interface
 
   interface operator(//)  ; module procedure ds_concat_cs, cs_concat_ds, ds_concat_ds                ; end interface

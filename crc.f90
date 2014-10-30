@@ -1,6 +1,4 @@
 
-#include "adt/itfUtil.fpp"
-
 module adt_crc
   implicit none
   private

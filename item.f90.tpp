@@ -16,12 +16,11 @@ module adt_item
 # undef _item_type_
 
 
-# define _item_type_(typeId, baseType) \
-    , storage_size(_paste(typeId,_var))
+# define _item_type_(typeId, baseType)   storage_size(_paste(typeId,_var)),
 
 # define _chunkType   integer*8
   _chunkType, parameter :: chunk_var = 0
-  integer*4,  parameter :: maxBytes  = max(0 _TableOf_item_types_)/8
+  integer*4,  parameter :: maxBytes  = max(_TableOf_item_types_ 0)/8
   integer*4,  parameter :: chunkSize = storage_size(chunk_var)/8
   integer*4,  parameter :: numChunks = ceiling( maxBytes / real(chunkSize) )
 # undef _item_type_
@@ -33,16 +32,54 @@ module adt_item
     type(TypeInfo_t), pointer :: typeInfo        => null()
   end type
 
+
+  type, public :: Item_t__impl__
+    _chunkType                :: data(numChunks) = 0
+    type(TypeInfo_t), pointer :: typeInfo        => null()
+  end type
+
+
   ! declare Item_of(<type>) interface ...
   ! NOTE: It's named Item_of to avoid ambiguity with Item-interface for type deref.
-# define _item_type_(typeId, baseType) \
-    , _paste(vi_from_,typeId)
-
   interface Item_of
-    module procedure vi_from_vi, vi_from_charString, vi_from_refencoding &
-                     _TableOf_item_types_
+#   define _declareConstructor_(typeId, baseType, bt_import) \
+    function _paste(item_of_,typeId)( val ) result(res) ;\
+      import Item_t; bt_import                          ;\
+      baseType     :: val                               ;\
+      type(Item_t) :: res                               ;\
+    end function
+
+    _declareConstructor_(bool,        logical,)
+    _declareConstructor_(int8,        integer*1,)
+    _declareConstructor_(int16,       integer*2,)
+    _declareConstructor_(int32,       integer*4,)
+    _declareConstructor_(int64,       integer*8,)
+    _declareConstructor_(real32,      real*4,)
+    _declareConstructor_(real64,      real*8,)
+    _declareConstructor_(complex32,   complex*8,)
+    _declareConstructor_(complex64,   complex*16,)
+    _declareConstructor_(c_void_ptr,  type(c_ptr),    import c_ptr)
+    _declareConstructor_(string,      type(String_t), import String_t)
+    _declareConstructor_(ref,         type(Ref_t),    import Ref_t)
+    _declareConstructor_(charString,  character(len=*),)
+
+    function item_of_refencoding( val ) result(res)
+      import Item_t, RefEncoding_t, Ref_t
+      type(RefEncoding_t), dimension(:) :: val
+      type(Ref_t),              pointer :: ptr
+      type(Item_t),              target :: res
+    end function
   end interface
-# undef _item_type_
+
+!
+!# define _item_type_(typeId, baseType) \
+!    , _paste(vi_from_,typeId)
+!
+!  interface Item_of
+!    module procedure vi_from_vi, vi_from_charString, vi_from_refencoding &
+!                     _TableOf_item_types_
+!  end interface
+!# undef _item_type_
 
 
   ! declare public <typeId>-interfaces for getting type pointers
@@ -109,55 +146,55 @@ module adt_item
   end subroutine
 
 
-! implement constructor routines
-
-# define _implementConstructor_(typeId, baseType, proto) \
-    function _paste(vi_from_,typeId)( val ) result(res) ;\
-      baseType             :: val                       ;\
-      baseType,    pointer :: ptr                       ;\
-      type(Item_t), target :: res                       ;\
-      if (vi_reshape( res, static_type(val) )) then     ;\
-        call res%typeInfo%initProc( res, 1, proto )     ;\
-      end if                                            ;\
-      call c_f_pointer( c_loc(res%data(1)), ptr )       ;\
-      ptr = val                                         ;\
-    end function
-
-  _implementConstructor_(bool,       logical,   0)
-  _implementConstructor_(int8,       integer*1, 0)
-  _implementConstructor_(int16,      integer*2, 0)
-  _implementConstructor_(int32,      integer*4, 0)
-  _implementConstructor_(int64,      integer*8, 0)
-  _implementConstructor_(real32,     real*4,    0)
-  _implementConstructor_(real64,     real*8,    0)
-  _implementConstructor_(complex32,  complex*8, 0)
-  _implementConstructor_(complex64,  complex*16, 0)
-  _implementConstructor_(c_void_ptr, type(c_ptr), 0)
-  _implementConstructor_(string,     type(String_t), temporary_string)
-  _implementConstructor_(ref,        type(Ref_t),    temporary_ref)
-
-
-  function vi_from_charString( val ) result(res)
-    character(len=*)        :: val
-    type(String_t), pointer :: ptr
-    type(Item_t),    target :: res
-
-    if (vi_reshape( res, static_type(string_var) )) &
-      call res%typeInfo%initProc( res%data, 1, temporary_string )
-    call c_f_pointer( c_loc(res%data(1)), ptr )
-    call assign( ptr, val )
-  end function
-
-
-  function vi_from_refencoding( val ) result(res)
-    type(RefEncoding_t), dimension(:) :: val
-    type(Ref_t),              pointer :: ptr
-    type(Item_t),              target :: res
-    if (vi_reshape( res, static_type(ref_var) )) &
-      call res%typeInfo%initProc( res%data, 1, temporary_ref )
-    call c_f_pointer( c_loc(res%data(1)), ptr )
-    call assign( ptr, val )
-  end function
+!! implement constructor routines
+!
+!# define _implementConstructor_(typeId, baseType, proto) \
+!    function _paste(vi_from_,typeId)( val ) result(res) ;\
+!      baseType             :: val                       ;\
+!      baseType,    pointer :: ptr                       ;\
+!      type(Item_t), target :: res                       ;\
+!      if (vi_reshape( res, static_type(val) )) then     ;\
+!        call res%typeInfo%initProc( res, 1, proto )     ;\
+!      end if                                            ;\
+!      call c_f_pointer( c_loc(res%data(1)), ptr )       ;\
+!      ptr = val                                         ;\
+!    end function
+!
+!  _implementConstructor_(bool,       logical,   0)
+!  _implementConstructor_(int8,       integer*1, 0)
+!  _implementConstructor_(int16,      integer*2, 0)
+!  _implementConstructor_(int32,      integer*4, 0)
+!  _implementConstructor_(int64,      integer*8, 0)
+!  _implementConstructor_(real32,     real*4,    0)
+!  _implementConstructor_(real64,     real*8,    0)
+!  _implementConstructor_(complex32,  complex*8, 0)
+!  _implementConstructor_(complex64,  complex*16, 0)
+!  _implementConstructor_(c_void_ptr, type(c_ptr), 0)
+!  _implementConstructor_(string,     type(String_t), temporary_string)
+!  _implementConstructor_(ref,        type(Ref_t),    temporary_ref)
+!
+!
+!  function vi_from_charString( val ) result(res)
+!    character(len=*)        :: val
+!    type(String_t), pointer :: ptr
+!    type(Item_t),    target :: res
+!
+!    if (vi_reshape( res, static_type(string_var) )) &
+!      call res%typeInfo%initProc( res%data, 1, temporary_string )
+!    call c_f_pointer( c_loc(res%data(1)), ptr )
+!    call assign( ptr, val )
+!  end function
+!
+!
+!  function vi_from_refencoding( val ) result(res)
+!    type(RefEncoding_t), dimension(:) :: val
+!    type(Ref_t),              pointer :: ptr
+!    type(Item_t),              target :: res
+!    if (vi_reshape( res, static_type(ref_var) )) &
+!      call res%typeInfo%initProc( res%data, 1, temporary_ref )
+!    call c_f_pointer( c_loc(res%data(1)), ptr )
+!    call assign( ptr, val )
+!  end function
 
 
   function vi_from_vi( val ) result(res)
