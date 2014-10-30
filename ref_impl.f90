@@ -23,7 +23,7 @@
 !  end interface
 !end module
 
-
+!_PROC_EXPORT(ref_initialize)
   subroutine ref_initialize( self, has_proto, proto )
     use adt_ref
     use adt_basestring
@@ -42,6 +42,7 @@
   end subroutine
 
 
+!_PROC_EXPORT(ref_assign_ref)
   subroutine ref_assign_ref( lhs, rhs )
     use adt_ref
     use adt_basestring
@@ -59,6 +60,7 @@
   end subroutine
 
 
+!_PROC_EXPORT(ref_assign_encoding)
   subroutine ref_assign_encoding( lhs, rhs )
     use adt_ref
     use adt_basestring
@@ -80,6 +82,7 @@
   end subroutine
 
 
+!_PROC_EXPORT(ref_get_TypeReference)
   function ref_get_TypeReference( self ) result(res)
     use adt_ref, only: Ref_t
     use adt_basestring
@@ -91,6 +94,7 @@
   end function
 
 
+!_PROC_EXPORT(ref_initialize)
   pure function ref_rank( self ) result(res)
     use adt_ref
     type(Ref_t), intent(in) :: self
@@ -104,6 +108,7 @@
   end function
 
 
+!_PROC_EXPORT(ref_shape)
   pure function ref_shape( self ) result(res)
     use adt_ref
     type(Ref_t), intent(in) :: self
@@ -119,6 +124,7 @@
   end function
 
 
+!_PROC_EXPORT(ref_clone)
   function ref_clone( self ) result(res)
     use adt_ref
     use adt_basestring
@@ -137,6 +143,7 @@
   end function
 
 
+!_PROC_EXPORT(ref_cptr)
   function ref_cptr( self ) result(res)
     use adt_ref
     use iso_c_binding
@@ -152,6 +159,7 @@
   end function
 
 
+!_PROC_EXPORT(ref_delete)
   recursive &
   subroutine ref_delete( self )
     use adt_ref
@@ -164,6 +172,7 @@
   end subroutine
 
 
+!_PROC_EXPORT(ref_free)
   recursive &
   subroutine ref_free( self )
     use adt_ref
@@ -190,6 +199,7 @@
   end subroutine
 
 
+!_PROC_EXPORT(ref_dynamic_type)
   function ref_dynamic_type( self ) result(res)
     use adt_ref
     use adt_typeinfo

@@ -44,8 +44,8 @@
 #include "adt/itfUtil.fpp"
 
 
-!PROC_EXPORT(crc32_bytebuffer)
-  function crc32_bytebuffer( seed, buf, size ) bind(c,name='crc32_bytebuffer_') result(crc_)
+!_PROC_EXPORT(crc32_bytebuffer)
+  function crc32_bytebuffer( seed, buf, size ) result(crc_)
     use iso_c_binding
     integer(kind=c_int32_t), intent(in) :: seed
     integer(kind=c_size_t),  intent(in) :: size
@@ -107,7 +107,7 @@
   end function
 
 
-!PROC_EXPORT(crc32_string)
+!_PROC_EXPORT(crc32_string)
   function crc32_string( str ) result(crc_)
     use iso_c_binding
     character(len=*),          target, intent(in) :: str
@@ -118,7 +118,7 @@
   end function
 
 
-!PROC_EXPORT(crc32_c_ptr)
+!_PROC_EXPORT(crc32_c_ptr)
   function crc32_c_ptr( cptr, size ) result(crc_)
     use iso_c_binding
     type (c_ptr),                      intent(in) :: cptr

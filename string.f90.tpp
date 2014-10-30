@@ -75,7 +75,7 @@ module adt_string
   end interface
 
   interface delete
-    subroutine basestring_delete( ds )
+    subroutine basestring_delete( ds ) bind(c,name="basestring_delete_")
       import String_t
       type(String_t), intent(inout) :: ds
     end subroutine
@@ -89,7 +89,7 @@ module adt_string
   interface assignment(=)
     module procedure cs_assign_ds
 
-    subroutine basestring_assign_bs( lhs, rhs )
+    subroutine basestring_assign_bs( lhs, rhs ) bind(c,name="basestring_assign_bs_")
       import String_t
       type(String_t), intent(inout) :: lhs
       type(String_t),    intent(in) :: rhs

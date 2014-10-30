@@ -1,4 +1,6 @@
 
+#include "adt/itfUtil.fpp"
+
 module adt_list
   use adt_ref
   implicit none
@@ -106,7 +108,7 @@ module adt_list
 
   !_TypeGen_implementAll()
 
-
+!_PROC_EXPORT(al_initialize_node)
   subroutine al_initialize_node( self, nodeType )
     type (Node_t),              target :: self
     type(TypeInfo_t), optional, target :: nodeType
@@ -173,6 +175,7 @@ module adt_list
   end subroutine
 
   
+!_PROC_EXPORT(al_length)
   function al_length( self ) result(res)
     type(List_t), target  :: self
     integer*4             :: res
@@ -233,6 +236,7 @@ module adt_list
   end subroutine
 
   
+!_PROC_EXPORT(al_delete_list)
   recursive &
   subroutine al_delete_list( self )
     use iso_c_binding
@@ -497,6 +501,7 @@ module adt_list
   end subroutine
 
   
+!_PROC_EXPORT(al_pop_int)
   function al_pop_int( self, at ) result(res)
     type(List_t), target :: self
     integer*4            :: at
@@ -505,6 +510,7 @@ module adt_list
   end function
 
 
+!_PROC_EXPORT(ali_pop_idx)
   function ali_pop_idx( self ) result(res)
     type(ListIndex_t) :: self, res
     integer*4         :: cnt
@@ -513,6 +519,7 @@ module adt_list
   end function
 
 
+!_PROC_EXPORT(al_assign_al)
   subroutine al_assign_al( lhs, rhs )
     type(List_t), target, intent(inout) :: lhs
     type(List_t), target,    intent(in) :: rhs

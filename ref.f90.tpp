@@ -68,9 +68,9 @@ module adt_ref
   interface shape
     pure &
     function ref_shape( self ) result(res)
-      import Ref_t, rank
+      import Ref_t
       type(Ref_t), intent(in) :: self
-      integer                 :: res(rank(self))
+      integer                 :: res(ref_rank(self))
     end function
   end interface
 

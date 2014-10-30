@@ -1,12 +1,14 @@
 
+#include "adt/itfUtil.fpp"
+
 module adt_crc
   implicit none
   private
 
   interface crc32
-    function crc32_bytebuffer( seed, buf, size ) bind(c,name='crc32_bytebuffer_')
+    function crc32_bytebuffer( seed, buf, size ) result(res)
       use iso_c_binding
-      integer(kind=c_int32_t)             :: crc32_bytebuffer
+      integer(kind=c_int32_t)             :: res
       integer(kind=c_int32_t), intent(in) :: seed
       integer(kind=c_size_t),  intent(in) :: size
       integer(kind=c_int8_t),  intent(in) :: buf(size)
@@ -27,6 +29,6 @@ module adt_crc
   end interface
 
   public :: crc32
-  
+
 end
 
