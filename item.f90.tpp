@@ -259,7 +259,7 @@ module adt_item
   
   subroutine item_assign_item_private( lhs, rhs )
     type(Item_t), intent(inout) :: lhs
-    type(Item_t)                :: rhs
+    type(Item_t), intent(in)    :: rhs
     call assign( lhs, rhs )
   end subroutine
 

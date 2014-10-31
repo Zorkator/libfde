@@ -83,7 +83,7 @@ end module
 
 !_PROC_EXPORT(ref_get_TypeReference)
   function ref_get_TypeReference( self ) result(res)
-    use adt_ref__
+    use adt_ref__, only: Ref_t, c_ptr, basestring_cptr
     implicit none
     type(Ref_t), intent(in) :: self
     type(c_ptr)             :: res
@@ -94,7 +94,7 @@ end module
 
 !_PROC_EXPORT(ref_initialize)
   pure function ref_rank( self ) result(res)
-    use adt_ref__
+    use adt_ref__, only: Ref_t
     implicit none
     type(Ref_t), intent(in) :: self
     integer                 :: res
