@@ -2,31 +2,31 @@
 #include "adt/ref_status.fpp"
 #include "adt/itfUtil.fpp"
 
-!module adt_ref__
-!  use adt_ref, only: RefEncoding_t, rank
-!  use adt_basestring
-!  use adt_typeinfo
-!  use iso_c_binding
-!
-!  type, public :: Ref_t__
-!    _RefStatus                :: refstat = _ref_HardLent
-!    type(BaseString_t)        :: ref_str
-!    type(TypeInfo_t), pointer :: typeInfo => null()
-!  end type
-!
-!  interface
-!    function ref_get_TypeReference( self ) result(res)
-!      import Ref_t__, c_ptr
-!      type(Ref_t__), intent(in) :: self
-!      type(c_ptr)               :: res
-!    end function
-!  end interface
-!end module
+module adt_ref__
+  use adt_ref, only: Ref_t => Ref_t__impl__, RefEncoding_t
+  use adt_basestring
+  use adt_typeinfo
+  use iso_c_binding
+
+  interface
+    pure function ref_rank( self ) result(res)
+      import Ref_t
+      type(Ref_t), intent(in) :: self
+      integer                 :: res
+    end function
+
+    function ref_get_TypeReference( self ) result(res)
+      import Ref_t, c_ptr
+      type(Ref_t), intent(in) :: self
+      type(c_ptr)             :: res
+    end function
+  end interface
+end module
 
 !_PROC_EXPORT(ref_initialize)
   subroutine ref_initialize( self, has_proto, proto )
-    use adt_ref
-    use adt_basestring
+    use adt_ref__
+    implicit none
     type(Ref_t) :: self
     integer     :: has_proto
     type(Ref_t) :: proto
@@ -44,8 +44,8 @@
 
 !_PROC_EXPORT(ref_assign_ref)
   subroutine ref_assign_ref( lhs, rhs )
-    use adt_ref
-    use adt_basestring
+    use adt_ref__
+    implicit none
     type(Ref_t), intent(inout) :: lhs
     type(Ref_t),    intent(in) :: rhs
 
@@ -62,9 +62,8 @@
 
 !_PROC_EXPORT(ref_assign_encoding)
   subroutine ref_assign_encoding( lhs, rhs )
-    use adt_ref
-    use adt_basestring
-    use iso_c_binding
+    use adt_ref__
+    implicit none
     type(Ref_t),              intent(inout) :: lhs
     type(RefEncoding_t), target, intent(in) :: rhs(:)
     integer*4,                    parameter :: size_typeInfo = storage_size(TypeInfo_ptr_t(null())) / 8
@@ -84,9 +83,8 @@
 
 !_PROC_EXPORT(ref_get_TypeReference)
   function ref_get_TypeReference( self ) result(res)
-    use adt_ref, only: Ref_t
-    use adt_basestring
-    use iso_c_binding
+    use adt_ref__
+    implicit none
     type(Ref_t), intent(in) :: self
     type(c_ptr)             :: res
 
@@ -96,7 +94,8 @@
 
 !_PROC_EXPORT(ref_initialize)
   pure function ref_rank( self ) result(res)
-    use adt_ref
+    use adt_ref__
+    implicit none
     type(Ref_t), intent(in) :: self
     integer                 :: res
 
@@ -110,9 +109,10 @@
 
 !_PROC_EXPORT(ref_shape)
   pure function ref_shape( self ) result(res)
-    use adt_ref
+    use adt_ref__
+    implicit none
     type(Ref_t), intent(in) :: self
-    integer                 :: res(rank(self))
+    integer                 :: res(ref_rank(self))
 
     if (associated( self%typeInfo )) then
       if (associated( self%typeInfo%shapeProc )) then
@@ -126,8 +126,8 @@
 
 !_PROC_EXPORT(ref_clone)
   function ref_clone( self ) result(res)
-    use adt_ref
-    use adt_basestring
+    use adt_ref__
+    implicit none
     type(Ref_t), intent(in) :: self
     type(Ref_t)             :: res
 
@@ -145,8 +145,8 @@
 
 !_PROC_EXPORT(ref_cptr)
   function ref_cptr( self ) result(res)
-    use adt_ref
-    use iso_c_binding
+    use adt_ref__
+    implicit none
     type(Ref_t), intent(in) :: self
     type(c_ptr)             :: res
     type(void_t),   pointer :: wrap
@@ -162,8 +162,8 @@
 !_PROC_EXPORT(ref_delete)
   recursive &
   subroutine ref_delete( self )
-    use adt_ref
-    use adt_basestring
+    use adt_ref__
+    implicit none
     type(Ref_t) :: self
 
     call ref_free( self )
@@ -175,8 +175,8 @@
 !_PROC_EXPORT(ref_free)
   recursive &
   subroutine ref_free( self )
-    use adt_ref
-    use iso_c_binding
+    use adt_ref__
+    implicit none
     type(Ref_t)           :: self
     type(void_t), pointer :: wrap
     type(c_ptr)           :: ptr
@@ -201,8 +201,8 @@
 
 !_PROC_EXPORT(ref_dynamic_type)
   function ref_dynamic_type( self ) result(res)
-    use adt_ref
-    use adt_typeinfo
+    use adt_ref__
+    implicit none
     type(Ref_t), intent(in) :: self
     type(TypeInfo_t), pointer :: res
 

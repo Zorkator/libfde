@@ -10,11 +10,19 @@ module adt_ref
 
 
   type, public :: Ref_t
-    !private
+    private
     _RefStatus                :: refstat = _ref_HardLent
     type(BaseString_t)        :: ref_str
     type(TypeInfo_t), pointer :: typeInfo => null()
   end type
+
+
+  type, public :: Ref_t__impl__
+    _RefStatus                :: refstat = _ref_HardLent
+    type(BaseString_t)        :: ref_str
+    type(TypeInfo_t), pointer :: typeInfo => null()
+  end type
+
 
   !_TypeGen_declare_RefType( public, ref, type(Ref_t), scalar, \
   !     initProc   = ref_initialize, \
