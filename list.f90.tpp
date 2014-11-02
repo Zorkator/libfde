@@ -316,7 +316,8 @@ module adt_list
   end interface
   
   interface clear
-    subroutine al_delete_list( self )
+    recursive &
+    subroutine al_clear( self )
       import List_t
       type (List_t), intent(inout) :: self
     end subroutine
@@ -465,14 +466,14 @@ end module
 !
 !!  subroutine al_delete( self )
 !!    type (List_t), target, intent(inout) :: self
-!!    call al_delete_list( self )
-!!    call al_delete_list( al_stale_list )
+!!    call al_clear( self )
+!!    call al_clear( al_stale_list )
 !!  end subroutine
 !!
 !!  
-!!!_PROC_EXPORT(al_delete_list)
+!!!_PROC_EXPORT(al_clear)
 !!  recursive &
-!!  subroutine al_delete_list( self )
+!!  subroutine al_clear( self )
 !!    use iso_c_binding
 !!    type(List_t), target, intent(inout) :: self
 !!    type(Node_t),               pointer :: ptr, delPtr
