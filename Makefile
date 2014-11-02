@@ -5,7 +5,8 @@ ARCH ?= 32
 
 mk_F90_FLAGS_gfortran_debug   = -ggdb -cpp -ffree-line-length-none $(_F90_FLAGS)
 mk_F90_FLAGS_gfortran_release = -O3 -cpp -ffree-line-length-none $(_F90_FLAGS)
-mk_F90C_gfortran              = gfortran-4.9
+#mk_F90C_gfortran              = gfortran-4.8
+mk_F90C_gfortran              = /opt/gcc/4.9.2/bin/gfortran
 
 mk_F90_FLAGS_ifort_debug      = -g -fpp -allow nofpp-comments $(_F90_FLAGS)
 mk_F90_FLAGS_ifort_release    = -O3 -fpp -allow nofpp-comments $(_F90_FLAGS)
@@ -23,7 +24,7 @@ mk_TAG              = $(F90C).$(CFG).$(ARCH)
 
 TPP_FILES = $(wildcard *.tpp)
 BASE_OBJ  = crc.o crc_impl.o typeinfo.o typeinfo_impl.o basestring.o basestring_impl.o ref.o ref_impl.o string.o \
-						list.o basetypes.o item.o item_impl.o hash_map.o
+						list.o list_impl.o basetypes.o item.o item_impl.o hash_map.o
 
 # file specific compiler flags ...
 crc_impl_F90_FLAGS_gfortran  = -fno-range-check
