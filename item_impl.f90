@@ -25,8 +25,8 @@ module adt_item__
 end module
 
 
-!_PROC_EXPORT(item_initialize)
-  subroutine item_initialize( self, has_proto, proto )
+!_PROC_EXPORT(item_init_by_proto)
+  subroutine item_init_by_proto( self, has_proto, proto )
     use adt_item__
     implicit none
     type(Item_t) :: self

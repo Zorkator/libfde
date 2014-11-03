@@ -25,7 +25,7 @@ module adt_ref
 
 
   !_TypeGen_declare_RefType( public, ref, type(Ref_t), scalar, \
-  !     initProc   = ref_initialize, \
+  !     initProc   = ref_init_by_proto, \
   !     assignProc = ref_assign_ref, \
   !     deleteProc = ref_delete,     \
   !     cloneMode  = _type )
@@ -51,7 +51,7 @@ module adt_ref
   ! interface definitions
 
   interface
-    subroutine ref_initialize( self, has_proto, proto )
+    subroutine ref_init_by_proto( self, has_proto, proto )
       import Ref_t
       type(Ref_t) :: self, proto
       integer     :: has_proto

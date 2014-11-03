@@ -23,8 +23,8 @@ module adt_ref__
   end interface
 end module
 
-!_PROC_EXPORT(ref_initialize)
-  subroutine ref_initialize( self, has_proto, proto )
+!_PROC_EXPORT(ref_init_by_proto)
+  subroutine ref_init_by_proto( self, has_proto, proto )
     use adt_ref__
     implicit none
     type(Ref_t) :: self
@@ -92,7 +92,7 @@ end module
   end function
 
 
-!_PROC_EXPORT(ref_initialize)
+!_PROC_EXPORT(ref_rank)
   pure function ref_rank( self ) result(res)
     use adt_ref__, only: Ref_t
     implicit none

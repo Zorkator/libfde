@@ -40,9 +40,9 @@ module adt_item
 
 
   !_TypeGen_declare_RefType( public, Item, type(Item_t), scalar, \
-  !     initProc   = item_initialize,  \
-  !     assignProc = item_assign_item, \
-  !     deleteProc = item_delete,      \
+  !     initProc   = item_init_by_proto, \
+  !     assignProc = item_assign_item,   \
+  !     deleteProc = item_delete,        \
   !     cloneMode  = _type )
 
   !_TypeGen_declare_ListNode( public, Item, type(Item_t), scalar )
@@ -243,7 +243,7 @@ module adt_item
   end interface
 
   interface
-    subroutine item_initialize( self, has_proto, proto )
+    subroutine item_init_by_proto( self, has_proto, proto )
       import Item_t
       type(Item_t) :: self
       integer      :: has_proto

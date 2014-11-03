@@ -365,7 +365,7 @@ class ListNode(TypeSpec):
 
     type = """
     type, private :: {typeId}_node_t
-      type(Node_t)        :: super
+      type(ListNode_t)    :: super
       {baseType}{dimSize} :: value
     end type
     type(TypeInfo_t), target :: type_{typeId}_node
@@ -399,14 +399,14 @@ class ListNode(TypeSpec):
     new_node = """
     function {typeId}_new_node_( valPtr ) result(res)
       {baseType}{dimSpec}, pointer, intent(out) :: valPtr
-      type(Node_t),                     pointer :: res
+      type(ListNode_t),                 pointer :: res
       type({typeId}_node_t),            pointer :: node => null()
       type(TypeInfo_t),                 pointer :: ti
 
       allocate( node )
       ti => static_type( node%value )
       if (associated( ti%initProc )) &
-        call ti%initProc( node%value, 0 ) !< init value as default instance!
+        call ti%initProc( node%value, 0 ) !< 0 => init value as default instance - no prototype!
       valPtr => node%value
       res    => node%super
       res%typeInfo => node_type(valPtr)
@@ -416,7 +416,7 @@ class ListNode(TypeSpec):
     new_node_of = """
     function {typeId}_new_node_of_( val ) result(res)
       {baseType}{dimSpec}, intent(in) :: val
-      type(Node_t),           pointer :: res
+      type(ListNode_t),       pointer :: res
       {baseType}{dimSpec},    pointer :: val_ptr
       res     => {typeId}_new_node_( val_ptr )
       val_ptr =  val
@@ -425,9 +425,9 @@ class ListNode(TypeSpec):
 
     new_node_of_alias = """
     function {typeId}{aliasId}_new_node_of_( val ) result(res)
-      {baseType}{dimSpec},        intent(in) :: val
-      type(Node_t),                  pointer :: res
-      {aliasBaseType}{aliasDimSpec}, pointer :: val_ptr
+      {baseType}{dimSpec},            intent(in) :: val
+      type(ListNode_t),                  pointer :: res
+      {aliasBaseType}{aliasDimSpec},     pointer :: val_ptr
       res     => {typeId}_new_node_( val_ptr )
       val_ptr =  val
     end function
@@ -435,10 +435,10 @@ class ListNode(TypeSpec):
 
     clone_node = """
     subroutine {typeId}_clone_node_( tgt, src )
-      type(Node_t), pointer, intent(out) :: tgt
-      type({typeId}_node_t),  intent(in) :: src
-      type({typeId}_node_t),     pointer :: node => null()
-      type(TypeInfo_t),          pointer :: ti
+      type(ListNode_t), pointer, intent(out) :: tgt
+      type({typeId}_node_t),      intent(in) :: src
+      type({typeId}_node_t),         pointer :: node => null()
+      type(TypeInfo_t),              pointer :: ti
 
       allocate( node )
       ti => static_type( node%value )
