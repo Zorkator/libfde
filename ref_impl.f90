@@ -51,7 +51,7 @@ end module
 
     if (.not. associated(lhs%ref_str%ptr, rhs%ref_str%ptr)) then
       call ref_free( lhs )
-      call basestring_assign_bs( lhs%ref_str, rhs%ref_str )
+      call basestring_assign_basestring( lhs%ref_str, rhs%ref_str )
       lhs%typeInfo => rhs%typeInfo
 
       if (_ref_isWeakMine( rhs%refstat )) &

@@ -2,9 +2,8 @@
 module adt_string
   use iso_c_binding
   use adt_ref
-  use adt_basestring, only: BaseString_t, &
-                            attribute_permanent, attribute_volatile, permanent_string, temporary_string, &
-                            basestring_len_ref, basestring_ptr, basestring_release_weak
+  use adt_basestring, only: BaseString_t, basestring_len_ref, &
+                            attribute_permanent, attribute_volatile, permanent_string, temporary_string
   implicit none
   private
 
@@ -13,116 +12,23 @@ module adt_string
     private
     type(BaseString_t) :: str
 
-#   define _refstat(self)   self%str%refstat
 #   define _len(self)       self%str%len
-#   define _ptr(self)       basestring_ptr(self%str)
-#   define _array(self)     self%str%ptr(:self%str%len)
 #   define _reflen(self)    basestring_len_ref( self%str )
   end type
 
 
   !_TypeGen_declare_RefType( public, String, type(String_t), scalar, \
   !     initProc   = basestring_init_by_proto, \
-  !     assignProc = basestring_assign_bs,  \
+  !     assignProc = basestring_assign_basestring,  \
   !     deleteProc = basestring_delete, \
   !     cloneMode  = _type )
 
-
-  ! interface definitions
-
-  interface String; module procedure ds_from_cs, ds_from_buf         ; end interface
-  interface str          ; module procedure ds_str                          ; end interface
-  interface char         ; module procedure ds_char, ds_char_l              ; end interface
-  interface achar        ; module procedure ds_achar, ds_achar_l            ; end interface
-  interface adjustl      ; module procedure ds_adjustl                      ; end interface
-  interface adjustr      ; module procedure ds_adjustr                      ; end interface
-  interface iachar       ; module procedure ds_iachar                       ; end interface
-  interface ichar        ; module procedure ds_ichar                        ; end interface
-  interface index        ; module procedure ds_idx_cs, cs_idx_ds, ds_idx_ds ; end interface
-  interface len          ; module procedure ds_len                          ; end interface
-  interface len_trim     ; module procedure ds_len_trim                     ; end interface
-  interface lge          ; module procedure ds_lge_cs, cs_lge_ds, ds_lge_ds ; end interface
-  interface lgt          ; module procedure ds_lgt_cs, cs_lgt_ds, ds_lgt_ds ; end interface
-  interface lle          ; module procedure ds_lle_cs, cs_lle_ds, ds_lle_ds ; end interface
-  interface llt          ; module procedure ds_llt_cs, cs_llt_ds, ds_llt_ds ; end interface
-
-
-  ! redefine adt_basestring interfaces for reusage
-  
-  interface
-    subroutine basestring_init_by_proto( ds, has_proto, proto )
-      import String_t
-      type(String_t), intent(inout) :: ds
-      integer,        intent(in)    :: has_proto
-      type(String_t), intent(in)    :: proto
-    end subroutine
-  end interface
-
-  interface cptr
-    function basestring_cptr( ds ) result(res)
-      import String_t, c_ptr
-      type(String_t), intent(in) :: ds
-      type(c_ptr)                :: res
-    end function
-  end interface
-
-  interface set_attribute
-    subroutine basestring_set_attribute( ds, attrib )
-      import String_t
-      type(String_t),  intent(inout) :: ds
-      integer(kind=1), intent(in)    :: attrib
-    end subroutine
-  end interface
-
-  interface delete
-    subroutine basestring_delete( ds )
-      import String_t
-      type(String_t), intent(inout) :: ds
-    end subroutine
-  end interface
-  ! assignment and operators
-
-  interface assign
-    module procedure cs_assign_ds
-
-    subroutine basestring_assign_bs( lhs, rhs )
-      import String_t
-      type(String_t), intent(inout) :: lhs
-      type(String_t),    intent(in) :: rhs
-    end subroutine
-
-    subroutine basestring_assign_cs( bs, cs )
-      import String_t
-      type(String_t), intent(inout) :: bs
-      character(len=*),   intent(in)    :: cs
-    end subroutine
-
-    subroutine basestring_assign_buf( lhs, rhs )
-      import String_t
-      type(String_t),                 intent(inout) :: lhs
-      character(len=1), dimension(:), intent(in)    :: rhs
-    end subroutine
-  end interface
-
-  interface assignment(=)
-    module procedure cs_assign_ds, ds_assign_cs, ds_assign_ds, ds_assign_buf
-  end interface
-
-  interface operator(//)  ; module procedure ds_concat_cs, cs_concat_ds, ds_concat_ds                ; end interface
-  interface operator(==)  ; module procedure ds_eq_cs, cs_eq_ds, ds_eq_ds                            ; end interface 
-  interface operator(/=)  ; module procedure ds_ne_cs, cs_ne_ds, ds_ne_ds                            ; end interface 
-  interface operator(<)   ; module procedure ds_lt_cs, cs_lt_ds, ds_lt_ds                            ; end interface 
-  interface operator(<=)  ; module procedure ds_le_cs, cs_le_ds, ds_le_ds                            ; end interface 
-  interface operator(>)   ; module procedure ds_gt_cs, cs_gt_ds, ds_gt_ds                            ; end interface 
-  interface operator(>=)  ; module procedure ds_ge_cs, cs_ge_ds, ds_ge_ds                            ; end interface
-
-  ! declare public interfaces 
 
   !public :: String <= is set public by RefType declaration!
   public :: str, cptr
   public :: char
   public :: delete
-  public :: attribute_permanent, attribute_volatile, set_attribute
+  public :: set_attribute, attribute_permanent, attribute_volatile
   public :: permanent_string, temporary_string
 
   public :: adjustl
@@ -145,11 +51,449 @@ module adt_string
   public :: operator(<=)
   public :: operator(>)
   public :: operator(>=)
+
+
+  ! interface definitions
+
+  interface String
+    function string_from_charString( cs ) result(ds)
+      import String_t
+      character(len=*), intent(in) :: cs
+      type(String_t)               :: ds
+    end function
+
+    function string_from_buf( buf ) result(ds)
+      import String_t
+      character(len=1), dimension(:), intent(in) :: buf
+      type(String_t)                             :: ds
+    end function
+  end interface
+
+
+  interface str
+    function string_str( ds ) result(res)
+      import String_t
+      type(String_t)                      :: ds
+      character(len=_reflen(ds)), pointer :: res
+    end function
+  end interface
+
+
+  interface cptr
+    function basestring_cptr( ds ) result(res)
+      import String_t, c_ptr
+      type(String_t), intent(in) :: ds
+      type(c_ptr)                :: res
+    end function
+  end interface
+
+
+  interface char
+    function string_char( ds ) result(res)
+      import String_t
+      type(String_t)          :: ds
+      character(len=_len(ds)) :: res
+    end function
+
+    function string_char_l( ds, length ) result(res)
+      import String_t
+      type(String_t)        :: ds
+      integer,   intent(in) :: length
+      character(len=length) :: res
+    end function
+  end interface
+
+
+  interface delete
+    subroutine basestring_delete( ds )
+      import String_t
+      type(String_t), intent(inout) :: ds
+    end subroutine
+  end interface
+
+
+  interface set_attribute
+    subroutine basestring_set_attribute( ds, attrib )
+      import String_t
+      type(String_t),  intent(inout) :: ds
+      integer(kind=1), intent(in)    :: attrib
+    end subroutine
+  end interface
+
+
+  interface achar
+    function string_achar( ds ) result(res)
+      import String_t
+      type(String_t), intent(in) :: ds
+      character(len=1)           :: res(_len(ds))
+    end function
+
+    function string_achar_l( ds, length ) result(res)
+      import String_t
+      type(String_t), intent(in) :: ds
+      integer,   intent(in)      :: length
+      character(len=1)           :: res(length)
+    end function
+  end interface
+
+
+  interface adjustl
+    function string_adjustl( ds ) result(res)
+      import String_t
+      type(String_t), intent(in) :: ds
+      character(len=_len(ds))    :: res
+    end function
+  end interface
+
+
+  interface adjustr
+    function string_adjustr( ds ) result(res)
+      import String_t
+      type(String_t), intent(in) :: ds
+      character(len=_len(ds))    :: res
+    end function
+  end interface
+
+
+  interface iachar
+    function string_iachar( ds ) result(res)
+      import String_t
+      type(String_t), intent(in) :: ds
+      integer                    :: res(_len(ds))
+    end function
+  end interface
+
+
+  interface ichar
+    function string_ichar( ds ) result(res)
+      import String_t
+      type(String_t), intent(in) :: ds
+      integer                    :: res(_len(ds))
+    end function
+  end interface
+
+
+  interface index
+    function string_idx_charString( strg, sub, back ) result(res)
+      import String_t
+      type(String_t),        intent(in) :: strg
+      character(len=*),      intent(in) :: sub
+      logical,     intent(in), optional :: back
+      integer                           :: res
+    end function
+
+    function charString_idx_string( strg, sub, back ) result(res)
+      import String_t
+      character(len=*),  intent(in) :: strg
+      type(String_t),    intent(in) :: sub
+      logical, optional, intent(in) :: back
+      integer                       :: res
+    end function
+
+    function string_idx_string( strg, sub, back ) result(res)
+      import String_t
+      type(String_t),    intent(in) :: strg
+      type(String_t),    intent(in) :: sub
+      logical, optional, intent(in) :: back
+      integer                       :: res
+    end function
+  end interface
+
+
+  interface len
+    function string_len( ds ) result(length)
+      import String_t
+      type(String_t), intent(in) :: ds
+      integer                    :: length
+    end function
+  end interface
+
   
+  interface len_trim
+    function string_len_trim( ds ) result(length)
+      import String_t
+      type(String_t), intent(in) :: ds
+      integer                    :: length
+    end function
+  end interface
 
-# define _release_weak( ds ) \
-    call basestring_release_weak( ds%str )
 
+  interface lge
+    logical function string_lge_charString( strgA, strgB )
+      import String_t
+      type(String_t),   intent(in) :: strgA
+      character(len=*), intent(in) :: strgB
+    end function
+
+    logical function charString_lge_string( strgA, strgB )
+      import String_t
+      character(len=*), intent(in) :: strgA
+      type(String_t),   intent(in) :: strgB
+    end function
+
+    logical function string_lge_string( strgA, strgB )
+      import String_t
+      type(String_t), intent(in) :: strgA
+      type(String_t), intent(in) :: strgB
+    end function
+  end interface
+
+
+  interface lgt
+    logical function string_lgt_charString( strgA, strgB )
+      import String_t
+      type(String_t),   intent(in) :: strgA
+      character(len=*), intent(in) :: strgB
+    end function
+
+    logical function charString_lgt_string( strgA, strgB )
+      import String_t
+      character(len=*), intent(in) :: strgA
+      type(String_t),   intent(in) :: strgB
+    end function
+
+    logical function string_lgt_string( strgA, strgB )
+      import String_t
+      type(String_t), intent(in) :: strgA
+      type(String_t), intent(in) :: strgB
+    end function
+  end interface
+
+
+  interface lle
+    logical function string_lle_charString( strgA, strgB )
+      import String_t
+      type(String_t),   intent(in) :: strgA
+      character(len=*), intent(in) :: strgB
+    end function
+
+    logical function charString_lle_string( strgA, strgB )
+      import String_t
+      character(len=*), intent(in) :: strgA
+      type(String_t),   intent(in) :: strgB
+    end function
+
+    logical function string_lle_string( strgA, strgB )
+      import String_t
+      type(String_t), intent(in) :: strgA
+      type(String_t), intent(in) :: strgB
+    end function
+  end interface
+
+
+  interface llt
+    logical function string_llt_charString( strgA, strgB )
+      import String_t
+      type(String_t),   intent(in) :: strgA
+      character(len=*), intent(in) :: strgB
+    end function
+
+    logical function charString_llt_string( strgA, strgB )
+      import String_t
+      character(len=*), intent(in) :: strgA
+      type(String_t),   intent(in) :: strgB
+    end function
+
+    logical function string_llt_string( strgA, strgB )
+      import String_t
+      type(String_t), intent(in) :: strgA
+      type(String_t), intent(in) :: strgB
+    end function
+  end interface
+
+
+  interface assign
+    subroutine charString_assign_string( cs, ds )
+      import String_t
+      character(len=*), intent(out) :: cs
+      type(String_t),    intent(in) :: ds
+    end subroutine
+
+    subroutine basestring_assign_basestring( lhs, rhs )
+      import String_t
+      type(String_t), intent(inout) :: lhs
+      type(String_t),    intent(in) :: rhs
+    end subroutine
+
+    subroutine basestring_assign_charString( bs, cs )
+      import String_t
+      type(String_t), intent(inout) :: bs
+      character(len=*),   intent(in)    :: cs
+    end subroutine
+
+    subroutine basestring_assign_buf( lhs, rhs )
+      import String_t
+      type(String_t),                 intent(inout) :: lhs
+      character(len=1), dimension(:), intent(in)    :: rhs
+    end subroutine
+  end interface
+
+
+  interface assignment(=)
+    module procedure charString_assign_string_private, string_assign_string_private
+    module procedure string_assign_charString_private, string_assign_buf_private
+  end interface
+
+
+  interface operator(//)
+    function string_concat_charString( lhs, rhs ) result(res)
+      import String_t
+      type(String_t),        intent(in) :: lhs
+      character(len=*),      intent(in) :: rhs
+      character(len=_len(lhs)+len(rhs)) :: res
+    end function
+
+    function charString_concat_string( lhs, rhs ) result(res)
+      import String_t
+      character(len=*),      intent(in) :: lhs
+      type(String_t),        intent(in) :: rhs
+      character(len=len(lhs)+_len(rhs)) :: res
+    end function
+
+    function string_concat_string( lhs, rhs ) result(res)
+      import String_t
+      type(String_t),         intent(in) :: lhs
+      type(String_t),         intent(in) :: rhs
+      character(len=_len(lhs)+_len(rhs)) :: res
+    end function
+  end interface
+
+
+  interface operator(==)
+    logical function string_eq_charString( lhs, rhs )
+      import String_t
+      type(String_t),   intent(in) :: lhs
+      character(len=*), intent(in) :: rhs
+    end function
+
+    logical function charString_eq_string( lhs, rhs )
+      import String_t
+      character(len=*), intent(in) :: lhs
+      type(String_t),   intent(in) :: rhs
+    end function
+
+    logical function string_eq_string( lhs, rhs )
+      import String_t
+      type(String_t), intent(in) :: lhs
+      type(String_t), intent(in) :: rhs
+    end function
+  end interface
+
+
+  interface operator(/=)
+    logical function string_ne_charString( lhs, rhs )
+      import String_t
+      type(String_t),   intent(in) :: lhs
+      character(len=*), intent(in) :: rhs
+    end function
+
+    logical function charString_ne_string( lhs, rhs )
+      import String_t
+      character(len=*), intent(in) :: lhs
+      type(String_t),   intent(in) :: rhs
+    end function
+
+    logical function string_ne_string( lhs, rhs )
+      import String_t
+      type(String_t), intent(in) :: lhs
+      type(String_t), intent(in) :: rhs
+    end function
+  end interface
+
+
+  interface operator(<) 
+    logical function string_lt_charString( lhs, rhs )
+      import String_t
+      type(String_t),   intent(in) :: lhs
+      character(len=*), intent(in) :: rhs
+    end function
+
+    logical function charString_lt_string( lhs, rhs )
+      import String_t
+      character(len=*), intent(in) :: lhs
+      type(String_t),   intent(in) :: rhs
+    end function
+
+    logical function string_lt_string( lhs, rhs )
+      import String_t
+      type(String_t), intent(in) :: lhs
+      type(String_t), intent(in) :: rhs
+    end function
+  end interface
+
+
+  interface operator(<=)
+    logical function string_le_charString( lhs, rhs )
+      import String_t
+      type(String_t),   intent(in) :: lhs
+      character(len=*), intent(in) :: rhs
+    end function
+
+    logical function charString_le_string( lhs, rhs )
+      import String_t
+      character(len=*), intent(in) :: lhs
+      type(String_t),   intent(in) :: rhs
+    end function
+
+    logical function string_le_string( lhs, rhs )
+      import String_t
+      type(String_t), intent(in) :: lhs
+      type(String_t), intent(in) :: rhs
+    end function
+  end interface
+
+
+  interface operator(>) 
+    logical function string_gt_charString( lhs, rhs )
+      import String_t
+      type(String_t),   intent(in) :: lhs
+      character(len=*), intent(in) :: rhs
+    end function
+
+    logical function charString_gt_string( lhs, rhs )
+      import String_t
+      character(len=*), intent(in) :: lhs
+      type(String_t),   intent(in) :: rhs
+    end function
+
+
+    logical function string_gt_string( lhs, rhs )
+      import String_t
+      type(String_t), intent(in) :: lhs
+      type(String_t), intent(in) :: rhs
+    end function
+  end interface
+
+
+  interface operator(>=)
+    logical function string_ge_charString( lhs, rhs )
+      import String_t
+      type(String_t),   intent(in) :: lhs
+      character(len=*), intent(in) :: rhs
+    end function
+
+    logical function charString_ge_string( lhs, rhs )
+      import String_t
+      character(len=*), intent(in) :: lhs
+      type(String_t),   intent(in) :: rhs
+    end function
+
+    logical function string_ge_string( lhs, rhs )
+      import String_t
+      type(String_t), intent(in) :: lhs
+      type(String_t), intent(in) :: rhs
+    end function
+  end interface
+
+  
+  interface
+    subroutine basestring_init_by_proto( ds, has_proto, proto )
+      import String_t
+      type(String_t), intent(inout) :: ds
+      integer,        intent(in)    :: has_proto
+      type(String_t), intent(in)    :: proto
+    end subroutine
+  end interface
 
 !-----------------
   contains
@@ -157,494 +501,30 @@ module adt_string
 
   !_TypeGen_implementAll()
 
-  ! String
-  function ds_from_cs( cs ) result(ds)
-    use adt_basestring, only: basestring_init_by_cs
-    character(len=*), intent(in) :: cs
-    type(String_t)               :: ds
-    call basestring_init_by_cs( ds%str, cs )
-  end function
 
-
-  function ds_from_buf( buf ) result(ds)
-    use adt_basestring, only: basestring_init_by_buf
-    character(len=1), dimension(:), intent(in) :: buf
-    type(String_t)                             :: ds
-    call basestring_init_by_buf( ds%str, buf )
-  end function
-
-
-  ! str
-  function ds_str( ds ) result(res)
-    type(String_t)                      :: ds
-    character(len=_reflen(ds)), pointer :: res
-    type(c_ptr)                         :: ptr
-    ptr = cptr( ds )
-    if (c_associated( ptr )) then; call c_f_pointer( ptr, res )
-                             else; res => null()
-    end if
-  end function
-
-
-  ! char
-  function ds_char( ds ) result(res)
-    type(String_t)          :: ds
-    character(len=_len(ds)) :: res
-    res = _ptr(ds)
-    _release_weak( ds )
-  end function
-
-
-  ! char - fixed length
-  function ds_char_l( ds, length ) result(res)
-    type(String_t)        :: ds
-    integer,   intent(in) :: length
-    character(len=length) :: res
-    integer               :: limit
-
-    limit = min(_len(ds), length)
-    res(1:limit)  = _ptr(ds)
-    res(limit+1:) = ' '
-    _release_weak( ds )
-  end function
-  
-
-  ! achar
-  function ds_achar( ds ) result(res)
-    type(String_t), intent(in) :: ds
-    character(len=1)           :: res(_len(ds))
-    res = _array(ds)
-    _release_weak( ds )
-  end function
-
-
-  ! achar - fixed length
-  function ds_achar_l( ds, length ) result(res)
-    type(String_t), intent(in) :: ds
-    integer,   intent(in)      :: length
-    character(len=1)           :: res(length)
-    integer                    :: limit
-
-    limit = min(_len(ds), length)
-    res(1:limit)  = _array(ds)
-    res(limit+1:) = ' '
-    _release_weak( ds )
-  end function
-
-
-  ! assignments
-
-  subroutine ds_assign_cs( lhs, rhs )
-    type(String_t), intent(inout) :: lhs
-    character(len=*),  intent(in) :: rhs
-    call basestring_assign_cs( lhs, rhs )
+  subroutine charString_assign_string_private( lhs, rhs )
+    character(len=*), intent(out) :: lhs
+    type(String_t),    intent(in) :: rhs
+    call assign( lhs, rhs )
   end subroutine
 
-
-  subroutine cs_assign_ds( cs, ds )
-    character(len=*), intent(out) :: cs
-    type(String_t),    intent(in) :: ds
-    cs = _ptr(ds)
-    _release_weak( ds )
-  end subroutine
-
-
-  subroutine ds_assign_ds( lhs, rhs )
+  subroutine string_assign_string_private( lhs, rhs )
     type(String_t), intent(inout) :: lhs
     type(String_t),    intent(in) :: rhs
-    call basestring_assign_bs( lhs, rhs )
+    call assign( lhs, rhs )
   end subroutine
 
-
-  subroutine ds_assign_buf( lhs, rhs )
-    type(String_t),              intent(inout) :: lhs
-    character(len=1), dimension(:), intent(in) :: rhs
-    call basestring_assign_buf( lhs, rhs )
+  subroutine string_assign_charString_private( lhs, rhs )
+    type(String_t), intent(inout) :: lhs
+    character(len=*),   intent(in)    :: rhs
+    call assign( lhs, rhs )
   end subroutine
 
-
-!##################################
-
-  ! adjustl
-  function ds_adjustl( ds ) result(res)
-    type(String_t), intent(in) :: ds
-    character(len=_len(ds))    :: res
-    res = adjustl(_ptr(ds))
-    _release_weak( ds )
-  end function
-
-  ! adjustr
-  function ds_adjustr( ds ) result(res)
-    type(String_t), intent(in) :: ds
-    character(len=_len(ds))    :: res
-    res = adjustr(_ptr(ds))
-    _release_weak( ds )
-  end function
-
-
-  ! iachar
-  function ds_iachar( ds ) result(res)
-    type(String_t), intent(in) :: ds
-    integer                    :: res(_len(ds))
-    res = iachar(_array(ds))
-    _release_weak( ds )
-  end function
-
-  
-  ! ichar
-  function ds_ichar( ds ) result(res)
-    type(String_t), intent(in) :: ds
-    integer                    :: res(_len(ds))
-    res = ichar(_array(ds))
-    _release_weak( ds )
-  end function
-
-
-  ! index
-  function ds_idx_cs( strg, sub, back ) result(res)
-    type(String_t),        intent(in) :: strg
-    character(len=*),      intent(in) :: sub
-    logical,     intent(in), optional :: back
-    integer                           :: res
-    res = index(_ptr(strg), sub, back)
-    _release_weak( strg )
-  end function
-
-  function cs_idx_ds( strg, sub, back ) result(res)
-    character(len=*),  intent(in) :: strg
-    type(String_t),    intent(in) :: sub
-    logical, optional, intent(in) :: back
-    integer                       :: res
-    res = index(strg, _ptr(sub), back)
-    _release_weak( sub )
-  end function
-
-  function ds_idx_ds( strg, sub, back ) result(res)
-    type(String_t),    intent(in) :: strg
-    type(String_t),    intent(in) :: sub
-    logical, optional, intent(in) :: back
-    integer                       :: res
-    res = index(_ptr(strg), _ptr(sub), back)
-    _release_weak( strg )
-    _release_weak( sub )
-  end function
-
-
-  ! len
-  function ds_len( ds ) result(length)
-    type(String_t), intent(in) :: ds
-    integer                    :: length
-    length = _len(ds)
-    _release_weak( ds )
-  end function
-
-
-  ! len_trim
-  function ds_len_trim( ds ) result(length)
-    type(String_t), intent(in) :: ds
-    integer                    :: length
-    length = len_trim(_ptr(ds))
-    _release_weak( ds )
-  end function
-
-
-  ! lge
-  function ds_lge_cs( strgA, strgB ) result(res)
-    type(String_t),   intent(in) :: strgA
-    character(len=*), intent(in) :: strgB
-    logical                      :: res
-    res = lge(_ptr(strgA), strgB)
-    _release_weak( strgA )
-  end function
-
-  function cs_lge_ds( strgA, strgB ) result(res)
-    character(len=*), intent(in) :: strgA
-    type(String_t),   intent(in) :: strgB
-    logical                      :: res
-    res = lge(strgA, _ptr(strgB))
-    _release_weak( strgB )
-  end function
-
-  function ds_lge_ds( strgA, strgB ) result(res)
-    type(String_t), intent(in) :: strgA
-    type(String_t), intent(in) :: strgB
-    logical                    :: res
-    res = lge(_ptr(strgA), _ptr(strgB))
-    _release_weak( strgA )
-    _release_weak( strgB )
-  end function
-
-
-  ! lgt
-  function ds_lgt_cs( strgA, strgB ) result(res)
-    type(String_t),   intent(in) :: strgA
-    character(len=*), intent(in) :: strgB
-    logical                      :: res
-    res = lgt(_ptr(strgA), strgB)
-    _release_weak( strgA )
-  end function
-
-  function cs_lgt_ds( strgA, strgB ) result(res)
-    character(len=*), intent(in) :: strgA
-    type(String_t),   intent(in) :: strgB
-    logical                      :: res
-    res = lgt(strgA, _ptr(strgB))
-    _release_weak( strgB )
-  end function
-
-  function ds_lgt_ds( strgA, strgB ) result(res)
-    type(String_t), intent(in) :: strgA
-    type(String_t), intent(in) :: strgB
-    logical                    :: res
-    res = lgt(_ptr(strgA), _ptr(strgB))
-    _release_weak( strgA )
-    _release_weak( strgB )
-  end function
-
-
-  ! lle
-  function ds_lle_cs( strgA, strgB ) result(res)
-    type(String_t),   intent(in) :: strgA
-    character(len=*), intent(in) :: strgB
-    logical                      :: res
-    res = lle(_ptr(strgA), strgB)
-    _release_weak( strgA )
-  end function
-
-  function cs_lle_ds( strgA, strgB ) result(res)
-    character(len=*), intent(in) :: strgA
-    type(String_t),   intent(in) :: strgB
-    logical                      :: res
-    res = lle(strgA, _ptr(strgB))
-    _release_weak( strgB )
-  end function
-
-  function ds_lle_ds( strgA, strgB ) result(res)
-    type(String_t), intent(in) :: strgA
-    type(String_t), intent(in) :: strgB
-    logical                    :: res
-    res = lle(_ptr(strgA), _ptr(strgB))
-    _release_weak( strgA )
-    _release_weak( strgB )
-  end function
-
-
-  ! llt
-  function ds_llt_cs( strgA, strgB ) result(res)
-    type(String_t),   intent(in) :: strgA
-    character(len=*), intent(in) :: strgB
-    logical                      :: res
-    res = llt(_ptr(strgA), strgB)
-    _release_weak( strgA )
-  end function
-
-  function cs_llt_ds( strgA, strgB ) result(res)
-    character(len=*), intent(in) :: strgA
-    type(String_t),   intent(in) :: strgB
-    logical                      :: res
-    res = llt(strgA, _ptr(strgB))
-    _release_weak( strgB )
-  end function
-
-  function ds_llt_ds( strgA, strgB ) result(res)
-    type(String_t), intent(in) :: strgA
-    type(String_t), intent(in) :: strgB
-    logical                    :: res
-    res = llt(_ptr(strgA), _ptr(strgB))
-    _release_weak( strgA )
-    _release_weak( strgB )
-  end function
-
-
-  ! concatenation
-
-  function ds_concat_cs( lhs, rhs ) result(res)
-    type(String_t),        intent(in) :: lhs
-    character(len=*),      intent(in) :: rhs
-    character(len=_len(lhs)+len(rhs)) :: res
-    res = _ptr(lhs) // rhs
-    _release_weak( lhs )
-  end function
-
-  function cs_concat_ds( lhs, rhs ) result(res)
-    character(len=*),      intent(in) :: lhs
-    type(String_t),        intent(in) :: rhs
-    character(len=len(lhs)+_len(rhs)) :: res
-    res = lhs // _ptr(rhs)
-    _release_weak( rhs )
-  end function
-
-  function ds_concat_ds( lhs, rhs ) result(res)
-    type(String_t),         intent(in) :: lhs
-    type(String_t),         intent(in) :: rhs
-    character(len=_len(lhs)+_len(rhs)) :: res
-    res = _ptr(lhs) // _ptr(rhs)
-    _release_weak( lhs )
-    _release_weak( rhs )
-  end function
-
-  ! equality
-
-  function ds_eq_cs( lhs, rhs ) result(res)
-    type(String_t),   intent(in) :: lhs
-    character(len=*), intent(in) :: rhs
-    logical                      :: res
-    res = _ptr(lhs) == rhs
-    _release_weak( lhs )
-  end function
-
-  function cs_eq_ds( lhs, rhs ) result(res)
-    character(len=*), intent(in) :: lhs
-    type(String_t),   intent(in) :: rhs
-    logical                      :: res
-    res = lhs == _ptr(rhs)
-    _release_weak( rhs )
-  end function
-
-  function ds_eq_ds( lhs, rhs ) result(res)
-    type(String_t), intent(in) :: lhs
-    type(String_t), intent(in) :: rhs
-    logical                    :: res
-    res = _ptr(lhs) == _ptr(rhs)
-    _release_weak( lhs )
-    _release_weak( rhs )
-  end function
-
-  ! inequality
-
-  function ds_ne_cs( lhs, rhs ) result(res)
-    type(String_t),   intent(in) :: lhs
-    character(len=*), intent(in) :: rhs
-    logical                      :: res
-    res = _ptr(lhs) /= rhs
-    _release_weak( lhs )
-  end function
-
-  function cs_ne_ds( lhs, rhs ) result(res)
-    character(len=*), intent(in) :: lhs
-    type(String_t),   intent(in) :: rhs
-    logical                      :: res
-    res = lhs /= _ptr(rhs)
-    _release_weak( rhs )
-  end function
-
-  function ds_ne_ds( lhs, rhs ) result(res)
-    type(String_t), intent(in) :: lhs
-    type(String_t), intent(in) :: rhs
-    logical                    :: res
-    res = _ptr(lhs) /= _ptr(rhs)
-    _release_weak( lhs )
-    _release_weak( rhs )
-  end function
-
-  ! lower than
-
-  function ds_lt_cs( lhs, rhs ) result(res)
-    type(String_t),   intent(in) :: lhs
-    character(len=*), intent(in) :: rhs
-    logical                      :: res
-    res = _ptr(lhs) < rhs
-    _release_weak( lhs )
-  end function
-
-  function cs_lt_ds( lhs, rhs ) result(res)
-    character(len=*), intent(in) :: lhs
-    type(String_t),   intent(in) :: rhs
-    logical                      :: res
-    res = lhs < _ptr(rhs)
-    _release_weak( rhs )
-  end function
-
-  function ds_lt_ds( lhs, rhs ) result(res)
-    type(String_t), intent(in) :: lhs
-    type(String_t), intent(in) :: rhs
-    logical                    :: res
-    res = _ptr(lhs) < _ptr(rhs)
-    _release_weak( lhs )
-    _release_weak( rhs )
-  end function
-
-  ! lower equal
-
-  function ds_le_cs( lhs, rhs ) result(res)
-    type(String_t),   intent(in) :: lhs
-    character(len=*), intent(in) :: rhs
-    logical                      :: res
-    res = _ptr(lhs) <= rhs
-    _release_weak( lhs )
-  end function
-
-  function cs_le_ds( lhs, rhs ) result(res)
-    character(len=*), intent(in) :: lhs
-    type(String_t),   intent(in) :: rhs
-    logical                      :: res
-    res = lhs <= _ptr(rhs)
-    _release_weak( rhs )
-  end function
-
-  function ds_le_ds( lhs, rhs ) result(res)
-    type(String_t), intent(in) :: lhs
-    type(String_t), intent(in) :: rhs
-    logical                    :: res
-    res = _ptr(lhs) <= _ptr(rhs)
-    _release_weak( lhs )
-    _release_weak( rhs )
-  end function
-
-  ! greater than
-
-  function ds_gt_cs( lhs, rhs ) result(res)
-    type(String_t),   intent(in) :: lhs
-    character(len=*), intent(in) :: rhs
-    logical                      :: res
-    res = _ptr(lhs) > rhs
-    _release_weak( lhs )
-  end function
-
-  function cs_gt_ds( lhs, rhs ) result(res)
-    character(len=*), intent(in) :: lhs
-    type(String_t),   intent(in) :: rhs
-    logical                      :: res
-    res = lhs > _ptr(rhs)
-    _release_weak( rhs )
-  end function
-
-
-  function ds_gt_ds( lhs, rhs ) result(res)
-    type(String_t), intent(in) :: lhs
-    type(String_t), intent(in) :: rhs
-    logical                    :: res
-    res = _ptr(lhs) > _ptr(rhs)
-    _release_weak( lhs )
-    _release_weak( rhs )
-  end function
-
-  ! greater equal
-
-  function ds_ge_cs( lhs, rhs ) result(res)
-    type(String_t),   intent(in) :: lhs
-    character(len=*), intent(in) :: rhs
-    logical                      :: res
-    res = _ptr(lhs) >= rhs
-    _release_weak( lhs )
-  end function
-
-  function cs_ge_ds( lhs, rhs ) result(res)
-    character(len=*), intent(in) :: lhs
-    type(String_t),   intent(in) :: rhs
-    logical                      :: res
-    res = lhs >= _ptr(rhs)
-    _release_weak( rhs )
-  end function
-
-  function ds_ge_ds( lhs, rhs ) result(res)
-    type(String_t), intent(in) :: lhs
-    type(String_t), intent(in) :: rhs
-    logical                    :: res
-    res = _ptr(lhs) >= _ptr(rhs)
-    _release_weak( lhs )
-    _release_weak( rhs )
-  end function
+  subroutine string_assign_buf_private( lhs, rhs )
+    type(String_t),                 intent(inout) :: lhs
+    character(len=1), dimension(:), intent(in)    :: rhs
+    call assign( lhs, rhs )
+  end subroutine
 
 end module
 

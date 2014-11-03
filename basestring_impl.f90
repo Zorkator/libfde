@@ -19,8 +19,8 @@
   end subroutine
 
 
-!_PROC_EXPORT(basestring_init_by_cs)
-  subroutine basestring_init_by_cs( bs, cs )
+!_PROC_EXPORT(basestring_init_by_charString)
+  subroutine basestring_init_by_charString( bs, cs )
     use adt_basestring, only: BaseString_t
     use iso_c_binding
     implicit none
@@ -139,8 +139,8 @@
   end function
   
 
-!_PROC_EXPORT(basestring_assign_cs)
-  subroutine basestring_assign_cs( bs, cs )
+!_PROC_EXPORT(basestring_assign_charString)
+  subroutine basestring_assign_charString( bs, cs )
     use adt_basestring, only: BaseString_t
     use iso_c_binding
     implicit none
@@ -194,8 +194,8 @@
   end subroutine
 
 
-!_PROC_EXPORT(basestring_assign_bs)
-  subroutine basestring_assign_bs( lhs, rhs )
+!_PROC_EXPORT(basestring_assign_basestring)
+  subroutine basestring_assign_basestring( lhs, rhs )
     use adt_basestring, only: BaseString_t, basestring_ptr
     implicit none
     type(BaseString_t), intent(inout) :: lhs
@@ -215,7 +215,7 @@
 
       ! assigning from hard rhs
       else
-        call basestring_assign_cs( lhs, basestring_ptr(rhs) ) !< use ptr function to get the right length!
+        call basestring_assign_charString( lhs, basestring_ptr(rhs) ) !< use ptr function to get the right length!
       end if
     end if
   end subroutine

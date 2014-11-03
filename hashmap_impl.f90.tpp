@@ -1,83 +1,100 @@
 
-module hash_map
+#include "adt/itfUtil.fpp"
+
+module adt_hashmap__
+  use adt_hashmap
   use adt_string
   use adt_list
   use adt_item
   use adt_ref
-  implicit none
-  private
+  use adt_crc
 
-  integer, parameter :: min_indexSize = 10
-  integer, parameter :: max_indexSize = 100000
+  type(List_t), target :: hashmap_nodeCache
 
-
-  type, private :: HashNode_t
-    private
+  type, public :: HashNode_t
     type(String_t) :: key
     type(Item_t)   :: value
   end type
 
-  !_TypeGen_declare_RefType( private, HashNode, type(HashNode_t), scalar, \
-  !     deleteProc = hn_delete, \
+  !_TypeGen_declare_RefType( public, HashNode, type(HashNode_t), scalar, \
+  !     deleteProc = hashnode_delete, \
   !     cloneMode  = _type )
 
-  !_TypeGen_declare_ListNode( private, HashNode, type(HashNode_t), scalar )
+  !_TypeGen_declare_ListNode( public, HashNode, type(HashNode_t), scalar )
 
+  interface
+    subroutine hashnode_delete( self )
+      import HashNode_t
+      type(HashNode_t), intent(inout) :: self
+    end subroutine
+  end interface
+
+# define HashMap_t    HashMap_t__impl__
 
   type, public :: HashMap_t
     type(List_t), dimension(:), pointer :: indexVector    => null()
     integer*4                           :: items          =  0
-    integer*4                           :: indexLimits(2) = (/ min_indexSize, max_indexSize /)
+    integer*4                           :: indexLimits(2) = default_indexLimits
   end type
 
-  !_TypeGen_declare_RefType( public, HashMap, type(HashMap_t), scalar, \
-  !     initProc   = hm_initialize_proto, \
-  !     assignProc = hm_assign_hm,        \
-  !     deleteProc = hm_delete,           \
-  !     cloneMode  = _type )
 
-  !_TypeGen_declare_ListNode( public, HashMap, type(HashMap_t), scalar )
+  interface
+    function hashmap_get_bucketIndex( self, key ) result(res)
+      import HashMap_t, ListIndex_t
+      type(HashMap_t),  intent(in) :: self
+      character(len=*), intent(in) :: key
+      type(ListIndex_t)            :: res
+    end function
 
-  
-  type(List_t), target :: hm_nodeCache
+    function hashmap_get_value_ref( self, key, clearStale ) result(res)
+      import HashMap_t, Item_t
+      type(HashMap_t)              :: self
+      character(len=*), intent(in) :: key
+      logical                      :: clearStale
+      type(Item_t),        pointer :: res
+    end function
 
-  
-  interface initialize ; module procedure hm_initialize, hm_initialize_default ; end interface
-  interface len        ; module procedure hm_len                               ; end interface
-  interface clear      ; module procedure hm_clear                             ; end interface
-  interface delete     ; module procedure hm_delete                            ; end interface
-  interface set        ; module procedure hm_set                               ; end interface
-  interface get        ; module procedure hm_get                               ; end interface
-  interface remove     ; module procedure hm_remove_key                        ; end interface
-  interface unset      ; module procedure hm_unset_key                         ; end interface
-  interface pop        ; module procedure hm_pop_key                           ; end interface
-  interface setDefault ; module procedure hm_set_default                       ; end interface
-  interface hasKey     ; module procedure hm_has_key                           ; end interface
+    logical &
+    function hashmap_locate_item( self, key, idx )
+      import HashMap_t, ListIndex_t
+      type(HashMap_t), intent(inout) :: self
+      character(len=*),   intent(in) :: key
+      type(ListIndex_t), intent(out) :: idx
+    end function
 
-  interface assign        ; module procedure hm_assign_hm                      ; end interface
-  interface assignment(=) ; module procedure hm_assign_hm                      ; end interface
+    logical &
+    function hashmap_unset_( self, key, valTgt )
+      import HashMap_t, Item_t
+      type(HashMap_t),               intent(inout) :: self
+      character(len=*),                 intent(in) :: key
+      type(Item_t), optional, pointer, intent(out) :: valTgt
+    end function
 
-  public :: initialize
-  public :: clear
-  public :: delete
-  public :: get, set, remove, unset, pop
-  public :: setDefault, hasKey
-  public :: hm_clear_cache
-  public :: assign, assignment(=)
+    subroutine hashmap_clear( self, tgtList )
+      import HashMap_t, List_t
+      type(HashMap_t), intent(inout) :: self
+      type(List_t),         optional :: tgtList
+    end subroutine
+  end interface
 
 contains
 
   !_TypeGen_implementAll()
 
+end module
+
+!_PROC_EXPORT(hashmap_len)
   pure &
-  function hm_len( self ) result(res)
+  function hashmap_len( self ) result(res)
+    use adt_hashmap__; implicit none
     type(HashMap_t), intent(in) :: self
     integer*4                   :: res
     res = self%items
   end function
 
 
-  subroutine hn_delete( self )
+  subroutine hashnode_delete( self )
+    use adt_hashmap__; implicit none
     type(HashNode_t), intent(inout) :: self
     
     call delete( self%key )
@@ -85,7 +102,9 @@ contains
   end subroutine
 
 
-  subroutine hm_initialize_proto( self, has_proto, proto )
+!_PROC_EXPORT(hashmap_init_by_proto)
+  subroutine hashmap_init_by_proto( self, has_proto, proto )
+    use adt_hashmap__; implicit none
     type(HashMap_t)     :: self
     integer             :: has_proto
     type(HashMap_t)     :: proto
@@ -94,37 +113,42 @@ contains
     self%indexVector => null()
     self%items       =  0
     if (has_proto /= 0) then; indexLimits = proto%indexLimits
-                        else; indexLimits = (/ min_indexSize, max_indexSize /)
+                        else; indexLimits = default_indexLimits
     end if
-    call hm_initialize( self, indexLimits(1), indexLimits(2) )
+    call hashmap_init_sized( self, indexLimits(1), indexLimits(2) )
   end subroutine
 
 
-  subroutine hm_initialize_default( self )
+!_PROC_EXPORT(hashmap_init)
+  subroutine hashmap_init( self )
+    use adt_hashmap__; implicit none
     type(HashMap_t), intent(inout) :: self
-    call hm_initialize( self, min_indexSize, max_indexSize )
+    call hashmap_init_sized( self, default_indexLimits(1), default_indexLimits(2) )
   end subroutine
 
 
-  subroutine hm_initialize( self, index_min, index_max )
+!_PROC_EXPORT(hashmap_init_sized)
+  subroutine hashmap_init_sized( self, index_min, index_max )
+    use adt_hashmap__; implicit none
     type(HashMap_t), intent(inout) :: self
     integer                        :: index_min, index_max
 
     self%indexLimits(1) = max(1, index_min)
     self%indexLimits(2) = max(1, index_min, index_max)
-    if (.not. is_valid(hm_nodeCache)) &
-      call initialize( hm_nodeCache )
-    call hm_setup_index( self, self%indexLimits(1) )
+    if (.not. is_valid(hashmap_nodeCache)) &
+      call initialize( hashmap_nodeCache )
+    call hashmap_setup_index( self, self%indexLimits(1) )
   end subroutine
 
 
-  subroutine hm_setup_index( self, indexSize, tgtList )
+  subroutine hashmap_setup_index( self, indexSize, tgtList )
+    use adt_hashmap__; implicit none
     type(HashMap_t), intent(inout) :: self
     integer*4,          intent(in) :: indexSize
     type(List_t),         optional :: tgtList
     integer*4                      :: i
 
-    call hm_clear( self, tgtList )
+    call hashmap_clear( self, tgtList )
     if (indexSize /= size(self%indexVector)) then
       if (associated( self%indexVector )) &
         deallocate( self%indexVector )
@@ -138,7 +162,9 @@ contains
   end subroutine
 
   
-  subroutine hm_clear( self, tgtList )
+!_PROC_EXPORT(hashmap_clear)
+  subroutine hashmap_clear( self, tgtList )
+    use adt_hashmap__; implicit none
     type(HashMap_t), intent(inout) :: self
     type(List_t), optional, target :: tgtList
     type(List_t),          pointer :: tgt
@@ -146,7 +172,7 @@ contains
     
     if (associated( self%indexVector )) then
       if (present(tgtList)) then; tgt => tgtList
-                            else; tgt => hm_nodeCache
+                            else; tgt => hashmap_nodeCache
       end if
 
       do i = 0, size( self%indexVector ) - 1
@@ -156,18 +182,21 @@ contains
     end if
   end subroutine
 
-
-  subroutine hm_delete( self )
+!_PROC_EXPORT(hashmap_delete)
+  subroutine hashmap_delete( self )
+    use adt_hashmap__; implicit none
     type(HashMap_t), intent(inout) :: self
 
     if (associated( self%indexVector )) then
-      call hm_clear( self )
+      call hashmap_clear( self )
       deallocate( self%indexVector )
     end if
   end subroutine
 
 
-  subroutine hm_assign_hm( lhs, rhs )
+!_PROC_EXPORT(hashmap_assign_hashmap)
+  subroutine hashmap_assign_hashmap( lhs, rhs )
+    use adt_hashmap__; implicit none
     type(HashMap_t), target, intent(inout) :: lhs
     type(HashMap_t), target,    intent(in) :: rhs
     type(ListIndex_t)                      :: l_idx, r_idx
@@ -176,11 +205,10 @@ contains
    
     if (.not. associated( lhs%indexVector, rhs%indexVector )) then
       lhs%indexLimits = rhs%indexLimits
-      call hm_pre_cache( rhs%items )
-      call hm_setup_index( lhs, size(rhs%indexVector) )
+      call hashmap_pre_cache( rhs%items )
+      call hashmap_setup_index( lhs, size(rhs%indexVector) )
       do i = 0, size( lhs%indexVector ) - 1
-        !lhs%indexVector(i) = rhs%indexVector(i) !< too simple ... should reuse cached items
-        call insert( index( lhs%indexVector(i), tail, 0 ), index( hm_nodeCache, -len( rhs%indexVector(i) ) ) )
+        call insert( index( lhs%indexVector(i), tail, 0 ), index( hashmap_nodeCache, -len( rhs%indexVector(i) ) ) )
         l_idx = index( lhs%indexVector(i) )
         r_idx = index( rhs%indexVector(i) )
         do while (is_valid(r_idx))
@@ -196,13 +224,15 @@ contains
   end subroutine  
 
 
-  subroutine hm_clear_cache()
-    call clear( hm_nodeCache )
+!_PROC_EXPORT(hashmap_clear_cache)
+  subroutine hashmap_clear_cache()
+    use adt_hashmap__; implicit none
+    call clear( hashmap_nodeCache )
   end subroutine
 
 
-  function hm_get_bucketIndex( self, key ) result(res)
-    use adt_crc
+  function hashmap_get_bucketIndex( self, key ) result(res)
+    use adt_hashmap__; implicit none
     type(HashMap_t),  intent(in) :: self
     character(len=*), intent(in) :: key
     type(ListIndex_t)            :: res
@@ -218,19 +248,20 @@ contains
 
 
   logical &
-  function hm_locate_item( self, key, idx ) result(res)
+  function hashmap_locate_item( self, key, idx ) result(res)
+    use adt_hashmap__; implicit none
     type(HashMap_t), intent(inout) :: self
     character(len=*),   intent(in) :: key
     type(ListIndex_t), intent(out) :: idx
-    type(HashNode_t),      pointer :: item
+    type(HashNode_t),      pointer :: node
     
     if (self%indexLimits(1) < self%indexLimits(2)) &
-      call hm_reindex( self )
+      call hashmap_reindex( self )
     
-    idx = hm_get_bucketIndex( self, key )
+    idx = hashmap_get_bucketIndex( self, key )
     do while (is_valid(idx))
-      item => HashNode(idx)
-      if (item%key /= key) then; call next(idx)
+      node => HashNode(idx)
+      if (node%key /= key) then; call next(idx)
                            else; exit
       end if
     end do
@@ -238,26 +269,32 @@ contains
   end function
 
 
-  subroutine hm_set( self, key, val )
+!_PROC_EXPORT(hashmap_set)
+  subroutine hashmap_set( self, key, val )
+    use adt_hashmap__; implicit none
     type(HashMap_t), intent(inout) :: self
     character(len=*),   intent(in) :: key
     type(Item_t),       intent(in) :: val
     type(Item_t),          pointer :: valPtr
 
-    valPtr => hm_get_value_ref( self, key, .false. )
+    valPtr => hashmap_get_value_ref( self, key, .false. )
     call assign( valPtr, val )
   end subroutine
 
 
-  function hm_get( self, key ) result(res)
+!_PROC_EXPORT(hashmap_get)
+  function hashmap_get( self, key ) result(res)
+    use adt_hashmap__; implicit none
     type(HashMap_t)              :: self
     character(len=*), intent(in) :: key
     type(Item_t),        pointer :: res
-    res => hm_get_value_ref( self, key, .true. )
+    res => hashmap_get_value_ref( self, key, .true. )
   end function
 
 
-  function hm_get_value_ref( self, key, clearStale ) result(res)
+!_PROC_EXPORT(hashmap_get_value_ref)
+  function hashmap_get_value_ref( self, key, clearStale ) result(res)
+    use adt_hashmap__; implicit none
     type(HashMap_t)              :: self
     character(len=*), intent(in) :: key
     logical                      :: clearStale
@@ -265,12 +302,12 @@ contains
     type(HashNode_t),    pointer :: mapItem
     type(ListIndex_t)            :: bucket, idx
   
-    if (hm_locate_item( self, key, bucket )) then
+    if (hashmap_locate_item( self, key, bucket )) then
       ! hash node exists ...
       mapItem => HashNode(bucket)
     else
       ! need to add new hash node
-      idx = pop( hm_nodeCache, first )
+      idx = pop( hashmap_nodeCache, first )
       if (is_valid(idx)) then
         mapItem => HashNode(idx)
         call insert( bucket, idx )
@@ -285,15 +322,17 @@ contains
     res => mapItem%value
   end function
 
-  
-  function hm_get_value_ptr( self, key ) result(res)
+
+!_PROC_EXPORT(hashmap_get_value_ptr)
+  function hashmap_get_value_ptr( self, key ) result(res)
+    use adt_hashmap__; implicit none
     type(HashMap_t)              :: self
     character(len=*), intent(in) :: key
     type(Item_t),        pointer :: res
     type(HashNode_t),    pointer :: mapItem
     type(ListIndex_t)            :: bucket
   
-    if (hm_locate_item( self, key, bucket )) then
+    if (hashmap_locate_item( self, key, bucket )) then
       mapItem => HashNode( bucket )
       res => mapItem%value
     else
@@ -302,58 +341,67 @@ contains
   end function
 
 
-  subroutine hm_reindex( self )
+  subroutine hashmap_reindex( self )
+    use adt_hashmap__; implicit none
     type(HashMap_t), intent(inout) :: self
   end subroutine
 
   
-  subroutine hm_pre_cache( numItems )
+  subroutine hashmap_pre_cache( numItems )
+    use adt_hashmap__; implicit none
     integer*4                 :: numItems, missing
     type(HashNode_t), pointer :: mapItem
-    missing = numItems - len( hm_nodeCache )
+    missing = numItems - len( hashmap_nodeCache )
     do while (missing > 0)
-      call append( hm_nodeCache, new_ListNode( mapItem ) )
+      call append( hashmap_nodeCache, new_ListNode( mapItem ) )
       missing = missing - 1
     end do
   end subroutine
 
 
-  subroutine hm_remove_key( self, key )
+!_PROC_EXPORT(hashmap_remove_key)
+  subroutine hashmap_remove_key( self, key )
+    use adt_hashmap__; implicit none
     type(HashMap_t), intent(inout) :: self
     character(len=*),   intent(in) :: key
     logical                        :: ignored
-    ignored = hm_unset_( self, key )
+    ignored = hashmap_unset_( self, key )
   end subroutine
 
   
+!_PROC_EXPORT(hashmap_unset_key)
   logical &
-  function hm_unset_key( self, key ) result(res)
+  function hashmap_unset_key( self, key ) result(res)
+    use adt_hashmap__; implicit none
     type(HashMap_t), intent(inout) :: self
     character(len=*),   intent(in) :: key
-    res = hm_unset_( self, key )
+    res = hashmap_unset_( self, key )
   end function
 
 
-  function hm_pop_key( self, key ) result(res)
+!_PROC_EXPORT(hashmap_pop_key)
+  function hashmap_pop_key( self, key ) result(res)
+    use adt_hashmap__; implicit none
     type(HashMap_t), intent(inout) :: self
     character(len=*),   intent(in) :: key
     type(Item_t),          pointer :: res
-    if (.not. hm_unset_( self, key, res )) &
+    if (.not. hashmap_unset_( self, key, res )) &
       res => null()
   end function
 
 
   logical &
-  function hm_unset_( self, key, valTgt ) result(res)
+  function hashmap_unset_( self, key, valTgt ) result(res)
+    use adt_hashmap__; implicit none
     type(HashMap_t),               intent(inout) :: self
     character(len=*),                 intent(in) :: key
     type(Item_t), optional, pointer, intent(out) :: valTgt
     type(HashNode_t),       pointer              :: mapItem
     type(ListIndex_t)                            :: bucket
 
-    res = hm_locate_item( self, key, bucket )
+    res = hashmap_locate_item( self, key, bucket )
     if (res) then
-      call append( hm_nodeCache, index( bucket, 0 ) )
+      call append( hashmap_nodeCache, index( bucket, 0 ) )
       if (present(valTgt)) then
         mapItem => HashNode(bucket)
         valTgt  => mapItem%value
@@ -361,14 +409,16 @@ contains
     end if
   end function
 
-  
-  function hm_set_default( self, key, defaultVal ) result(res)
+
+!_PROC_EXPORT(hashmap_set_default)
+  function hashmap_set_default( self, key, defaultVal ) result(res)
+    use adt_hashmap__; implicit none
     type(HashMap_t),     intent(inout) :: self
     character(len=*),       intent(in) :: key
     type(Item_t), optional, intent(in) :: defaultVal
     type(Item_t),              pointer :: res
 
-    res => hm_get_value_ref( self, key, .true. )
+    res => hashmap_get_value_ref( self, key, .true. )
     if (present(defaultVal)) then
       if (.not. is_valid(res)) then; call assign( res, defaultVal )
                                else; call delete( defaultVal )
@@ -376,14 +426,14 @@ contains
     end if
   end function
 
-  
+
+!_PROC_EXPORT(hashmap_has_key)
   logical &
-  function hm_has_key( self, key ) result(res)
+  function hashmap_has_key( self, key ) result(res)
+    use adt_hashmap__; implicit none
     type(HashMap_t)              :: self
     character(len=*), intent(in) :: key
     type(ListIndex_t)            :: bucket
-    res = hm_locate_item( self, key, bucket )
+    res = hashmap_locate_item( self, key, bucket )
   end function
-
-end
 
