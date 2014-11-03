@@ -1,6 +1,6 @@
 
 program testinger
-  use hash_map
+  use adt_hashmap
   use adt_item
   use adt_string
   use adt_ref
@@ -67,6 +67,6 @@ program testinger
 
   call delete( map )
   call delete( map2 )
-  call hm_clear_cache()
+  call hashmap_clear_cache()
 end
 

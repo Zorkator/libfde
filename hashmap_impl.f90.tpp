@@ -75,6 +75,18 @@ module adt_hashmap__
       type(HashMap_t), intent(inout) :: self
       type(List_t),         optional :: tgtList
     end subroutine
+
+    subroutine hashmap_setup_index( self, indexSize, tgtList )
+      import HashMap_t, List_t
+      type(HashMap_t), intent(inout) :: self
+      integer*4,          intent(in) :: indexSize
+      type(List_t),         optional :: tgtList
+    end subroutine
+
+    subroutine hashmap_reindex( self )
+      import HashMap_t
+      type(HashMap_t), intent(inout) :: self
+    end subroutine
   end interface
 
 contains
@@ -94,7 +106,8 @@ end module
 
 
   subroutine hashnode_delete( self )
-    use adt_hashmap__; implicit none
+    use adt_hashmap__, only: HashNode_t, delete
+    implicit none
     type(HashNode_t), intent(inout) :: self
     
     call delete( self%key )
@@ -142,7 +155,8 @@ end module
 
 
   subroutine hashmap_setup_index( self, indexSize, tgtList )
-    use adt_hashmap__; implicit none
+    use adt_hashmap__, only: HashMap_t, List_t, hashmap_clear, initialize
+    implicit none
     type(HashMap_t), intent(inout) :: self
     integer*4,          intent(in) :: indexSize
     type(List_t),         optional :: tgtList
@@ -164,7 +178,8 @@ end module
   
 !_PROC_EXPORT(hashmap_clear)
   subroutine hashmap_clear( self, tgtList )
-    use adt_hashmap__; implicit none
+    use adt_hashmap__, only: HashMap_t, List_t, hashmap_nodeCache, append
+    implicit none
     type(HashMap_t), intent(inout) :: self
     type(List_t), optional, target :: tgtList
     type(List_t),          pointer :: tgt
@@ -226,13 +241,15 @@ end module
 
 !_PROC_EXPORT(hashmap_clear_cache)
   subroutine hashmap_clear_cache()
-    use adt_hashmap__; implicit none
+    use adt_hashmap__, only: clear, hashmap_nodeCache
+    implicit none
     call clear( hashmap_nodeCache )
   end subroutine
 
 
   function hashmap_get_bucketIndex( self, key ) result(res)
-    use adt_hashmap__; implicit none
+    use adt_hashmap__, only: HashMap_t, ListIndex_t, crc32, index
+    implicit none
     type(HashMap_t),  intent(in) :: self
     character(len=*), intent(in) :: key
     type(ListIndex_t)            :: res
@@ -249,7 +266,10 @@ end module
 
   logical &
   function hashmap_locate_item( self, key, idx ) result(res)
-    use adt_hashmap__; implicit none
+    use adt_hashmap__, only: HashMap_t, HashNode_t, ListIndex_t, hashmap_reindex, &
+                             hashmap_get_bucketIndex, HashNode, next, is_valid
+    use adt_string
+    implicit none
     type(HashMap_t), intent(inout) :: self
     character(len=*),   intent(in) :: key
     type(ListIndex_t), intent(out) :: idx
@@ -294,7 +314,9 @@ end module
 
 !_PROC_EXPORT(hashmap_get_value_ref)
   function hashmap_get_value_ref( self, key, clearStale ) result(res)
-    use adt_hashmap__; implicit none
+    use adt_hashmap__, only: HashMap_t, Item_t, HashNode_t, ListIndex_t, HashNode, hashmap_nodeCache, &
+                             hashmap_locate_item, first, new_ListNode, insert, delete, pop, is_valid, assign
+    implicit none
     type(HashMap_t)              :: self
     character(len=*), intent(in) :: key
     logical                      :: clearStale
@@ -342,7 +364,8 @@ end module
 
 
   subroutine hashmap_reindex( self )
-    use adt_hashmap__; implicit none
+    use adt_hashmap__, only: HashMap_t
+    implicit none
     type(HashMap_t), intent(inout) :: self
   end subroutine
 
@@ -392,7 +415,9 @@ end module
 
   logical &
   function hashmap_unset_( self, key, valTgt ) result(res)
-    use adt_hashmap__; implicit none
+    use adt_hashmap__, only: HashMap_t, Item_t, HashNode_t, ListIndex_t, &
+                             hashmap_locate_item, hashmap_nodeCache, index, append, HashNode
+    implicit none
     type(HashMap_t),               intent(inout) :: self
     character(len=*),                 intent(in) :: key
     type(Item_t), optional, pointer, intent(out) :: valTgt
