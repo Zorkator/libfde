@@ -5,7 +5,7 @@
 
 !_PROC_EXPORT(basestring_init_by_proto)
   subroutine basestring_init_by_proto( bs, has_proto, proto )
-    use adt_basestring, only: BaseString_t
+    use adt_basestring, only: BaseString_t, basestring_assign_buf
     implicit none
     type(BaseString_t), intent(inout) :: bs
     integer,            intent(in)    :: has_proto
@@ -13,10 +13,13 @@
 
     bs%ptr => null()
     bs%len =  0
-    if (has_proto /= 0) then; _ref_init( bs%refstat, _ref_hardness(proto%refstat) )
-                        else; bs%refstat = _ref_HardLent
+    if (has_proto /= 0) then
+      _ref_init( bs%refstat, _ref_hardness(proto%refstat) )
+      if (associated( proto%ptr )) &
+        call basestring_assign_buf( bs, proto%ptr )
+    else
+      bs%refstat = _ref_HardLent
     end if
-    call basestring_assign_basestring( bs, proto )
   end subroutine
 
 
