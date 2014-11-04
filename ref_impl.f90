@@ -15,7 +15,7 @@ module adt_ref__
       integer                 :: res
     end function
 
-    function ref_get_TypeReference( self ) result(res)
+    function ref_get_typereference( self ) result(res)
       import Ref_t, c_ptr
       type(Ref_t), intent(in) :: self
       type(c_ptr)             :: res
@@ -91,8 +91,8 @@ end module
   end subroutine
 
 
-!_PROC_EXPORT(ref_get_TypeReference)
-  function ref_get_TypeReference( self ) result(res)
+!_PROC_EXPORT(ref_get_typereference)
+  function ref_get_typereference( self ) result(res)
     use adt_ref__, only: Ref_t, c_ptr, basestring_cptr
     implicit none
     type(Ref_t), intent(in) :: self
@@ -161,7 +161,7 @@ end module
     type(c_ptr)             :: res
     type(void_t),   pointer :: wrap
 
-    res = ref_get_TypeReference(self)
+    res = ref_get_typereference(self)
     if (c_associated(res)) then
       call c_f_pointer( res, wrap )
       res = c_loc(wrap%ptr)
@@ -192,7 +192,7 @@ end module
     type(c_ptr)           :: ptr
 
     if (_ref_isMine( self%refstat )) then
-      ptr = ref_get_TypeReference(self)
+      ptr = ref_get_typereference(self)
       if (c_associated( ptr )) then
         call c_f_pointer( ptr, wrap )
 

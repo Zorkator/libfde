@@ -71,7 +71,7 @@ module adt_item
     _declare_constructor_(c_void_ptr,  type(c_ptr),    import c_ptr)
     _declare_constructor_(string,      type(String_t), import String_t)
     _declare_constructor_(ref,         type(Ref_t),    import Ref_t)
-    _declare_constructor_(charString,  character(len=*),)
+    _declare_constructor_(charstring,  character(len=*),)
 
     function item_of_refencoding( val ) result(res)
       import Item_t, RefEncoding_t, Ref_t
@@ -175,8 +175,8 @@ module adt_item
     _declare_assign_(c_void_ptr, type(c_ptr),    import c_ptr)
     _declare_assign_(string,     type(String_t), import String_t)
     _declare_assign_(ref,        type(Ref_t),    import Ref_t)
-    _declare_assign_(charString, character(len=*),)
-    !_declare_assign_(item,       type(Item_t),)
+    _declare_assign_(charstring, character(len=*),)
+    !_declare_assign_(item,      type(Item_t),)
 
     subroutine item_assign_refencoding( lhs, rhs )
       import Item_t, RefEncoding_t

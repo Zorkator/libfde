@@ -17,13 +17,13 @@ module adt_memoryref
 
 !_PROC_EXPORT(memoryref_object_size)
   integer(kind=c_size_t) &
-  function memoryref_object_size() bind(c,name="memoryref_object_size_") result(res)
+  function memoryref_object_size() result(res)
     type (MemoryRef_t) :: tmp
     res = storage_size(tmp) / 8
   end function
 
 !_PROC_EXPORT(memoryref_init)
-  subroutine memoryref_init( self ) bind(c,name='memoryref_init_')
+  subroutine memoryref_init( self )
     type(MemoryRef_t), intent(inout) :: self
     self%loc = C_NULL_PTR
     self%len = 0

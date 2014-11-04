@@ -12,7 +12,7 @@
 
 
   !**
-  ! init_TypeInfo initializes TypeInfo structure.
+  ! init_typeinfo initializes TypeInfo structure.
   ! @param self         - the TypeInfo to initialize
   ! @param typeId       - the type's id string (e.g. double)
   ! @param baseType     - the type's base string (e.g. real*8)
@@ -25,8 +25,8 @@
   ! @param initProc     - the subroutine to initialize a variable  : subroutine init( var, hardness )
   ! @param shapeProc    - the function to inspect the shape        : subroutine shape( var, res, rank )
   !*
-!PROC_EXPORT_1REF(init_TypeInfo, self)
-  subroutine init_TypeInfo( self, typeId, baseType, bitSize, rank, subtype, &
+!PROC_EXPORT_1REF(init_typeinfo, self)
+  subroutine init_typeinfo( self, typeId, baseType, bitSize, rank, subtype, &
                             assignProc, cloneObjProc, cloneRefProc, deleteProc, initProc, shapeProc )
     use adt_typeinfo, only: TypeInfo_t
     type(TypeInfo_t),    intent(inout) :: self

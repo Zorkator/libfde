@@ -56,7 +56,7 @@ module adt_string
   ! interface definitions
 
   interface String
-    function string_from_charString( cs ) result(ds)
+    function string_from_charstring( cs ) result(ds)
       import String_t
       character(len=*), intent(in) :: cs
       type(String_t)               :: ds
@@ -174,7 +174,7 @@ module adt_string
 
 
   interface index
-    function string_idx_charString( strg, sub, back ) result(res)
+    function string_idx_charstring( strg, sub, back ) result(res)
       import String_t
       type(String_t),        intent(in) :: strg
       character(len=*),      intent(in) :: sub
@@ -182,7 +182,7 @@ module adt_string
       integer                           :: res
     end function
 
-    function charString_idx_string( strg, sub, back ) result(res)
+    function charstring_idx_string( strg, sub, back ) result(res)
       import String_t
       character(len=*),  intent(in) :: strg
       type(String_t),    intent(in) :: sub
@@ -219,13 +219,13 @@ module adt_string
 
 
   interface lge
-    logical function string_lge_charString( strgA, strgB )
+    logical function string_lge_charstring( strgA, strgB )
       import String_t
       type(String_t),   intent(in) :: strgA
       character(len=*), intent(in) :: strgB
     end function
 
-    logical function charString_lge_string( strgA, strgB )
+    logical function charstring_lge_string( strgA, strgB )
       import String_t
       character(len=*), intent(in) :: strgA
       type(String_t),   intent(in) :: strgB
@@ -240,13 +240,13 @@ module adt_string
 
 
   interface lgt
-    logical function string_lgt_charString( strgA, strgB )
+    logical function string_lgt_charstring( strgA, strgB )
       import String_t
       type(String_t),   intent(in) :: strgA
       character(len=*), intent(in) :: strgB
     end function
 
-    logical function charString_lgt_string( strgA, strgB )
+    logical function charstring_lgt_string( strgA, strgB )
       import String_t
       character(len=*), intent(in) :: strgA
       type(String_t),   intent(in) :: strgB
@@ -261,13 +261,13 @@ module adt_string
 
 
   interface lle
-    logical function string_lle_charString( strgA, strgB )
+    logical function string_lle_charstring( strgA, strgB )
       import String_t
       type(String_t),   intent(in) :: strgA
       character(len=*), intent(in) :: strgB
     end function
 
-    logical function charString_lle_string( strgA, strgB )
+    logical function charstring_lle_string( strgA, strgB )
       import String_t
       character(len=*), intent(in) :: strgA
       type(String_t),   intent(in) :: strgB
@@ -282,13 +282,13 @@ module adt_string
 
 
   interface llt
-    logical function string_llt_charString( strgA, strgB )
+    logical function string_llt_charstring( strgA, strgB )
       import String_t
       type(String_t),   intent(in) :: strgA
       character(len=*), intent(in) :: strgB
     end function
 
-    logical function charString_llt_string( strgA, strgB )
+    logical function charstring_llt_string( strgA, strgB )
       import String_t
       character(len=*), intent(in) :: strgA
       type(String_t),   intent(in) :: strgB
@@ -303,7 +303,7 @@ module adt_string
 
 
   interface assign
-    subroutine charString_assign_string( cs, ds )
+    subroutine charstring_assign_string( cs, ds )
       import String_t
       character(len=*), intent(out) :: cs
       type(String_t),    intent(in) :: ds
@@ -315,7 +315,7 @@ module adt_string
       type(String_t),    intent(in) :: rhs
     end subroutine
 
-    subroutine basestring_assign_charString( bs, cs )
+    subroutine basestring_assign_charstring( bs, cs )
       import String_t
       type(String_t), intent(inout) :: bs
       character(len=*),   intent(in)    :: cs
@@ -330,20 +330,20 @@ module adt_string
 
 
   interface assignment(=)
-    module procedure charString_assign_string_private, string_assign_string_private
-    module procedure string_assign_charString_private, string_assign_buf_private
+    module procedure charstring_assign_string_private, string_assign_string_private
+    module procedure string_assign_charstring_private, string_assign_buf_private
   end interface
 
 
   interface operator(//)
-    function string_concat_charString( lhs, rhs ) result(res)
+    function string_concat_charstring( lhs, rhs ) result(res)
       import String_t
       type(String_t),        intent(in) :: lhs
       character(len=*),      intent(in) :: rhs
       character(len=_len(lhs)+len(rhs)) :: res
     end function
 
-    function charString_concat_string( lhs, rhs ) result(res)
+    function charstring_concat_string( lhs, rhs ) result(res)
       import String_t
       character(len=*),      intent(in) :: lhs
       type(String_t),        intent(in) :: rhs
@@ -360,13 +360,13 @@ module adt_string
 
 
   interface operator(==)
-    logical function string_eq_charString( lhs, rhs )
+    logical function string_eq_charstring( lhs, rhs )
       import String_t
       type(String_t),   intent(in) :: lhs
       character(len=*), intent(in) :: rhs
     end function
 
-    logical function charString_eq_string( lhs, rhs )
+    logical function charstring_eq_string( lhs, rhs )
       import String_t
       character(len=*), intent(in) :: lhs
       type(String_t),   intent(in) :: rhs
@@ -381,13 +381,13 @@ module adt_string
 
 
   interface operator(/=)
-    logical function string_ne_charString( lhs, rhs )
+    logical function string_ne_charstring( lhs, rhs )
       import String_t
       type(String_t),   intent(in) :: lhs
       character(len=*), intent(in) :: rhs
     end function
 
-    logical function charString_ne_string( lhs, rhs )
+    logical function charstring_ne_string( lhs, rhs )
       import String_t
       character(len=*), intent(in) :: lhs
       type(String_t),   intent(in) :: rhs
@@ -402,13 +402,13 @@ module adt_string
 
 
   interface operator(<) 
-    logical function string_lt_charString( lhs, rhs )
+    logical function string_lt_charstring( lhs, rhs )
       import String_t
       type(String_t),   intent(in) :: lhs
       character(len=*), intent(in) :: rhs
     end function
 
-    logical function charString_lt_string( lhs, rhs )
+    logical function charstring_lt_string( lhs, rhs )
       import String_t
       character(len=*), intent(in) :: lhs
       type(String_t),   intent(in) :: rhs
@@ -423,13 +423,13 @@ module adt_string
 
 
   interface operator(<=)
-    logical function string_le_charString( lhs, rhs )
+    logical function string_le_charstring( lhs, rhs )
       import String_t
       type(String_t),   intent(in) :: lhs
       character(len=*), intent(in) :: rhs
     end function
 
-    logical function charString_le_string( lhs, rhs )
+    logical function charstring_le_string( lhs, rhs )
       import String_t
       character(len=*), intent(in) :: lhs
       type(String_t),   intent(in) :: rhs
@@ -444,13 +444,13 @@ module adt_string
 
 
   interface operator(>) 
-    logical function string_gt_charString( lhs, rhs )
+    logical function string_gt_charstring( lhs, rhs )
       import String_t
       type(String_t),   intent(in) :: lhs
       character(len=*), intent(in) :: rhs
     end function
 
-    logical function charString_gt_string( lhs, rhs )
+    logical function charstring_gt_string( lhs, rhs )
       import String_t
       character(len=*), intent(in) :: lhs
       type(String_t),   intent(in) :: rhs
@@ -466,13 +466,13 @@ module adt_string
 
 
   interface operator(>=)
-    logical function string_ge_charString( lhs, rhs )
+    logical function string_ge_charstring( lhs, rhs )
       import String_t
       type(String_t),   intent(in) :: lhs
       character(len=*), intent(in) :: rhs
     end function
 
-    logical function charString_ge_string( lhs, rhs )
+    logical function charstring_ge_string( lhs, rhs )
       import String_t
       character(len=*), intent(in) :: lhs
       type(String_t),   intent(in) :: rhs
@@ -502,7 +502,7 @@ module adt_string
   !_TypeGen_implementAll()
 
 
-  subroutine charString_assign_string_private( lhs, rhs )
+  subroutine charstring_assign_string_private( lhs, rhs )
     character(len=*), intent(out) :: lhs
     type(String_t),    intent(in) :: rhs
     call assign( lhs, rhs )
@@ -514,7 +514,7 @@ module adt_string
     call assign( lhs, rhs )
   end subroutine
 
-  subroutine string_assign_charString_private( lhs, rhs )
+  subroutine string_assign_charstring_private( lhs, rhs )
     type(String_t), intent(inout) :: lhs
     character(len=*),   intent(in)    :: rhs
     call assign( lhs, rhs )

@@ -57,7 +57,7 @@ module adt_ref
       integer     :: has_proto
     end subroutine
 
-    function ref_get_TypeReference( self ) result(res)
+    function ref_get_typereference( self ) result(res)
       import Ref_t, c_ptr
       type(Ref_t), intent(in) :: self
       type(c_ptr)             :: res
@@ -150,7 +150,7 @@ module adt_ref
   ! declare public interfaces 
 
   public :: assign, assignment(=)
-  public :: ref_get_TypeReference  !< needed by generated code
+  public :: ref_get_typereference  !< needed by generated code
   public :: rank
   public :: shape
   public :: clone

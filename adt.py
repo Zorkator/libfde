@@ -7,9 +7,10 @@ cfg  = ('debug', 'release')[0]
 arch = (32, 64)[sys.maxsize > 2**32]
 tag  = (cfg, arch)
 
-for f in ('libadt.gfortran.{}.{}.so', 'libadt.ifort.{}.{}.so', 'libadt_dll.dll'):
-  try   : _libHandle = CDLL( f.format(*tag) ); break
-  except: pass
+for f in ('libadt.gfortran.{0}.{1}.so', 'libadt.ifort.{0}.{1}.so', 'libadt_dll.dll'):
+  soName = f.format(*tag)
+  try   : _libHandle = CDLL( soName ); break
+  except: print "tried to load '%s' without success ..." % soName
 else:
   raise IOError("unable to locate ADT's shared library")
 
@@ -19,7 +20,7 @@ class Meta(type(Structure)):
 
   def __new__( _class, name, bases, members ):
     from operator import add
-    method = '%s_{}_' % name.lower()
+    method = '%s_{0}_' % name.lower()
     members['__typeprocs__'] = list( members.get( '__typeprocs__', [method] ) ) \
                              + filter( bool, reduce( add, (getattr( b, '__typeprocs__', [] ) for b in bases) ) )
     size = getattr( _libHandle, method.format('object_size'), None )

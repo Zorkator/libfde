@@ -171,7 +171,7 @@ class RefType(TypeSpec):
       {baseType}{dimSpec},   pointer :: res
       type({typeId}_wrap_t), pointer :: wrap
       
-      call c_f_pointer( ref_get_TypeReference(val), wrap )
+      call c_f_pointer( ref_get_typereference(val), wrap )
       res => wrap%ptr
     end function
     """,

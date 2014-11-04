@@ -15,7 +15,7 @@ module adt_basestring
   ! interface visibility
 
   public :: basestring_init_by_proto
-  public :: basestring_init_by_charString
+  public :: basestring_init_by_charstring
   public :: basestring_init_by_buf
   public :: basestring_set_attribute
   public :: basestring_release_weak
@@ -23,7 +23,7 @@ module adt_basestring
   public :: basestring_ptr
   public :: basestring_cptr
   public :: basestring_len_ref
-  public :: basestring_assign_charString
+  public :: basestring_assign_charstring
   public :: basestring_assign_buf
   public :: basestring_assign_basestring
 
@@ -48,7 +48,7 @@ module adt_basestring
       type(BaseString_t), intent(in)    :: proto
     end subroutine
 
-    subroutine basestring_init_by_charString( bs, attr, cs )
+    subroutine basestring_init_by_charstring( bs, attr, cs )
       import BaseString_t
       type(BaseString_t), intent(inout) :: bs
       integer(kind=1),    intent(in)    :: attr
@@ -97,7 +97,7 @@ module adt_basestring
       integer                        :: res
     end function
 
-    subroutine basestring_assign_charString( bs, cs )
+    subroutine basestring_assign_charstring( bs, cs )
       import BaseString_t
       type(BaseString_t), intent(inout) :: bs
       character(len=*),   intent(in)    :: cs

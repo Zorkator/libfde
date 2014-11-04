@@ -146,8 +146,8 @@ end module
   _implement_constructor_(ref,        type(Ref_t),    temporary_ref)
 
 
-!_EXPORT_CONSTRUCTOR(charString)
-  function item_of_charString( val ) result(res)
+!_EXPORT_CONSTRUCTOR(charstring)
+  function item_of_charstring( val ) result(res)
     use adt_item__
     implicit none
     character(len=*)        :: val
@@ -278,8 +278,8 @@ end module
   _implement_assign_(ref,        type(Ref_t))
 
 
-!_EXPORT_ASSIGN(charString)
-  subroutine item_assign_charString( lhs, rhs )
+!_EXPORT_ASSIGN(charstring)
+  subroutine item_assign_charstring( lhs, rhs )
     use adt_item__
     implicit none
     type(Item_t), target, intent(inout) :: lhs
