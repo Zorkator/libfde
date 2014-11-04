@@ -10,6 +10,7 @@
 # define _ref_HardMine        (/1, 1/)
 
 # define _ref_init(s,h)       s(1:2) = (/int(h,1), int(0,1)/)
+# define _ref_initMine(s,h)   s(1:2) = (/int(h,1), int(1,1)/)
 
 # define _ref_setHard(s,v)    s(1) = v
 # define _ref_setMine(s,v)    s(2) = v

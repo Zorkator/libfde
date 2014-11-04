@@ -12,8 +12,29 @@ module adt_basestring
     character(len=1), dimension(:), pointer :: ptr     => null()
   end type
 
+  ! interface visibility
+
+  public :: basestring_init_by_proto
+  public :: basestring_init_by_charString
+  public :: basestring_init_by_buf
+  public :: basestring_set_attribute
+  public :: basestring_release_weak
+  public :: basestring_delete
+  public :: basestring_ptr
+  public :: basestring_cptr
+  public :: basestring_len_ref
+  public :: basestring_assign_charString
+  public :: basestring_assign_buf
+  public :: basestring_assign_basestring
+
+  public :: temporary_string, permanent_string
+  public :: attribute_volatile, attribute_permanent
+
+
+  ! parameter definitions
+
   type(BaseString_t), parameter :: temporary_string    = BaseString_t( _ref_WeakLent, 0, null() )
-  type(BaseString_t), parameter :: permanent_string    = BaseString_t( _ref_WeakLent, 0, null() )
+  type(BaseString_t), parameter :: permanent_string    = BaseString_t( _ref_HardLent, 0, null() )
   integer(kind=1),    parameter :: attribute_volatile  = 0
   integer(kind=1),    parameter :: attribute_permanent = 1
 
@@ -27,15 +48,17 @@ module adt_basestring
       type(BaseString_t), intent(in)    :: proto
     end subroutine
 
-    subroutine basestring_init_by_charString( bs, cs )
+    subroutine basestring_init_by_charString( bs, attr, cs )
       import BaseString_t
       type(BaseString_t), intent(inout) :: bs
+      integer(kind=1),    intent(in)    :: attr
       character(len=*),   intent(in)    :: cs
     end subroutine
 
-    subroutine basestring_init_by_buf( bs, buf )
+    subroutine basestring_init_by_buf( bs, attr, buf )
       import BaseString_t
       type(BaseString_t),             intent(inout) :: bs
+      integer(kind=1),                intent(in)    :: attr
       character(len=1), dimension(:), intent(in)    :: buf
     end subroutine
 
@@ -92,24 +115,6 @@ module adt_basestring
       type(BaseString_t),    intent(in) :: rhs
     end subroutine
   end interface
-
-  ! interface visibility
-
-  public :: basestring_init_by_proto
-  public :: basestring_init_by_charString
-  public :: basestring_init_by_buf
-  public :: basestring_set_attribute
-  public :: basestring_release_weak
-  public :: basestring_delete
-  public :: basestring_ptr
-  public :: basestring_cptr
-  public :: basestring_len_ref
-  public :: basestring_assign_charString
-  public :: basestring_assign_buf
-  public :: basestring_assign_basestring
-
-  public :: temporary_string, permanent_string
-  public :: attribute_volatile, attribute_permanent
 
 end module
 

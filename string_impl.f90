@@ -20,7 +20,6 @@ module adt_string__
 
 end module
 
-
 !_PROC_EXPORT(string_object_size)
   integer(kind=4) &
   function string_object_size() result(res)
@@ -37,7 +36,7 @@ end module
     use adt_string__; implicit none
     character(len=*), intent(in) :: cs
     type(String_t)               :: res
-    call basestring_init_by_charString( res%str, cs )
+    call basestring_init_by_charString( res%str, attribute_volatile, cs )
   end function
 
 !_PROC_EXPORT(string_from_buf)
@@ -45,7 +44,7 @@ end module
     use adt_string__; implicit none
     character(len=1), dimension(:), intent(in) :: buf
     type(String_t)                             :: res
-    call basestring_init_by_buf( res%str, buf )
+    call basestring_init_by_buf( res%str, attribute_volatile, buf )
   end function
 
 

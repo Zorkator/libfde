@@ -16,40 +16,49 @@
     if (has_proto /= 0) then; _ref_init( bs%refstat, _ref_hardness(proto%refstat) )
                         else; bs%refstat = _ref_HardLent
     end if
+    call basestring_assign_basestring( bs, proto )
   end subroutine
 
 
 !_PROC_EXPORT(basestring_init_by_charString)
-  subroutine basestring_init_by_charString( bs, cs )
+  subroutine basestring_init_by_charString( bs, attr, cs )
     use adt_basestring, only: BaseString_t
     use iso_c_binding
     implicit none
     type(BaseString_t)              :: bs
+    integer(kind=1),     intent(in) :: attr
     character(len=*),    intent(in) :: cs
     character(len=len(cs)), pointer :: tgt
 
     bs%len = len(cs)
     if (bs%len > 0) then
-      bs%refstat = _ref_WeakMine
       allocate( bs%ptr(bs%len) )
+      _ref_initMine( bs%refstat, attr )
       call c_f_pointer( c_loc(bs%ptr(1)), tgt )
       tgt = cs
+    else
+      bs%ptr => null()
+      _ref_init( bs%refstat, attr )
     end if
   end subroutine
 
   
 !_PROC_EXPORT(basestring_init_by_buf)
-  subroutine basestring_init_by_buf( bs, buf )
+  subroutine basestring_init_by_buf( bs, attr, buf )
     use adt_basestring, only: BaseString_t
     implicit none
     type(BaseString_t)                         :: bs
+    integer(kind=1),                intent(in) :: attr
     character(len=1), dimension(:), intent(in) :: buf
 
     bs%len = size(buf)
     if (bs%len > 0) then
-      bs%refstat = _ref_WeakMine
       allocate( bs%ptr(bs%len) )
+      _ref_initMine( bs%refstat, attr )
       bs%ptr = buf
+    else
+      bs%ptr => null()
+      _ref_init( bs%refstat, attr )
     end if
   end subroutine
 
@@ -109,6 +118,7 @@
 
 
 !_PROC_EXPORT(basestring_cptr)
+!_ARG_REFERENCE(bs)
   function basestring_cptr( bs ) result(res)
     use adt_basestring, only: BaseString_t
     use iso_c_binding
@@ -121,6 +131,21 @@
       deallocate( bs%ptr )
     else if (associated(bs%ptr) .and. bs%len > 0) then
       res = c_loc(bs%ptr(1))
+    end if
+  end function
+
+
+!_PROC_EXPORT(basestring_memoryref)
+  function basestring_memoryref( bs ) result(res)
+    use adt_basestring, only: BaseString_t
+    use adt_memoryref
+    use iso_c_binding
+    type(BaseString_t), intent(in) :: bs
+    type(MemoryRef_t)              :: res
+
+    if (associated(bs%ptr) .and. bs%len > 0) then
+      res%loc = c_loc(bs%ptr(1))
+      res%len = bs%len
     end if
   end function
 

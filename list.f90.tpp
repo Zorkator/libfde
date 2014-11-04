@@ -80,7 +80,7 @@ module adt_list
   end interface
 
   interface is_valid
-    pure logical function listidx_is_valid( self )
+    pure logical function listindex_is_valid( self )
       import ListIndex_t
       type(ListIndex_t), intent(in) :: self
     end function
@@ -133,7 +133,7 @@ module adt_list
   end interface
   
   interface dynamic_type
-    function listidx_dynamic_type( self ) result(res)
+    function listindex_dynamic_type( self ) result(res)
       import ListIndex_t, TypeInfo_t
       type(ListIndex_t), intent(in) :: self
       type(TypeInfo_t),     pointer :: res
@@ -141,7 +141,7 @@ module adt_list
   end interface
 
   interface index       
-    function listidx_index_idx( self, stride ) result(res)
+    function listindex_index_idx( self, stride ) result(res)
       import ListIndex_t
       type(ListIndex_t), intent(in) :: self
       integer(kind=4),     optional :: stride
@@ -158,21 +158,21 @@ module adt_list
   end interface
 
   interface prev        
-    subroutine listidx_prev( self )
+    subroutine listindex_prev( self )
       import ListIndex_t
       type(ListIndex_t), intent(inout) :: self
     end subroutine
   end interface
 
   interface next        
-    subroutine listidx_next( self )
+    subroutine listindex_next( self )
       import ListIndex_t
       type(ListIndex_t), intent(inout) :: self
     end subroutine
   end interface
 
   interface set_prev    
-    function listidx_set_prev( self ) result(res)
+    function listindex_set_prev( self ) result(res)
       import ListIndex_t
       type(ListIndex_t), intent(inout) :: self
       logical                          :: res
@@ -180,7 +180,7 @@ module adt_list
   end interface
 
   interface set_next    
-    function listidx_set_next( self ) result(res)
+    function listindex_set_next( self ) result(res)
       import ListIndex_t
       type(ListIndex_t), intent(inout) :: self
       logical                          :: res
@@ -188,7 +188,7 @@ module adt_list
   end interface
 
   interface get_prev    
-    function listidx_get_prev( self ) result(res)
+    function listindex_get_prev( self ) result(res)
       import ListIndex_t
       type(ListIndex_t), intent(in) :: self
       type(ListIndex_t)             :: res
@@ -196,7 +196,7 @@ module adt_list
   end interface
 
   interface get_next    
-    function listidx_get_next( self ) result(res)
+    function listindex_get_next( self ) result(res)
       import ListIndex_t
       type(ListIndex_t), intent(in) :: self
       type(ListIndex_t)             :: res
@@ -204,31 +204,31 @@ module adt_list
   end interface
 
   interface insert      
-    subroutine listidx_insert_list( self, list )
+    subroutine listindex_insert_list( self, list )
       import List_t, ListIndex_t
       type(ListIndex_t), intent(in) :: self
       type(List_t),          target :: list
     end subroutine
     
-    subroutine listidx_insert_node( self, node )
+    subroutine listindex_insert_node( self, node )
       import ListIndex_t, ListNode_t
       type(ListIndex_t), intent(in) :: self
       type(ListNode_t),          target :: node
     end subroutine
     
-    subroutine listidx_insert_idx( self, idx )
+    subroutine listindex_insert_idx( self, idx )
       import ListIndex_t
       type(ListIndex_t) :: self, idx
     end subroutine
 
-    subroutine listidx_insert_range( self, beg, end )
+    subroutine listindex_insert_range( self, beg, end )
       import ListIndex_t
       type(ListIndex_t), intent(in) :: self, beg, end
     end subroutine
   end interface
 
   interface remove      
-    subroutine listidx_remove_idx( self )
+    subroutine listindex_remove_idx( self )
       import ListIndex_t
       type(ListIndex_t) :: self
     end subroutine
@@ -242,7 +242,7 @@ module adt_list
       type(ListIndex_t)    :: res
     end function
     
-    function listidx_pop_idx( self ) result(res)
+    function listindex_pop_idx( self ) result(res)
       import ListIndex_t
       type(ListIndex_t) :: self, res
     end function
@@ -267,12 +267,12 @@ module adt_list
   end interface
 
   interface operator(==)  
-    pure logical function listidx_eq_listidx( self, other )
+    pure logical function listindex_eq_listindex( self, other )
       import ListIndex_t
       type(ListIndex_t), intent(in) :: self, other
     end function
     
-    pure logical function listidx_eq_node( self, node )
+    pure logical function listindex_eq_node( self, node )
       import ListIndex_t, ListNode_t
       type(ListIndex_t), intent(in) :: self
       type(ListNode_t),      intent(in) :: node
@@ -280,12 +280,12 @@ module adt_list
   end interface
 
   interface operator(/=)  
-    pure logical function listidx_ne_listidx( self, other )
+    pure logical function listindex_ne_listindex( self, other )
       import ListIndex_t
       type(ListIndex_t), intent(in) :: self, other
     end function
     
-    pure logical function listidx_ne_node( self, node )
+    pure logical function listindex_ne_node( self, node )
       import ListIndex_t, ListNode_t
       type(ListIndex_t), intent(in) :: self
       type(ListNode_t),      intent(in) :: node
