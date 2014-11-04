@@ -25,6 +25,15 @@ module adt_item__
 end module
 
 
+!_PROC_EXPORT(item_object_size)
+  integer(kind=4) &
+  function item_object_size() result(res)
+    use adt_item__; implicit none
+    type (Item_t) :: tmp
+    res = storage_size(tmp) / 8
+  end function
+
+
 !_PROC_EXPORT(item_init_by_proto)
   subroutine item_init_by_proto( self, has_proto, proto )
     use adt_item__

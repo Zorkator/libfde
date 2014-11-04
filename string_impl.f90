@@ -21,6 +21,15 @@ module adt_string__
 end module
 
 
+!_PROC_EXPORT(string_object_size)
+  integer(kind=4) &
+  function string_object_size() result(res)
+    use adt_string__; implicit none
+    type (String_t) :: tmp
+    res = storage_size(tmp) / 8
+  end function
+
+
   ! String
 
 !_PROC_EXPORT(string_from_charString)

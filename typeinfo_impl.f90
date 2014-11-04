@@ -1,4 +1,16 @@
 
+#include "adt/itfUtil.fpp"
+
+
+!_PROC_EXPORT(typeinfo_object_size)
+  integer(kind=4) &
+  function typeinfo_object_size() result(res)
+    use adt_typeinfo; implicit none
+    type (TypeInfo_t) :: tmp
+    res = storage_size(tmp) / 8
+  end function
+
+
   !**
   ! init_TypeInfo initializes TypeInfo structure.
   ! @param self         - the TypeInfo to initialize

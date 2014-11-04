@@ -23,6 +23,16 @@ module adt_ref__
   end interface
 end module
 
+
+!_PROC_EXPORT(ref_object_size)
+  integer(kind=4) &
+  function ref_object_size() result(res)
+    use adt_ref__; implicit none
+    type (Ref_t) :: tmp
+    res = storage_size(tmp) / 8
+  end function
+
+
 !_PROC_EXPORT(ref_init_by_proto)
   subroutine ref_init_by_proto( self, has_proto, proto )
     use adt_ref__

@@ -168,6 +168,15 @@ module adt_list__
 end module
 
 
+!_PROC_EXPORT(list_object_size)
+  integer(kind=4) &
+  function list_object_size() result(res)
+    use adt_list__; implicit none
+    type (List_t) :: tmp
+    res = storage_size(tmp) / 8
+  end function
+
+
   subroutine listnode_init( self, nodeType )
     use adt_list__, only: ListNode_t, TypeInfo_t
     implicit none

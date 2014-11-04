@@ -95,6 +95,16 @@ contains
 
 end module
 
+
+!_PROC_EXPORT(hashmap_object_size)
+  integer(kind=4) &
+  function hashmap_object_size() result(res)
+    use adt_hashmap__; implicit none
+    type (HashMap_t) :: tmp
+    res = storage_size(tmp) / 8
+  end function
+
+
 !_PROC_EXPORT(hashmap_len)
   pure &
   function hashmap_len( self ) result(res)
