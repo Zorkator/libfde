@@ -4,8 +4,8 @@ module string_ref
   implicit none
 
   type, public, bind(C) :: StringRef
-    type (c_ptr)            :: loc = c_null_ptr
-    integer(kind=c_int32_t) :: len = 0
+    type (c_ptr)           :: loc = c_null_ptr
+    integer(kind=c_size_t) :: len = 0
   end type
 
   interface str
