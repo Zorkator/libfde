@@ -4,6 +4,7 @@
 
 
 !_PROC_EXPORT(basestring_init_by_proto_c)
+!_ARG_REFERENCE2(bs, proto)
   subroutine basestring_init_by_proto_c( bs, has_proto, proto )
     use adt_basestring, only: BaseString_t, basestring_assign_buf
     use iso_c_binding
@@ -25,6 +26,7 @@
 
 
 !_PROC_EXPORT(basestring_init_by_charstring_c)
+!_ARG_REFERENCE1(bs)
   subroutine basestring_init_by_charstring_c( bs, attr, cs )
     use adt_basestring, only: BaseString_t
     use iso_c_binding
@@ -48,6 +50,7 @@
 
   
 !_PROC_EXPORT(basestring_init_by_buf)
+!_ARG_REFERENCE1(bs)
   subroutine basestring_init_by_buf( bs, attr, buf )
     use adt_basestring, only: BaseString_t
     implicit none
@@ -68,6 +71,7 @@
 
 
 !_PROC_EXPORT(basestring_set_attribute)
+!_ARG_REFERENCE1(bs)
   subroutine basestring_set_attribute( bs, attr )
     use adt_basestring, only: BaseString_t
     implicit none
@@ -79,6 +83,7 @@
 
 
 !_PROC_EXPORT(basestring_release_weak)
+!_ARG_REFERENCE1(bs)
   subroutine basestring_release_weak( bs )
     use adt_basestring, only: BaseString_t
     implicit none
@@ -90,6 +95,7 @@
 
 
 !_PROC_EXPORT(basestring_delete_c)
+!_ARG_REFERENCE1(bs)
   subroutine basestring_delete_c( bs )
     use adt_basestring, only: BaseString_t
     implicit none
@@ -106,6 +112,7 @@
 
 
 !_PROC_EXPORT(basestring_ptr)
+!_ARG_REFERENCE1(bs)
   function basestring_ptr( bs ) result(res)
     use adt_basestring, only: BaseString_t
     use iso_c_binding
@@ -122,6 +129,7 @@
 
 
 !_PROC_EXPORT(basestring_cptr)
+!_ARG_REFERENCE1(bs)
   function basestring_cptr( bs ) result(res)
     use adt_basestring, only: BaseString_t
     use iso_c_binding
@@ -139,6 +147,7 @@
 
 
 !_PROC_EXPORT(basestring_cptr_c)
+!_ARG_REFERENCE2(res, bs)
   subroutine basestring_cptr_c( res, bs )
     use adt_basestring, only: BaseString_t
     use iso_c_binding
@@ -156,6 +165,7 @@
 
 
 !_PROC_EXPORT(basestring_memoryref_c)
+!_ARG_REFERENCE2(res, bs)
   subroutine basestring_memoryref_c( res, bs )
     use adt_basestring, only: BaseString_t
     use adt_memoryref
@@ -170,9 +180,10 @@
   end subroutine
 
 
-!_PROC_EXPORT(basestring_len_ref_c)
+!_PROC_EXPORT(basestring_len_ref)
+!_ARG_REFERENCE1(bs)
   pure &
-  function basestring_len_ref_c( bs ) result(res)
+  function basestring_len_ref( bs ) result(res)
     use adt_basestring, only: BaseString_t
     implicit none
     type(BaseString_t), intent(in) :: bs
@@ -185,6 +196,7 @@
   
 
 !_PROC_EXPORT(basestring_assign_charstring_c)
+!_ARG_REFERENCE1(bs)
   subroutine basestring_assign_charstring_c( bs, cs )
     use adt_basestring, only: BaseString_t
     use iso_c_binding
@@ -214,6 +226,7 @@
 
 
 !_PROC_EXPORT(basestring_assign_buf)
+!_ARG_REFERENCE2(lhs, rhs)
   subroutine basestring_assign_buf( lhs, rhs )
     use adt_basestring, only: BaseString_t
     implicit none
@@ -240,6 +253,7 @@
 
 
 !_PROC_EXPORT(basestring_assign_basestring_c)
+!_ARG_REFERENCE2(lhs, rhs)
   subroutine basestring_assign_basestring_c( lhs, rhs )
     use adt_basestring, only: BaseString_t, basestring_ptr
     implicit none

@@ -30,9 +30,9 @@ module adt_list
 
 
   !_TypeGen_declare_RefType( public, List, type(List_t), scalar, \
-  !     initProc   = list_init_by_proto, \
-  !     deleteProc = list_delete,        \
-  !     assignProc = list_assign_list,   \
+  !     initProc   = list_init_by_proto_c, \
+  !     deleteProc = list_delete_c,        \
+  !     assignProc = list_assign_list_c,   \
   !     cloneMode  = _type )
 
   !_TypeGen_declare_ListNode( public, List, type(List_t), scalar )
@@ -59,20 +59,20 @@ module adt_list
 
   
   interface initialize
-    subroutine list_init_by_proto( self, has_proto, proto )
+    subroutine list_init_by_proto_c( self, has_proto, proto )
       import List_t
-      type(List_t) :: self, proto
-      integer      :: has_proto
+      type(List_t)    :: self, proto
+      integer(kind=4) :: has_proto
     end subroutine
 
-    subroutine list_init( self )
+    subroutine list_init_c( self )
       import List_t
       type(List_t) :: self
     end subroutine
   end interface
 
   interface len
-    function list_length( self ) result(res)
+    function list_length_c( self ) result(res)
       import List_t
       type(List_t)    :: self
       integer(kind=4) :: res
@@ -80,37 +80,37 @@ module adt_list
   end interface
 
   interface is_valid
-    pure logical function listindex_is_valid( self )
+    pure logical function listindex_is_valid_c( self )
       import ListIndex_t
       type(ListIndex_t), intent(in) :: self
     end function
 
-    pure logical function list_is_valid( self )
+    pure logical function list_is_valid_c( self )
       import List_t
       type(List_t), intent(in) :: self
     end function
   end interface
 
   interface is_empty
-    pure logical function list_is_empty( self )
+    pure logical function list_is_empty_c( self )
       import List_t
       type (List_t), intent(in) :: self
     end function
   end interface
 
   interface append
-    subroutine list_append_list( self, other )
+    subroutine list_append_list_c( self, other )
       import List_t
       type (List_t), target :: self, other
     end subroutine
     
-    subroutine list_append_node( self, node )
+    subroutine list_append_node_c( self, node )
       import List_t, ListNode_t
       type (List_t), target :: self
       type (ListNode_t), target :: node
     end subroutine
     
-    subroutine list_append_idx( self, idx )
+    subroutine list_append_idx_c( self, idx )
       import List_t, ListIndex_t
       type (List_t), target :: self
       type (ListIndex_t)    :: idx
@@ -118,7 +118,7 @@ module adt_list
   end interface
 
   interface delete
-    subroutine list_delete( self )
+    subroutine list_delete_c( self )
       import List_t
       type (List_t), intent(inout) :: self
     end subroutine
@@ -126,7 +126,7 @@ module adt_list
   
   interface clear
     recursive &
-    subroutine list_clear( self )
+    subroutine list_clear_c( self )
       import List_t
       type (List_t), intent(inout) :: self
     end subroutine
@@ -158,21 +158,21 @@ module adt_list
   end interface
 
   interface prev        
-    subroutine listindex_prev( self )
+    subroutine listindex_prev_c( self )
       import ListIndex_t
       type(ListIndex_t), intent(inout) :: self
     end subroutine
   end interface
 
   interface next        
-    subroutine listindex_next( self )
+    subroutine listindex_next_c( self )
       import ListIndex_t
       type(ListIndex_t), intent(inout) :: self
     end subroutine
   end interface
 
   interface set_prev    
-    function listindex_set_prev( self ) result(res)
+    function listindex_set_prev_c( self ) result(res)
       import ListIndex_t
       type(ListIndex_t), intent(inout) :: self
       logical                          :: res
@@ -180,7 +180,7 @@ module adt_list
   end interface
 
   interface set_next    
-    function listindex_set_next( self ) result(res)
+    function listindex_set_next_c( self ) result(res)
       import ListIndex_t
       type(ListIndex_t), intent(inout) :: self
       logical                          :: res
@@ -204,31 +204,31 @@ module adt_list
   end interface
 
   interface insert      
-    subroutine listindex_insert_list( self, list )
+    subroutine listindex_insert_list_c( self, list )
       import List_t, ListIndex_t
       type(ListIndex_t), intent(in) :: self
       type(List_t),          target :: list
     end subroutine
     
-    subroutine listindex_insert_node( self, node )
+    subroutine listindex_insert_node_c( self, node )
       import ListIndex_t, ListNode_t
       type(ListIndex_t), intent(in) :: self
-      type(ListNode_t),          target :: node
+      type(ListNode_t),      target :: node
     end subroutine
     
-    subroutine listindex_insert_idx( self, idx )
+    subroutine listindex_insert_idx_c( self, idx )
       import ListIndex_t
       type(ListIndex_t) :: self, idx
     end subroutine
 
-    subroutine listindex_insert_range( self, beg, end )
+    subroutine listindex_insert_range_c( self, beg, end )
       import ListIndex_t
       type(ListIndex_t), intent(in) :: self, beg, end
     end subroutine
   end interface
 
   interface remove      
-    subroutine listindex_remove_idx( self )
+    subroutine listindex_remove_idx_c( self )
       import ListIndex_t
       type(ListIndex_t) :: self
     end subroutine
@@ -249,13 +249,13 @@ module adt_list
   end interface
 
   interface assign        
-    subroutine list_assign_list( lhs, rhs )
+    subroutine list_assign_list_c( lhs, rhs )
       import List_t
       type(List_t), intent(inout) :: lhs
       type(List_t),    intent(in) :: rhs
     end subroutine
     
-    subroutine list_assign_idx( lhs, rhs )
+    subroutine list_assign_idx_c( lhs, rhs )
       import List_t, ListIndex_t
       type(List_t),   intent(inout) :: lhs
       type(ListIndex_t), intent(in) :: rhs
@@ -267,12 +267,12 @@ module adt_list
   end interface
 
   interface operator(==)  
-    pure logical function listindex_eq_listindex( self, other )
+    pure logical function listindex_eq_listindex_c( self, other )
       import ListIndex_t
       type(ListIndex_t), intent(in) :: self, other
     end function
     
-    pure logical function listindex_eq_node( self, node )
+    pure logical function listindex_eq_node_c( self, node )
       import ListIndex_t, ListNode_t
       type(ListIndex_t), intent(in) :: self
       type(ListNode_t),      intent(in) :: node
@@ -280,12 +280,12 @@ module adt_list
   end interface
 
   interface operator(/=)  
-    pure logical function listindex_ne_listindex( self, other )
+    pure logical function listindex_ne_listindex_c( self, other )
       import ListIndex_t
       type(ListIndex_t), intent(in) :: self, other
     end function
     
-    pure logical function listindex_ne_node( self, node )
+    pure logical function listindex_ne_node_c( self, node )
       import ListIndex_t, ListNode_t
       type(ListIndex_t), intent(in) :: self
       type(ListNode_t),      intent(in) :: node
@@ -298,12 +298,14 @@ module adt_list
 
   !_TypeGen_implementAll()
 
+!_PROC_EXPORT(list_assign_list_private)
   subroutine list_assign_list_private( lhs, rhs )
     type(List_t), intent(inout) :: lhs
     type(List_t),    intent(in) :: rhs
     call assign( lhs, rhs )
   end subroutine
   
+!_PROC_EXPORT(list_assign_idx_private)
   subroutine list_assign_idx_private( lhs, rhs )
     type(List_t),   intent(inout) :: lhs
     type(ListIndex_t), intent(in) :: rhs

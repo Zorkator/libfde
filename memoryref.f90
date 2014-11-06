@@ -15,9 +15,9 @@ module adt_memoryref
   contains
 !---------------
 
-!_PROC_EXPORT(memoryref_object_size)
+!_PROC_EXPORT(memoryref_object_size_c)
   integer(kind=c_size_t) &
-  function memoryref_object_size() result(res)
+  function memoryref_object_size_c() result(res)
     type (MemoryRef_t) :: tmp
     res = storage_size(tmp) / 8
   end function

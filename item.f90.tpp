@@ -1,5 +1,6 @@
 
 #include "adt/item.fpp"
+#include "adt/itfUtil.fpp"
 
 module adt_item
   use iso_c_binding
@@ -257,6 +258,7 @@ module adt_item
 
   !_TypeGen_implementAll()
   
+!_PROC_EXPORT(item_assign_item_private)
   subroutine item_assign_item_private( lhs, rhs )
     type(Item_t), intent(inout) :: lhs
     type(Item_t), intent(in)    :: rhs

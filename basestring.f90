@@ -23,7 +23,7 @@ module adt_basestring
   public :: basestring_ptr
   public :: basestring_cptr
   public :: basestring_cptr_c
-  public :: basestring_len_ref_c
+  public :: basestring_len_ref
   public :: basestring_assign_charstring_c
   public :: basestring_assign_buf
   public :: basestring_assign_basestring_c
@@ -98,7 +98,7 @@ module adt_basestring
     end subroutine
 
     pure &
-    function basestring_len_ref_c( bs ) result(res)
+    function basestring_len_ref( bs ) result(res)
       import BaseString_t
       type(BaseString_t), intent(in) :: bs
       integer(kind=4)                :: res

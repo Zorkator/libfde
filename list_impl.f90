@@ -43,67 +43,69 @@ module adt_list__
     end subroutine
 
     recursive &
-    subroutine list_clear( self )
+    subroutine list_clear_c( self )
       import List_t
       type(List_t), intent(inout) :: self
     end subroutine
 
-    pure logical function listindex_is_valid( self )
+    pure logical &
+    function listindex_is_valid_c( self )
       import ListIndex_t
       type(ListIndex_t), intent(in) :: self
     end function
 
-    pure logical function list_is_valid( self )
+    pure logical &
+    function list_is_valid_c( self )
       import List_t
       type(List_t), intent(in) :: self
     end function
   
-    subroutine list_init( self )
+    subroutine list_init_c( self )
       import List_t
       type(List_t) :: self
     end subroutine
 
-    subroutine listnode_init( self, nodeType )
+    subroutine listnode_init_( self, nodeType )
       import ListNode_t, TypeInfo_t
       type (ListNode_t)              :: self
       type(TypeInfo_t), optional :: nodeType
     end subroutine
 
-    subroutine list_link_node( node, prev, next )
+    subroutine list_link_node_( node, prev, next )
       import ListNode_t
       type (ListNode_t) :: node, prev, next
     end subroutine
 
-    subroutine list_unlink_node( prev, next )
+    subroutine list_unlink_node_( prev, next )
       import ListNode_t
       type (ListNode_t) :: prev, next
     end subroutine
 
-    subroutine list_insert_nodes( pos_hook, beg_prev, end_next )
+    subroutine list_insert_nodes_( pos_hook, beg_prev, end_next )
       import ListNode_t
       type(ListNode_t) :: pos_hook, beg_prev, end_next
     end subroutine
 
-    subroutine listindex_insert_idx( self, idx )
+    subroutine listindex_insert_idx_c( self, idx )
       import ListIndex_t
       type(ListIndex_t) :: self, idx
     end subroutine
 
-    subroutine listindex_insert_idx_cnt( self, idx, cnt )
+    subroutine listindex_insert_idx_cnt_( self, idx, cnt )
       import ListIndex_t
       type(ListIndex_t)            :: self, idx
       integer(kind=4), intent(out) :: cnt
     end subroutine
 
     logical &
-    function listindex_advance_head( self, steps )
+    function listindex_advance_head_( self, steps )
       import ListIndex_t
       type(ListIndex_t), intent(inout) :: self
       integer(kind=4)                  :: steps
     end function
 
     logical &
-    function listindex_advance_foot( self, steps )
+    function listindex_advance_foot_( self, steps )
       import ListIndex_t
       type(ListIndex_t), intent(inout) :: self
       integer(kind=4)                  :: steps, i
@@ -121,7 +123,7 @@ module adt_list__
       type(ListIndex_t) :: self, res
     end function
 
-    function list_index_node( self, at, stride ) result(res)
+    function list_index_node_( self, at, stride ) result(res)
       import List_t, ListNode_t, ListIndex_t
       type(List_t),   target, intent(in) :: self
       type(ListNode_t), target, optional :: at
@@ -129,7 +131,7 @@ module adt_list__
       type(ListIndex_t)                  :: res
     end function
 
-    function listindex_set_next( self ) result(res)
+    function listindex_set_next_c( self ) result(res)
       import ListIndex_t
       type(ListIndex_t), intent(inout) :: self
       logical                          :: res
@@ -142,23 +144,23 @@ module adt_list__
       type(ListIndex_t)             :: res
     end function
     
-    subroutine list_append_node( self, node )
+    subroutine list_append_node_c( self, node )
       import List_t, ListNode_t
       type (List_t), target :: self
       type (ListNode_t), target :: node
     end subroutine
 
-    subroutine list_append_list( self, other )
+    subroutine list_append_list_c( self, other )
       import List_t
       type (List_t), target :: self, other
     end subroutine
 
-    subroutine listindex_next( self )
+    subroutine listindex_next_c( self )
       import ListIndex_t
       type(ListIndex_t), intent(inout) :: self
     end subroutine
 
-    subroutine list_assign_list( lhs, rhs )
+    subroutine list_assign_list_c( lhs, rhs )
       import List_t
       type(List_t), intent(inout) :: lhs
       type(List_t),    intent(in) :: rhs
@@ -168,25 +170,25 @@ module adt_list__
 end module
 
 
-!_PROC_EXPORT(list_object_size)
+!_PROC_EXPORT(list_object_size_c)
   integer(kind=4) &
-  function list_object_size() result(res)
+  function list_object_size_c() result(res)
     use adt_list__; implicit none
     type (List_t) :: tmp
     res = storage_size(tmp) / 8
   end function
 
 
-!_PROC_EXPORT(listindex_object_size)
+!_PROC_EXPORT(listindex_object_size_c)
   integer(kind=4) &
-  function listindex_object_size() result(res)
+  function listindex_object_size_c() result(res)
     use adt_list__; implicit none
     type (ListIndex_t) :: tmp
     res = storage_size(tmp) / 8
   end function
 
 
-  subroutine listnode_init( self, nodeType )
+  subroutine listnode_init_( self, nodeType )
     use adt_list__, only: ListNode_t, TypeInfo_t
     implicit none
     type (ListNode_t),               target :: self
@@ -196,7 +198,7 @@ end module
     self%typeInfo => nodeType
   end subroutine
 
-  subroutine list_link_node( node, prev, next )
+  subroutine list_link_node_( node, prev, next )
     use adt_list__, only: ListNode_t
     implicit none
     type (ListNode_t), target :: node, prev, next
@@ -206,7 +208,7 @@ end module
     prev%next => node
   end subroutine
 
-  subroutine list_unlink_node( prev, next )
+  subroutine list_unlink_node_( prev, next )
     use adt_list__, only: ListNode_t
     implicit none
     type (ListNode_t), target :: prev, next
@@ -214,64 +216,66 @@ end module
     next%prev => prev
   end subroutine
 
-  subroutine list_remove_node( node )
+  subroutine list_remove_node_( node )
     use adt_list__; implicit none
     type (ListNode_t), target :: node
-    call list_unlink_node( node%prev, node%next )
+    call list_unlink_node_( node%prev, node%next )
     node%prev => null()
     node%next => null()
   end subroutine
 
-  subroutine list_replace_node( old, new )
+  subroutine list_replace_node_( old, new )
     use adt_list__; implicit none
     type (ListNode_t), target :: old, new
-    call list_unlink_node( old%prev, old%next )
-    call list_link_node( new, old%prev, old%next )
+    call list_unlink_node_( old%prev, old%next )
+    call list_link_node_( new, old%prev, old%next )
     old%prev => null()
     old%next => null()
   end subroutine
 
-  subroutine list_insert_nodes( pos_hook, beg_prev, end_next )
-    use adt_list__, only: ListNode_t, list_unlink_node
+  subroutine list_insert_nodes_( pos_hook, beg_prev, end_next )
+    use adt_list__, only: ListNode_t, list_unlink_node_
     implicit none
     type(ListNode_t), target :: pos_hook, beg_prev, end_next
     pos_hook % prev%next => beg_prev % next
     beg_prev % next%prev => pos_hook % prev
     pos_hook % prev      => end_next % prev
     end_next % prev%next => pos_hook
-    call list_unlink_node( beg_prev, end_next )
+    call list_unlink_node_( beg_prev, end_next )
   end subroutine
 
 
-!_PROC_EXPORT(list_init_by_proto)
-  subroutine list_init_by_proto( self, has_proto, proto )
+!_PROC_EXPORT(list_init_by_proto_c)
+  subroutine list_init_by_proto_c( self, has_proto, proto )
     use adt_list__; implicit none
     type(List_t), target :: self
-    integer              :: has_proto
+    integer(kind=4)      :: has_proto
     type(List_t)         :: proto
-    call list_init( self )
+
+    call list_init_c( self )
     if (has_proto /= 0) &
-      call list_assign_list( self, proto )
+      call list_assign_list_c( self, proto )
   end subroutine
 
 
-!_PROC_EXPORT(list_init)
-  subroutine list_init( self )
-    use adt_list__, only: List_t, listnode_init, list_is_valid, &
-                          listnode_init, list_stale_list
+!_PROC_EXPORT(list_init_c)
+  subroutine list_init_c( self )
+    use adt_list__, only: List_t, listnode_init_, list_is_valid_c, &
+                          listnode_init_, list_stale_list
     implicit none
-    type(List_t),               target :: self
-    call listnode_init( self%node )
+    type(List_t), target :: self
+
+    call listnode_init_( self%node )
     self%length = 0
-    if (.not. list_is_valid( list_stale_list )) then
-      call listnode_init( list_stale_list%node )
+    if (.not. list_is_valid_c( list_stale_list )) then
+      call listnode_init_( list_stale_list%node )
       list_stale_list%length = 0
     end if
   end subroutine
 
   
-!_PROC_EXPORT(list_length)
-  function list_length( self ) result(res)
+!_PROC_EXPORT(list_length_c)
+  function list_length_c( self ) result(res)
     use adt_list__; implicit none
     type(List_t),     target  :: self
     integer(kind=4)           :: res
@@ -290,9 +294,9 @@ end module
   end function
 
 
-!_PROC_EXPORT(list_is_valid)
+!_PROC_EXPORT(list_is_valid_c)
   pure logical &
-  function list_is_valid( self ) result(res)
+  function list_is_valid_c( self ) result(res)
     use adt_list__, only: List_t
     implicit none
     type(List_t), target, intent(in) :: self
@@ -300,60 +304,60 @@ end module
   end function
 
 
-!_PROC_EXPORT(list_is_empty)
+!_PROC_EXPORT(list_is_empty_c)
   pure logical &
-  function list_is_empty( self ) result(res)
+  function list_is_empty_c( self ) result(res)
     use adt_list__; implicit none
     type (List_t), target, intent(in) :: self
     res = associated(self%node%prev, self%node) .and. associated(self%node%next, self%node)
   end function
 
 
-!_PROC_EXPORT(list_append_list)
-  subroutine list_append_list( self, other )
-    use adt_list__, only: List_t, list_insert_nodes
+!_PROC_EXPORT(list_append_list_c)
+  subroutine list_append_list_c( self, other )
+    use adt_list__, only: List_t, list_insert_nodes_
     implicit none
     type (List_t), target :: self, other
-    call list_insert_nodes( self%node, other%node, other%node )
+    call list_insert_nodes_( self%node, other%node, other%node )
     self%length  = self%length + other%length
     other%length = 0
   end subroutine
 
 
-!_PROC_EXPORT(list_append_node)
-  subroutine list_append_node( self, node )
-    use adt_list__, only: List_t, ListNode_t, list_link_node
+!_PROC_EXPORT(list_append_node_c)
+  subroutine list_append_node_c( self, node )
+    use adt_list__, only: List_t, ListNode_t, list_link_node_
     implicit none
     type (List_t), target :: self
     type (ListNode_t), target :: node
-    call list_link_node( node, self%node%prev, self%node )
+    call list_link_node_( node, self%node%prev, self%node )
     self%length = self%length + 1
   end subroutine
 
 
-!_PROC_EXPORT(list_append_idx)
-  subroutine list_append_idx( self, idx )
+!_PROC_EXPORT(list_append_idx_c)
+  subroutine list_append_idx_c( self, idx )
     use adt_list__; implicit none
     type (List_t), target :: self
     type (ListIndex_t)    :: idx
-    call listindex_insert_idx( list_index_int(self, tail, 0), idx )
+    call listindex_insert_idx_c( list_index_int(self, tail, 0), idx )
   end subroutine
 
 
-!_PROC_EXPORT(list_delete)
-  subroutine list_delete( self )
+!_PROC_EXPORT(list_delete_c)
+  subroutine list_delete_c( self )
     use adt_list__; implicit none
     type (List_t), target, intent(inout) :: self
-    call list_clear( self )
-    call list_clear( list_stale_list )
+    call list_clear_c( self )
+    call list_clear_c( list_stale_list )
   end subroutine
 
   
-!_PROC_EXPORT(list_clear)
+!_PROC_EXPORT(list_clear_c)
   recursive &
-  subroutine list_clear( self )
+  subroutine list_clear_c( self )
     use adt_list__, only: List_t, ListNode_t, ValueNode_t, &
-                          list_init
+                          list_init_c
     use iso_c_binding
     implicit none
     type(List_t), target, intent(inout) :: self
@@ -370,7 +374,7 @@ end module
       end if
       deallocate( delPtr )
     end do
-    call list_init( self )
+    call list_init_c( self )
   end subroutine
 
 
@@ -393,7 +397,7 @@ end module
   !  a = min( begin, end )
   !end function
 
-  function list_index_node( self, at, stride ) result(res)
+  function list_index_node_( self, at, stride ) result(res)
     use adt_list__, only: List_t, ListNode_t, ListIndex_t
     implicit none
     type(List_t), target, intent(in) :: self
@@ -411,18 +415,18 @@ end module
 
 !_PROC_EXPORT(listindex_index_idx)
   function listindex_index_idx( self, stride ) result(res)
-    use adt_list__, only: ListIndex_t, list_index_node
+    use adt_list__, only: ListIndex_t, list_index_node_
     implicit none
     type(ListIndex_t), intent(in) :: self
     integer(kind=4),     optional :: stride
     type(ListIndex_t)             :: res
-    res = list_index_node( self%host, self%node, stride )
+    res = list_index_node_( self%host, self%node, stride )
   end function
 
 
 !_PROC_EXPORT(list_index_int)
   function list_index_int( self, at, stride ) result(res)
-    use adt_list__, only: List_t, ListIndex_t, listindex_advance_foot
+    use adt_list__, only: List_t, ListIndex_t, listindex_advance_foot_
     implicit none
     type(List_t),      target, intent(in) :: self
     integer(kind=4), optional, intent(in) :: at
@@ -431,28 +435,28 @@ end module
     logical                               :: ok
     res%host => self
     res%node => self%node
-    if (present(at)) then; ok = listindex_advance_foot( res, at )
+    if (present(at)) then; ok = listindex_advance_foot_( res, at )
                      else; res%node => res%node%next
     end if
     if (present(stride))   res%stride = stride
   end function
 
 
-!_PROC_EXPORT(listindex_set_prev)
-  function listindex_set_prev( self ) result(res)
+!_PROC_EXPORT(listindex_set_prev_c)
+  function listindex_set_prev_c( self ) result(res)
     use adt_list__; implicit none
     type(ListIndex_t), intent(inout) :: self
     logical                          :: res
-    res = listindex_advance_head( self, -self%stride )
+    res = listindex_advance_head_( self, -self%stride )
   end function
 
 
-!_PROC_EXPORT(listindex_prev)
-  subroutine listindex_prev( self )
+!_PROC_EXPORT(listindex_prev_c)
+  subroutine listindex_prev_c( self )
     use adt_list__; implicit none
     type(ListIndex_t), intent(inout) :: self
     logical                          :: ok
-    ok = listindex_advance_head( self, -self%stride )
+    ok = listindex_advance_head_( self, -self%stride )
   end subroutine
 
 
@@ -463,27 +467,27 @@ end module
     type(ListIndex_t)             :: res
     logical                       :: ok
     res = self
-    ok = listindex_advance_head( res, -res%stride )
+    ok = listindex_advance_head_( res, -res%stride )
   end function
 
 
-!_PROC_EXPORT(listindex_set_next)
-  function listindex_set_next( self ) result(res)
-    use adt_list__, only: ListIndex_t, listindex_advance_head
+!_PROC_EXPORT(listindex_set_next_c)
+  function listindex_set_next_c( self ) result(res)
+    use adt_list__, only: ListIndex_t, listindex_advance_head_
     implicit none
     type(ListIndex_t), intent(inout) :: self
     logical                          :: res
-    res = listindex_advance_head( self, self%stride )
+    res = listindex_advance_head_( self, self%stride )
   end function
 
 
-!_PROC_EXPORT(listindex_next)
-  subroutine listindex_next( self )
-    use adt_list__, only: ListIndex_t, listindex_advance_head
+!_PROC_EXPORT(listindex_next_c)
+  subroutine listindex_next_c( self )
+    use adt_list__, only: ListIndex_t, listindex_advance_head_
     implicit none
     type(ListIndex_t), intent(inout) :: self
     logical                          :: ok
-    ok = listindex_advance_head( self, self%stride )
+    ok = listindex_advance_head_( self, self%stride )
   end subroutine
 
 
@@ -494,12 +498,12 @@ end module
     type(ListIndex_t)             :: res
     logical                       :: ok
     res = self
-    ok = listindex_advance_head( res, res%stride )
+    ok = listindex_advance_head_( res, res%stride )
   end function
 
 
   logical &
-  function listindex_advance_foot( self, steps ) result(res)
+  function listindex_advance_foot_( self, steps ) result(res)
     use adt_list__, only: ListIndex_t
     implicit none
     type(ListIndex_t), target, intent(inout) :: self
@@ -523,7 +527,7 @@ end module
   
 
   logical &
-  function listindex_advance_head( self, steps ) result(res)
+  function listindex_advance_head_( self, steps ) result(res)
     use adt_list__, only: ListIndex_t
     implicit none
     type(ListIndex_t), target, intent(inout) :: self
@@ -546,9 +550,9 @@ end module
   end function
   
 
-!_PROC_EXPORT(listindex_is_valid)
+!_PROC_EXPORT(listindex_is_valid_c)
   pure logical &
-  function listindex_is_valid( self ) result(res)
+  function listindex_is_valid_c( self ) result(res)
     use adt_list__, only: ListIndex_t
     implicit none
     type(ListIndex_t), target, intent(in) :: self
@@ -558,18 +562,18 @@ end module
   end function
 
   
-!_PROC_EXPORT(listindex_eq_listindex)
+!_PROC_EXPORT(listindex_eq_listindex_c)
   pure logical &
-  function listindex_eq_listindex( self, other ) result(res)
+  function listindex_eq_listindex_c( self, other ) result(res)
     use adt_list__; implicit none
     type(ListIndex_t), intent(in) :: self, other
     res = associated( self%node, other%node )
   end function
 
   
-!_PROC_EXPORT(listindex_eq_node)
+!_PROC_EXPORT(listindex_eq_node_c)
   pure logical &
-  function listindex_eq_node( self, node ) result(res)
+  function listindex_eq_node_c( self, node ) result(res)
     use adt_list__; implicit none
     type(ListIndex_t),    intent(in) :: self
     type(ListNode_t), target, intent(in) :: node
@@ -577,18 +581,18 @@ end module
   end function
 
   
-!_PROC_EXPORT(listindex_ne_listindex)
+!_PROC_EXPORT(listindex_ne_listindex_c)
   pure logical &
-  function listindex_ne_listindex( self, other ) result(res)
+  function listindex_ne_listindex_c( self, other ) result(res)
     use adt_list__; implicit none
     type(ListIndex_t), intent(in) :: self, other
     res = .not. associated( self%node, other%node )
   end function
 
   
-!_PROC_EXPORT(listindex_ne_node)
+!_PROC_EXPORT(listindex_ne_node_c)
   pure logical &
-  function listindex_ne_node( self, node ) result(res)
+  function listindex_ne_node_c( self, node ) result(res)
     use adt_list__; implicit none
     type(ListIndex_t),    intent(in) :: self
     type(ListNode_t), target, intent(in) :: node
@@ -596,39 +600,40 @@ end module
   end function
 
   
-!_PROC_EXPORT(listindex_insert_list)
-  subroutine listindex_insert_list( self, lst )
+!_PROC_EXPORT(listindex_insert_list_c)
+  subroutine listindex_insert_list_c( self, lst )
     use adt_list__; implicit none
     type(ListIndex_t), intent(in) :: self
     type(List_t),          target :: lst
-    call list_insert_nodes( self%node, lst%node, lst%node )
+    call list_insert_nodes_( self%node, lst%node, lst%node )
     self%host%length = self%host%length + lst%length
     lst%length       = 0
   end subroutine
 
 
-!_PROC_EXPORT(listindex_insert_node)
-  subroutine listindex_insert_node( self, node )
+!_PROC_EXPORT(listindex_insert_node_c)
+  subroutine listindex_insert_node_c( self, node )
     use adt_list__; implicit none
     type(ListIndex_t), intent(in) :: self
-    type(ListNode_t),          target :: node
-    call list_link_node( node, self%node%prev, self%node )
+    type(ListNode_t),      target :: node
+    call list_link_node_( node, self%node%prev, self%node )
     self%host%length = self%host%length + 1
   end subroutine
 
 
-!_PROC_EXPORT(listindex_insert_idx)
-  subroutine listindex_insert_idx( self, idx )
-    use adt_list__, only: ListIndex_t, listindex_insert_idx_cnt
+!_PROC_EXPORT(listindex_insert_idx_c)
+  subroutine listindex_insert_idx_c( self, idx )
+    use adt_list__, only: ListIndex_t, listindex_insert_idx_cnt_
     implicit none
     type(ListIndex_t) :: self, idx
     integer(kind=4)   :: cnt
-    call listindex_insert_idx_cnt( self, idx, cnt )
+    call listindex_insert_idx_cnt_( self, idx, cnt )
   end subroutine
 
 
-  subroutine listindex_insert_idx_cnt( self, idx, cnt )
-    use adt_list__, only: ListIndex_t, ListNode_t, listindex_is_valid, listindex_set_next, listindex_next, list_insert_nodes
+  subroutine listindex_insert_idx_cnt_( self, idx, cnt )
+    use adt_list__, only: ListIndex_t, ListNode_t, listindex_is_valid_c, listindex_set_next_c, &
+                          listindex_next_c, list_insert_nodes_
     implicit none
     type(ListIndex_t)            :: self, idx
     integer(kind=4), intent(out) :: cnt
@@ -636,36 +641,38 @@ end module
     logical                      :: done
 
     cnt = 0
-    do while (listindex_is_valid( idx ))
+    do while (listindex_is_valid_c( idx ))
       node => idx%node
-      done = .not. listindex_set_next(idx)
+      done = .not. listindex_set_next_c(idx)
       cnt  = cnt + 1
-      call list_insert_nodes( self%node, node%prev, node%next )
+      call list_insert_nodes_( self%node, node%prev, node%next )
       self%host%length = self%host%length + 1
       idx%host%length  = idx%host%length - 1
 
       if (done) then; exit
-                else; call listindex_next(self)
+                else; call listindex_next_c(self)
       end if
     end do
   end subroutine
 
 
-!_PROC_EXPORT(listindex_insert_range)
-  subroutine listindex_insert_range( self, beg, end )
+!_PROC_EXPORT(listindex_insert_range_c)
+  subroutine listindex_insert_range_c( self, beg, end )
     use adt_list__; implicit none
     type(ListIndex_t), intent(in) :: self, beg, end
-    call list_insert_nodes( self%node, beg%node%prev, end%node%next )
+
+    call list_insert_nodes_( self%node, beg%node%prev, end%node%next )
     self%host%length = -1
     beg%host%length  = -1
   end subroutine
 
 
-!_PROC_EXPORT(listindex_remove_idx)
-  subroutine listindex_remove_idx( self )
+!_PROC_EXPORT(listindex_remove_idx_c)
+  subroutine listindex_remove_idx_c( self )
     use adt_list__; implicit none
     type(ListIndex_t) :: self
-    call listindex_insert_idx( list_index_int(list_stale_list, tail, 0), self )
+
+    call listindex_insert_idx_c( list_index_int(list_stale_list, tail, 0), self )
   end subroutine
 
   
@@ -675,24 +682,26 @@ end module
     type(List_t), target :: self
     integer(kind=4)      :: at
     type(ListIndex_t)    :: res
+
     res = listindex_index_idx( listindex_pop_idx( list_index_int( self, at, 0 ) ), 0 )
   end function
 
 
 !_PROC_EXPORT(listindex_pop_idx)
   function listindex_pop_idx( self ) result(res)
-    use adt_list__, only: ListIndex_t, listindex_insert_idx_cnt, list_index_int, list_stale_list, tail
+    use adt_list__, only: ListIndex_t, listindex_insert_idx_cnt_, list_index_int, list_stale_list, tail
     implicit none
     type(ListIndex_t) :: self, res
     integer(kind=4)   :: cnt
-    call listindex_insert_idx_cnt( list_index_int(list_stale_list, tail, 0), self, cnt )
+
+    call listindex_insert_idx_cnt_( list_index_int(list_stale_list, tail, 0), self, cnt )
     res = list_index_int( list_stale_list, -cnt )
   end function
 
 
-!_PROC_EXPORT(list_assign_list)
-  subroutine list_assign_list( lhs, rhs )
-    use adt_list__, only: List_t, ListNode_t, NodeCloner, list_clear, list_append_node
+!_PROC_EXPORT(list_assign_list_c)
+  subroutine list_assign_list_c( lhs, rhs )
+    use adt_list__, only: List_t, ListNode_t, NodeCloner, list_clear_c, list_append_node_c
     implicit none
     type(List_t), target, intent(inout) :: lhs
     type(List_t), target,    intent(in) :: rhs
@@ -701,20 +710,20 @@ end module
 
     base => rhs%node%next%prev !< sorry, but rhs is a shallow copy!
     if (.not. associated( base, lhs%node )) then
-      call list_clear( lhs )
+      call list_clear_c( lhs )
       ptr => base%next
       do while (.not. associated( ptr, base ))
         cloneNode => ptr%typeInfo%cloneObjProc
         call cloneNode( copy, ptr )
-        call list_append_node( lhs, copy )
+        call list_append_node_c( lhs, copy )
         ptr => ptr%next
       end do
     end if
   end subroutine
 
 
-!_PROC_EXPORT(list_assign_idx)
-  subroutine list_assign_idx( lhs, rhs )
+!_PROC_EXPORT(list_assign_idx_c)
+  subroutine list_assign_idx_c( lhs, rhs )
     use adt_list__; implicit none
     type(List_t), target, intent(inout) :: lhs
     type(ListIndex_t),       intent(in) :: rhs
@@ -725,17 +734,17 @@ end module
 
     idx = rhs
     if (associated( idx%host, lhs )) then
-      call list_init( tmp )
-      call listindex_insert_idx( list_index_int(tmp, tail, 0), idx )
-      call list_clear( lhs )
-      call list_append_list( lhs, tmp )
+      call list_init_c( tmp )
+      call listindex_insert_idx_c( list_index_int(tmp, tail, 0), idx )
+      call list_clear_c( lhs )
+      call list_append_list_c( lhs, tmp )
     else
-      call list_clear( lhs )
-      do while (listindex_is_valid(idx))
+      call list_clear_c( lhs )
+      do while (listindex_is_valid_c(idx))
         cloneNode => idx%node%typeInfo%cloneObjProc
         call cloneNode( copy, idx%node )
-        call list_append_node( lhs, copy )
-        call listindex_next(idx)
+        call list_append_node_c( lhs, copy )
+        call listindex_next_c(idx)
       end do
     end if
   end subroutine

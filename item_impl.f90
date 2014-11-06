@@ -25,9 +25,9 @@ module adt_item__
 end module
 
 
-!_PROC_EXPORT(item_object_size)
+!_PROC_EXPORT(item_object_size_c)
   integer(kind=4) &
-  function item_object_size() result(res)
+  function item_object_size_c() result(res)
     use adt_item__; implicit none
     type (Item_t) :: tmp
     res = storage_size(tmp) / 8

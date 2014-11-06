@@ -19,6 +19,7 @@ program testinger
   procedure(simpleCall), pointer :: sc => null()
   type(Ding)                     :: dong
   integer*4                      :: i, j
+  type(TypeInfo_t),      pointer :: ti
 
   type(c_ptr)         :: cpointer
   type(Ref_t)         :: ref1, ref2, ref3, ref4
@@ -94,22 +95,20 @@ program testinger
 
   ref2 = ref_of(4.23)
   ref1 = clone(ref2)
-
   call free(ref1)
 
   ref1 = ref_of(dong)
-
   ref2 = clone(ref1)
-
-  !call free(ref2)
+  call free(ref2)
 
   allocate( ptr2d(4,4) )
   ref1 = ref_of(ptr2d)
-  call ref_control( ref1, accept_reference )
+  ti => dynamic_type(ref1)
+  call bind( ref1, .false. )
+  call bind( ref1, .true. )
 
   ptr2d => null()
   ptr2d => intXY(ref1)
-
   ptr2d = 21
 
   ref2 = ref_from_CallBack( sub_a )

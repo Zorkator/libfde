@@ -3,10 +3,19 @@
 #include "adt/itfUtil.fpp"
 
 module adt_ref__
-  use adt_ref, only: Ref_t => Ref_t__impl__, RefEncoding_t
+  use adt_ref, only: RefEncoding_t
   use adt_basestring
   use adt_typeinfo
   use iso_c_binding
+
+# define Ref_t    Ref_t__impl__
+
+  type, public :: Ref_t
+    _RefStatus                :: refstat = _ref_HardLent
+    type(BaseString_t)        :: ref_str
+    type(TypeInfo_t), pointer :: typeInfo => null()
+  end type
+
 
   interface
     pure function ref_rank( self ) result(res)
@@ -24,9 +33,9 @@ module adt_ref__
 end module
 
 
-!_PROC_EXPORT(ref_object_size)
+!_PROC_EXPORT(ref_object_size_c)
   integer(kind=4) &
-  function ref_object_size() result(res)
+  function ref_object_size_c() result(res)
     use adt_ref__; implicit none
     type (Ref_t) :: tmp
     res = storage_size(tmp) / 8
@@ -34,6 +43,7 @@ end module
 
 
 !_PROC_EXPORT(ref_init_by_proto)
+!_ARG_REFERENCE2(self, proto)
   subroutine ref_init_by_proto( self, has_proto, proto )
     use adt_ref__
     implicit none
@@ -52,8 +62,9 @@ end module
   end subroutine
 
 
-!_PROC_EXPORT(ref_assign_ref)
-  subroutine ref_assign_ref( lhs, rhs )
+!_PROC_EXPORT(ref_assign_ref_c)
+!_ARG_REFERENCE2(lhs, rhs)
+  subroutine ref_assign_ref_c( lhs, rhs )
     use adt_ref__
     implicit none
     type(Ref_t), intent(inout) :: lhs
@@ -71,6 +82,7 @@ end module
 
 
 !_PROC_EXPORT(ref_assign_encoding)
+!_ARG_REFERENCE2(lhs, rhs)
   subroutine ref_assign_encoding( lhs, rhs )
     use adt_ref__
     implicit none
@@ -92,6 +104,7 @@ end module
 
 
 !_PROC_EXPORT(ref_get_typereference)
+!_ARG_REFERENCE1(self)
   function ref_get_typereference( self ) result(res)
     use adt_ref__, only: Ref_t, c_ptr, basestring_cptr_c
     implicit none
@@ -103,6 +116,7 @@ end module
 
 
 !_PROC_EXPORT(ref_rank)
+!_ARG_REFERENCE1(self)
   pure function ref_rank( self ) result(res)
     use adt_ref__, only: Ref_t
     implicit none
@@ -118,6 +132,7 @@ end module
 
 
 !_PROC_EXPORT(ref_shape)
+!_ARG_REFERENCE1(self)
   pure function ref_shape( self ) result(res)
     use adt_ref__
     implicit none
@@ -135,6 +150,7 @@ end module
 
 
 !_PROC_EXPORT(ref_clone)
+!_ARG_REFERENCE1(self)
   function ref_clone( self ) result(res)
     use adt_ref__
     implicit none
@@ -154,6 +170,7 @@ end module
 
 
 !_PROC_EXPORT(ref_cptr)
+!_ARG_REFERENCE1(self)
   function ref_cptr( self ) result(res)
     use adt_ref__
     implicit none
@@ -169,9 +186,10 @@ end module
   end function
 
 
-!_PROC_EXPORT(ref_delete)
+!_PROC_EXPORT(ref_delete_c)
+!_ARG_REFERENCE1(self)
   recursive &
-  subroutine ref_delete( self )
+  subroutine ref_delete_c( self )
     use adt_ref__
     implicit none
     type(Ref_t) :: self
@@ -183,6 +201,7 @@ end module
 
 
 !_PROC_EXPORT(ref_free)
+!_ARG_REFERENCE1(self)
   recursive &
   subroutine ref_free( self )
     use adt_ref__
@@ -210,6 +229,7 @@ end module
 
 
 !_PROC_EXPORT(ref_dynamic_type)
+!_ARG_REFERENCE1(self)
   function ref_dynamic_type( self ) result(res)
     use adt_ref__
     implicit none
@@ -222,3 +242,13 @@ end module
   end function
 
   
+!_PROC_EXPORT(ref_bind)
+!_ARG_REFERENCE1(self)
+  subroutine ref_bind( self, do_bind )
+    use adt_ref__
+    implicit none
+    type(Ref_t), intent(inout) :: self
+    logical                    :: do_bind
+    _ref_setMine( self%refstat, merge( 1, 0, do_bind ) )
+  end subroutine
+

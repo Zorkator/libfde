@@ -144,6 +144,8 @@ class RefType(TypeSpec):
     #   dimSpec:    ('', ', dimension(:,...)')[has_dimension]
     #
     ref_encoder = """
+!_PROC_EXPORT({typeId}_encode_ref_)
+!_ARG_REFERENCE1(val)
     function {typeId}_encode_ref_( val ) result(res)
       use iso_c_binding
       {baseType}{dimSpec}{valAttrib}   :: val
@@ -165,6 +167,8 @@ class RefType(TypeSpec):
     #   dimSpec:   ('', ', dimension(:,...)')[has_dimension]
     #
     ref_decoder = """
+!_PROC_EXPORT({typeId}_decode_ref_)
+!_ARG_REFERENCE1(val)
     function {typeId}_decode_ref_( val ) result(res)
       use iso_c_binding
       type(Ref_t),        intent(in) :: val
@@ -244,6 +248,8 @@ class RefType(TypeSpec):
 
     # parameters:
     ref_typechecker = """
+!_PROC_EXPORT({typeId}_in_ref_)
+!_ARG_REFERENCE1(self)
     function {typeId}_in_ref_( self ) result(res)
       type(Ref_t), intent(in) :: self
       logical                 :: res
@@ -260,13 +266,15 @@ class RefType(TypeSpec):
     #   deleteProc: ', deleteProc = <funcId>'
     #   shapeProc:  ', shapeProc = <funcId>'
     ref_typeinfo = """
+!_PROC_EXPORT({typeId}_typeinfo_)
+!_ARG_REFERENCE1(self)
     function {typeId}_typeinfo_( self ) result(res)
       {baseType}{dimSpec}       :: self
       type(TypeInfo_t), pointer :: res
 
       res => type_{typeId}
       if (.not. res%initialized) &
-        call init_TypeInfo( res, '{typeId}', '{baseType}' &
+        call typeinfo_init( res, '{typeId}', '{baseType}' &
                             , int(storage_size(self),4) &
                             , size(shape(self)){initProc}{assignProc}{deleteProc}{shapeProc}{cloneProc} &
                             , cloneRefProc = {typeId}_clone_ref_ )
@@ -278,13 +286,15 @@ class RefType(TypeSpec):
     #   baseType:   fortran base type | type(...) | procedure(...)
     #   dimSpec:    ('', ', dimension(:,...)')[has_dimension]
     proc_typeinfo = """
+!_PROC_EXPORT({typeId}_typeinfo_)
+!_ARG_REFERENCE1(self)
     function {typeId}_typeinfo_( self ) result(res)
       {baseType}{dimSpec}       :: self
       type(TypeInfo_t), pointer :: res
 
       res => type_{typeId}
       if (.not. res%initialized) &
-        call init_TypeInfo( res, '{typeId}', '{baseType}', 0, 0 )
+        call typeinfo_init( res, '{typeId}', '{baseType}', 0, 0 )
     end function
     """
   )
@@ -385,18 +395,22 @@ class ListNode(TypeSpec):
     access_itf = "new_ListNode, new_ListNode_of, node_type, {typeId}",
 
     node_type = """
+!_PROC_EXPORT({typeId}_nodetype_)
+!_ARG_REFERENCE1(val)
     function {typeId}_nodetype_( val ) result(res)
       {baseType}{dimSpec}, intent(in) :: val
       type(TypeInfo_t),       pointer :: res
       type({typeId}_node_t)           :: node
       res => type_{typeId}_node
       if (.not. res%initialized) &
-        call init_TypeInfo( res, '{typeId}_node', 'type({typeId}_node_t)', &
+        call typeinfo_init( res, '{typeId}_node', 'type({typeId}_node_t)', &
           int(storage_size(node),4), 0, subtype = static_type(val), cloneObjProc = {typeId}_clone_node_ )
     end function
     """,
 
     new_node = """
+!_PROC_EXPORT({typeId}_new_node_)
+!_ARG_REFERENCE1(valPtr)
     function {typeId}_new_node_( valPtr ) result(res)
       {baseType}{dimSpec}, pointer, intent(out) :: valPtr
       type(ListNode_t),                 pointer :: res
@@ -414,6 +428,8 @@ class ListNode(TypeSpec):
     """,
 
     new_node_of = """
+!_PROC_EXPORT({typeId}_new_node_of_)
+!_ARG_REFERENCE1(val)
     function {typeId}_new_node_of_( val ) result(res)
       {baseType}{dimSpec}, intent(in) :: val
       type(ListNode_t),       pointer :: res
@@ -424,6 +440,8 @@ class ListNode(TypeSpec):
     """,
 
     new_node_of_alias = """
+!_PROC_EXPORT({typeId}{aliasId}_new_node_of_)
+!_ARG_REFERENCE1(val)
     function {typeId}{aliasId}_new_node_of_( val ) result(res)
       {baseType}{dimSpec},            intent(in) :: val
       type(ListNode_t),                  pointer :: res
@@ -451,6 +469,8 @@ class ListNode(TypeSpec):
     """,
 
     node_value = """
+!_PROC_EXPORT({typeId}_node_value_)
+!_ARG_REFERENCE1(idx)
     function {typeId}_node_value_( idx ) result(res)
       use iso_c_binding
       type(ListIndex_t)              :: idx

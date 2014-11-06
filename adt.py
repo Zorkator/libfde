@@ -20,9 +20,9 @@ class Meta(type(Structure)):
 
   def __new__( _class, name, bases, members ):
     from operator import add
-    method = '%s_{0}_' % name.lower()
+    method = '{0}_{{0}}_c_'.format(name.lower())
     members['__typeprocs__'] = list( members.get( '__typeprocs__', [method] ) ) \
-                             + filter( bool, reduce( add, (getattr( b, '__typeprocs__', [] ) for b in bases) ) )
+                             + reduce( add, (getattr( b, '__typeprocs__', [] ) for b in bases) )
     size = getattr( _libHandle, method.format('object_size'), None )
     size and members.setdefault( '_fields_', [('_data', c_int8 * size())] )
     return super(Meta, _class).__new__( _class, name, bases, members )
@@ -41,6 +41,7 @@ class Object(Structure):
       raise AttributeError( "'%s' object has no attribute '%s'" % (self.__class__.__name__, name) )
     setattr( type(self), name, attr )
     return attr
+
 
 
 class MemoryRef(Object):
@@ -63,4 +64,37 @@ class String(BaseString):
     m = MemoryRef()
     self.memoryref( byref(m), byref(self) )
     return string_at( m.ptr, m.len )
+
+  def __len__( self ):
+    return self.len( byref(self) )
+
+
+
+class TypeInfo(Object):
+  pass
+
+
+
+class Ref(Object):
+  pass
+
+
+
+class Item(Object):
+  pass
+
+
+
+class List(Object):
+  pass
+
+
+class ListIndex(Object):
+  pass
+
+
+
+class HashMap(Object):
+  pass
+
 

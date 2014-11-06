@@ -2,9 +2,9 @@
 #include "adt/itfUtil.fpp"
 
 
-!_PROC_EXPORT(typeinfo_object_size)
+!_PROC_EXPORT(typeinfo_object_size_c)
   integer(kind=4) &
-  function typeinfo_object_size() result(res)
+  function typeinfo_object_size_c() result(res)
     use adt_typeinfo; implicit none
     type (TypeInfo_t) :: tmp
     res = storage_size(tmp) / 8
@@ -12,7 +12,7 @@
 
 
   !**
-  ! init_typeinfo initializes TypeInfo structure.
+  ! typeinfo_init initializes TypeInfo structure.
   ! @param self         - the TypeInfo to initialize
   ! @param typeId       - the type's id string (e.g. double)
   ! @param baseType     - the type's base string (e.g. real(kind=8))
@@ -25,8 +25,8 @@
   ! @param initProc     - the subroutine to initialize a variable  : subroutine init( var, hardness )
   ! @param shapeProc    - the function to inspect the shape        : subroutine shape( var, res, rank )
   !*
-!PROC_EXPORT_1REF(init_typeinfo, self)
-  subroutine init_typeinfo( self, typeId, baseType, bitSize, rank, subtype, &
+!_PROC_EXPORT(typeinfo_init)
+  subroutine typeinfo_init( self, typeId, baseType, bitSize, rank, subtype, &
                             assignProc, cloneObjProc, cloneRefProc, deleteProc, initProc, shapeProc )
     use adt_typeinfo, only: TypeInfo_t
     type(TypeInfo_t),    intent(inout) :: self

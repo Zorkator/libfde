@@ -14,15 +14,15 @@ module adt_string__
 #   define _len(self)           self%str%len
 #   define _ptr(self)           basestring_ptr(self%str)
 #   define _array(self)         self%str%ptr(:self%str%len)
-#   define _reflen(self)        basestring_len_ref_c( self%str )
+#   define _reflen(self)        basestring_len_ref( self%str )
 #   define _release_weak(self)  call basestring_release_weak( self%str )
   end type
 
 end module
 
-!_PROC_EXPORT(string_object_size)
+!_PROC_EXPORT(string_object_size_c)
   integer(kind=4) &
-  function string_object_size() result(res)
+  function string_object_size_c() result(res)
     use adt_string__; implicit none
     type (String_t) :: tmp
     res = storage_size(tmp) / 8
@@ -117,39 +117,14 @@ end module
 
 
   ! assignments
-!_PROC_EXPORT(charstring_assign_string)
-  subroutine charstring_assign_string( lhs, rhs )
+!_PROC_EXPORT(charstring_assign_string_c)
+  subroutine charstring_assign_string_c( lhs, rhs )
     use adt_string__; implicit none
     character(len=*), intent(out) :: lhs
     type(String_t),    intent(in) :: rhs
     lhs = _ptr(rhs)
     _release_weak( rhs )
   end subroutine
-
-!_PROC_EXPORT(string_assign_charstring)
-  subroutine string_assign_charstring( lhs, rhs )
-    use adt_string__; implicit none
-    type(String_t), intent(inout) :: lhs
-    character(len=*),  intent(in) :: rhs
-    call basestring_assign_charstring_c( lhs%str, rhs )
-  end subroutine
-
-!_PROC_EXPORT(string_assign_string)
-  subroutine string_assign_string( lhs, rhs )
-    use adt_string__; implicit none
-    type(String_t), intent(inout) :: lhs
-    type(String_t),    intent(in) :: rhs
-    call basestring_assign_basestring_c( lhs%str, rhs%str )
-  end subroutine
-
-!_PROC_EXPORT(string_assign_buf)
-  subroutine string_assign_buf( lhs, rhs )
-    use adt_string__; implicit none
-    type(String_t),              intent(inout) :: lhs
-    character(len=1), dimension(:), intent(in) :: rhs
-    call basestring_assign_buf( lhs%str, rhs )
-  end subroutine
-
 
 !##################################
 
@@ -233,30 +208,30 @@ end module
 
 
   ! len
-!_PROC_EXPORT(string_len)
-  function string_len( self ) result(length)
+!_PROC_EXPORT(string_len_c)
+  function string_len_c( self ) result(length)
     use adt_string__; implicit none
     type(String_t), intent(in) :: self
-    integer                    :: length
+    integer(kind=c_size_t)     :: length
     length = _len(self)
     _release_weak( self )
   end function
 
 
   ! len_trim
-!_PROC_EXPORT(string_len_trim)
-  function string_len_trim( self ) result(length)
+!_PROC_EXPORT(string_len_trim_c)
+  function string_len_trim_c( self ) result(length)
     use adt_string__; implicit none
     type(String_t), intent(in) :: self
-    integer                    :: length
+    integer(kind=c_size_t)     :: length
     length = len_trim(_ptr(self))
     _release_weak( self )
   end function
 
 
   ! lge
-!_PROC_EXPORT(string_lge_charstring)
-  function string_lge_charstring( strgA, strgB ) result(res)
+!_PROC_EXPORT(string_lge_charstring_c)
+  function string_lge_charstring_c( strgA, strgB ) result(res)
     use adt_string__; implicit none
     type(String_t),   intent(in) :: strgA
     character(len=*), intent(in) :: strgB
@@ -265,8 +240,8 @@ end module
     _release_weak( strgA )
   end function
 
-!_PROC_EXPORT(charstring_lge_string)
-  function charstring_lge_string( strgA, strgB ) result(res)
+!_PROC_EXPORT(charstring_lge_string_c)
+  function charstring_lge_string_c( strgA, strgB ) result(res)
     use adt_string__; implicit none
     character(len=*), intent(in) :: strgA
     type(String_t),   intent(in) :: strgB
@@ -275,8 +250,8 @@ end module
     _release_weak( strgB )
   end function
 
-!_PROC_EXPORT(string_lge_string)
-  function string_lge_string( strgA, strgB ) result(res)
+!_PROC_EXPORT(string_lge_string_c)
+  function string_lge_string_c( strgA, strgB ) result(res)
     use adt_string__; implicit none
     type(String_t), intent(in) :: strgA
     type(String_t), intent(in) :: strgB
@@ -288,8 +263,8 @@ end module
 
 
   ! lgt
-!_PROC_EXPORT(string_lgt_charstring)
-  function string_lgt_charstring( strgA, strgB ) result(res)
+!_PROC_EXPORT(string_lgt_charstring_c)
+  function string_lgt_charstring_c( strgA, strgB ) result(res)
     use adt_string__; implicit none
     type(String_t),   intent(in) :: strgA
     character(len=*), intent(in) :: strgB
@@ -298,8 +273,8 @@ end module
     _release_weak( strgA )
   end function
 
-!_PROC_EXPORT(charstring_lgt_string)
-  function charstring_lgt_string( strgA, strgB ) result(res)
+!_PROC_EXPORT(charstring_lgt_string_c)
+  function charstring_lgt_string_c( strgA, strgB ) result(res)
     use adt_string__; implicit none
     character(len=*), intent(in) :: strgA
     type(String_t),   intent(in) :: strgB
@@ -308,8 +283,8 @@ end module
     _release_weak( strgB )
   end function
 
-!_PROC_EXPORT(string_lgt_string)
-  function string_lgt_string( strgA, strgB ) result(res)
+!_PROC_EXPORT(string_lgt_string_c)
+  function string_lgt_string_c( strgA, strgB ) result(res)
     use adt_string__; implicit none
     type(String_t), intent(in) :: strgA
     type(String_t), intent(in) :: strgB
@@ -321,8 +296,8 @@ end module
 
 
   ! lle
-!_PROC_EXPORT(string_lle_charstring)
-  function string_lle_charstring( strgA, strgB ) result(res)
+!_PROC_EXPORT(string_lle_charstring_c)
+  function string_lle_charstring_c( strgA, strgB ) result(res)
     use adt_string__; implicit none
     type(String_t),   intent(in) :: strgA
     character(len=*), intent(in) :: strgB
@@ -331,8 +306,8 @@ end module
     _release_weak( strgA )
   end function
 
-!_PROC_EXPORT(charstring_lle_string)
-  function charstring_lle_string( strgA, strgB ) result(res)
+!_PROC_EXPORT(charstring_lle_string_c)
+  function charstring_lle_string_c( strgA, strgB ) result(res)
     use adt_string__; implicit none
     character(len=*), intent(in) :: strgA
     type(String_t),   intent(in) :: strgB
@@ -341,8 +316,8 @@ end module
     _release_weak( strgB )
   end function
 
-!_PROC_EXPORT(string_lle_string)
-  function string_lle_string( strgA, strgB ) result(res)
+!_PROC_EXPORT(string_lle_string_c)
+  function string_lle_string_c( strgA, strgB ) result(res)
     use adt_string__; implicit none
     type(String_t), intent(in) :: strgA
     type(String_t), intent(in) :: strgB
@@ -354,8 +329,8 @@ end module
 
 
   ! llt
-!_PROC_EXPORT(string_llt_charstring)
-  function string_llt_charstring( strgA, strgB ) result(res)
+!_PROC_EXPORT(string_llt_charstring_c)
+  function string_llt_charstring_c( strgA, strgB ) result(res)
     use adt_string__; implicit none
     type(String_t),   intent(in) :: strgA
     character(len=*), intent(in) :: strgB
@@ -364,8 +339,8 @@ end module
     _release_weak( strgA )
   end function
 
-!_PROC_EXPORT(charstring_llt_string)
-  function charstring_llt_string( strgA, strgB ) result(res)
+!_PROC_EXPORT(charstring_llt_string_c)
+  function charstring_llt_string_c( strgA, strgB ) result(res)
     use adt_string__; implicit none
     character(len=*), intent(in) :: strgA
     type(String_t),   intent(in) :: strgB
@@ -374,8 +349,8 @@ end module
     _release_weak( strgB )
   end function
 
-!_PROC_EXPORT(string_llt_string)
-  function string_llt_string( strgA, strgB ) result(res)
+!_PROC_EXPORT(string_llt_string_c)
+  function string_llt_string_c( strgA, strgB ) result(res)
     use adt_string__; implicit none
     type(String_t), intent(in) :: strgA
     type(String_t), intent(in) :: strgB
@@ -420,8 +395,8 @@ end module
 
 
   ! equality
-!_PROC_EXPORT(string_eq_charstring)
-  function string_eq_charstring( lhs, rhs ) result(res)
+!_PROC_EXPORT(string_eq_charstring_c)
+  function string_eq_charstring_c( lhs, rhs ) result(res)
     use adt_string__; implicit none
     type(String_t),   intent(in) :: lhs
     character(len=*), intent(in) :: rhs
@@ -430,8 +405,8 @@ end module
     _release_weak( lhs )
   end function
 
-!_PROC_EXPORT(charstring_eq_string)
-  function charstring_eq_string( lhs, rhs ) result(res)
+!_PROC_EXPORT(charstring_eq_string_c)
+  function charstring_eq_string_c( lhs, rhs ) result(res)
     use adt_string__; implicit none
     character(len=*), intent(in) :: lhs
     type(String_t),   intent(in) :: rhs
@@ -440,8 +415,8 @@ end module
     _release_weak( rhs )
   end function
 
-!_PROC_EXPORT(string_eq_string)
-  function string_eq_string( lhs, rhs ) result(res)
+!_PROC_EXPORT(string_eq_string_c)
+  function string_eq_string_c( lhs, rhs ) result(res)
     use adt_string__; implicit none
     type(String_t), intent(in) :: lhs
     type(String_t), intent(in) :: rhs
@@ -453,8 +428,8 @@ end module
 
 
   ! inequality
-!_PROC_EXPORT(string_ne_charstring)
-  function string_ne_charstring( lhs, rhs ) result(res)
+!_PROC_EXPORT(string_ne_charstring_c)
+  function string_ne_charstring_c( lhs, rhs ) result(res)
     use adt_string__; implicit none
     type(String_t),   intent(in) :: lhs
     character(len=*), intent(in) :: rhs
@@ -463,8 +438,8 @@ end module
     _release_weak( lhs )
   end function
 
-!_PROC_EXPORT(charstring_ne_string)
-  function charstring_ne_string( lhs, rhs ) result(res)
+!_PROC_EXPORT(charstring_ne_string_c)
+  function charstring_ne_string_c( lhs, rhs ) result(res)
     use adt_string__; implicit none
     character(len=*), intent(in) :: lhs
     type(String_t),   intent(in) :: rhs
@@ -473,8 +448,8 @@ end module
     _release_weak( rhs )
   end function
 
-!_PROC_EXPORT(string_ne_string)
-  function string_ne_string( lhs, rhs ) result(res)
+!_PROC_EXPORT(string_ne_string_c)
+  function string_ne_string_c( lhs, rhs ) result(res)
     use adt_string__; implicit none
     type(String_t), intent(in) :: lhs
     type(String_t), intent(in) :: rhs
@@ -486,8 +461,8 @@ end module
 
 
   ! lower than
-!_PROC_EXPORT(string_lt_charstring)
-  function string_lt_charstring( lhs, rhs ) result(res)
+!_PROC_EXPORT(string_lt_charstring_c)
+  function string_lt_charstring_c( lhs, rhs ) result(res)
     use adt_string__; implicit none
     type(String_t),   intent(in) :: lhs
     character(len=*), intent(in) :: rhs
@@ -496,8 +471,8 @@ end module
     _release_weak( lhs )
   end function
 
-!_PROC_EXPORT(charstring_lt_string)
-  function charstring_lt_string( lhs, rhs ) result(res)
+!_PROC_EXPORT(charstring_lt_string_c)
+  function charstring_lt_string_c( lhs, rhs ) result(res)
     use adt_string__; implicit none
     character(len=*), intent(in) :: lhs
     type(String_t),   intent(in) :: rhs
@@ -506,8 +481,8 @@ end module
     _release_weak( rhs )
   end function
 
-!_PROC_EXPORT(string_lt_string)
-  function string_lt_string( lhs, rhs ) result(res)
+!_PROC_EXPORT(string_lt_string_c)
+  function string_lt_string_c( lhs, rhs ) result(res)
     use adt_string__; implicit none
     type(String_t), intent(in) :: lhs
     type(String_t), intent(in) :: rhs
@@ -519,8 +494,8 @@ end module
 
 
   ! lower equal
-!_PROC_EXPORT(string_le_charstring)
-  function string_le_charstring( lhs, rhs ) result(res)
+!_PROC_EXPORT(string_le_charstring_c)
+  function string_le_charstring_c( lhs, rhs ) result(res)
     use adt_string__; implicit none
     type(String_t),   intent(in) :: lhs
     character(len=*), intent(in) :: rhs
@@ -529,8 +504,8 @@ end module
     _release_weak( lhs )
   end function
 
-!_PROC_EXPORT(charstring_le_string)
-  function charstring_le_string( lhs, rhs ) result(res)
+!_PROC_EXPORT(charstring_le_string_c)
+  function charstring_le_string_c( lhs, rhs ) result(res)
     use adt_string__; implicit none
     character(len=*), intent(in) :: lhs
     type(String_t),   intent(in) :: rhs
@@ -539,8 +514,8 @@ end module
     _release_weak( rhs )
   end function
 
-!_PROC_EXPORT(string_le_string)
-  function string_le_string( lhs, rhs ) result(res)
+!_PROC_EXPORT(string_le_string_c)
+  function string_le_string_c( lhs, rhs ) result(res)
     use adt_string__; implicit none
     type(String_t), intent(in) :: lhs
     type(String_t), intent(in) :: rhs
@@ -552,8 +527,8 @@ end module
 
 
   ! greater than
-!_PROC_EXPORT(string_gt_charstring)
-  function string_gt_charstring( lhs, rhs ) result(res)
+!_PROC_EXPORT(string_gt_charstring_c)
+  function string_gt_charstring_c( lhs, rhs ) result(res)
     use adt_string__; implicit none
     type(String_t),   intent(in) :: lhs
     character(len=*), intent(in) :: rhs
@@ -562,8 +537,8 @@ end module
     _release_weak( lhs )
   end function
 
-!_PROC_EXPORT(charstring_gt_string)
-  function charstring_gt_string( lhs, rhs ) result(res)
+!_PROC_EXPORT(charstring_gt_string_c)
+  function charstring_gt_string_c( lhs, rhs ) result(res)
     use adt_string__; implicit none
     character(len=*), intent(in) :: lhs
     type(String_t),   intent(in) :: rhs
@@ -572,8 +547,8 @@ end module
     _release_weak( rhs )
   end function
 
-!_PROC_EXPORT(string_gt_string)
-  function string_gt_string( lhs, rhs ) result(res)
+!_PROC_EXPORT(string_gt_string_c)
+  function string_gt_string_c( lhs, rhs ) result(res)
     use adt_string__; implicit none
     type(String_t), intent(in) :: lhs
     type(String_t), intent(in) :: rhs
@@ -585,8 +560,8 @@ end module
 
 
   ! greater equal
-!_PROC_EXPORT(string_ge_charstring)
-  function string_ge_charstring( lhs, rhs ) result(res)
+!_PROC_EXPORT(string_ge_charstring_c)
+  function string_ge_charstring_c( lhs, rhs ) result(res)
     use adt_string__; implicit none
     type(String_t),   intent(in) :: lhs
     character(len=*), intent(in) :: rhs
@@ -595,8 +570,8 @@ end module
     _release_weak( lhs )
   end function
 
-!_PROC_EXPORT(charstring_ge_string)
-  function charstring_ge_string( lhs, rhs ) result(res)
+!_PROC_EXPORT(charstring_ge_string_c)
+  function charstring_ge_string_c( lhs, rhs ) result(res)
     use adt_string__; implicit none
     character(len=*), intent(in) :: lhs
     type(String_t),   intent(in) :: rhs
@@ -605,8 +580,8 @@ end module
     _release_weak( rhs )
   end function
 
-!_PROC_EXPORT(string_ge_string)
-  function string_ge_string( lhs, rhs ) result(res)
+!_PROC_EXPORT(string_ge_string_c)
+  function string_ge_string_c( lhs, rhs ) result(res)
     use adt_string__; implicit none
     type(String_t), intent(in) :: lhs
     type(String_t), intent(in) :: rhs

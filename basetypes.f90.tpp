@@ -1,4 +1,7 @@
 
+!                . o O (needed for generated procedure exports)
+#include "adt/itfUtil.fpp"
+
 module adt_basetypes
   use iso_c_binding
   use adt_ref

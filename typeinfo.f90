@@ -37,7 +37,7 @@ module adt_typeinfo
 
 
   interface
-    subroutine init_TypeInfo( self, typeId, baseType, bitSize, rank, subtype, &
+    subroutine typeinfo_init( self, typeId, baseType, bitSize, rank, subtype, &
                               assignProc, cloneObjProc, cloneRefProc, deleteProc, initProc, shapeProc )
       import TypeInfo_t
       type(TypeInfo_t),    intent(inout) :: self
