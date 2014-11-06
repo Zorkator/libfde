@@ -14,7 +14,7 @@ program f_test
     end function
   end interface
   
-  integer*4 :: i, j, code
+  integer(kind=4)   :: i, j, code
   character(len=32) :: str
   str = "this is a test-string"
   print *, crc32( 0, str(1:1), len_trim(str) )

@@ -34,7 +34,7 @@ program testinger
   print *, str(s)
   val = 'replace ref by text'
 
-  val => setdefault( map, 'bool' )
+  val => setdefault( map, 'bool', Item_of(.true.) )
   val => setdefault( map, 'float', Item_of(4.234) )
   val => setdefault( map, 'string', Item_of('char string') )
   val => setdefault( map, 'float', Item_of('char string') )

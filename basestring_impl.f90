@@ -3,12 +3,13 @@
 #include "adt/ref_status.fpp"
 
 
-!_PROC_EXPORT(basestring_init_by_proto)
-  subroutine basestring_init_by_proto( bs, has_proto, proto )
+!_PROC_EXPORT(basestring_init_by_proto_c)
+  subroutine basestring_init_by_proto_c( bs, has_proto, proto )
     use adt_basestring, only: BaseString_t, basestring_assign_buf
+    use iso_c_binding
     implicit none
     type(BaseString_t), intent(inout) :: bs
-    integer,            intent(in)    :: has_proto
+    integer(kind=4),    intent(in)    :: has_proto
     type(BaseString_t), intent(in)    :: proto
 
     bs%ptr => null()
@@ -23,8 +24,8 @@
   end subroutine
 
 
-!_PROC_EXPORT(basestring_init_by_charstring)
-  subroutine basestring_init_by_charstring( bs, attr, cs )
+!_PROC_EXPORT(basestring_init_by_charstring_c)
+  subroutine basestring_init_by_charstring_c( bs, attr, cs )
     use adt_basestring, only: BaseString_t
     use iso_c_binding
     implicit none
@@ -88,8 +89,8 @@
   end subroutine
 
 
-!_PROC_EXPORT(basestring_delete)
-  subroutine basestring_delete( bs )
+!_PROC_EXPORT(basestring_delete_c)
+  subroutine basestring_delete_c( bs )
     use adt_basestring, only: BaseString_t
     implicit none
     type(BaseString_t) :: bs
@@ -121,7 +122,6 @@
 
 
 !_PROC_EXPORT(basestring_cptr)
-!_ARG_REFERENCE(bs)
   function basestring_cptr( bs ) result(res)
     use adt_basestring, only: BaseString_t
     use iso_c_binding
@@ -138,28 +138,45 @@
   end function
 
 
-!_PROC_EXPORT(basestring_memoryref)
-  function basestring_memoryref( bs ) result(res)
+!_PROC_EXPORT(basestring_cptr_c)
+  subroutine basestring_cptr_c( res, bs )
+    use adt_basestring, only: BaseString_t
+    use iso_c_binding
+    implicit none
+    type(c_ptr),        intent(inout) :: res
+    type(BaseString_t)                :: bs
+
+    res = C_NULL_PTR
+    if (_ref_isWeakMine( bs%refstat )) then
+      deallocate( bs%ptr )
+    else if (associated(bs%ptr) .and. bs%len > 0) then
+      res = c_loc(bs%ptr(1))
+    end if
+  end subroutine
+
+
+!_PROC_EXPORT(basestring_memoryref_c)
+  subroutine basestring_memoryref_c( res, bs )
     use adt_basestring, only: BaseString_t
     use adt_memoryref
     use iso_c_binding
-    type(BaseString_t), intent(in) :: bs
-    type(MemoryRef_t)              :: res
+    type(MemoryRef_t),  intent(inout) :: res
+    type(BaseString_t), intent(in)    :: bs
 
     if (associated(bs%ptr) .and. bs%len > 0) then
       res%loc = c_loc(bs%ptr(1))
       res%len = bs%len
     end if
-  end function
+  end subroutine
 
 
-!_PROC_EXPORT(basestring_len_ref)
+!_PROC_EXPORT(basestring_len_ref_c)
   pure &
-  function basestring_len_ref( bs ) result(res)
+  function basestring_len_ref_c( bs ) result(res)
     use adt_basestring, only: BaseString_t
     implicit none
     type(BaseString_t), intent(in) :: bs
-    integer                        :: res
+    integer(kind=4)                :: res
 
     if (_ref_isWeakMine(bs%refstat)) then; res = 0
                                      else; res = bs%len
@@ -167,8 +184,8 @@
   end function
   
 
-!_PROC_EXPORT(basestring_assign_charstring)
-  subroutine basestring_assign_charstring( bs, cs )
+!_PROC_EXPORT(basestring_assign_charstring_c)
+  subroutine basestring_assign_charstring_c( bs, cs )
     use adt_basestring, only: BaseString_t
     use iso_c_binding
     implicit none
@@ -222,8 +239,8 @@
   end subroutine
 
 
-!_PROC_EXPORT(basestring_assign_basestring)
-  subroutine basestring_assign_basestring( lhs, rhs )
+!_PROC_EXPORT(basestring_assign_basestring_c)
+  subroutine basestring_assign_basestring_c( lhs, rhs )
     use adt_basestring, only: BaseString_t, basestring_ptr
     implicit none
     type(BaseString_t), intent(inout) :: lhs
@@ -243,7 +260,7 @@
 
       ! assigning from hard rhs
       else
-        call basestring_assign_charstring( lhs, basestring_ptr(rhs) ) !< use ptr function to get the right length!
+        call basestring_assign_charstring_c( lhs, basestring_ptr(rhs) ) !< use ptr function to get the right length!
       end if
     end if
   end subroutine

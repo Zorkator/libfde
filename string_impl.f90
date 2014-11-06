@@ -14,7 +14,7 @@ module adt_string__
 #   define _len(self)           self%str%len
 #   define _ptr(self)           basestring_ptr(self%str)
 #   define _array(self)         self%str%ptr(:self%str%len)
-#   define _reflen(self)        basestring_len_ref( self%str )
+#   define _reflen(self)        basestring_len_ref_c( self%str )
 #   define _release_weak(self)  call basestring_release_weak( self%str )
   end type
 
@@ -36,7 +36,7 @@ end module
     use adt_string__; implicit none
     character(len=*), intent(in) :: cs
     type(String_t)               :: res
-    call basestring_init_by_charString( res%str, attribute_volatile, cs )
+    call basestring_init_by_charstring_c( res%str, attribute_volatile, cs )
   end function
 
 !_PROC_EXPORT(string_from_buf)
@@ -131,7 +131,7 @@ end module
     use adt_string__; implicit none
     type(String_t), intent(inout) :: lhs
     character(len=*),  intent(in) :: rhs
-    call basestring_assign_charstring( lhs%str, rhs )
+    call basestring_assign_charstring_c( lhs%str, rhs )
   end subroutine
 
 !_PROC_EXPORT(string_assign_string)
@@ -139,7 +139,7 @@ end module
     use adt_string__; implicit none
     type(String_t), intent(inout) :: lhs
     type(String_t),    intent(in) :: rhs
-    call basestring_assign_basestring( lhs%str, rhs%str )
+    call basestring_assign_basestring_c( lhs%str, rhs%str )
   end subroutine
 
 !_PROC_EXPORT(string_assign_buf)

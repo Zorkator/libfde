@@ -44,8 +44,8 @@
 #include "adt/itfUtil.fpp"
 
 
-!_PROC_EXPORT(crc32_bytebuffer)
-  function crc32_bytebuffer( seed, buf, size ) result(crc_)
+!_PROC_EXPORT(crc32_bytebuffer_c)
+  function crc32_bytebuffer_c( seed, buf, size ) result(crc_)
     use iso_c_binding
     integer(kind=c_int32_t), intent(in) :: seed
     integer(kind=c_size_t),  intent(in) :: size
@@ -107,14 +107,14 @@
   end function
 
 
-!_PROC_EXPORT(crc32_string)
-  function crc32_string( str ) result(crc_)
+!_PROC_EXPORT(crc32_string_c)
+  function crc32_string_c( str ) result(crc_)
     use iso_c_binding
     character(len=*),          target, intent(in) :: str
-    integer(kind=c_int32_t)                       :: crc_, crc32_bytebuffer
+    integer(kind=c_int32_t)                       :: crc_, crc32_bytebuffer_c
     integer(kind=c_int8_t), dimension(:), pointer :: buf
     call c_f_pointer( c_loc(str(1:1)), buf, (/len_trim(str)/) )
-    crc_ = crc32_bytebuffer( 0, buf, int(size(buf), c_size_t) )
+    crc_ = crc32_bytebuffer_c( 0, buf, int(size(buf), c_size_t) )
   end function
 
 
@@ -123,9 +123,9 @@
     use iso_c_binding
     type (c_ptr),                      intent(in) :: cptr
     integer(kind=c_size_t),            intent(in) :: size
-    integer(kind=c_int32_t)                       :: crc_, crc32_bytebuffer
+    integer(kind=c_int32_t)                       :: crc_, crc32_bytebuffer_c
     integer(kind=c_int8_t), dimension(:), pointer :: buf
     call c_f_pointer( cptr, buf, (/size/) )
-    crc_ = crc32_bytebuffer( 0, buf, size )
+    crc_ = crc32_bytebuffer_c( 0, buf, size )
   end function
 

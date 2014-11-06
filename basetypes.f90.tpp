@@ -33,10 +33,10 @@ module adt_basetypes
   !_TypeGen_declare_ListNode( public, complex128, complex*32,  scalar )
   !_TypeGen_declare_ListNode( public, c_void_ptr, type(c_ptr), scalar )
   
-  !_TypeGen_declare_ListNode( public, ref, type(Ref_t), scalar )
+  !_TypeGen_declare_ListNode( public, ref, type(Ref_t),        scalar )
   !_TypeGen_declare_ListNode( alias, ref, type(RefEncoding_t), dimension(:) )
 
-  !_TypeGen_declare_ListNode( public, String, type(String_t), scalar )
+  !_TypeGen_declare_ListNode( public, String, type(String_t),  scalar )
   !_TypeGen_declare_ListNode( alias, String, character(len=*), scalar )
   !_TypeGen_declare_ListNode( alias, String, character(len=1), dimension(:) )
 

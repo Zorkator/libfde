@@ -15,7 +15,7 @@
   ! init_typeinfo initializes TypeInfo structure.
   ! @param self         - the TypeInfo to initialize
   ! @param typeId       - the type's id string (e.g. double)
-  ! @param baseType     - the type's base string (e.g. real*8)
+  ! @param baseType     - the type's base string (e.g. real(kind=8))
   ! @param bitSize      - the storage size of the type in bytes (=> storage_size(type))
   ! @param rank         - the rank of the type
   ! @param assignProc   - the subroutine to assign a variable      : subroutine assign( lhs, rhs )
@@ -31,8 +31,8 @@
     use adt_typeinfo, only: TypeInfo_t
     type(TypeInfo_t),    intent(inout) :: self
     character(len=*),       intent(in) :: typeId, baseType
-    integer*4,              intent(in) :: bitSize
-    integer*4,              intent(in) :: rank
+    integer(kind=4),        intent(in) :: bitSize
+    integer(kind=4),        intent(in) :: rank
     type(TypeInfo_t), target, optional :: subtype
     procedure(),              optional :: assignProc, cloneObjProc, cloneRefProc, deleteProc, initProc, shapeProc
 

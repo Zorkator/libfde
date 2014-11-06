@@ -8,6 +8,7 @@ module adt_hashmap__
   use adt_item
   use adt_ref
   use adt_crc
+  use iso_c_binding
 
   type(List_t), target :: hashmap_nodeCache
 
@@ -33,8 +34,8 @@ module adt_hashmap__
 
   type, public :: HashMap_t
     type(List_t), dimension(:), pointer :: indexVector    => null()
-    integer*4                           :: items          =  0
-    integer*4                           :: indexLimits(2) = default_indexLimits
+    integer(kind=4)                     :: items          =  0
+    integer(kind=4)                     :: indexLimits(2) = default_indexLimits
   end type
 
 
@@ -70,18 +71,32 @@ module adt_hashmap__
       type(Item_t), optional, pointer, intent(out) :: valTgt
     end function
 
-    subroutine hashmap_clear( self, tgtList )
+    subroutine hashmap_flush( self, tgtList )
       import HashMap_t, List_t
       type(HashMap_t), intent(inout) :: self
-      type(List_t),         optional :: tgtList
+      type(List_t)                   :: tgtList
     end subroutine
 
-    subroutine hashmap_setup_index( self, indexSize, tgtList )
-      import HashMap_t, List_t
+    subroutine hashmap_setup_index( self, indexSize )
+      import HashMap_t
       type(HashMap_t), intent(inout) :: self
-      integer*4,          intent(in) :: indexSize
-      type(List_t),         optional :: tgtList
+      integer(kind=4),    intent(in) :: indexSize
     end subroutine
+
+    function hashmap_get_ptr( self, key ) result(res)
+      import HashMap_t, Item_t
+      type(HashMap_t)              :: self
+      character(len=*), intent(in) :: key
+      type(Item_t),        pointer :: res
+    end function
+
+    function hashmap_set_default( self, key, defaultVal ) result(res)
+      import HashMap_t, Item_t
+      type(HashMap_t), intent(inout) :: self
+      character(len=*),   intent(in) :: key
+      type(Item_t)                   :: defaultVal
+      type(Item_t),          pointer :: res
+    end function
 
     subroutine hashmap_reindex( self )
       import HashMap_t
@@ -96,21 +111,21 @@ contains
 end module
 
 
-!_PROC_EXPORT(hashmap_object_size)
+!_PROC_EXPORT(hashmap_object_size_c)
   integer(kind=4) &
-  function hashmap_object_size() result(res)
+  function hashmap_object_size_c() result(res)
     use adt_hashmap__; implicit none
     type (HashMap_t) :: tmp
     res = storage_size(tmp) / 8
   end function
 
 
-!_PROC_EXPORT(hashmap_len)
+!_PROC_EXPORT(hashmap_len_c)
   pure &
-  function hashmap_len( self ) result(res)
+  function hashmap_len_c( self ) result(res)
     use adt_hashmap__; implicit none
     type(HashMap_t), intent(in) :: self
-    integer*4                   :: res
+    integer(kind=4)             :: res
     res = self%items
   end function
 
@@ -125,36 +140,36 @@ end module
   end subroutine
 
 
-!_PROC_EXPORT(hashmap_init_by_proto)
-  subroutine hashmap_init_by_proto( self, has_proto, proto )
+!_PROC_EXPORT(hashmap_init_by_proto_c)
+  subroutine hashmap_init_by_proto_c( self, has_proto, proto )
     use adt_hashmap__; implicit none
     type(HashMap_t)     :: self
     integer             :: has_proto
     type(HashMap_t)     :: proto
-    integer*4           :: indexLimits(2)
+    integer(kind=4)     :: indexLimits(2)
 
     self%indexVector => null()
     self%items       =  0
     if (has_proto /= 0) then; indexLimits = proto%indexLimits
                         else; indexLimits = default_indexLimits
     end if
-    call hashmap_init_sized( self, indexLimits(1), indexLimits(2) )
+    call hashmap_init_sized_c( self, indexLimits(1), indexLimits(2) )
   end subroutine
 
 
-!_PROC_EXPORT(hashmap_init)
-  subroutine hashmap_init( self )
+!_PROC_EXPORT(hashmap_init_c)
+  subroutine hashmap_init_c( self )
     use adt_hashmap__; implicit none
     type(HashMap_t), intent(inout) :: self
-    call hashmap_init_sized( self, default_indexLimits(1), default_indexLimits(2) )
+    call hashmap_init_sized_c( self, default_indexLimits(1), default_indexLimits(2) )
   end subroutine
 
 
-!_PROC_EXPORT(hashmap_init_sized)
-  subroutine hashmap_init_sized( self, index_min, index_max )
+!_PROC_EXPORT(hashmap_init_sized_c)
+  subroutine hashmap_init_sized_c( self, index_min, index_max )
     use adt_hashmap__; implicit none
     type(HashMap_t), intent(inout) :: self
-    integer                        :: index_min, index_max
+    integer(kind=4)                :: index_min, index_max
 
     self%indexLimits(1) = max(1, index_min)
     self%indexLimits(2) = max(1, index_min, index_max)
@@ -164,15 +179,14 @@ end module
   end subroutine
 
 
-  subroutine hashmap_setup_index( self, indexSize, tgtList )
-    use adt_hashmap__, only: HashMap_t, List_t, hashmap_clear, initialize
+  subroutine hashmap_setup_index( self, indexSize )
+    use adt_hashmap__, only: HashMap_t, List_t, hashmap_flush, initialize, hashmap_nodeCache
     implicit none
     type(HashMap_t), intent(inout) :: self
-    integer*4,          intent(in) :: indexSize
-    type(List_t),         optional :: tgtList
-    integer*4                      :: i
+    integer(kind=4),    intent(in) :: indexSize
+    integer(kind=4)                :: i
 
-    call hashmap_clear( self, tgtList )
+    call hashmap_flush( self, hashmap_nodeCache )
     if (indexSize /= size(self%indexVector)) then
       if (associated( self%indexVector )) &
         deallocate( self%indexVector )
@@ -186,47 +200,51 @@ end module
   end subroutine
 
   
-!_PROC_EXPORT(hashmap_clear)
-  subroutine hashmap_clear( self, tgtList )
-    use adt_hashmap__, only: HashMap_t, List_t, hashmap_nodeCache, append
+  subroutine hashmap_flush( self, tgtList )
+    use adt_hashmap__, only: HashMap_t, List_t, append
     implicit none
     type(HashMap_t), intent(inout) :: self
-    type(List_t), optional, target :: tgtList
+    type(List_t),           target :: tgtList
     type(List_t),          pointer :: tgt
-    integer*4                      :: i
+    integer(kind=4)                :: i
     
     if (associated( self%indexVector )) then
-      if (present(tgtList)) then; tgt => tgtList
-                            else; tgt => hashmap_nodeCache
-      end if
-
       do i = 0, size( self%indexVector ) - 1
-        call append( tgt, self%indexVector(i) )
+        call append( tgtList, self%indexVector(i) )
       end do
       self%items = 0
     end if
   end subroutine
 
-!_PROC_EXPORT(hashmap_delete)
-  subroutine hashmap_delete( self )
+
+!_PROC_EXPORT(hashmap_clear_c)
+  subroutine hashmap_clear_c( self )
+    use adt_hashmap__; implicit none
+    type(HashMap_t), intent(inout) :: self
+    call hashmap_flush( self, hashmap_nodeCache )
+  end subroutine
+
+
+!_PROC_EXPORT(hashmap_delete_c)
+  subroutine hashmap_delete_c( self )
     use adt_hashmap__; implicit none
     type(HashMap_t), intent(inout) :: self
 
     if (associated( self%indexVector )) then
-      call hashmap_clear( self )
+      call hashmap_flush( self, hashmap_nodeCache )
       deallocate( self%indexVector )
     end if
   end subroutine
 
 
-!_PROC_EXPORT(hashmap_assign_hashmap)
-  subroutine hashmap_assign_hashmap( lhs, rhs )
+!_PROC_EXPORT(hashmap_assign_hashmap_c)
+  subroutine hashmap_assign_hashmap_c( lhs, rhs )
     use adt_hashmap__; implicit none
     type(HashMap_t), target, intent(inout) :: lhs
     type(HashMap_t), target,    intent(in) :: rhs
     type(ListIndex_t)                      :: l_idx, r_idx
     type(HashNode_t),              pointer :: l_node, r_node
-    integer*4                              :: i
+    integer(kind=4)                        :: i
    
     if (.not. associated( lhs%indexVector, rhs%indexVector )) then
       lhs%indexLimits = rhs%indexLimits
@@ -249,8 +267,8 @@ end module
   end subroutine  
 
 
-!_PROC_EXPORT(hashmap_clear_cache)
-  subroutine hashmap_clear_cache()
+!_PROC_EXPORT(hashmap_clear_cache_c)
+  subroutine hashmap_clear_cache_c()
     use adt_hashmap__, only: clear, hashmap_nodeCache
     implicit none
     call clear( hashmap_nodeCache )
@@ -299,8 +317,8 @@ end module
   end function
 
 
-!_PROC_EXPORT(hashmap_set)
-  subroutine hashmap_set( self, key, val )
+!_PROC_EXPORT(hashmap_set_c)
+  subroutine hashmap_set_c( self, key, val )
     use adt_hashmap__; implicit none
     type(HashMap_t), intent(inout) :: self
     character(len=*),   intent(in) :: key
@@ -322,7 +340,16 @@ end module
   end function
 
 
-!_PROC_EXPORT(hashmap_get_value_ref)
+!_PROC_EXPORT(hashmap_get_c)
+  subroutine hashmap_get_c( res, self, key )
+    use adt_hashmap__; implicit none
+    type(c_ptr),      intent(inout) :: res
+    type(HashMap_t)                 :: self
+    character(len=*), intent(in)    :: key
+    res = c_loc( hashmap_get_value_ref( self, key, .true. ) )
+  end subroutine
+
+
   function hashmap_get_value_ref( self, key, clearStale ) result(res)
     use adt_hashmap__, only: HashMap_t, Item_t, HashNode_t, ListIndex_t, HashNode, hashmap_nodeCache, &
                              hashmap_locate_item, first, new_ListNode, insert, delete, pop, is_valid, assign
@@ -355,9 +382,10 @@ end module
   end function
 
 
-!_PROC_EXPORT(hashmap_get_value_ptr)
-  function hashmap_get_value_ptr( self, key ) result(res)
-    use adt_hashmap__; implicit none
+!_PROC_EXPORT(hashmap_get_ptr)
+  function hashmap_get_ptr( self, key ) result(res)
+    use adt_hashmap__, only: HashMap_t, Item_t, HashNode_t, ListIndex_t, hashmap_locate_item, HashNode
+    implicit none
     type(HashMap_t)              :: self
     character(len=*), intent(in) :: key
     type(Item_t),        pointer :: res
@@ -373,6 +401,21 @@ end module
   end function
 
 
+!_PROC_EXPORT(hashmap_get_ptr_c)
+  subroutine hashmap_get_ptr_c( res, self, key )
+    use adt_hashmap__; implicit none
+    type(c_ptr),      intent(inout) :: res
+    type(HashMap_t)                 :: self
+    character(len=*), intent(in)    :: key
+    type(Item_t),           pointer :: ptr
+
+    ptr => hashmap_get_ptr( self, key )
+    if (associated(ptr)) then; res = c_loc(ptr)
+                         else; res = C_NULL_PTR
+    end if
+  end subroutine
+
+
   subroutine hashmap_reindex( self )
     use adt_hashmap__, only: HashMap_t
     implicit none
@@ -382,7 +425,7 @@ end module
   
   subroutine hashmap_pre_cache( numItems )
     use adt_hashmap__; implicit none
-    integer*4                 :: numItems, missing
+    integer(kind=4)           :: numItems, missing
     type(HashNode_t), pointer :: mapItem
     missing = numItems - len( hashmap_nodeCache )
     do while (missing > 0)
@@ -392,8 +435,8 @@ end module
   end subroutine
 
 
-!_PROC_EXPORT(hashmap_remove_key)
-  subroutine hashmap_remove_key( self, key )
+!_PROC_EXPORT(hashmap_remove_key_c)
+  subroutine hashmap_remove_key_c( self, key )
     use adt_hashmap__; implicit none
     type(HashMap_t), intent(inout) :: self
     character(len=*),   intent(in) :: key
@@ -402,9 +445,9 @@ end module
   end subroutine
 
   
-!_PROC_EXPORT(hashmap_unset_key)
+!_PROC_EXPORT(hashmap_unset_key_c)
   logical &
-  function hashmap_unset_key( self, key ) result(res)
+  function hashmap_unset_key_c( self, key ) result(res)
     use adt_hashmap__; implicit none
     type(HashMap_t), intent(inout) :: self
     character(len=*),   intent(in) :: key
@@ -421,6 +464,20 @@ end module
     if (.not. hashmap_unset_( self, key, res )) &
       res => null()
   end function
+
+
+!_PROC_EXPORT(hashmap_pop_key_c)
+  subroutine hashmap_pop_key_c( res, self, key )
+    use adt_hashmap__; implicit none
+    type(c_ptr),      intent(inout) :: res
+    type(HashMap_t),  intent(inout) :: self
+    character(len=*), intent(in)    :: key
+    type(Item_t),           pointer :: ptr
+
+    if (hashmap_unset_( self, key, ptr )) then; res = c_loc(ptr)
+                                          else; res = C_NULL_PTR
+    end if
+  end subroutine
 
 
   logical &
@@ -447,24 +504,34 @@ end module
 
 !_PROC_EXPORT(hashmap_set_default)
   function hashmap_set_default( self, key, defaultVal ) result(res)
-    use adt_hashmap__; implicit none
+    use adt_hashmap__, only: HashMap_t, Item_t, hashmap_get_value_ref, is_valid, assign, delete
+    implicit none
     type(HashMap_t),     intent(inout) :: self
     character(len=*),       intent(in) :: key
-    type(Item_t), optional, intent(in) :: defaultVal
+    type(Item_t)                       :: defaultVal
     type(Item_t),              pointer :: res
 
     res => hashmap_get_value_ref( self, key, .true. )
-    if (present(defaultVal)) then
-      if (.not. is_valid(res)) then; call assign( res, defaultVal )
-                               else; call delete( defaultVal )
-      end if
+    if (.not. is_valid(res)) then; call assign( res, defaultVal ) !< key didn't exist before
+                             else; call delete( defaultVal )      !< key existed - so delete given defaultVal
     end if
   end function
 
 
-!_PROC_EXPORT(hashmap_has_key)
+!_PROC_EXPORT(hashmap_set_default_c)
+  subroutine hashmap_set_default_c( res, self, key, defaultVal )
+    use adt_hashmap__; implicit none
+    type(c_ptr),         intent(inout) :: res
+    type(HashMap_t),     intent(inout) :: self
+    character(len=*),       intent(in) :: key
+    type(Item_t)                       :: defaultVal
+    res = c_loc( hashmap_set_default( self, key, defaultVal ) )
+  end subroutine
+
+
+!_PROC_EXPORT(hashmap_has_key_c)
   logical &
-  function hashmap_has_key( self, key ) result(res)
+  function hashmap_has_key_c( self, key ) result(res)
     use adt_hashmap__; implicit none
     type(HashMap_t)              :: self
     character(len=*), intent(in) :: key

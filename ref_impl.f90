@@ -43,10 +43,10 @@ end module
     
     if (has_proto /= 0) then;
       _ref_init( self%refstat, _ref_hardness(proto%refstat) )
-      call basestring_init_by_proto( self%ref_str, 1, proto%ref_str )
+      call basestring_init_by_proto_c( self%ref_str, 1, proto%ref_str )
     else;
       self%refstat = _ref_HardLent
-      call basestring_init_by_proto( self%ref_str, 0, self%ref_str )
+      call basestring_init_by_proto_c( self%ref_str, 0, self%ref_str )
     end if
     self%typeInfo => null()
   end subroutine
@@ -61,7 +61,7 @@ end module
 
     if (.not. associated(lhs%ref_str%ptr, rhs%ref_str%ptr)) then
       call ref_free( lhs )
-      call basestring_assign_basestring( lhs%ref_str, rhs%ref_str )
+      call basestring_assign_basestring_c( lhs%ref_str, rhs%ref_str )
       lhs%typeInfo => rhs%typeInfo
 
       if (_ref_isWeakMine( rhs%refstat )) &
@@ -76,8 +76,8 @@ end module
     implicit none
     type(Ref_t),              intent(inout) :: lhs
     type(RefEncoding_t), target, intent(in) :: rhs(:)
-    integer*4,                    parameter :: size_typeInfo = storage_size(TypeInfo_ptr_t(null())) / 8
-    integer*4,                    parameter :: size_encoding = storage_size(RefEncoding_t(null())) / 8
+    integer(kind=4),              parameter :: size_typeInfo = storage_size(TypeInfo_ptr_t(null())) / 8
+    integer(kind=4),              parameter :: size_encoding = storage_size(RefEncoding_t(null())) / 8
     character(len=1), dimension(:), pointer :: stream
     type(TypeInfo_ptr_t),           pointer :: typeInfo
     type(c_ptr)                             :: encoding
@@ -93,12 +93,12 @@ end module
 
 !_PROC_EXPORT(ref_get_typereference)
   function ref_get_typereference( self ) result(res)
-    use adt_ref__, only: Ref_t, c_ptr, basestring_cptr
+    use adt_ref__, only: Ref_t, c_ptr, basestring_cptr_c
     implicit none
     type(Ref_t), intent(in) :: self
     type(c_ptr)             :: res
 
-    res = basestring_cptr( self%ref_str )
+    call basestring_cptr_c( res, self%ref_str )
   end function
 
 
@@ -177,7 +177,7 @@ end module
     type(Ref_t) :: self
 
     call ref_free( self )
-    call basestring_delete( self%ref_str )
+    call basestring_delete_c( self%ref_str )
     self%typeInfo => null()
   end subroutine
 

@@ -498,7 +498,7 @@ class TypeGenerator(object):
   count = dict()
 
   _ident     = '\s*(\w+)\s*'      #< some type identifier
-  _baseType  = '\s*([\w *=()]+)'  #< e.g. integer*4, type(Struct), character(len=*), <interfaceId>, ...
+  _baseType  = '\s*([\w *=()]+)'  #< e.g. integer(kind=4), type(Struct), character(len=*), <interfaceId>, ...
   _dimType   = '\s*([\w ,:()]+)'  #< e.g. scalar, dimension(:,:), procedure
   _keySpecs  = '((?:,\s*\w+\s*=\s*\w+\s*)*)'
   _typeDecl  = '^\s*!\s*_TypeGen_declare_RefType\(%s,%s,%s,%s%s\)' % (_ident, _ident, _baseType, _dimType, _keySpecs)

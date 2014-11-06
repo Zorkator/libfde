@@ -2,7 +2,7 @@
 module adt_string
   use iso_c_binding
   use adt_ref
-  use adt_basestring, only: BaseString_t, basestring_len_ref, &
+  use adt_basestring, only: BaseString_t, basestring_len_ref_c, &
                             attribute_permanent, attribute_volatile, permanent_string, temporary_string
   implicit none
   private
@@ -13,14 +13,14 @@ module adt_string
     type(BaseString_t) :: str
 
 #   define _len(self)       self%str%len
-#   define _reflen(self)    basestring_len_ref( self%str )
+#   define _reflen(self)    basestring_len_ref_c( self%str )
   end type
 
 
   !_TypeGen_declare_RefType( public, String, type(String_t), scalar, \
-  !     initProc   = basestring_init_by_proto, \
-  !     assignProc = basestring_assign_basestring,  \
-  !     deleteProc = basestring_delete, \
+  !     initProc   = basestring_init_by_proto_c,     \
+  !     assignProc = basestring_assign_basestring_c, \
+  !     deleteProc = basestring_delete_c,            \
   !     cloneMode  = _type )
 
 
@@ -105,7 +105,7 @@ module adt_string
 
 
   interface delete
-    subroutine basestring_delete( ds )
+    subroutine basestring_delete_c( ds )
       import String_t
       type(String_t), intent(inout) :: ds
     end subroutine
@@ -309,13 +309,13 @@ module adt_string
       type(String_t),    intent(in) :: ds
     end subroutine
 
-    subroutine basestring_assign_basestring( lhs, rhs )
+    subroutine basestring_assign_basestring_c( lhs, rhs )
       import String_t
       type(String_t), intent(inout) :: lhs
       type(String_t),    intent(in) :: rhs
     end subroutine
 
-    subroutine basestring_assign_charstring( bs, cs )
+    subroutine basestring_assign_charstring_c( bs, cs )
       import String_t
       type(String_t), intent(inout) :: bs
       character(len=*),   intent(in)    :: cs
@@ -487,7 +487,7 @@ module adt_string
 
   
   interface
-    subroutine basestring_init_by_proto( ds, has_proto, proto )
+    subroutine basestring_init_by_proto_c( ds, has_proto, proto )
       import String_t
       type(String_t), intent(inout) :: ds
       integer,        intent(in)    :: has_proto
