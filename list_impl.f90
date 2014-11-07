@@ -12,8 +12,8 @@ module adt_list__
 # define ListIndex_t  ListIndex_t__impl__
 
   type, public :: ListNode_t
-    type(ListNode_t),         pointer :: prev => null(), next => null()
     type(TypeInfo_t), public, pointer :: typeInfo => null()
+    type(ListNode_t),         pointer :: prev => null(), next => null()
     type(void_t)                      :: padding
   end type
 
@@ -383,10 +383,25 @@ end module
     use adt_list__; implicit none
     type(ListIndex_t), intent(in) :: self
     type(TypeInfo_t),     pointer :: res
+
     res => self%node%typeInfo
     if (.not. associated(res)) &
-      res => type_void
+      res => void_type()
   end function
+
+
+!_PROC_EXPORT(listindex_dynamic_type_c)
+  subroutine listindex_dynamic_type_c( res, self )
+    use adt_list__; implicit none
+    type(TypeSpecs_t), intent(inout) :: res
+    type(ListIndex_t), intent(in)    :: self
+    type(TypeInfo_t),        pointer :: ptr
+
+    ptr => self%node%typeInfo
+    if (.not. associated(ptr)) &
+      ptr => void_type()
+    res = ptr%typeSpecs
+  end subroutine
 
 
   !function list_index( self, begin, end, stride ) result(res)

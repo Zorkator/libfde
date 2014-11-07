@@ -29,14 +29,14 @@ module adt_item
 
   type, public :: Item_t
     private
-    _chunkType                :: data(numChunks) = 0
     type(TypeInfo_t), pointer :: typeInfo        => null()
+    _chunkType                :: data(numChunks) = 0
   end type
 
 
   type, public :: Item_t__impl__
-    _chunkType                :: data(numChunks) = 0
     type(TypeInfo_t), pointer :: typeInfo        => null()
+    _chunkType                :: data(numChunks) = 0
   end type
 
 

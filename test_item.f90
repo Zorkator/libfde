@@ -126,7 +126,7 @@ end
     val = vi                           ;\
     ti  => dynamic_type(vi)            ;\
     print *, ti%typeId, ti%baseType    ;\
-    print *, 'byteSize:', ti%byteSize  ;\
+    print *, 'byteSize:', ti%typeSpecs%byteSize  ;\
     print *, _paste(is_,_typeId)( vi ) ;\
     print *, is_valid(vi)              ;\
     call delete( vi )                  ;\

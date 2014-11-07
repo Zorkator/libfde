@@ -23,8 +23,11 @@ class Meta(type(Structure)):
     method = '{0}_{{0}}_c_'.format(name.lower())
     members['__typeprocs__'] = list( members.get( '__typeprocs__', [method] ) ) \
                              + reduce( add, (getattr( b, '__typeprocs__', [] ) for b in bases) )
-    size = getattr( _libHandle, method.format('object_size'), None )
-    size and members.setdefault( '_fields_', [('_data', c_int8 * size())] )
+    if members.get('_fields_') == '__deferred__':
+      members.pop('_fields_')
+    else:
+      size = getattr( _libHandle, method.format('object_size'), None )
+      size and members.setdefault( '_fields_', [('_data', c_int8 * size())] )
     return super(Meta, _class).__new__( _class, name, bases, members )
 
 
@@ -70,8 +73,14 @@ class String(BaseString):
 
 
 
-class TypeInfo(Object):
-  pass
+class TypeSpecs(Object):
+  _fields_ = '__deferred__'
+
+TypeSpecs._fields_ = [('_typeId',   MemoryRef),
+                      ('_baseType', MemoryRef),
+                      ('_byteSize', c_size_t),
+                      ('_rank',     c_size_t),
+                      ('_subtype',  POINTER(TypeSpecs))]
 
 
 

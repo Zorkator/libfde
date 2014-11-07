@@ -4,12 +4,14 @@
 module adt_memoryref
   use, intrinsic :: iso_c_binding
   implicit none
-  private
+  public
   
-  type, public, bind(c) :: MemoryRef_t
+  type, bind(c) :: MemoryRef_t
     type (c_ptr)           :: loc = C_NULL_PTR
     integer(kind=c_size_t) :: len = 0
   end type
+
+  type(MemoryRef_t), parameter :: null_ref = MemoryRef_t( C_NULL_PTR, 0 )
 
 !---------------
   contains

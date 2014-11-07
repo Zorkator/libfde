@@ -87,9 +87,24 @@ end module
     type(TypeInfo_t), pointer :: res
 
     if (associated( self%typeInfo )) then; res => self%typeInfo
-                                     else; res => type_void
+                                     else; res => void_type()
     end if
   end function
+
+
+!_PROC_EXPORT(item_dynamic_type_c)
+  subroutine item_dynamic_type_c( res, self )
+    use adt_item__
+    implicit none
+    type(TypeSpecs_t), intent(inout) :: res
+    type(Item_t),      intent(in)    :: self
+    type(TypeInfo_t),        pointer :: ptr
+
+    if (associated( self%typeInfo )) then; ptr => self%typeInfo
+                                     else; ptr => void_type()
+    end if
+    res = ptr%typeSpecs
+  end subroutine
 
 
 !_PROC_EXPORT(item_delete_c)
@@ -117,7 +132,7 @@ end module
     baseType,    pointer :: ptr                          ;\
     type(Item_t), target :: res                          ;\
     if (item_reshape_( res, static_type(val) )) then     ;\
-      call res%typeInfo%initProc( res, 1, proto )        ;\
+      call res%typeInfo%initProc( res%data, 1, proto )   ;\
     end if                                               ;\
     call c_f_pointer( c_loc(res%data(1)), ptr )          ;\
     ptr = val                                            ;\
@@ -186,7 +201,7 @@ end module
     type(Item_t) :: res
 
     if (item_reshape_( res, val%typeInfo )) then
-      res%data = 0 !< setting 0 here implies a temporary instance!
+      !res%data = 0 !< setting 0 here implies a temporary instance!
       call res%typeInfo%initProc( res%data, 1, res%data )
     end if
 
@@ -208,7 +223,7 @@ end module
     baseType,    pointer :: res                         ;\
     baseType             :: var                         ;\
     if (item_reshape_( self, static_type(var) )) then   ;\
-      call self%typeInfo%initProc( self, 0 )            ;\
+      call self%typeInfo%initProc( self%data, 0 )       ;\
     end if                                              ;\
     call c_f_pointer( c_loc(self%data(1)), res )        ;\
   end function
@@ -248,7 +263,7 @@ end module
     
     if (associated( self%typeInfo )) then
       memref%loc = c_loc(self%data(1))
-      memref%len = self%typeInfo%byteSize
+      memref%len = self%typeInfo%typeSpecs%byteSize
     else
       memref%loc = C_NULL_PTR
       memref%len = 0
@@ -266,7 +281,7 @@ end module
     baseType,                intent(in) :: rhs         ;\
     baseType,                   pointer :: ptr         ;\
     if (item_reshape_( lhs, static_type(rhs) )) then   ;\
-      call lhs%typeInfo%initProc( lhs, 0 )             ;\
+      call lhs%typeInfo%initProc( lhs%data, 0 )        ;\
     end if                                             ;\
     call c_f_pointer( c_loc(lhs%data(1)), ptr )        ;\
     ptr = rhs                                          ;\
@@ -306,7 +321,7 @@ end module
     character(len=*),        intent(in) :: rhs
     type(String_t),             pointer :: ptr
     if (item_reshape_( lhs, static_type(string_var) )) &
-      call lhs%typeInfo%initProc( lhs, 0 )
+      call lhs%typeInfo%initProc( lhs%data, 0 )
     call c_f_pointer( c_loc(lhs%data(1)), ptr )
     call assign( ptr, rhs )
   end subroutine
@@ -320,7 +335,7 @@ end module
     type(RefEncoding_t), dimension(:), intent(in) :: rhs
     type(Ref_t),                          pointer :: ptr
     if (item_reshape_( lhs, static_type(ref_var) )) &
-      call lhs%typeInfo%initProc( lhs, 0 )
+      call lhs%typeInfo%initProc( lhs%data, 0 )
     call c_f_pointer( c_loc(lhs%data(1)), ptr )
     call assign( ptr, rhs )
   end subroutine
@@ -336,7 +351,7 @@ end module
     ! can't prevent self assignment ... (since fortran gives us a shallow copy of rhs)
     ! so in case - just do it and let sensitive types handle it themselves.
     if (item_reshape_( lhs, rhs%typeInfo )) &
-      call lhs%typeInfo%initProc( lhs, 0 )
+      call lhs%typeInfo%initProc( lhs%data, 0 )
 
     if (associated( lhs%typeInfo%assignProc )) then
       call lhs%typeInfo%assignProc( lhs%data, rhs%data )

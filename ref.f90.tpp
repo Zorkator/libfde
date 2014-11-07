@@ -12,16 +12,16 @@ module adt_ref
 
   type, public :: Ref_t
     private
-    _RefStatus                :: refstat = _ref_HardLent
-    type(BaseString_t)        :: ref_str
     type(TypeInfo_t), pointer :: typeInfo => null()
+    type(BaseString_t)        :: ref_str
+    _RefStatus                :: refstat = _ref_HardLent
   end type
 
 
   !_TypeGen_declare_RefType( public, ref, type(Ref_t), scalar, \
-  !     initProc   = ref_init_by_proto, \
-  !     assignProc = ref_assign_ref_c, \
-  !     deleteProc = ref_delete_c,     \
+  !     initProc   = ref_init_by_proto_c, \
+  !     assignProc = ref_assign_ref_c,    \
+  !     deleteProc = ref_delete_c,        \
   !     cloneMode  = _type )
 
 
@@ -30,17 +30,18 @@ module adt_ref
   end type
 
 
-  type(Ref_t), parameter :: permanent_ref = Ref_t( _ref_HardLent, permanent_string, null() )
-  type(Ref_t), parameter :: temporary_ref = Ref_t( _ref_WeakLent, temporary_string, null() )
+  type(Ref_t), parameter :: permanent_ref = Ref_t( null(), permanent_string, _ref_HardLent )
+  type(Ref_t), parameter :: temporary_ref = Ref_t( null(), temporary_string, _ref_WeakLent )
 
 
   ! interface definitions
 
   interface
-    subroutine ref_init_by_proto( self, has_proto, proto )
+    subroutine ref_init_by_proto_c( self, has_proto, proto )
       import Ref_t
-      type(Ref_t) :: self, proto
-      integer     :: has_proto
+      type(Ref_t),     intent(inout) :: self
+      integer(kind=4), intent(in)    :: has_proto
+      type(Ref_t),     intent(in)    :: proto
     end subroutine
 
     function ref_get_typereference( self ) result(res)
@@ -52,10 +53,10 @@ module adt_ref
 
   interface rank
     pure &
-    function ref_rank( self ) result(res)
+    function ref_rank_c( self ) result(res)
       import Ref_t
       type(Ref_t), intent(in) :: self
-      integer                 :: res
+      integer(kind=4)         :: res
     end function
   end interface
 
@@ -64,7 +65,7 @@ module adt_ref
     function ref_shape( self ) result(res)
       import Ref_t
       type(Ref_t), intent(in) :: self
-      integer                 :: res(ref_rank(self))
+      integer                 :: res(ref_rank_c(self))
     end function
   end interface
 
@@ -94,9 +95,9 @@ module adt_ref
 
   interface free
     recursive &
-    subroutine ref_free( self )
+    subroutine ref_free_c( self )
       import Ref_t
-      type(Ref_t)           :: self
+      type(Ref_t) :: self
     end subroutine
   end interface
 
@@ -109,7 +110,7 @@ module adt_ref
   end interface
 
   interface bind
-    subroutine ref_bind( self, do_bind )
+    subroutine ref_bind_c( self, do_bind )
       import Ref_t
       type(Ref_t), intent(inout) :: self
       logical                    :: do_bind
@@ -153,7 +154,7 @@ module adt_ref
 
   ! declare TypeInfo necessities public
 
-  public :: TypeInfo_t, TypeInfo_ptr_t, type_void, void_t, typeInfo_init
+  public :: TypeInfo_t, TypeInfo_ptr_t, void_type, void_t, typeInfo_init
 
 !-----------------
   contains
