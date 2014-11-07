@@ -45,7 +45,7 @@ class Object(Structure):
 
 
 class MemoryRef(Object):
-  _fields_ = [('ptr', c_char_p),
+  _fields_ = [('ptr', c_void_p),
               ('len', c_size_t)]
 
 

@@ -41,9 +41,9 @@ module adt_item
 
 
   !_TypeGen_declare_RefType( public, Item, type(Item_t), scalar, \
-  !     initProc   = item_init_by_proto, \
-  !     assignProc = item_assign_item,   \
-  !     deleteProc = item_delete,        \
+  !     initProc   = item_init_by_proto_c, \
+  !     assignProc = item_assign_item_c,   \
+  !     deleteProc = item_delete_c,        \
   !     cloneMode  = _type )
 
   !_TypeGen_declare_ListNode( public, Item, type(Item_t), scalar )
@@ -120,12 +120,12 @@ module adt_item
 
 
   ! declare type-check interfaces ...
-# define _interface_isType(typeId, baseType)          \
-  public :: _paste(is_,typeId)                       ;\
-  interface _paste(is_,typeId)                       ;\
-    logical function _paste(item_is_,typeId)( self ) ;\
-      import Item_t                                  ;\
-      type(Item_t), intent(in) :: self               ;\
+# define _interface_isType(typeId, baseType)            \
+  public :: _paste(is_,typeId)                         ;\
+  interface _paste(is_,typeId)                         ;\
+    logical function _paste(item_is_,typeId)_c( self ) ;\
+      import Item_t                                    ;\
+      type(Item_t), intent(in) :: self                 ;\
     end function
 
   _interface_isType(bool,       logical)
@@ -158,10 +158,10 @@ module adt_item
   public :: assignment(=), assign
   interface assignment(=)
 #   define _declare_assign_(typeId, baseType, bt_import)  \
-    subroutine _paste(item_assign_,typeId)( lhs, rhs ) ;\
-      import Item_t; bt_import                         ;\
-      type(Item_t), target, intent(inout) :: lhs       ;\
-      baseType,                intent(in) :: rhs       ;\
+    subroutine _paste(item_assign_,typeId)_c( lhs, rhs ) ;\
+      import Item_t; bt_import                           ;\
+      type(Item_t), target, intent(inout) :: lhs         ;\
+      baseType,                intent(in) :: rhs         ;\
     end subroutine
 
     _declare_assign_(bool,       logical,)
@@ -177,20 +177,19 @@ module adt_item
     _declare_assign_(string,     type(String_t), import String_t)
     _declare_assign_(ref,        type(Ref_t),    import Ref_t)
     _declare_assign_(charstring, character(len=*),)
-    !_declare_assign_(item,      type(Item_t),)
 
-    subroutine item_assign_refencoding( lhs, rhs )
+    subroutine item_assign_refencoding_( lhs, rhs )
       import Item_t, RefEncoding_t
       type(Item_t),           target, intent(inout) :: lhs
       type(RefEncoding_t), dimension(:), intent(in) :: rhs
     end subroutine
 
 
-#   define _declare_assign_to_(typeId, baseType, bt_import) \
-    subroutine _paste(typeId,_assign_item)( lhs, rhs )     ;\
-      import Item_t; bt_import                             ;\
-      baseType, intent(inout) :: lhs                       ;\
-      type(Item_t),    target :: rhs                       ;\
+#   define _declare_assign_to_(typeId, baseType, bt_import)  \
+    subroutine _paste(item_assign_to_,typeId)_c( lhs, rhs ) ;\
+      import Item_t; bt_import                              ;\
+      baseType, intent(inout) :: lhs                        ;\
+      type(Item_t),    target :: rhs                        ;\
     end subroutine
 
     _declare_assign_to_(bool,       logical,)
@@ -211,7 +210,7 @@ module adt_item
 
   ! declare by-call assignment interface
   interface assign
-    subroutine item_assign_item( lhs, rhs )
+    subroutine item_assign_item_c( lhs, rhs )
       import Item_t
       type(Item_t), intent(inout) :: lhs
       type(Item_t)                :: rhs
@@ -220,7 +219,7 @@ module adt_item
 
   public :: is_valid
   interface is_valid
-    logical function item_is_valid( self ) result(res)
+    logical function item_is_valid_c( self ) result(res)
       import Item_t
       type(Item_t), intent(in) :: self
     end function
@@ -237,18 +236,18 @@ module adt_item
 
   public :: delete
   interface delete
-    recursive subroutine item_delete( self )
+    recursive subroutine item_delete_c( self )
       import Item_t
       type(Item_t) :: self
     end subroutine
   end interface
 
   interface
-    subroutine item_init_by_proto( self, has_proto, proto )
+    subroutine item_init_by_proto_c( self, has_proto, proto )
       import Item_t
-      type(Item_t) :: self
-      integer      :: has_proto
-      type(Item_t) :: proto
+      type(Item_t),    intent(inout) :: self
+      integer(kind=4), intent(in)    :: has_proto
+      type(Item_t),    intent(in)    :: proto
     end subroutine
   end interface
 

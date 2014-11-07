@@ -6,6 +6,7 @@ module adt_item__
   use adt_typeinfo
   use adt_string
   use adt_ref
+  use adt_memoryref
   use iso_c_binding
 
 # define Item_t   Item_t__impl__
@@ -14,7 +15,7 @@ module adt_item__
   type (Ref_t)    :: ref_var
 
   interface
-    function item_reshape( self, new_typeInfo ) result(res)
+    function item_reshape_( self, new_typeInfo ) result(res)
       import Item_t, TypeInfo_t
       type(Item_t)                         :: self
       type(TypeInfo_t), target, intent(in) :: new_typeInfo
@@ -34,19 +35,21 @@ end module
   end function
 
 
-!_PROC_EXPORT(item_init_by_proto)
-  subroutine item_init_by_proto( self, has_proto, proto )
+!_PROC_EXPORT(item_init_by_proto_c)
+  subroutine item_init_by_proto_c( self, has_proto, proto )
     use adt_item__
     implicit none
-    type(Item_t) :: self
-    integer      :: has_proto
-    type(Item_t) :: proto
+    type(Item_t),    intent(inout) :: self
+    integer(kind=4), intent(in)    :: has_proto
+    type(Item_t),    intent(in)    :: proto
     self%data     = 0
     self%typeInfo => null()
+    if (has_proto /= 0) &
+      call item_assign_item_c( self, proto )
   end subroutine
 
 
-  function item_reshape( self, new_typeInfo ) result(res)
+  function item_reshape_( self, new_typeInfo ) result(res)
     use adt_item__, only: Item_t, TypeInfo_t
     implicit none
     type(Item_t)                         :: self
@@ -67,8 +70,8 @@ end module
   end function
 
 
-!_PROC_EXPORT(item_is_valid)
-  logical function item_is_valid( self ) result(res)
+!_PROC_EXPORT(item_is_valid_c)
+  logical function item_is_valid_c( self ) result(res)
     use adt_item__
     implicit none
     type(Item_t), intent(in) :: self
@@ -89,9 +92,9 @@ end module
   end function
 
 
-!_PROC_EXPORT(item_delete)
+!_PROC_EXPORT(item_delete_c)
   recursive &
-  subroutine item_delete( self )
+  subroutine item_delete_c( self )
     use adt_item__
     implicit none
     type(Item_t) :: self
@@ -113,7 +116,7 @@ end module
     baseType             :: val                          ;\
     baseType,    pointer :: ptr                          ;\
     type(Item_t), target :: res                          ;\
-    if (item_reshape( res, static_type(val) )) then      ;\
+    if (item_reshape_( res, static_type(val) )) then     ;\
       call res%typeInfo%initProc( res, 1, proto )        ;\
     end if                                               ;\
     call c_f_pointer( c_loc(res%data(1)), ptr )          ;\
@@ -154,7 +157,7 @@ end module
     type(String_t), pointer :: ptr
     type(Item_t),    target :: res
 
-    if (item_reshape( res, static_type(string_var) )) &
+    if (item_reshape_( res, static_type(string_var) )) &
       call res%typeInfo%initProc( res%data, 1, temporary_string )
     call c_f_pointer( c_loc(res%data(1)), ptr )
     call assign( ptr, val )
@@ -168,7 +171,7 @@ end module
     type(RefEncoding_t), dimension(:) :: val
     type(Ref_t),              pointer :: ptr
     type(Item_t),              target :: res
-    if (item_reshape( res, static_type(ref_var) )) &
+    if (item_reshape_( res, static_type(ref_var) )) &
       call res%typeInfo%initProc( res%data, 1, temporary_ref )
     call c_f_pointer( c_loc(res%data(1)), ptr )
     call assign( ptr, val )
@@ -182,7 +185,7 @@ end module
     type(Item_t) :: val
     type(Item_t) :: res
 
-    if (item_reshape( res, val%typeInfo )) then
+    if (item_reshape_( res, val%typeInfo )) then
       res%data = 0 !< setting 0 here implies a temporary instance!
       call res%typeInfo%initProc( res%data, 1, res%data )
     end if
@@ -204,7 +207,7 @@ end module
     type(Item_t), target :: self                        ;\
     baseType,    pointer :: res                         ;\
     baseType             :: var                         ;\
-    if (item_reshape( self, static_type(var) )) then    ;\
+    if (item_reshape_( self, static_type(var) )) then   ;\
       call self%typeInfo%initProc( self, 0 )            ;\
     end if                                              ;\
     call c_f_pointer( c_loc(self%data(1)), res )        ;\
@@ -236,20 +239,37 @@ end module
   _implement_getter_(ref,        type(Ref_t))
 
 
+!_PROC_EXPORT(item_memoryref_c)
+  subroutine item_memoryref_c( self, memref )
+    use adt_item__
+    implicit none
+    type(Item_t), target, intent(in) :: self
+    type(MemoryRef_t), intent(inout) :: memref
+    
+    if (associated( self%typeInfo )) then
+      memref%loc = c_loc(self%data(1))
+      memref%len = self%typeInfo%byteSize
+    else
+      memref%loc = C_NULL_PTR
+      memref%len = 0
+    end if
+  end subroutine
+
+
 ! implement assignment routines
 
-# define _EXPORT_ASSIGN(typeId)    _PROC_EXPORT(_paste(item_assign_,typeId))
-# define _implement_assign_(typeId, baseType)         \
-  subroutine _paste(item_assign_,typeId)( lhs, rhs ) ;\
-    use adt_item__; implicit none                    ;\
-    type(Item_t), target, intent(inout) :: lhs       ;\
-    baseType,                intent(in) :: rhs       ;\
-    baseType,                   pointer :: ptr       ;\
-    if (item_reshape( lhs, static_type(rhs) )) then  ;\
-      call lhs%typeInfo%initProc( lhs, 0 )           ;\
-    end if                                           ;\
-    call c_f_pointer( c_loc(lhs%data(1)), ptr )      ;\
-    ptr = rhs                                        ;\
+# define _EXPORT_ASSIGN(typeId)    _PROC_EXPORT(_paste(item_assign_,typeId)_c)
+# define _implement_assign_(typeId, baseType)           \
+  subroutine _paste(item_assign_,typeId)_c( lhs, rhs ) ;\
+    use adt_item__; implicit none                      ;\
+    type(Item_t), target, intent(inout) :: lhs         ;\
+    baseType,                intent(in) :: rhs         ;\
+    baseType,                   pointer :: ptr         ;\
+    if (item_reshape_( lhs, static_type(rhs) )) then   ;\
+      call lhs%typeInfo%initProc( lhs, 0 )             ;\
+    end if                                             ;\
+    call c_f_pointer( c_loc(lhs%data(1)), ptr )        ;\
+    ptr = rhs                                          ;\
   end subroutine
 
 !_EXPORT_ASSIGN(bool)
@@ -279,27 +299,27 @@ end module
 
 
 !_EXPORT_ASSIGN(charstring)
-  subroutine item_assign_charstring( lhs, rhs )
+  subroutine item_assign_charstring_c( lhs, rhs )
     use adt_item__
     implicit none
     type(Item_t), target, intent(inout) :: lhs
     character(len=*),        intent(in) :: rhs
     type(String_t),             pointer :: ptr
-    if (item_reshape( lhs, static_type(string_var) )) &
+    if (item_reshape_( lhs, static_type(string_var) )) &
       call lhs%typeInfo%initProc( lhs, 0 )
     call c_f_pointer( c_loc(lhs%data(1)), ptr )
     call assign( ptr, rhs )
   end subroutine
 
   
-!_EXPORT_ASSIGN(refencoding)
-  subroutine item_assign_refencoding( lhs, rhs )
+!_PROC_EXPORT(item_assign_refencoding_)
+  subroutine item_assign_refencoding_( lhs, rhs )
     use adt_item__
     implicit none
     type(Item_t),           target, intent(inout) :: lhs
     type(RefEncoding_t), dimension(:), intent(in) :: rhs
     type(Ref_t),                          pointer :: ptr
-    if (item_reshape( lhs, static_type(ref_var) )) &
+    if (item_reshape_( lhs, static_type(ref_var) )) &
       call lhs%typeInfo%initProc( lhs, 0 )
     call c_f_pointer( c_loc(lhs%data(1)), ptr )
     call assign( ptr, rhs )
@@ -307,7 +327,7 @@ end module
 
 
 !_EXPORT_ASSIGN(item)
-  subroutine item_assign_item( lhs, rhs )
+  subroutine item_assign_item_c( lhs, rhs )
     use adt_item__
     implicit none
     type(Item_t), intent(inout) :: lhs
@@ -315,7 +335,7 @@ end module
 
     ! can't prevent self assignment ... (since fortran gives us a shallow copy of rhs)
     ! so in case - just do it and let sensitive types handle it themselves.
-    if (item_reshape( lhs, rhs%typeInfo )) &
+    if (item_reshape_( lhs, rhs%typeInfo )) &
       call lhs%typeInfo%initProc( lhs, 0 )
 
     if (associated( lhs%typeInfo%assignProc )) then
@@ -328,9 +348,9 @@ end module
 
 ! implement assign-to routines
 
-# define _EXPORT_ASSIGN_TO(typeId)    _PROC_EXPORT(_paste(typeId,_assign_item))
+# define _EXPORT_ASSIGN_TO(typeId)    _PROC_EXPORT(_paste(item_assign_to_,typeId)_c)
 # define _implement_assign_to_(typeId, baseType)            \
-  subroutine _paste(typeId,_assign_item)( lhs, rhs )       ;\
+  subroutine _paste(item_assign_to_,typeId)_c( lhs, rhs )  ;\
     use adt_item__; implicit none                          ;\
     baseType, intent(inout) :: lhs                         ;\
     type(Item_t),    target :: rhs                         ;\
@@ -374,13 +394,13 @@ end module
 
 ! implement type check routines
 
-# define _EXPORT_TYPECHECK(typeId)    _PROC_EXPORT(_paste(item_is_,typeId))
-# define _implement_typecheck_(typeId, baseType)                \
-  logical function _paste(item_is_,typeId)( self ) result(res) ;\
-    use adt_item__; implicit none                              ;\
-    type(Item_t), intent(in) :: self                           ;\
-    baseType                 :: var                            ;\
-    res = associated( static_type(var), self%typeInfo )        ;\
+# define _EXPORT_TYPECHECK(typeId)    _PROC_EXPORT(_paste(item_is_,typeId)_c)
+# define _implement_typecheck_(typeId, baseType)                  \
+  logical function _paste(item_is_,typeId)_c( self ) result(res) ;\
+    use adt_item__; implicit none                                ;\
+    type(Item_t), intent(in) :: self                             ;\
+    baseType                 :: var                              ;\
+    res = associated( static_type(var), self%typeInfo )          ;\
   end function
   ! For the pointer check (associated) above it is really important to give static_type() as the
   !   first argument, otherwise Fortrans starts to deref self%typeInfo (WTH!?)
