@@ -29,14 +29,14 @@ module adt_item
 
   type, public :: Item_t
     private
-    type(TypeInfo_t), pointer :: typeInfo        => null()
     _chunkType                :: data(numChunks) = 0
+    type(TypeInfo_t), pointer :: typeInfo        => null()
   end type
 
 
   type, public :: Item_t__impl__
-    type(TypeInfo_t), pointer :: typeInfo        => null()
     _chunkType                :: data(numChunks) = 0
+    type(TypeInfo_t), pointer :: typeInfo        => null()
   end type
 
 
@@ -73,6 +73,7 @@ module adt_item
     _declare_constructor_(string,      type(String_t), import String_t)
     _declare_constructor_(ref,         type(Ref_t),    import Ref_t)
     _declare_constructor_(charstring,  character(len=*),)
+    _declare_constructor_(item,        type(Item_t),)
 
     function item_of_refencoding( val ) result(res)
       import Item_t, RefEncoding_t, Ref_t

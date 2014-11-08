@@ -68,8 +68,8 @@
   contains
     subroutine link_memref( memref, what )
       use adt_memoryref
-      type(MemoryRef_t) :: memref
-      character(len=*)  :: what
+      type(MemoryRef_t)        :: memref
+      character(len=*), target :: what
       memref%loc = c_loc(what(1:1))
       memref%len = len_trim(what)
     end subroutine

@@ -5,8 +5,7 @@ ARCH ?= 32
 
 mk_F90_FLAGS_gfortran_debug   = -ggdb -cpp -ffree-line-length-none $(_F90_FLAGS)
 mk_F90_FLAGS_gfortran_release = -O3 -cpp -ffree-line-length-none $(_F90_FLAGS)
-#mk_F90C_gfortran              = gfortran-4.8
-mk_F90C_gfortran              = /opt/gcc/4.9.2/bin/gfortran
+mk_F90C_gfortran              = gfortran-4.9
 
 mk_F90_FLAGS_ifort_debug      = -g -fpp -allow nofpp-comments $(_F90_FLAGS)
 mk_F90_FLAGS_ifort_release    = -O3 -fpp -allow nofpp-comments $(_F90_FLAGS)
@@ -23,7 +22,7 @@ mk_TAG              = $(F90C).$(CFG).$(ARCH)
 .PHONY: clean
 
 TPP_FILES = $(wildcard *.tpp)
-BASE_OBJ  = crc.o crc_impl.o typeinfo.o typeinfo_impl.o basestring.o basestring_impl.o ref.o ref_impl.o string.o string_impl.o \
+BASE_OBJ  = crc.o crc_impl.o memoryref.o typeinfo.o typeinfo_impl.o basestring.o basestring_impl.o ref.o ref_impl.o string.o string_impl.o \
 						list.o list_impl.o basetypes.o item.o item_impl.o hashmap.o hashmap_impl.o
 
 # file specific compiler flags ...
@@ -58,7 +57,7 @@ map: $(BASE_OBJ) test_hash_map.o
 	$(mk_F90C) $(mk_F90_FLAGS) $(mk_INCLUDE_PATHLIST) $? -o $@.$(mk_TAG)
 
 clean:
-	rm -f *.mod *.o *.debug.* *.release.* $(TPP_FILES:%.tpp=%)
+	rm -f *.mod *.o *.$(mk_TAG) $(TPP_FILES:%.tpp=%)
 
 test: clean dynstring gref item alist map
 	./dynstring.$(mk_TAG)

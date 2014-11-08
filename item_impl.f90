@@ -127,6 +127,7 @@ end module
 # define _EXPORT_CONSTRUCTOR(typeId)    _PROC_EXPORT(_paste(item_of_,typeId))
 # define _implement_constructor_(typeId, baseType, proto) \
   function _paste(item_of_,typeId)( val ) result(res)    ;\
+    use iso_c_binding                                    ;\
     use adt_item__; implicit none                        ;\
     baseType             :: val                          ;\
     baseType,    pointer :: ptr                          ;\
@@ -201,7 +202,6 @@ end module
     type(Item_t) :: res
 
     if (item_reshape_( res, val%typeInfo )) then
-      !res%data = 0 !< setting 0 here implies a temporary instance!
       call res%typeInfo%initProc( res%data, 1, res%data )
     end if
 

@@ -8,8 +8,8 @@ module adt_list
 
   type, public :: ListNode_t
     private
-    type(TypeInfo_t), public, pointer :: typeInfo => null()
     type(ListNode_t),         pointer :: prev => null(), next => null()
+    type(TypeInfo_t), public, pointer :: typeInfo => null()
     type(void_t)                      :: padding
   end type
 

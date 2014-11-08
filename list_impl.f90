@@ -4,6 +4,7 @@
 module adt_list__
   use adt_list
   use adt_ref
+  use adt_typeinfo
   use iso_c_binding
   implicit none
 
@@ -12,8 +13,8 @@ module adt_list__
 # define ListIndex_t  ListIndex_t__impl__
 
   type, public :: ListNode_t
-    type(TypeInfo_t), public, pointer :: typeInfo => null()
     type(ListNode_t),         pointer :: prev => null(), next => null()
+    type(TypeInfo_t), public, pointer :: typeInfo => null()
     type(void_t)                      :: padding
   end type
 

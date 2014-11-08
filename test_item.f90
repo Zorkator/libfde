@@ -36,6 +36,7 @@ program testinger
 
   v1 = Item_of(String('testinger'))
   v1 = 5.34
+  v1 = Item_of(v1)
   v1 = String("testinger")
   v1 = 123
   v1 = 'bla & text'

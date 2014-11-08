@@ -7,9 +7,9 @@ module adt_basestring
   private
   
   type, public :: BaseString_t
-    character(len=1), dimension(:), pointer :: ptr     => null()
-    integer(kind=c_size_t)                  :: len     = 0
     _RefStatus                              :: refstat = _ref_HardLent
+    integer(kind=c_size_t)                  :: len     = 0
+    character(len=1), dimension(:), pointer :: ptr     => null()
   end type
 
   ! interface visibility
@@ -34,8 +34,8 @@ module adt_basestring
 
   ! parameter definitions
 
-  type(BaseString_t), parameter :: temporary_string    = BaseString_t( null(), 0, _ref_WeakLent )
-  type(BaseString_t), parameter :: permanent_string    = BaseString_t( null(), 0, _ref_HardLent )
+  type(BaseString_t), parameter :: temporary_string    = BaseString_t( _ref_WeakLent, 0, null() )
+  type(BaseString_t), parameter :: permanent_string    = BaseString_t( _ref_HardLent, 0, null() )
   integer(kind=1),    parameter :: attribute_volatile  = 0
   integer(kind=1),    parameter :: attribute_permanent = 1
 
