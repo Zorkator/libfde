@@ -200,16 +200,7 @@ end module
     implicit none
     type(Item_t) :: val
     type(Item_t) :: res
-
-    if (item_reshape_( res, val%typeInfo )) then
-      call res%typeInfo%initProc( res%data, 1, res%data )
-    end if
-
-    if (associated( res%typeInfo%assignProc )) then
-      call res%typeInfo%assignProc( res%data, val%data )
-    else
-      res%data = val%data
-    end if
+    call item_assign_item_c( res, val )
   end function
 
 
@@ -348,15 +339,19 @@ end module
     type(Item_t), intent(inout) :: lhs
     type(Item_t)                :: rhs
 
-    ! can't prevent self assignment ... (since fortran gives us a shallow copy of rhs)
-    ! so in case - just do it and let sensitive types handle it themselves.
-    if (item_reshape_( lhs, rhs%typeInfo )) &
-      call lhs%typeInfo%initProc( lhs%data, 0 )
+    if (associated( rhs%typeInfo )) then
+      ! can't prevent self assignment ... (since fortran gives us a shallow copy of rhs)
+      ! so in case - just do it and let sensitive types handle it themselves.
+      if (item_reshape_( lhs, rhs%typeInfo )) &
+        call lhs%typeInfo%initProc( lhs%data, 0 )
 
-    if (associated( lhs%typeInfo%assignProc )) then
-      call lhs%typeInfo%assignProc( lhs%data, rhs%data )
+      if (associated( lhs%typeInfo%assignProc )) then
+        call lhs%typeInfo%assignProc( lhs%data, rhs%data )
+      else
+        lhs%data = rhs%data
+      end if
     else
-      lhs%data = rhs%data
+      call item_delete_c( lhs )
     end if
   end subroutine
 

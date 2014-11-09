@@ -4,16 +4,17 @@ module adt_hashmap
   use adt_list
   use adt_item
   use adt_ref
+  use iso_c_binding
   implicit none
   private
 
-  integer, parameter :: default_indexLimits(2) = (/ 10, 100000 /)
+  integer(kind=c_size_t), parameter :: default_indexLimits(2) = (/ 10, 100000 /)
 
   type, public :: HashMap_t
     private
     type(List_t), dimension(:), pointer :: indexVector    => null()
-    integer(kind=4)                     :: items          =  0
-    integer(kind=4)                     :: indexLimits(2) = default_indexLimits
+    integer(kind=c_size_t)              :: items          =  0, resize_cnt = 0
+    integer(kind=c_size_t)              :: indexLimits(2) =  default_indexLimits
   end type
 
   !_TypeGen_declare_RefType( public, HashMap, type(HashMap_t), scalar, \
@@ -30,7 +31,7 @@ module adt_hashmap
   public :: delete
   public :: set, get, remove, unset, pop
   public :: setDefault, hasKey
-  public :: hashmap_clear_cache
+  public :: hashmap_clear_cache, hashmap_get_stats
   public :: assign, assignment(=)
   public :: default_indexLimits
 
@@ -162,6 +163,14 @@ module adt_hashmap
 
   interface hashmap_clear_cache
     subroutine hashmap_clear_cache_c()
+    end subroutine
+  end interface
+
+  interface hashmap_get_stats
+    subroutine hashmap_get_stats_c( self, stats )
+      import HashMap_t, c_size_t
+      type(HashMap_t), intent(in) :: self
+      integer(kind=c_size_t)      :: stats(6)
     end subroutine
   end interface
 

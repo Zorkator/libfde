@@ -34,20 +34,20 @@ module adt_hashmap__
 
   type, public :: HashMap_t
     type(List_t), dimension(:), pointer :: indexVector    => null()
-    integer(kind=4)                     :: items          =  0
-    integer(kind=4)                     :: indexLimits(2) = default_indexLimits
+    integer(kind=c_size_t)              :: items          =  0, resize_cnt = 0
+    integer(kind=c_size_t)              :: indexLimits(2) = default_indexLimits
   end type
 
 
   interface
-    function hashmap_get_bucketIndex( self, key ) result(res)
+    function hashmap_get_bucketIndex_( self, key ) result(res)
       import HashMap_t, ListIndex_t
       type(HashMap_t),  intent(in) :: self
       character(len=*), intent(in) :: key
       type(ListIndex_t)            :: res
     end function
 
-    function hashmap_get_value_ref( self, key, clearStale ) result(res)
+    function hashmap_get_value_ref_( self, key, clearStale ) result(res)
       import HashMap_t, Item_t
       type(HashMap_t)              :: self
       character(len=*), intent(in) :: key
@@ -56,7 +56,7 @@ module adt_hashmap__
     end function
 
     logical &
-    function hashmap_locate_item( self, key, idx )
+    function hashmap_locate_item_( self, key, idx )
       import HashMap_t, ListIndex_t
       type(HashMap_t), intent(inout) :: self
       character(len=*),   intent(in) :: key
@@ -71,16 +71,18 @@ module adt_hashmap__
       type(Item_t), optional, pointer, intent(out) :: valTgt
     end function
 
-    subroutine hashmap_flush( self, tgtList )
+    subroutine hashmap_flush_( self, tgtList, delIndex )
       import HashMap_t, List_t
       type(HashMap_t), intent(inout) :: self
       type(List_t)                   :: tgtList
+      logical                        :: delIndex
     end subroutine
 
-    subroutine hashmap_setup_index( self, indexSize )
-      import HashMap_t
+    subroutine hashmap_setup_index_( self, indexSize, tgtList )
+      import HashMap_t, List_t
       type(HashMap_t), intent(inout) :: self
       integer(kind=4),    intent(in) :: indexSize
+      type(List_t)                   :: tgtList
     end subroutine
 
     function hashmap_get_ptr( self, key ) result(res)
@@ -98,7 +100,7 @@ module adt_hashmap__
       type(Item_t),          pointer :: res
     end function
 
-    subroutine hashmap_reindex( self )
+    subroutine hashmap_reindex_( self )
       import HashMap_t
       type(HashMap_t), intent(inout) :: self
     end subroutine
@@ -175,22 +177,20 @@ end module
     self%indexLimits(2) = max(1, index_min, index_max)
     if (.not. is_valid(hashmap_nodeCache)) &
       call initialize( hashmap_nodeCache )
-    call hashmap_setup_index( self, self%indexLimits(1) )
+    call hashmap_setup_index_( self, self%indexLimits(1), hashmap_nodeCache )
   end subroutine
 
 
-  subroutine hashmap_setup_index( self, indexSize )
-    use adt_hashmap__, only: HashMap_t, List_t, hashmap_flush, initialize, hashmap_nodeCache
+  subroutine hashmap_setup_index_( self, indexSize, tgtList )
+    use adt_hashmap__, only: HashMap_t, List_t, hashmap_flush_, initialize
     implicit none
     type(HashMap_t), intent(inout) :: self
     integer(kind=4),    intent(in) :: indexSize
+    type(List_t)                   :: tgtList
     integer(kind=4)                :: i
 
-    call hashmap_flush( self, hashmap_nodeCache )
-    if (indexSize /= size(self%indexVector)) then
-      if (associated( self%indexVector )) &
-        deallocate( self%indexVector )
-
+    if (indexSize /= size( self%indexVector )) then
+      call hashmap_flush_( self, tgtList, .true. )
       allocate( self%indexVector(0 : indexSize - 1) )
       !DEC$ parallel
       do i = 0, indexSize - 1
@@ -200,11 +200,12 @@ end module
   end subroutine
 
   
-  subroutine hashmap_flush( self, tgtList )
+  subroutine hashmap_flush_( self, tgtList, delIndex )
     use adt_hashmap__, only: HashMap_t, List_t, append
     implicit none
     type(HashMap_t), intent(inout) :: self
     type(List_t),           target :: tgtList
+    logical                        :: delIndex
     type(List_t),          pointer :: tgt
     integer(kind=4)                :: i
     
@@ -213,6 +214,8 @@ end module
         call append( tgtList, self%indexVector(i) )
       end do
       self%items = 0
+      if (delIndex) &
+        deallocate( self%indexVector )
     end if
   end subroutine
 
@@ -221,7 +224,7 @@ end module
   subroutine hashmap_clear_c( self )
     use adt_hashmap__; implicit none
     type(HashMap_t), intent(inout) :: self
-    call hashmap_flush( self, hashmap_nodeCache )
+    call hashmap_flush_( self, hashmap_nodeCache, .false. )
   end subroutine
 
 
@@ -229,11 +232,7 @@ end module
   subroutine hashmap_delete_c( self )
     use adt_hashmap__; implicit none
     type(HashMap_t), intent(inout) :: self
-
-    if (associated( self%indexVector )) then
-      call hashmap_flush( self, hashmap_nodeCache )
-      deallocate( self%indexVector )
-    end if
+    call hashmap_flush_( self, hashmap_nodeCache, .true. )
   end subroutine
 
 
@@ -249,7 +248,7 @@ end module
     if (.not. associated( lhs%indexVector, rhs%indexVector )) then
       lhs%indexLimits = rhs%indexLimits
       call hashmap_pre_cache( rhs%items )
-      call hashmap_setup_index( lhs, size(rhs%indexVector) )
+      call hashmap_setup_index_( lhs, size(rhs%indexVector), hashmap_nodeCache )
       do i = 0, size( lhs%indexVector ) - 1
         call insert( index( lhs%indexVector(i), tail, 0 ), index( hashmap_nodeCache, -len( rhs%indexVector(i) ) ) )
         l_idx = index( lhs%indexVector(i) )
@@ -275,7 +274,7 @@ end module
   end subroutine
 
 
-  function hashmap_get_bucketIndex( self, key ) result(res)
+  function hashmap_get_bucketIndex_( self, key ) result(res)
     use adt_hashmap__, only: HashMap_t, ListIndex_t, crc32, index
     implicit none
     type(HashMap_t),  intent(in) :: self
@@ -288,14 +287,14 @@ end module
     ! have to fix negativ indices since fortran doesn't know unsigned integers >:(
     if (idx < 0) &
       idx = idx + n
-    res = index( self%indexVector(idx) )
+    res = index( self%indexVector(idx), 1, stride=1 )
   end function
 
 
   logical &
-  function hashmap_locate_item( self, key, idx ) result(res)
-    use adt_hashmap__, only: HashMap_t, HashNode_t, ListIndex_t, hashmap_reindex, &
-                             hashmap_get_bucketIndex, HashNode, next, is_valid
+  function hashmap_locate_item_( self, key, idx ) result(res)
+    use adt_hashmap__, only: HashMap_t, HashNode_t, ListIndex_t, hashmap_reindex_, &
+                             hashmap_get_bucketIndex_, HashNode, next, is_valid
     use adt_string
     implicit none
     type(HashMap_t), intent(inout) :: self
@@ -304,9 +303,9 @@ end module
     type(HashNode_t),      pointer :: node
     
     if (self%indexLimits(1) < self%indexLimits(2)) &
-      call hashmap_reindex( self )
+      call hashmap_reindex_( self ) !< range in indexLimits enables index-auto-resizing
     
-    idx = hashmap_get_bucketIndex( self, key )
+    idx = hashmap_get_bucketIndex_( self, key )
     do while (is_valid(idx))
       node => HashNode(idx)
       if (node%key /= key) then; call next(idx)
@@ -325,7 +324,7 @@ end module
     type(Item_t),       intent(in) :: val
     type(Item_t),          pointer :: valPtr
 
-    valPtr => hashmap_get_value_ref( self, key, .false. )
+    valPtr => hashmap_get_value_ref_( self, key, .false. )
     call assign( valPtr, val )
   end subroutine
 
@@ -336,7 +335,7 @@ end module
     type(HashMap_t)              :: self
     character(len=*), intent(in) :: key
     type(Item_t),        pointer :: res
-    res => hashmap_get_value_ref( self, key, .true. )
+    res => hashmap_get_value_ref_( self, key, .true. )
   end function
 
 
@@ -346,13 +345,13 @@ end module
     type(c_ptr),      intent(inout) :: res
     type(HashMap_t)                 :: self
     character(len=*), intent(in)    :: key
-    res = c_loc( hashmap_get_value_ref( self, key, .true. ) )
+    res = c_loc( hashmap_get_value_ref_( self, key, .true. ) )
   end subroutine
 
 
-  function hashmap_get_value_ref( self, key, clearStale ) result(res)
+  function hashmap_get_value_ref_( self, key, clearStale ) result(res)
     use adt_hashmap__, only: HashMap_t, Item_t, HashNode_t, ListIndex_t, HashNode, hashmap_nodeCache, &
-                             hashmap_locate_item, first, new_ListNode, insert, delete, pop, is_valid, assign
+                             hashmap_locate_item_, first, new_ListNode, insert, delete, pop, is_valid, assign
     implicit none
     type(HashMap_t)              :: self
     character(len=*), intent(in) :: key
@@ -361,7 +360,7 @@ end module
     type(HashNode_t),    pointer :: mapItem
     type(ListIndex_t)            :: bucket, idx
   
-    if (hashmap_locate_item( self, key, bucket )) then
+    if (hashmap_locate_item_( self, key, bucket )) then
       ! hash node exists ...
       mapItem => HashNode(bucket)
     else
@@ -384,7 +383,7 @@ end module
 
 !_PROC_EXPORT(hashmap_get_ptr)
   function hashmap_get_ptr( self, key ) result(res)
-    use adt_hashmap__, only: HashMap_t, Item_t, HashNode_t, ListIndex_t, hashmap_locate_item, HashNode
+    use adt_hashmap__, only: HashMap_t, Item_t, HashNode_t, ListIndex_t, hashmap_locate_item_, HashNode
     implicit none
     type(HashMap_t)              :: self
     character(len=*), intent(in) :: key
@@ -392,7 +391,7 @@ end module
     type(HashNode_t),    pointer :: mapItem
     type(ListIndex_t)            :: bucket
   
-    if (hashmap_locate_item( self, key, bucket )) then
+    if (hashmap_locate_item_( self, key, bucket )) then
       mapItem => HashNode( bucket )
       res => mapItem%value
     else
@@ -416,10 +415,64 @@ end module
   end subroutine
 
 
-  subroutine hashmap_reindex( self )
-    use adt_hashmap__, only: HashMap_t
+  subroutine hashmap_reindex_( self )
+    use adt_hashmap__, only: HashMap_t, HashNode_t, HashNode, hashmap_setup_index_, hashmap_get_bucketIndex_
+    use adt_string
+    use adt_list
+    use iso_c_binding
     implicit none
     type(HashMap_t), intent(inout) :: self
+    type(List_t)                   :: bufList
+    type(ListIndex_t)              :: bucket, idx
+    type(HashNode_t),      pointer :: node
+    integer(kind=c_size_t)         :: cur_size, new_size, items
+    real                           :: fract
+
+    cur_size = size( self%indexVector )
+    fract    = real(self%items - cur_size) / cur_size
+    
+    if (abs(fract) > 0.8) then
+      new_size = ishft( cur_size, merge( 1, -1, fract > 0 ) )
+      new_size = max( new_size, self%indexLimits(1) )
+      new_size = min( new_size, self%indexLimits(2) )
+
+      if (new_size /= cur_size) then
+        items    = self%items
+        call initialize( bufList )
+        call hashmap_setup_index_( self, new_size, bufList )
+      
+        do while (.not. is_empty( bufList ))
+          idx    =  index( bufList, first, 0 )
+          node   => HashNode( idx )
+          bucket =  hashmap_get_bucketIndex_( self, str(node%key) )
+          call insert( bucket, idx )
+        end do
+        self%items = items
+        self%resize_cnt = self%resize_cnt + 1
+      end if
+    end if
+  end subroutine
+
+
+!_PROC_EXPORT(hashmap_get_stats_c)
+  subroutine hashmap_get_stats_c( self, stats )
+    use adt_hashmap__; implicit none
+    type(HashMap_t), intent(in) :: self
+    integer(kind=c_size_t)      :: stats(6) ! 1=slots, 2=used, 3=items, 4=minLen, 5=maxLen, 6=resizeCnt
+    integer(kind=c_size_t)      :: i, cnt
+    stats    = 0;
+    stats(1) = size(self%indexVector)
+    stats(4) = self%items
+    stats(6) = self%resize_cnt
+    do i = 0, size( self%indexVector ) - 1
+      cnt = len(self%indexVector(i))
+      stats(2) = stats(2) + merge( 1, 0, cnt > 0 )
+      if (cnt < stats(4)) &
+        stats(4) = cnt
+      if (cnt > stats(5)) &
+        stats(5) = cnt
+      stats(3) = stats(3) + cnt
+    end do
   end subroutine
 
   
@@ -483,7 +536,7 @@ end module
   logical &
   function hashmap_unset_( self, key, valTgt ) result(res)
     use adt_hashmap__, only: HashMap_t, Item_t, HashNode_t, ListIndex_t, &
-                             hashmap_locate_item, hashmap_nodeCache, index, append, HashNode
+                             hashmap_locate_item_, hashmap_nodeCache, index, append, HashNode
     implicit none
     type(HashMap_t),               intent(inout) :: self
     character(len=*),                 intent(in) :: key
@@ -491,9 +544,10 @@ end module
     type(HashNode_t),       pointer              :: mapItem
     type(ListIndex_t)                            :: bucket
 
-    res = hashmap_locate_item( self, key, bucket )
+    res = hashmap_locate_item_( self, key, bucket )
     if (res) then
       call append( hashmap_nodeCache, index( bucket, 0 ) )
+      self%items = self%items - 1
       if (present(valTgt)) then
         mapItem => HashNode(bucket)
         valTgt  => mapItem%value
@@ -504,14 +558,14 @@ end module
 
 !_PROC_EXPORT(hashmap_set_default)
   function hashmap_set_default( self, key, defaultVal ) result(res)
-    use adt_hashmap__, only: HashMap_t, Item_t, hashmap_get_value_ref, is_valid, assign, delete
+    use adt_hashmap__, only: HashMap_t, Item_t, hashmap_get_value_ref_, is_valid, assign, delete
     implicit none
     type(HashMap_t),     intent(inout) :: self
     character(len=*),       intent(in) :: key
     type(Item_t)                       :: defaultVal
     type(Item_t),              pointer :: res
 
-    res => hashmap_get_value_ref( self, key, .true. )
+    res => hashmap_get_value_ref_( self, key, .true. )
     if (.not. is_valid(res)) then; call assign( res, defaultVal ) !< key didn't exist before
                              else; call delete( defaultVal )      !< key existed - so delete given defaultVal
     end if
@@ -536,6 +590,6 @@ end module
     type(HashMap_t)              :: self
     character(len=*), intent(in) :: key
     type(ListIndex_t)            :: bucket
-    res = hashmap_locate_item( self, key, bucket )
+    res = hashmap_locate_item_( self, key, bucket )
   end function
 
