@@ -12,9 +12,9 @@ module adt_ref
 
   type, public :: Ref_t
     private
-    _RefStatus                :: refstat = _ref_HardLent
-    type(BaseString_t)        :: ref_str
     type(TypeInfo_t), pointer :: typeInfo => null()
+    type(BaseString_t)        :: ref_str
+    _RefStatus                :: refstat = _ref_HardLent
   end type
 
 
@@ -30,8 +30,8 @@ module adt_ref
   end type
 
 
-  type(Ref_t), parameter :: permanent_ref = Ref_t( _ref_HardLent, permanent_string, null() )
-  type(Ref_t), parameter :: temporary_ref = Ref_t( _ref_WeakLent, temporary_string, null() )
+  type(Ref_t), parameter :: permanent_ref = Ref_t( null(), permanent_string, _ref_HardLent )
+  type(Ref_t), parameter :: temporary_ref = Ref_t( null(), temporary_string, _ref_WeakLent )
 
 
   ! interface definitions

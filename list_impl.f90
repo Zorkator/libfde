@@ -13,8 +13,8 @@ module adt_list__
 # define ListIndex_t  ListIndex_t__impl__
 
   type, public :: ListNode_t
-    type(ListNode_t),         pointer :: prev => null(), next => null()
     type(TypeInfo_t), public, pointer :: typeInfo => null()
+    type(ListNode_t),         pointer :: prev => null(), next => null()
     type(void_t)                      :: padding
   end type
 

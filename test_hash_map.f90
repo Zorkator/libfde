@@ -30,7 +30,7 @@ program testinger
   call set( map, 'val-ref', Item_of(ref_of(val)) )
 
   val => get( map, 'val-ref' )
-  s => String( ref(val) )
+  s => String(Item(ref(val)))
   print *, str(s)
   val = 'replace ref by text'
 

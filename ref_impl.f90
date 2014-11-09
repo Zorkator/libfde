@@ -11,9 +11,9 @@ module adt_ref__
 # define Ref_t    Ref_t__impl__
 
   type, public :: Ref_t
-    _RefStatus                :: refstat = _ref_HardLent
-    type(BaseString_t)        :: ref_str
     type(TypeInfo_t), pointer :: typeInfo => null()
+    type(BaseString_t)        :: ref_str
+    _RefStatus                :: refstat = _ref_HardLent
   end type
 
 
