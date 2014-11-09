@@ -187,9 +187,16 @@ end module
     type(HashMap_t), intent(inout) :: self
     integer(kind=4),    intent(in) :: indexSize
     type(List_t)                   :: tgtList
-    integer(kind=4)                :: i
+    integer(kind=4)                :: i, cur_size
 
-    if (indexSize /= size( self%indexVector )) then
+    ! need to check associated before asking for the size!
+    ! gfortran doesn't clear a pointer's size on deallocate - so we might get an
+    !   old size even for a non-associated pointer!!!
+    if (associated( self%indexVector )) then; cur_size = size(self%indexVector)
+                                        else; cur_size = 0
+    end if
+
+    if (indexSize /= cur_size) then
       call hashmap_flush_( self, tgtList, .true. )
       allocate( self%indexVector(0 : indexSize - 1) )
       !DEC$ parallel
