@@ -8,13 +8,13 @@ module adt_hashmap
   implicit none
   private
 
-  integer(kind=c_size_t), parameter :: default_indexLimits(2) = (/ 10, 100000 /)
+  integer, parameter :: default_indexLimits(2) = (/ 10, 100000 /)
 
   type, public :: HashMap_t
     private
     type(List_t), dimension(:), pointer :: indexVector    => null()
-    integer(kind=c_size_t)              :: items          =  0, resize_cnt = 0
-    integer(kind=c_size_t)              :: indexLimits(2) =  default_indexLimits
+    integer                             :: items          =  0, resize_cnt = 0
+    integer                             :: indexLimits(2) =  default_indexLimits
   end type
 
   !_TypeGen_declare_RefType( public, HashMap, type(HashMap_t), scalar, \
@@ -50,7 +50,7 @@ module adt_hashmap
     subroutine hashmap_init_sized_c( self, index_min, index_max )
       import HashMap_t
       type(HashMap_t), intent(inout) :: self
-      integer(kind=4)                :: index_min, index_max
+      integer                        :: index_min, index_max
     end subroutine
   end interface
 
@@ -168,9 +168,9 @@ module adt_hashmap
 
   interface hashmap_get_stats
     subroutine hashmap_get_stats_c( self, stats )
-      import HashMap_t, c_size_t
+      import HashMap_t
       type(HashMap_t), intent(in) :: self
-      integer(kind=c_size_t)      :: stats(6)
+      integer                     :: stats(6)
     end subroutine
   end interface
 

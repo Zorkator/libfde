@@ -34,8 +34,8 @@ module adt_hashmap__
 
   type, public :: HashMap_t
     type(List_t), dimension(:), pointer :: indexVector    => null()
-    integer(kind=c_size_t)              :: items          =  0, resize_cnt = 0
-    integer(kind=c_size_t)              :: indexLimits(2) = default_indexLimits
+    integer                             :: items          =  0, resize_cnt = 0
+    integer                             :: indexLimits(2) = default_indexLimits
   end type
 
 
@@ -81,7 +81,7 @@ module adt_hashmap__
     subroutine hashmap_setup_index_( self, indexSize, tgtList )
       import HashMap_t, List_t
       type(HashMap_t), intent(inout) :: self
-      integer(kind=4),    intent(in) :: indexSize
+      integer,         intent(in)    :: indexSize
       type(List_t)                   :: tgtList
     end subroutine
 
@@ -148,7 +148,7 @@ end module
     type(HashMap_t)     :: self
     integer             :: has_proto
     type(HashMap_t)     :: proto
-    integer(kind=4)     :: indexLimits(2)
+    integer             :: indexLimits(2)
 
     self%indexVector => null()
     self%items       =  0
@@ -171,7 +171,7 @@ end module
   subroutine hashmap_init_sized_c( self, index_min, index_max )
     use adt_hashmap__; implicit none
     type(HashMap_t), intent(inout) :: self
-    integer(kind=4)                :: index_min, index_max
+    integer                        :: index_min, index_max
 
     self%indexLimits(1) = max(1, index_min)
     self%indexLimits(2) = max(1, index_min, index_max)
@@ -183,11 +183,12 @@ end module
 
   subroutine hashmap_setup_index_( self, indexSize, tgtList )
     use adt_hashmap__, only: HashMap_t, List_t, hashmap_flush_, initialize
+    use iso_c_binding
     implicit none
     type(HashMap_t), intent(inout) :: self
-    integer(kind=4),    intent(in) :: indexSize
+    integer,         intent(in)    :: indexSize
     type(List_t)                   :: tgtList
-    integer(kind=4)                :: i, cur_size
+    integer                        :: i, cur_size
 
     ! need to check associated before asking for the size!
     ! gfortran doesn't clear a pointer's size on deallocate - so we might get an
@@ -432,7 +433,7 @@ end module
     type(List_t)                   :: bufList
     type(ListIndex_t)              :: bucket, idx
     type(HashNode_t),      pointer :: node
-    integer(kind=c_size_t)         :: cur_size, new_size, items
+    integer                        :: cur_size, new_size, items
     real                           :: fract
 
     cur_size = size( self%indexVector )
@@ -465,8 +466,8 @@ end module
   subroutine hashmap_get_stats_c( self, stats )
     use adt_hashmap__; implicit none
     type(HashMap_t), intent(in) :: self
-    integer(kind=c_size_t)      :: stats(6) ! 1=slots, 2=used, 3=items, 4=minLen, 5=maxLen, 6=resizeCnt
-    integer(kind=c_size_t)      :: i, cnt
+    integer                     :: stats(6) ! 1=slots, 2=used, 3=items, 4=minLen, 5=maxLen, 6=resizeCnt
+    integer                     :: i, cnt
     stats    = 0;
     stats(1) = size(self%indexVector)
     stats(4) = self%items
