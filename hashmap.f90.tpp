@@ -1,4 +1,6 @@
 
+#include "adt/itfUtil.fpp"
+
 module adt_hashmap
   use adt_string
   use adt_list
@@ -178,6 +180,7 @@ contains
 
   !_TypeGen_implementAll()
 
+!_PROC_EXPORT(hashmap_assign_hashmap_private)
   subroutine hashmap_assign_hashmap_private( lhs, rhs )
     type(HashMap_t), intent(inout) :: lhs
     type(HashMap_t),    intent(in) :: rhs

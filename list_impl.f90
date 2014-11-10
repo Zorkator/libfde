@@ -20,7 +20,7 @@ module adt_list__
 
   type ValueNode_t
     type(ListNode_t) :: super
-    integer      :: pseudoValue
+    integer          :: pseudoValue
   end type
 
   type, public :: List_t

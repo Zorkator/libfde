@@ -184,9 +184,13 @@ end module
     use adt_ref__
     implicit none
     type(Ref_t), intent(in) :: self
-    integer(kind=c_size_t)  :: buf(n), n
-    buf(:n) = ref_shape( self )
-    res = (n <= ref_rank_c( self ))
+    integer(kind=c_size_t)  :: buf(n), n, rnk
+
+    rnk = ref_rank_c(self)
+    res = (n >= rnk)
+    n   = rnk
+    if (rnk .and. res) &
+      buf(:n) = ref_shape( self )
   end function
 
 
