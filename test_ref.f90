@@ -69,7 +69,7 @@ program testinger
 
   ref1 = ref_of(cplx)
 
-  cplx_ptr => complex128(ref1)
+  cplx_ptr => complex32(ref1)
   cplx_ptr = (1.0, -3)
 
 
