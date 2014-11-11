@@ -67,7 +67,7 @@ program testinger
 
   idx = index(l5)
   do while (is_valid(idx))
-    print *, int32(ref(idx))
+    print *, int4(ref(idx))
     call next(idx)
   end do
 
@@ -161,11 +161,11 @@ program testinger
   call fill( l2, 1, 10 )
   idx = index(l2, last)
   idx = pop( idx )
-  print *, real32(idx)
+  print *, real4(idx)
 
   idx = pop( l2, first )
-  print *, real32(idx)
-  print *, real32( pop( l2, last ) )
+  print *, real4(idx)
+  print *, real4( pop( l2, last ) )
 
   call clear( l1 )
   call fill( l2, 1, 10 )
@@ -203,7 +203,7 @@ program testinger
   idx = pop( l1, first ) !< pop first
   print *, is_valid(idx) !< should be valid!
   call printList(l1) !< 1,4,3,6,5,8,7,10,9
-  print *, real32(idx) !< 2.0
+  print *, real4(idx) !< 2.0
   call insert( index(l2, tail), idx )
   print *, is_valid(idx) !< should still be valid!
   call printList(l1) !< 1,4,3,6,5,8,7,10,9
@@ -231,7 +231,7 @@ program testinger
 
   print *, len(List(ref1))
 
-  print *, real32( index(l1) )
+  print *, real4( index(l1) )
 
   ref1 = clone(ref1)
   call printList( List(ref1) )
@@ -256,7 +256,7 @@ program testinger
 
     print *, "items:"
     do while (is_valid(idx))
-      print *, int32(idx)
+      print *, int4(idx)
       call next(idx)
     end do
     print *, "########"
@@ -268,7 +268,7 @@ program testinger
     
     print *, "items:"
     do while (beg /= end)
-      print *, int32(beg)
+      print *, int4(beg)
       call next(beg)
     end do
     print *, "########"
@@ -300,7 +300,7 @@ program testinger
 
     idx = index(list)
     do while (is_valid(idx))
-      write(*,'(F6.1)',advance="no") real32(idx)
+      write(*,'(F6.1)',advance="no") real4(idx)
       call next(idx)
     end do
     print *, ''

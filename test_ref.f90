@@ -75,17 +75,17 @@ program testinger
 
   ref2 = ref_of(42)
   ref1 = ref_of(ref2)
-  print *, int32(ref2)
-  print *, int32(ref(ref1))
+  print *, int4(ref2)
+  print *, int4(ref(ref1))
 
   if (is_ref(ref1)) then
     ref3 = ref(ref1)
-    if (is_int32(ref3)) &
-      print *, int32(ref3)
+    if (is_int4(ref3)) &
+      print *, int4(ref3)
   end if
 
   ref3 = clone(ref1)
-  print *, int32(ref(ref3))
+  print *, int4(ref(ref3))
   call delete( ref3 )
 
   ref1 = ref_of(intArray)

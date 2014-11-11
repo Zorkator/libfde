@@ -58,7 +58,7 @@ subroutine test_HashMap( num, idx_min, idx_max )
     write( key, '(i10)' ) i
     val = get( map, key )
     if (is_valid(val)) then
-      if (int32(val) == i) &
+      if (int4(val) == i) &
         cycle
     end if
     print*, trim(key), " = ????"
@@ -150,7 +150,7 @@ program testinger
 
   do i = 0, 999
     write(key,"(A3,I6)") "key", i
-    if (i /= int32( get( map2, key ) )) &
+    if (i /= int4( get( map2, key ) )) &
       print *, "mismatch for value ", i
   end do
 

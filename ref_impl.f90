@@ -189,7 +189,7 @@ end module
     rnk = ref_rank_c(self)
     res = (n >= rnk)
     n   = rnk
-    if (rnk .and. res) &
+    if (rnk > 0 .and. res) &
       buf(:n) = ref_shape( self )
   end function
 

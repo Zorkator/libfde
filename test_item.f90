@@ -14,22 +14,24 @@ program testinger
   integer*4        :: intvar, i, j
   type(String_t)   :: ds
   type(Ref_t)      :: gr, gr2
-  real*4                :: realVal
+  real*4           :: realVal
+  logical          :: logic
 
   print *, "Item: ",       storage_size(v1)/8
   print *, "String: ", storage_size(ds)/8
   print *, "Ref: ",    storage_size(gr)/8
 
+  v1 = Item_of(logic)
   v1 = Item_of(345597)
-  print *, int32(v1)
+  print *, int4(v1)
   v1 = Item_of(34.55)
-  print *, real32(v1)
+  print *, real4(v1)
 
   realVal = v1
   
 
   print *, is_valid(v1)
-  print *, is_real32(v1)
+  print *, is_real4(v1)
 
   ti = dynamic_type(v1)
   print *, ti%typeId
@@ -50,18 +52,18 @@ program testinger
   v1 = 42
   v2 = 0
 
-  print *, bool(v1)
+  print *, bool1(v1)
+  print *, int1(v1)
+  print *, int2(v1)
+  print *, int4(v1)
   print *, int8(v1)
-  print *, int16(v1)
-  print *, int32(v1)
-  print *, int64(v1)
-  print *, real32(v1)
+  print *, real4(v1)
   intvar = 0
 
   do i=1,500
     do j=1,500
       v2 = v1
-      intvar = intvar + int32(v1)
+      intvar = intvar + int4(v1)
     end do
   end do
 
@@ -75,7 +77,7 @@ program testinger
   do while (is_ref(gr))
     gr = ref(gr)
   end do
-  v1 = int32(gr)
+  v1 = int4(gr)
 
   gr = ref_of(v1)
   v2 = Item(gr)
@@ -135,21 +137,24 @@ end
     _finish(val)                       ;\
   end subroutine
 
-  _implementTest_(bool,       logical, .true., _nop)
-  _implementTest_(int8,       integer*1, 42, _nop)
-  _implementTest_(int16,      integer*2, 42, _nop)
-  _implementTest_(int32,      integer*4, 42, _nop)
-  _implementTest_(int64,      integer*8, 42, _nop)
-  _implementTest_(real32,     real*4, 1.5, _nop)
-  _implementTest_(real64,     real*8, 1.5, _nop)
-  _implementTest_(complex32,  complex*8, (1.5,2.5), _nop)
-  _implementTest_(complex64,  complex*16, (1.5,2.5), _nop)
+  _implementTest_(bool1,      logical*1, .true., _nop)
+  _implementTest_(bool2,      logical*2, .true., _nop)
+  _implementTest_(bool4,      logical*4, .true., _nop)
+  _implementTest_(bool8,      logical*8, .true., _nop)
+  _implementTest_(int1,       integer*1, 42, _nop)
+  _implementTest_(int2,       integer*2, 42, _nop)
+  _implementTest_(int4,       integer*4, 42, _nop)
+  _implementTest_(int8,       integer*8, 42, _nop)
+  _implementTest_(real4,      real*4, 1.5, _nop)
+  _implementTest_(real8,      real*8, 1.5, _nop)
+  _implementTest_(complex8,   complex*8, (1.5,2.5), _nop)
+  _implementTest_(complex16,  complex*16, (1.5,2.5), _nop)
   _implementTest_(c_void_ptr, type(c_ptr), C_NULL_PTR, _nop)
   _implementTest_(string,     type(String_t), 'testinger string', _delete)
   _implementTest_(ref,        type(Ref_t), val, _delete)
 
 # if defined ITEM_REAL16
-  _implementTest_(real128,    real*16, 1.5, _nop)
-  _implementTest_(complex128, complex*32, (1.5,2.5), _nop)
+  _implementTest_(real16,    real*16, 1.5, _nop)
+  _implementTest_(complex32, complex*32, (1.5,2.5), _nop)
 # endif
 

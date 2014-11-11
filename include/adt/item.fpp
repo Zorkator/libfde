@@ -4,15 +4,18 @@
 #include "adt/ppUtil.xpp"
 
 # define _TableOf_item_types_base_ \
-    _item_type_(bool,       logical)        \
-    _item_type_(int8,       integer*1)      \
-    _item_type_(int16,      integer*2)      \
-    _item_type_(int32,      integer*4)      \
-    _item_type_(int64,      integer*8)      \
-    _item_type_(real32,     real*4)         \
-    _item_type_(real64,     real*8)         \
-    _item_type_(complex32,  complex*8)      \
-    _item_type_(complex64,  complex*16)     \
+    _item_type_(bool1,      logical*1)      \
+    _item_type_(bool2,      logical*2)      \
+    _item_type_(bool4,      logical*4)      \
+    _item_type_(bool8,      logical*8)      \
+    _item_type_(int1,       integer*1)      \
+    _item_type_(int2,       integer*2)      \
+    _item_type_(int4,       integer*4)      \
+    _item_type_(int8,       integer*8)      \
+    _item_type_(real4,      real*4)         \
+    _item_type_(real8,      real*8)         \
+    _item_type_(complex8,   complex*8)      \
+    _item_type_(complex16,  complex*16)     \
     _item_type_(c_void_ptr, type(c_ptr))    \
     _item_type_(string,     type(String_t)) \
     _item_type_(ref,        type(Ref_t))
@@ -28,15 +31,15 @@
   !   or whatever.
   ! Even the intel inspector is perfectly fine with the test code (test_var_item.f90), throwing the sefaults!
   ! 
-  ! FOR NOW: sorry, but best is to disable real128 and complex128 for Item storage by default.
+  ! FOR NOW: sorry, but best is to disable real*16 and complex*32 for Item storage by default.
   ! Some sunny day, we either find that nasty BUG or we finally got better compilers that tell us the truth.
   ! If so, we could reenable the types by defining the preprocessor flag ITEM_REAL16
 
 # if defined ITEM_REAL16
 #   define _TableOf_item_types_ \
-      _TableOf_item_types_base_          \
-      _item_type_(real128,    real*16)   \
-      _item_type_(complex128, complex*32)
+      _TableOf_item_types_base_         \
+      _item_type_(real16,    real*16)   \
+      _item_type_(complex32, complex*32)
 # else
 #   define _TableOf_item_types_ \
       _TableOf_item_types_base_
