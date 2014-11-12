@@ -1,8 +1,10 @@
 
 from ctypes    import *
 from _typeinfo import TypedObject
+from _ftypes   import fortranType
 
 
+@fortranType( 'type(Ref_t)' )
 class Ref(TypedObject):
 
   @property

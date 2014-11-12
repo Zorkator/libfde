@@ -1,7 +1,7 @@
 
 from ctypes  import *
 from _base   import DynamicObject
-from _ftypes import MemoryRef
+from _ftypes import MemoryRef, fortranType
 
 
 class BaseString(DynamicObject):
@@ -9,7 +9,7 @@ class BaseString(DynamicObject):
   _attribute_permanent = c_int8(1)
 
 
-
+@fortranType( 'type(String_t)' )
 class String(BaseString):
   def __init__( self, s = '' ):
     self.init_by_charstring_( byref(self), byref(self._attribute_permanent), c_char_p(s), c_int32(len(s)) )
