@@ -258,18 +258,17 @@ end module
 
 
 !_PROC_EXPORT(item_memoryref_c)
-  subroutine item_memoryref_c( self, memref )
+  subroutine item_memoryref_c( res, self )
     use adt_item__
     implicit none
     type(Item_t), target, intent(in) :: self
-    type(MemoryRef_t), intent(inout) :: memref
+    type(MemoryRef_t), intent(inout) :: res
     
     if (associated( self%typeInfo )) then
-      memref%loc = c_loc(self%data(1))
-      memref%len = self%typeInfo%typeSpecs%byteSize
+      res%loc = c_loc(self%data(1))
+      res%len = self%typeInfo%typeSpecs%byteSize
     else
-      memref%loc = C_NULL_PTR
-      memref%len = 0
+      res = null_ref
     end if
   end subroutine
 

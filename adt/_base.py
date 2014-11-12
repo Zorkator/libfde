@@ -62,11 +62,16 @@ class Object(Union):
 
 
 class DynamicObject(Object):
+  __slots__ = ['_isRef']
+
+  @property
+  def asRef( self ):
+    self._isRef = True
+    return self
 
   def __del__( self ):
-    self.delete_( byref(self) )
+    getattr( self, '_isRef', False ) or self.delete_( byref(self) )
 
   def delete( self ):
     self.delete_( byref(self) )
-
 

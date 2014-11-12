@@ -77,6 +77,10 @@ module adt_item
     _declare_constructor_(ref,         type(Ref_t),    import Ref_t)
     _declare_constructor_(charstring,  character(len=*),)
     _declare_constructor_(item,        type(Item_t),)
+#   if defined ITEM_REAL16
+    _declare_constructor_(real16,      real*16,)
+    _declare_constructor_(complex32,   complex*32,)
+#   endif
 
     function item_of_refencoding( val ) result(res)
       import Item_t, RefEncoding_t, Ref_t
@@ -88,7 +92,7 @@ module adt_item
 
 
   ! declare accessor interfaces for getting type pointers ...
-# define _interface_Item_of(typeId, baseType, bt_import)   \
+# define _interface_getter_(typeId, baseType, bt_import)   \
   public :: typeId                                        ;\
   interface typeId                                        ;\
     function _paste(item_get_,typeId)( self ) result(res) ;\
@@ -97,37 +101,42 @@ module adt_item
       baseType,    pointer :: res                         ;\
     end function
 
-  _interface_Item_of(bool1,      logical*1,)
+  _interface_getter_(bool1,      logical*1,)
   end interface
-  _interface_Item_of(bool2,      logical*2,)
+  _interface_getter_(bool2,      logical*2,)
   end interface
-  _interface_Item_of(bool4,      logical*4,)
+  _interface_getter_(bool4,      logical*4,)
   end interface
-  _interface_Item_of(bool8,      logical*8,)
+  _interface_getter_(bool8,      logical*8,)
   end interface
-  _interface_Item_of(int1,       integer*1,)
+  _interface_getter_(int1,       integer*1,)
   end interface
-  _interface_Item_of(int2,       integer*2,)
+  _interface_getter_(int2,       integer*2,)
   end interface
-  _interface_Item_of(int4,       integer*4,)
+  _interface_getter_(int4,       integer*4,)
   end interface
-  _interface_Item_of(int8,       integer*8,)
+  _interface_getter_(int8,       integer*8,)
   end interface
-  _interface_Item_of(real4,      real*4,)
+  _interface_getter_(real4,      real*4,)
   end interface
-  _interface_Item_of(real8,      real*8,)
+  _interface_getter_(real8,      real*8,)
   end interface
-  _interface_Item_of(complex8,   complex*8,)
+  _interface_getter_(complex8,   complex*8,)
   end interface
-  _interface_Item_of(complex16,  complex*16,)
+  _interface_getter_(complex16,  complex*16,)
   end interface
-  _interface_Item_of(c_void_ptr, type(c_ptr),    import c_ptr)
+  _interface_getter_(c_void_ptr, type(c_ptr),    import c_ptr)
   end interface
-  _interface_Item_of(string,     type(String_t), import String_t)
+  _interface_getter_(string,     type(String_t), import String_t)
   end interface
-  _interface_Item_of(ref,        type(Ref_t),    import Ref_t)
+  _interface_getter_(ref,        type(Ref_t),    import Ref_t)
   end interface
-
+# if defined ITEM_REAL16
+  _interface_getter_(real16,     real*16,)
+  end interface
+  _interface_getter_(complex32,  complex*32,)
+  end interface
+# endif
 
   ! declare type-check interfaces ...
 # define _interface_isType(typeId, baseType)            \
@@ -168,7 +177,12 @@ module adt_item
   end interface
   _interface_isType(ref,        type(Ref_t))
   end interface
-
+# if defined ITEM_REAL16
+  _interface_isType(real16,     real*16)
+  end interface
+  _interface_isType(complex32,  complex*32)
+  end interface
+# endif
 
   ! declare assignment interfaces ...
   public :: assignment(=), assign
@@ -196,6 +210,10 @@ module adt_item
     _declare_assign_(string,     type(String_t), import String_t)
     _declare_assign_(ref,        type(Ref_t),    import Ref_t)
     _declare_assign_(charstring, character(len=*),)
+#   if defined ITEM_REAL16
+    _declare_assign_(real16,     real*16,)
+    _declare_assign_(complex32,  complex*32,)
+#   endif
 
     subroutine item_assign_refencoding_( lhs, rhs )
       import Item_t, RefEncoding_t
@@ -226,6 +244,10 @@ module adt_item
     _declare_assign_to_(c_void_ptr, type(c_ptr),    import c_ptr)
     _declare_assign_to_(string,     type(String_t), import String_t)
     _declare_assign_to_(ref,        type(Ref_t),    import Ref_t)
+#   if defined ITEM_REAL16
+    _declare_assign_to_(real16,     real*16,)
+    _declare_assign_to_(complex32,  complex*32,)
+#   endif
 
     module procedure item_assign_item_private
   end interface

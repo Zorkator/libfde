@@ -13,11 +13,15 @@ class BaseString(DynamicObject):
 class String(BaseString):
   def __init__( self, s = '' ):
     self.init_by_charstring_( byref(self), byref(self._attribute_permanent), c_char_p(s), c_int32(len(s)) )
-  
-  def __str__( self ):
+
+  @property
+  def value( self ):
     m = MemoryRef()
     self.memoryref_( byref(m), byref(self) )
     return string_at( m.ptr, m.len )
+
+  def __str__( self ):
+    return self.value
 
   def __len__( self ):
     return self.len_( byref(self) )

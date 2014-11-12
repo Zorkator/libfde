@@ -1,7 +1,7 @@
 
 from ctypes import *
 
-_typeMap = {
+_f2c_typeMap = {
   "logical*1"        : c_uint8,
   "logical*2"        : c_uint16,
   "logical*4"        : c_uint32,
@@ -19,21 +19,29 @@ _typeMap = {
 
 def fortranType( ident, ctypesClass = None ):
   def classOp( _class ):
-    global _typeMap
-    _typeMap[ident] = ctypesClass or _class
+    global _f2c_typeMap
+    _f2c_typeMap[ident] = ctypesClass or _class
     return _class
   return classOp
 
 
 def _ComplexType( name, ftype, ctype ):
+  def _init( self, *args ):
+    cplx = complex(*args)
+    super(self.__class__, self).__init__( cplx.real, cplx.imag )
+
+  def _cplx( self ):
+    return complex( self.real, self.imag )
+
   members = dict( _fields_    = [('real', ctype), ('imag', ctype)],
-                  __complex__ = lambda self: complex( self.real, self.imag ),
-                  __init__    = lambda self, val: super(self.__class__, self).__init__( val.real, val.imag )
+                  __init__    = _init,
+                  __complex__ = _cplx,
+                  value       = property( _cplx )
                 )
   _class  = type( name, (Structure,), members )
-  _typeMap[ftype] = _class
-  globals()[name] = _class
-  return _typeMap
+  _f2c_typeMap[ftype] = _class
+  globals()[name]     = _class
+  return _f2c_typeMap
 
 
 _ComplexType( 'Complex_8',  'complex*8',  c_float )

@@ -1,7 +1,7 @@
 
 from ctypes    import *
 from _typeinfo import TypedObject
-from _ftypes   import fortranType, MemoryRef, Complex_16, _typeMap as _base2c
+from _ftypes   import fortranType, MemoryRef, Complex_16
 from _string   import String
 from _ref      import Ref
 
@@ -10,17 +10,13 @@ from _ref      import Ref
 class Item(TypedObject):
   
   @property
-  def ctype( self ):
-    if self.typeInfo: return _base2c[ str(self.typeInfo.contents.baseType) ]
-    else            : return None
-
-  @property
   def value( self ):
-    ct = self.ctype
+    ct = self.ftype.ctype
     if ct:
       mr = MemoryRef()
       self.memoryref_( byref(mr), byref(self) )
-      return cast( mr.ptr, POINTER(ct) ).contents
+      obj = cast( mr.ptr, POINTER(ct) ).contents
+      return getattr( obj, 'asRef', obj ).value
     return None
 
   @value.setter
@@ -28,6 +24,10 @@ class Item(TypedObject):
     try   : getattr( self, self._typeMap.get( type(val), '_set_pointer' ) )( val )
     except: raise TypeError('%s not supported' % type(val)) 
 
+
+  def __init__( self, val = None ):
+    if val is not None:
+      self.value = val
   
   def _set_none( self, val ):
     self.delete_( byref(self) )
@@ -60,7 +60,12 @@ class Item(TypedObject):
     self.assign_item_( byref(self), byref(val) )
     
   def _set_pointer( self, val ):
-    self.assign_c_void_ptr_( byref(self), byref(val) )
+    try     : ptr = val.ctypes._as_parameter_              #< try to get pointer of numpy object
+    except AttributeError:
+      try   : ptr = cast( byref(val), POINTER(type(val)) ) #< try ctypes array
+      except: ptr = byref(val)                             #< some other scalar
+    self.assign_c_void_ptr_( byref(self), ptr )
+    
     
 
 Item._typeMap = {
