@@ -8,8 +8,12 @@ Created on Mon Nov 03 19:53:28 2014
 import sys
 import os
 from ctypes import *
-os.chdir('C:\\Users\\sjo\\Documents\\development\\zappralot\\libadt\\vc2010\\libadt_dll\\Debug')
-sys.path.insert(0, 'C:\\Users\\sjo\\Documents\\development\\zappralot\\libadt')
+
+try:
+	os.chdir('C:\\Users\\sjo\\Documents\\development\\zappralot\\libadt\\vc2010\\libadt_dll\\Debug')
+	sys.path.insert(0, 'C:\\Users\\sjo\\Documents\\development\\zappralot\\libadt')
+except:
+	pass
 
 import adt
 

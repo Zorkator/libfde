@@ -1,7 +1,7 @@
 
 from ctypes    import *
 from _typeinfo import TypedObject
-from _ftypes   import fortranType, MemoryRef, Complex_16
+from _ftypes   import fortranType, MemoryRef, Complex_8, Complex_16, Complex_32
 from _string   import String
 from _ref      import Ref
 
@@ -75,6 +75,9 @@ Item._typeMap = {
   long       : '_set_long',
   float      : '_set_float',
   complex    : '_set_complex',
+  Complex_8  : '_set_complex',
+  Complex_16 : '_set_complex',
+  Complex_32 : '_set_complex',
   str        : '_set_charstring',
   String     : '_set_string',
   Ref        : '_set_ref',
