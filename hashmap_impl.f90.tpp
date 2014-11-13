@@ -148,14 +148,13 @@ end module
     type(HashMap_t)     :: self
     integer             :: has_proto
     type(HashMap_t)     :: proto
-    integer             :: indexLimits(2)
 
     self%indexVector => null()
     self%items       =  0
-    if (has_proto /= 0) then; indexLimits = proto%indexLimits
-                        else; indexLimits = default_indexLimits
+    self%resize_cnt  =  0
+    if (has_proto /= 0) then; call hashmap_assign_hashmap_c( self, proto )
+                        else; call hashmap_init_sized_c( self, default_indexLimits(1), default_indexLimits(2) )
     end if
-    call hashmap_init_sized_c( self, indexLimits(1), indexLimits(2) )
   end subroutine
 
 
