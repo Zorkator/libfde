@@ -26,6 +26,7 @@ class Item(TypedObject):
 
 
   def __init__( self, val = None ):
+    super(Item, self).__init__()
     if val is not None:
       self.value = val
   

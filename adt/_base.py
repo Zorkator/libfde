@@ -69,6 +69,10 @@ class DynamicObject(Object):
     self._isRef = True
     return self
 
+  def __init__( self, other = None ):
+    useOther = c_int32( isinstance( other, self.__class__ ) )
+    self.init_by_proto_( byref(self), byref(useOther), useOther and byref(other) )
+
   def __del__( self ):
     getattr( self, '_isRef', False ) or self.delete_( byref(self) )
 
