@@ -104,6 +104,22 @@ module adt_hashmap__
       import HashMap_t
       type(HashMap_t), intent(inout) :: self
     end subroutine
+
+    subroutine hashmap_assign_hashmap_c( lhs, rhs )
+      import HashMap_t
+      type(HashMap_t), intent(inout) :: lhs
+      type(HashMap_t),    intent(in) :: rhs
+    end subroutine
+
+    subroutine hashmap_init_sized_c( self, index_min, index_max )
+      import HashMap_t
+      type(HashMap_t), intent(inout) :: self
+      integer                        :: index_min, index_max
+    end subroutine
+
+    subroutine hashmap_pre_cache( numItems )
+      integer(kind=4) :: numItems
+    end subroutine
   end interface
 
 contains
@@ -168,7 +184,8 @@ end module
 
 !_PROC_EXPORT(hashmap_init_sized_c)
   subroutine hashmap_init_sized_c( self, index_min, index_max )
-    use adt_hashmap__; implicit none
+    use adt_hashmap__, only: HashMap_t, initialize, is_valid, hashmap_nodeCache, hashmap_setup_index_
+    implicit none
     type(HashMap_t), intent(inout) :: self
     integer                        :: index_min, index_max
 
@@ -245,7 +262,9 @@ end module
 
 !_PROC_EXPORT(hashmap_assign_hashmap_c)
   subroutine hashmap_assign_hashmap_c( lhs, rhs )
-    use adt_hashmap__; implicit none
+    use adt_hashmap__, only: HashMap_t, HashNode_t, ListIndex_t, hashmap_pre_cache, hashmap_setup_index_, &
+                             hashmap_nodeCache, insert, index, len, is_valid, HashNode, assign, next, tail
+    implicit none
     type(HashMap_t), target, intent(inout) :: lhs
     type(HashMap_t), target,    intent(in) :: rhs
     type(ListIndex_t)                      :: l_idx, r_idx
@@ -484,7 +503,8 @@ end module
 
   
   subroutine hashmap_pre_cache( numItems )
-    use adt_hashmap__; implicit none
+    use adt_hashmap__, only: HashNode_t, len, hashmap_nodeCache, append, new_ListNode
+    implicit none
     integer(kind=4)           :: numItems, missing
     type(HashNode_t), pointer :: mapItem
     missing = numItems - len( hashmap_nodeCache )
