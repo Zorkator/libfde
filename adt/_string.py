@@ -1,15 +1,15 @@
 
 from ctypes  import *
-from _base   import DynamicObject
-from _ftypes import MemoryRef, fortranType
+from _object import Object
+from _ftypes import MemoryRef, mappedType
 
 
-class BaseString(DynamicObject):
+class BaseString(Object):
   _attribute_volatile  = c_int8(0)
   _attribute_permanent = c_int8(1)
 
 
-@fortranType( 'type(String_t)' )
+@mappedType( 'string', 'type(String_t)', str )
 class String(BaseString):
   
   @property
@@ -20,14 +20,18 @@ class String(BaseString):
 
   @value.setter
   def value( self, val ):
-    if   isinstance( val, String ): self.assign_basestring_( byref(self), byref(other) )
-    elif isinstance( val, str )   : self.assign_charstring_( byref(self), c_char_p(val), c_int32(len(val)) )
+    if isinstance( val, String ):
+      self.assign_basestring_( byref(self), byref(other) )
+    else:
+      val = str(val)
+      self.assign_charstring_( byref(self), c_char_p(val), c_int32(len(val)) )
 
   def __init__( self, other = '' ):
-    if isinstance( other, basestring ):
-      self.init_by_charstring_( byref(self), byref(self._attribute_permanent), c_char_p(other), c_int32(len(other)) )
+    if isinstance( other, String ):
+      super(String, self).__init__( other )
     else:
-      super(String, self).__init__( other ) 
+      other = str(other)
+      self.init_by_charstring_( byref(self), byref(self._attribute_permanent), c_char_p(other), c_int32(len(other)) )
 
   def __str__( self ):
     return self.value

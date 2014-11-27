@@ -20,9 +20,9 @@ module adt_hashmap
   end type
 
   !_TypeGen_declare_RefType( public, HashMap, type(HashMap_t), scalar, \
-  !     initProc   = hashmap_init_by_proto_c,  \
-  !     assignProc = hashmap_assign_hashmap_c, \
-  !     deleteProc = hashmap_delete_c,         \
+  !     initProc   = hashmap_init_by_hashmap_c, \
+  !     assignProc = hashmap_assign_hashmap_c,  \
+  !     deleteProc = hashmap_delete_c,          \
   !     cloneMode  = _type )
 
   !_TypeGen_declare_ListNode( public, HashMap, type(HashMap_t), scalar )
@@ -38,7 +38,7 @@ module adt_hashmap
   public :: default_indexLimits
 
   interface initialize
-    subroutine hashmap_init_by_proto_c( self, has_proto, proto )
+    subroutine hashmap_init_by_hashmap_c( self, has_proto, proto )
       import HashMap_t
       type(HashMap_t) :: self, proto
       integer         :: has_proto

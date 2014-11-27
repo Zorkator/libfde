@@ -246,8 +246,8 @@ end module
   end subroutine
 
 
-!_PROC_EXPORT(list_init_by_proto_c)
-  subroutine list_init_by_proto_c( self, has_proto, proto )
+!_PROC_EXPORT(list_init_by_list_c)
+  subroutine list_init_by_list_c( self, has_proto, proto )
     use adt_list__; implicit none
     type(List_t), target :: self
     integer(kind=4)      :: has_proto

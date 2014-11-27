@@ -158,8 +158,8 @@ end module
   end subroutine
 
 
-!_PROC_EXPORT(hashmap_init_by_proto_c)
-  subroutine hashmap_init_by_proto_c( self, has_proto, proto )
+!_PROC_EXPORT(hashmap_init_by_hashmap_c)
+  subroutine hashmap_init_by_hashmap_c( self, has_proto, proto )
     use adt_hashmap__; implicit none
     type(HashMap_t)     :: self
     integer             :: has_proto

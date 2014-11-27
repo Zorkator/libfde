@@ -1,10 +1,10 @@
 
 from ctypes  import *
-from _base   import DynamicObject
-from _ftypes import fortranType
+from _object import Object
+from _ftypes import mappedType
 
 
-@fortranType( 'type(List_t)' )
-class List(DynamicObject):
+@mappedType( 'list', 'type(List_t)' )
+class List(Object):
   pass
 

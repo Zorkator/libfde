@@ -68,9 +68,9 @@ end module
   end function
 
 
-!_PROC_EXPORT(ref_init_by_proto_c)
+!_PROC_EXPORT(ref_init_by_ref_c)
 !_ARG_REFERENCE2(self, proto)
-  subroutine ref_init_by_proto_c( self, has_proto, proto )
+  subroutine ref_init_by_ref_c( self, has_proto, proto )
     use adt_ref__
     implicit none
     type(Ref_t), intent(inout) :: self
@@ -79,10 +79,10 @@ end module
     
     if (has_proto /= 0) then;
       _ref_init( self%refstat, _ref_hardness(proto%refstat) )
-      call basestring_init_by_proto_c( self%ref_str, 1, proto%ref_str )
+      call basestring_init_by_basestring_c( self%ref_str, 1, proto%ref_str )
     else;
       self%refstat = _ref_HardLent
-      call basestring_init_by_proto_c( self%ref_str, 0, self%ref_str )
+      call basestring_init_by_basestring_c( self%ref_str, 0, self%ref_str )
     end if
     self%typeInfo => null()
   end subroutine

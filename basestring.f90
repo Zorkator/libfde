@@ -14,7 +14,7 @@ module adt_basestring
 
   ! interface visibility
 
-  public :: basestring_init_by_proto_c
+  public :: basestring_init_by_basestring_c
   public :: basestring_init_by_charstring_c
   public :: basestring_init_by_buf
   public :: basestring_set_attribute
@@ -42,7 +42,7 @@ module adt_basestring
   ! interface definitions
 
   interface
-    subroutine basestring_init_by_proto_c( bs, has_proto, proto )
+    subroutine basestring_init_by_basestring_c( bs, has_proto, proto )
       import BaseString_t
       type(BaseString_t), intent(inout) :: bs
       integer(kind=4),    intent(in)    :: has_proto

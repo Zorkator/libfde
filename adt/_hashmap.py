@@ -1,10 +1,10 @@
 
 from ctypes  import *
-from _base   import DynamicObject
-from _ftypes import fortranType
+from _object import Object
+from _ftypes import mappedType
 
 
-@fortranType( 'type(HashMap_t)' )
-class HashMap(DynamicObject):
+@mappedType( 'hashmap', 'type(HashMap_t)' )
+class HashMap(Object):
   pass
 

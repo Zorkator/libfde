@@ -35,8 +35,8 @@ end module
   end function
 
 
-!_PROC_EXPORT(item_init_by_proto_c)
-  subroutine item_init_by_proto_c( self, has_proto, proto )
+!_PROC_EXPORT(item_init_by_item_c)
+  subroutine item_init_by_item_c( self, has_proto, proto )
     use adt_item__
     implicit none
     type(Item_t),    intent(inout) :: self

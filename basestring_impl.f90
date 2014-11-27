@@ -3,9 +3,9 @@
 #include "adt/ref_status.fpp"
 
 
-!_PROC_EXPORT(basestring_init_by_proto_c)
+!_PROC_EXPORT(basestring_init_by_basestring_c)
 !_ARG_REFERENCE2(bs, proto)
-  subroutine basestring_init_by_proto_c( bs, has_proto, proto )
+  subroutine basestring_init_by_basestring_c( bs, has_proto, proto )
     use adt_basestring, only: BaseString_t, basestring_assign_buf
     use iso_c_binding
     implicit none

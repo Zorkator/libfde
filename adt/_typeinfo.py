@@ -1,7 +1,8 @@
 
 from ctypes  import *
-from _base   import Object, DynamicObject
-from _ftypes import MemoryRef, _f2c_typeMap
+from _base   import Compound
+from _object import Object
+from _ftypes import MemoryRef, _typeMap_ft2ct
 
 
 class TypeSpecs(Structure):
@@ -14,17 +15,17 @@ TypeSpecs._fields_ = [('typeId',   MemoryRef),
                       ('subtype',  POINTER(TypeSpecs))]
 
 
-class TypeInfo(Object):
+class TypeInfo(Compound):
   _fields_    = [('_spec', TypeSpecs)]
   _anonymous_ = ['_spec']
 
   @property
   def ctype( self ):
     """returns appropriate python ctype for this type"""
-    baseType = _f2c_typeMap[str(self.baseType)]
-    sliceLen = self.byteSize / sizeof(baseType)
-    if sliceLen > 1: return baseType * sliceLen
-    else           : return baseType
+    cType = _typeMap_ft2ct[str(self.baseType)]
+    sliceLen = self.byteSize / sizeof(cType)
+    if sliceLen > 1: return cType * sliceLen
+    else           : return cType
 
   def __str__( self ):
     what = ('scalar', '{4}-dimensional array, each', 'scalar')[bool(self.rank)]
@@ -32,10 +33,14 @@ class TypeInfo(Object):
 
 
 
-class TypedObject(DynamicObject):
+class TypedObject(Object):
   _fields_ = [('_typeInfo', POINTER(TypeInfo))]
 
   @property
   def ftype( self ):
     return self._typeInfo and self._typeInfo.contents
+
+  @property
+  def ctype( self ):
+    return self._typeInfo and self._typeInfo.contents.ctype
 

@@ -30,9 +30,9 @@ module adt_list
 
 
   !_TypeGen_declare_RefType( public, List, type(List_t), scalar, \
-  !     initProc   = list_init_by_proto_c, \
-  !     deleteProc = list_delete_c,        \
-  !     assignProc = list_assign_list_c,   \
+  !     initProc   = list_init_by_list_c, \
+  !     deleteProc = list_delete_c,       \
+  !     assignProc = list_assign_list_c,  \
   !     cloneMode  = _type )
 
   !_TypeGen_declare_ListNode( public, List, type(List_t), scalar )
@@ -59,7 +59,7 @@ module adt_list
 
   
   interface initialize
-    subroutine list_init_by_proto_c( self, has_proto, proto )
+    subroutine list_init_by_list_c( self, has_proto, proto )
       import List_t
       type(List_t)    :: self, proto
       integer(kind=4) :: has_proto

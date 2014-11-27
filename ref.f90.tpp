@@ -19,9 +19,9 @@ module adt_ref
 
 
   !_TypeGen_declare_RefType( public, ref, type(Ref_t), scalar, \
-  !     initProc   = ref_init_by_proto_c, \
-  !     assignProc = ref_assign_ref_c,    \
-  !     deleteProc = ref_delete_c,        \
+  !     initProc   = ref_init_by_ref_c, \
+  !     assignProc = ref_assign_ref_c,  \
+  !     deleteProc = ref_delete_c,      \
   !     cloneMode  = _type )
 
 
@@ -37,7 +37,7 @@ module adt_ref
   ! interface definitions
 
   interface
-    subroutine ref_init_by_proto_c( self, has_proto, proto )
+    subroutine ref_init_by_ref_c( self, has_proto, proto )
       import Ref_t
       type(Ref_t),     intent(inout) :: self
       integer(kind=4), intent(in)    :: has_proto

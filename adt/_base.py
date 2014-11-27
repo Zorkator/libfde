@@ -1,24 +1,30 @@
 
 from ctypes import *
-import sys
+import sys, platform
 
-_libHandle = None
-_libNames  = 'libadt.{f90c}.{cfg}.{arch}.so, libadt.{cfg}.{arch}.so, libadt.{arch}.so, libadt_dll.dll'
-_libInfo   = dict( cfg  = ('debug', 'release')[0],
-                   arch = (32, 64)[sys.maxsize > 2**32],
-                   f90c = ('gfortran', 'ifort')[0]
-                 )
+_libHandle  = None
+_libArch    = (32, 64)[sys.maxsize > 2**32]
+_libArchWin = ('Win32', 'x64')[sys.maxsize > 2**32]
+_libNames   = ("""
+  libadt.0.gfortran.debug.{arch}.so
+  libadt.0.gfortran.release.{arch}.so
+  libadt.0.ifort.debug.{arch}.so
+  libadt.0.ifort.release.{arch}.so
+""",
+"""
+  libadt.0.Debug.{archWin}.dll
+  libadt.0.Release.{archWin}.dll
+""")[platform.system() == "Windows"]
 
-for f in map( str.strip, _libNames.split(',') ):
-  _soName = f.format( **_libInfo )
+for soName in map( str.strip, _libNames.format( arch = _libArch, archWin = _libArchWin ).split() ):
   try:
-    _libHandle = CDLL( _soName ); break
+    _libHandle = CDLL( soName ); break
   except Exception as e:
-    print 'tried loading "%s": %s' % (_soName, e)
+    print 'tried loading "%s": %s' % (soName, e)
 else:
   raise OSError("unable to locate ADT's shared library")
 
-print 'loaded "%s"' % _soName
+print 'loaded "%s"' % soName
 
 
 
@@ -46,11 +52,17 @@ class _Meta(type(Union)):
 
 
 
-class Object(Union):
+class Compound(Union):
   __metaclass__ = _Meta
-  __typeprocs__ = [] #< no procedures for Object
+  __typeprocs__ = [] #< no procedures for Compound
+  __slots__     = ['_is_reference']
 
   def __getattr__( self, name ):
+    if name is '_is_reference': #< if we end up here, slot _is_reference has not been set!
+      return False
+    if name in ('__members__', '__methods__'):
+      return {}
+
     for fmt in self.__typeprocs__:
       try   : attr = getattr( _libHandle, fmt.format(name) ); break
       except: pass
@@ -58,24 +70,4 @@ class Object(Union):
       raise AttributeError( "'%s' object has no attribute '%s'" % (self.__class__.__name__, name) )
     setattr( type(self), name, attr )
     return attr
-
-
-
-class DynamicObject(Object):
-  __slots__ = ['_isRef']
-
-  @property
-  def asRef( self ):
-    self._isRef = True
-    return self
-
-  def __init__( self, other = None ):
-    useOther = c_int32( isinstance( other, self.__class__ ) )
-    self.init_by_proto_( byref(self), byref(useOther), useOther and byref(other) )
-
-  def __del__( self ):
-    getattr( self, '_isRef', False ) or self.delete_( byref(self) )
-
-  def delete( self ):
-    self.delete_( byref(self) )
 

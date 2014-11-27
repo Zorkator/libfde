@@ -20,9 +20,9 @@ module adt_string
 
 
   !_TypeGen_declare_RefType( public, String, type(String_t), scalar, \
-  !     initProc   = basestring_init_by_proto_c,     \
-  !     assignProc = basestring_assign_basestring_c, \
-  !     deleteProc = basestring_delete_c,            \
+  !     initProc   = basestring_init_by_basestring_c, \
+  !     assignProc = basestring_assign_basestring_c,  \
+  !     deleteProc = basestring_delete_c,             \
   !     cloneMode  = _type )
 
 
@@ -489,7 +489,7 @@ module adt_string
 
   
   interface
-    subroutine basestring_init_by_proto_c( ds, has_proto, proto )
+    subroutine basestring_init_by_basestring_c( ds, has_proto, proto )
       import String_t
       type(String_t), intent(inout) :: ds
       integer,        intent(in)    :: has_proto
