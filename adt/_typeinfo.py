@@ -38,9 +38,12 @@ class TypedObject(Object):
 
   @property
   def ftype( self ):
-    return self._typeInfo and self._typeInfo.contents
+    if self._typeInfo: return self._typeInfo.contents
 
   @property
   def ctype( self ):
-    return self._typeInfo and self._typeInfo.contents.ctype
+    if self._typeInfo: return self._typeInfo.contents.ctype
+
+  def __nonzero__( self ):
+    return bool(self._typeInfo)
 

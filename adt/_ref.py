@@ -7,6 +7,10 @@ from operator  import mul as _mul
 
 @mappedType( 'ref', 'type(Ref_t)' )
 class Ref(TypedObject):
+  
+  @TypedObject.value.getter
+  def value( self ):
+    return self
 
   @property
   def ptr( self ):

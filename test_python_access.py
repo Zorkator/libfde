@@ -45,7 +45,11 @@ l = adt.List()
 l.value = adt.List()
 
 ptr = cast( id(s), POINTER(c_void_p) )
-#i.value = ptr
-
-
+i.value = ptr
+print i.value
+i.value = adt.Item()
+i.value = cast( id(s), POINTER(c_int32) )
+i.value = None
+i.value = adt.Ref()
+print i.value
 

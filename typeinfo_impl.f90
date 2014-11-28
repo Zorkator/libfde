@@ -88,3 +88,12 @@
       call typeinfo_init( type_void, "void", "", 0, 0 )
   end function
 
+
+!_PROC_EXPORT(typeinfo_void_type_c)
+  subroutine typeinfo_void_type_c( res )
+    use adt_typeinfo, only: void_type
+    use iso_c_binding
+    type(c_ptr) :: res
+    res = c_loc(void_type())
+  end subroutine
+
