@@ -2,6 +2,7 @@
 F90C ?= gfortran
 CFG  ?= debug
 ARCH ?= 32
+MYOR ?= 0
 
 mk_F90_FLAGS_gfortran_debug   = -ggdb -cpp -ffree-line-length-none $(_F90_FLAGS)
 mk_F90_FLAGS_gfortran_release = -O3 -cpp -ffree-line-length-none $(_F90_FLAGS)
@@ -16,7 +17,7 @@ mk_F90_FLAGS        = $(mk_F90_FLAGS_$(F90C)_$(CFG)) -m$(ARCH) $(mk_F90C_PP_FLAG
 mk_F90C             = $(mk_F90C_$(F90C))
 mk_INCLUDE_PATHLIST = -I. -I./include
 
-mk_TAG              = $(F90C).$(CFG).$(ARCH)
+mk_TAG              = $(MYOR).$(F90C).$(CFG).$(ARCH)
 
 .SECONDARY:
 .PHONY: clean
@@ -35,8 +36,8 @@ all: clean dynstring gref item alist map
 base: $(BASE_OBJ)
 
 libadt: clean
-	$(MAKE) _F90_FLAGS=-fpic base
-	$(mk_F90C) -shared $(BASE_OBJ) -o $@.$(mk_TAG).so
+	$(MAKE) _F90_FLAGS="-fpic -DBUILT_TYPE=SHARED_LIB" base
+	$(mk_F90C) -shared -m$(ARCH) $(BASE_OBJ) -o $@.$(mk_TAG).so
 
 libcall: libadt test_lib_call.o
 	$(mk_F90C) test_lib_call.o -L. -ladt.$(mk_TAG) -lcrc -o $@.$(mk_TAG)

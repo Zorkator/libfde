@@ -24,7 +24,7 @@ class Object(Compound):
 
 
   def _lookup_method( self, name, _type ):
-    try   : return getattr( self, '{}_{}_'.format( name, _id_map.lookup(_type) ) )
+    try   : return getattr( self, '{0}_{1}_'.format( name, _id_map.lookup(_type) ) )
     except: raise TypeError( "%s.%s doesn't support %s" % (type(self).__name__, name, _type) )
 
 
