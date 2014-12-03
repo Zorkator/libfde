@@ -2,11 +2,9 @@
 #define __EXCEPTION_FPP
 
 #if defined(__GFORTRAN__)
-# define _paste(a,b)    a/**/b
-# define _str(a)        "a"
+# define _exc_paste(a,b)    a/**/b
 #else
-# define _paste(a,b)    a ## b
-# define _str(a)        #a
+# define _exc_paste(a,b)    a ## b
 #endif
 
 #define _args_0()
@@ -30,7 +28,7 @@
 #define _args_18()    _args_17() arg18,
 #define _args_19()    _args_18() arg19,
 #define _args_20()    _args_19() arg20,
-#define _args(nr)     _paste(_args_,nr)()
+#define _args(nr)     _exc_paste(_args_,nr)()
 
 
 #define _tryProcedure( id, args ) \
@@ -89,8 +87,8 @@
 
 !-- start a simple try block
 # define _tryBlock(label)             \
-    goto _paste(label,02)            ;\
-    entry _paste(tryblock__,label)
+    goto _exc_paste(label,02)        ;\
+    entry _exc_paste(tryblock__,label)
 
 !-- start a try loop block (bottom-controlled: executes at least once)
 # define _tryDo(label)  \
@@ -99,19 +97,19 @@
 !-- start a try loop block (top-controlled)
 # define _tryFor(label, init, cond, inc )  \
     init                                  ;\
-    goto _paste(label,01)                 ;\
-    _paste(label,00) inc                  ;\
-    _paste(label,01) continue             ;\
-    if (cond) goto _paste(label,02)       ;\
-    goto _paste(label,03)                 ;\
-    entry _paste(tryblock__,label)
+    goto _exc_paste(label,01)             ;\
+    _exc_paste(label,00) inc              ;\
+    _exc_paste(label,01) continue         ;\
+    if (cond) goto _exc_paste(label,02)   ;\
+    goto _exc_paste(label,03)             ;\
+    entry _exc_paste(tryblock__,label)
 
 
 !-- start catch block, catching all given exception types --
 # define _tryCatch(label, catchList, what)  \
     return                           ;\
-    _paste(label,02) continue        ;\
-    select case( try( _catch(catchList), str(what), proc(_paste(tryblock__,label)), _argEnd ) ) ;\
+    _exc_paste(label,02) continue    ;\
+    select case( try( _catch(catchList), str(what), proc(_exc_paste(tryblock__,label)), _argEnd ) ) ;\
       case (0); continue  !< this is important! Without it gfortran would skip the try!
 
 
@@ -120,23 +118,23 @@
     end select
 
 !-- end a try-do
-# define _tryWhile(label,cond)          \
-    _tryEnd(label)                     ;\
-    if (cond) goto _paste(label,02)    ;\
-    _paste(label,03) continue
+# define _tryWhile(label,cond)           \
+    _tryEnd(label)                      ;\
+    if (cond) goto _exc_paste(label,02) ;\
+    _exc_paste(label,03) continue
 
 !-- end a try-for
 # define _tryEndFor(label)     \
     end select                ;\
-    goto _paste(label,00)     ;\
-    _paste(label,03) continue
+    goto _exc_paste(label,00) ;\
+    _exc_paste(label,03) continue
 
 !-- early exit 
 !   RESTRICTIONS:
 !    -> breaks only the most inner try-loop
 !    -> works only within catch block
 # define _exitLoop(label)      \
-    goto _paste(label,03)
+    goto _exc_paste(label,03)
 
 #endif 
 
