@@ -4,42 +4,42 @@
 		<Platform Name="Win32"/>
 		<Platform Name="x64"/></Platforms>
 	<Configurations>
-		<Configuration Name="Debug|Win32" OutputDirectory="$(SolutionDir)exe" IntermediateDirectory="$(ConfigurationName).$(PlatformName)" ConfigurationType="typeDynamicLibrary">
+		<Configuration Name="Debug|Win32" OutputDirectory="$(ConfigurationName).$(PlatformName)" IntermediateDirectory="$(ConfigurationName).$(PlatformName)" ConfigurationType="typeDynamicLibrary">
 				<Tool Name="VFFortranCompilerTool" AdditionalOptions="/fpscomp:general /fpp:&quot;-f_com=no&quot;" SuppressStartupBanner="true" DebugInformationFormat="debugEnabled" Optimization="optimizeDisabled" AdditionalIncludeDirectories="../include" PreprocessorDefinitions="BUILT_TYPE=SHARED_LIB" WarnInterfaces="true" ExternalNameInterpretation="extNameLowerCase" ExternalNameUnderscore="true" Traceback="true" BoundsCheck="true" RuntimeLibrary="rtMultiThreadedDLL"/>
 				<Tool Name="VFLinkerTool" OutputFile="$(OutDir)\$(ProjectName).0.$(ConfigurationName).$(PlatformName).dll" LinkIncremental="linkIncrementalNo" SuppressStartupBanner="true" GenerateDebugInformation="true" SubSystem="subSystemWindows" LinkDLL="true"/>
 				<Tool Name="VFResourceCompilerTool"/>
 				<Tool Name="VFMidlTool" SuppressStartupBanner="true"/>
-				<Tool Name="VFCustomBuildTool"/>
+				<Tool Name="VFCustomBuildTool" CommandLine="$(ProjectDir)..\release_to.bat $(OutDir) $(ProjectDir)..\lib\$(ConfigurationName).$(PlatformName) _flag_" Outputs="$(ProjectDir)..\lib\$(ConfigurationName).$(PlatformName)\_flag_"/>
 				<Tool Name="VFPreLinkEventTool"/>
 				<Tool Name="VFPreBuildEventTool"/>
 				<Tool Name="VFPostBuildEventTool"/>
 				<Tool Name="VFManifestTool" SuppressStartupBanner="true"/></Configuration>
-		<Configuration Name="Release|Win32" OutputDirectory="$(SolutionDir)exe" IntermediateDirectory="$(ConfigurationName).$(PlatformName)" ConfigurationType="typeDynamicLibrary">
+		<Configuration Name="Release|Win32" OutputDirectory="$(ConfigurationName).$(PlatformName)" IntermediateDirectory="$(ConfigurationName).$(PlatformName)" ConfigurationType="typeDynamicLibrary">
 				<Tool Name="VFFortranCompilerTool" AdditionalOptions="/fpscomp:general /fpp:&quot;-f_com=no&quot;" SuppressStartupBanner="true" AdditionalIncludeDirectories="../include" PreprocessorDefinitions="BUILT_TYPE=SHARED_LIB" ExternalNameInterpretation="extNameLowerCase" ExternalNameUnderscore="true" RuntimeLibrary="rtMultiThreadedDLL"/>
 				<Tool Name="VFLinkerTool" OutputFile="$(OutDir)\$(ProjectName).0.$(ConfigurationName).$(PlatformName).dll" LinkIncremental="linkIncrementalNo" SuppressStartupBanner="true" SubSystem="subSystemWindows" LinkDLL="true"/>
 				<Tool Name="VFResourceCompilerTool"/>
 				<Tool Name="VFMidlTool" SuppressStartupBanner="true"/>
-				<Tool Name="VFCustomBuildTool"/>
+				<Tool Name="VFCustomBuildTool" CommandLine="$(ProjectDir)..\release_to.bat $(OutDir) $(ProjectDir)..\lib\$(ConfigurationName).$(PlatformName) _flag_" Outputs="$(ProjectDir)..\lib\$(ConfigurationName).$(PlatformName)\_flag_"/>
 				<Tool Name="VFPreLinkEventTool"/>
 				<Tool Name="VFPreBuildEventTool"/>
 				<Tool Name="VFPostBuildEventTool"/>
 				<Tool Name="VFManifestTool" SuppressStartupBanner="true"/></Configuration>
-		<Configuration Name="Debug|x64" OutputDirectory="$(SolutionDir)exe" IntermediateDirectory="$(ConfigurationName).$(PlatformName)" ConfigurationType="typeDynamicLibrary">
+		<Configuration Name="Debug|x64" OutputDirectory="$(ConfigurationName).$(PlatformName)" IntermediateDirectory="$(ConfigurationName).$(PlatformName)" ConfigurationType="typeDynamicLibrary">
 				<Tool Name="VFFortranCompilerTool" AdditionalOptions="/fpscomp:general /fpp:&quot;-f_com=no&quot;" SuppressStartupBanner="true" DebugInformationFormat="debugEnabled" Optimization="optimizeDisabled" AdditionalIncludeDirectories="../include" PreprocessorDefinitions="BUILT_TYPE=SHARED_LIB" WarnInterfaces="true" ExternalNameInterpretation="extNameLowerCase" ExternalNameUnderscore="true" Traceback="true" BoundsCheck="true" RuntimeLibrary="rtMultiThreadedDLL"/>
 				<Tool Name="VFLinkerTool" OutputFile="$(OutDir)\$(ProjectName).0.$(ConfigurationName).$(PlatformName).dll" LinkIncremental="linkIncrementalNo" SuppressStartupBanner="true" GenerateDebugInformation="true" SubSystem="subSystemWindows" LinkDLL="true"/>
 				<Tool Name="VFResourceCompilerTool"/>
 				<Tool Name="VFMidlTool" SuppressStartupBanner="true" TargetEnvironment="midlTargetAMD64"/>
-				<Tool Name="VFCustomBuildTool"/>
+				<Tool Name="VFCustomBuildTool" CommandLine="$(ProjectDir)..\release_to.bat $(OutDir) $(ProjectDir)..\lib\$(ConfigurationName).$(PlatformName) _flag_" Outputs="$(ProjectDir)..\lib\$(ConfigurationName).$(PlatformName)\_flag_"/>
 				<Tool Name="VFPreLinkEventTool"/>
 				<Tool Name="VFPreBuildEventTool"/>
 				<Tool Name="VFPostBuildEventTool"/>
 				<Tool Name="VFManifestTool" SuppressStartupBanner="true"/></Configuration>
-		<Configuration Name="Release|x64" OutputDirectory="$(SolutionDir)exe" IntermediateDirectory="$(ConfigurationName).$(PlatformName)" ConfigurationType="typeDynamicLibrary">
+		<Configuration Name="Release|x64" OutputDirectory="$(ConfigurationName).$(PlatformName)" IntermediateDirectory="$(ConfigurationName).$(PlatformName)" ConfigurationType="typeDynamicLibrary">
 				<Tool Name="VFFortranCompilerTool" AdditionalOptions="/fpscomp:general /fpp:&quot;-f_com=no&quot;" SuppressStartupBanner="true" AdditionalIncludeDirectories="../include" PreprocessorDefinitions="BUILT_TYPE=SHARED_LIB" ExternalNameInterpretation="extNameLowerCase" ExternalNameUnderscore="true" RuntimeLibrary="rtMultiThreadedDLL"/>
 				<Tool Name="VFLinkerTool" OutputFile="$(OutDir)\$(ProjectName).0.$(ConfigurationName).$(PlatformName).dll" LinkIncremental="linkIncrementalNo" SuppressStartupBanner="true" SubSystem="subSystemWindows" LinkDLL="true"/>
 				<Tool Name="VFResourceCompilerTool"/>
 				<Tool Name="VFMidlTool" SuppressStartupBanner="true" TargetEnvironment="midlTargetAMD64"/>
-				<Tool Name="VFCustomBuildTool"/>
+				<Tool Name="VFCustomBuildTool" CommandLine="$(ProjectDir)..\release_to.bat $(OutDir) $(ProjectDir)..\lib\$(ConfigurationName).$(PlatformName) _flag_" Outputs="$(ProjectDir)..\lib\$(ConfigurationName).$(PlatformName)\_flag_"/>
 				<Tool Name="VFPreLinkEventTool"/>
 				<Tool Name="VFPreBuildEventTool"/>
 				<Tool Name="VFPostBuildEventTool"/>
@@ -49,84 +49,84 @@
 		<Filter Name="Resource Files" Filter="rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe">
 		<File RelativePath="..\basetypes.f90.tpp">
 			<FileConfiguration Name="Debug|Win32">
-				<Tool Name="VFCustomBuildTool" CommandLine="python $(ProjectDir)..\typegen.py $(InputPath) -o $(InputName)" Outputs="$(InputName)"/></FileConfiguration>
+				<Tool Name="VFCustomBuildTool" CommandLine="python $(ProjectDir)..\typegen.py $(InputPath) -o ../$(InputName)" Outputs="../$(InputName)"/></FileConfiguration>
 			<FileConfiguration Name="Release|x64">
-				<Tool Name="VFCustomBuildTool" CommandLine="python $(ProjectDir)..\typegen.py $(InputPath) -o $(InputName)" Outputs="$(InputName)"/></FileConfiguration>
+				<Tool Name="VFCustomBuildTool" CommandLine="python $(ProjectDir)..\typegen.py $(InputPath) -o ../$(InputName)" Outputs="../$(InputName)"/></FileConfiguration>
 			<FileConfiguration Name="Debug|x64">
-				<Tool Name="VFCustomBuildTool" CommandLine="python $(ProjectDir)..\typegen.py $(InputPath) -o $(InputName)" Outputs="$(InputName)"/></FileConfiguration>
+				<Tool Name="VFCustomBuildTool" CommandLine="python $(ProjectDir)..\typegen.py $(InputPath) -o ../$(InputName)" Outputs="../$(InputName)"/></FileConfiguration>
 			<FileConfiguration Name="Release|Win32">
-				<Tool Name="VFCustomBuildTool" CommandLine="python $(ProjectDir)..\typegen.py $(InputPath) -o $(InputName)" Outputs="$(InputName)"/></FileConfiguration></File>
+				<Tool Name="VFCustomBuildTool" CommandLine="python $(ProjectDir)..\typegen.py $(InputPath) -o ../$(InputName)" Outputs="../$(InputName)"/></FileConfiguration></File>
 		<File RelativePath="..\hashmap.f90.tpp">
 			<FileConfiguration Name="Debug|Win32">
-				<Tool Name="VFCustomBuildTool" CommandLine="python $(ProjectDir)..\typegen.py $(InputPath) -o $(InputName)" Outputs="$(InputName)"/></FileConfiguration>
+				<Tool Name="VFCustomBuildTool" CommandLine="python $(ProjectDir)..\typegen.py $(InputPath) -o ../$(InputName)" Outputs="../$(InputName)"/></FileConfiguration>
 			<FileConfiguration Name="Release|x64">
-				<Tool Name="VFCustomBuildTool" CommandLine="python $(ProjectDir)..\typegen.py $(InputPath) -o $(InputName)" Outputs="$(InputName)"/></FileConfiguration>
+				<Tool Name="VFCustomBuildTool" CommandLine="python $(ProjectDir)..\typegen.py $(InputPath) -o ../$(InputName)" Outputs="../$(InputName)"/></FileConfiguration>
 			<FileConfiguration Name="Debug|x64">
-				<Tool Name="VFCustomBuildTool" CommandLine="python $(ProjectDir)..\typegen.py $(InputPath) -o $(InputName)" Outputs="$(InputName)"/></FileConfiguration>
+				<Tool Name="VFCustomBuildTool" CommandLine="python $(ProjectDir)..\typegen.py $(InputPath) -o ../$(InputName)" Outputs="../$(InputName)"/></FileConfiguration>
 			<FileConfiguration Name="Release|Win32">
-				<Tool Name="VFCustomBuildTool" CommandLine="python $(ProjectDir)..\typegen.py $(InputPath) -o $(InputName)" Outputs="$(InputName)"/></FileConfiguration></File>
+				<Tool Name="VFCustomBuildTool" CommandLine="python $(ProjectDir)..\typegen.py $(InputPath) -o ../$(InputName)" Outputs="../$(InputName)"/></FileConfiguration></File>
 		<File RelativePath="..\hashmap_impl.f90.tpp">
 			<FileConfiguration Name="Debug|Win32">
-				<Tool Name="VFCustomBuildTool" CommandLine="python $(ProjectDir)..\typegen.py $(InputPath) -o $(InputName)" Outputs="$(InputName)"/></FileConfiguration>
+				<Tool Name="VFCustomBuildTool" CommandLine="python $(ProjectDir)..\typegen.py $(InputPath) -o ../$(InputName)" Outputs="../$(InputName)"/></FileConfiguration>
 			<FileConfiguration Name="Release|x64">
-				<Tool Name="VFCustomBuildTool" CommandLine="python $(ProjectDir)..\typegen.py $(InputPath) -o $(InputName)" Outputs="$(InputName)"/></FileConfiguration>
+				<Tool Name="VFCustomBuildTool" CommandLine="python $(ProjectDir)..\typegen.py $(InputPath) -o ../$(InputName)" Outputs="../$(InputName)"/></FileConfiguration>
 			<FileConfiguration Name="Debug|x64">
-				<Tool Name="VFCustomBuildTool" CommandLine="python $(ProjectDir)..\typegen.py $(InputPath) -o $(InputName)" Outputs="$(InputName)"/></FileConfiguration>
+				<Tool Name="VFCustomBuildTool" CommandLine="python $(ProjectDir)..\typegen.py $(InputPath) -o ../$(InputName)" Outputs="../$(InputName)"/></FileConfiguration>
 			<FileConfiguration Name="Release|Win32">
-				<Tool Name="VFCustomBuildTool" CommandLine="python $(ProjectDir)..\typegen.py $(InputPath) -o $(InputName)" Outputs="$(InputName)"/></FileConfiguration></File>
+				<Tool Name="VFCustomBuildTool" CommandLine="python $(ProjectDir)..\typegen.py $(InputPath) -o ../$(InputName)" Outputs="../$(InputName)"/></FileConfiguration></File>
 		<File RelativePath="..\item.f90.tpp">
 			<FileConfiguration Name="Debug|Win32">
-				<Tool Name="VFCustomBuildTool" CommandLine="python $(ProjectDir)..\typegen.py $(InputPath) -o $(InputName)" Outputs="$(InputName)"/></FileConfiguration>
+				<Tool Name="VFCustomBuildTool" CommandLine="python $(ProjectDir)..\typegen.py $(InputPath) -o ../$(InputName)" Outputs="../$(InputName)"/></FileConfiguration>
 			<FileConfiguration Name="Release|x64">
-				<Tool Name="VFCustomBuildTool" CommandLine="python $(ProjectDir)..\typegen.py $(InputPath) -o $(InputName)" Outputs="$(InputName)"/></FileConfiguration>
+				<Tool Name="VFCustomBuildTool" CommandLine="python $(ProjectDir)..\typegen.py $(InputPath) -o ../$(InputName)" Outputs="../$(InputName)"/></FileConfiguration>
 			<FileConfiguration Name="Debug|x64">
-				<Tool Name="VFCustomBuildTool" CommandLine="python $(ProjectDir)..\typegen.py $(InputPath) -o $(InputName)" Outputs="$(InputName)"/></FileConfiguration>
+				<Tool Name="VFCustomBuildTool" CommandLine="python $(ProjectDir)..\typegen.py $(InputPath) -o ../$(InputName)" Outputs="../$(InputName)"/></FileConfiguration>
 			<FileConfiguration Name="Release|Win32">
-				<Tool Name="VFCustomBuildTool" CommandLine="python $(ProjectDir)..\typegen.py $(InputPath) -o $(InputName)" Outputs="$(InputName)"/></FileConfiguration></File>
+				<Tool Name="VFCustomBuildTool" CommandLine="python $(ProjectDir)..\typegen.py $(InputPath) -o ../$(InputName)" Outputs="../$(InputName)"/></FileConfiguration></File>
 		<File RelativePath="..\list.f90.tpp">
 			<FileConfiguration Name="Debug|Win32">
-				<Tool Name="VFCustomBuildTool" CommandLine="python $(ProjectDir)..\typegen.py $(InputPath) -o $(InputName)" Outputs="$(InputName)"/></FileConfiguration>
+				<Tool Name="VFCustomBuildTool" CommandLine="python $(ProjectDir)..\typegen.py $(InputPath) -o ../$(InputName)" Outputs="../$(InputName)"/></FileConfiguration>
 			<FileConfiguration Name="Release|x64">
-				<Tool Name="VFCustomBuildTool" CommandLine="python $(ProjectDir)..\typegen.py $(InputPath) -o $(InputName)" Outputs="$(InputName)"/></FileConfiguration>
+				<Tool Name="VFCustomBuildTool" CommandLine="python $(ProjectDir)..\typegen.py $(InputPath) -o ../$(InputName)" Outputs="../$(InputName)"/></FileConfiguration>
 			<FileConfiguration Name="Debug|x64">
-				<Tool Name="VFCustomBuildTool" CommandLine="python $(ProjectDir)..\typegen.py $(InputPath) -o $(InputName)" Outputs="$(InputName)"/></FileConfiguration>
+				<Tool Name="VFCustomBuildTool" CommandLine="python $(ProjectDir)..\typegen.py $(InputPath) -o ../$(InputName)" Outputs="../$(InputName)"/></FileConfiguration>
 			<FileConfiguration Name="Release|Win32">
-				<Tool Name="VFCustomBuildTool" CommandLine="python $(ProjectDir)..\typegen.py $(InputPath) -o $(InputName)" Outputs="$(InputName)"/></FileConfiguration></File>
+				<Tool Name="VFCustomBuildTool" CommandLine="python $(ProjectDir)..\typegen.py $(InputPath) -o ../$(InputName)" Outputs="../$(InputName)"/></FileConfiguration></File>
 		<File RelativePath="..\ref.f90.tpp">
 			<FileConfiguration Name="Debug|Win32">
-				<Tool Name="VFCustomBuildTool" CommandLine="python $(ProjectDir)..\typegen.py $(InputPath) -o $(InputName)" Outputs="$(InputName)"/></FileConfiguration>
+				<Tool Name="VFCustomBuildTool" CommandLine="python $(ProjectDir)..\typegen.py $(InputPath) -o ../$(InputName)" Outputs="../$(InputName)"/></FileConfiguration>
 			<FileConfiguration Name="Release|x64">
-				<Tool Name="VFCustomBuildTool" CommandLine="python $(ProjectDir)..\typegen.py $(InputPath) -o $(InputName)" Outputs="$(InputName)"/></FileConfiguration>
+				<Tool Name="VFCustomBuildTool" CommandLine="python $(ProjectDir)..\typegen.py $(InputPath) -o ../$(InputName)" Outputs="../$(InputName)"/></FileConfiguration>
 			<FileConfiguration Name="Debug|x64">
-				<Tool Name="VFCustomBuildTool" CommandLine="python $(ProjectDir)..\typegen.py $(InputPath) -o $(InputName)" Outputs="$(InputName)"/></FileConfiguration>
+				<Tool Name="VFCustomBuildTool" CommandLine="python $(ProjectDir)..\typegen.py $(InputPath) -o ../$(InputName)" Outputs="../$(InputName)"/></FileConfiguration>
 			<FileConfiguration Name="Release|Win32">
-				<Tool Name="VFCustomBuildTool" CommandLine="python $(ProjectDir)..\typegen.py $(InputPath) -o $(InputName)" Outputs="$(InputName)"/></FileConfiguration></File>
+				<Tool Name="VFCustomBuildTool" CommandLine="python $(ProjectDir)..\typegen.py $(InputPath) -o ../$(InputName)" Outputs="../$(InputName)"/></FileConfiguration></File>
 		<File RelativePath="..\string.f90.tpp">
 			<FileConfiguration Name="Debug|Win32">
-				<Tool Name="VFCustomBuildTool" CommandLine="python $(ProjectDir)..\typegen.py $(InputPath) -o $(InputName)" Outputs="$(InputName)"/></FileConfiguration>
+				<Tool Name="VFCustomBuildTool" CommandLine="python $(ProjectDir)..\typegen.py $(InputPath) -o ../$(InputName)" Outputs="../$(InputName)"/></FileConfiguration>
 			<FileConfiguration Name="Release|x64">
-				<Tool Name="VFCustomBuildTool" CommandLine="python $(ProjectDir)..\typegen.py $(InputPath) -o $(InputName)" Outputs="$(InputName)"/></FileConfiguration>
+				<Tool Name="VFCustomBuildTool" CommandLine="python $(ProjectDir)..\typegen.py $(InputPath) -o ../$(InputName)" Outputs="../$(InputName)"/></FileConfiguration>
 			<FileConfiguration Name="Debug|x64">
-				<Tool Name="VFCustomBuildTool" CommandLine="python $(ProjectDir)..\typegen.py $(InputPath) -o $(InputName)" Outputs="$(InputName)"/></FileConfiguration>
+				<Tool Name="VFCustomBuildTool" CommandLine="python $(ProjectDir)..\typegen.py $(InputPath) -o ../$(InputName)" Outputs="../$(InputName)"/></FileConfiguration>
 			<FileConfiguration Name="Release|Win32">
-				<Tool Name="VFCustomBuildTool" CommandLine="python $(ProjectDir)..\typegen.py $(InputPath) -o $(InputName)" Outputs="$(InputName)"/></FileConfiguration></File></Filter>
+				<Tool Name="VFCustomBuildTool" CommandLine="python $(ProjectDir)..\typegen.py $(InputPath) -o ../$(InputName)" Outputs="../$(InputName)"/></FileConfiguration></File></Filter>
 		<Filter Name="Source Files" Filter="f90;for;f;fpp;ftn;def;odl;idl">
-		<File RelativePath="..\crc.f90"/>
-		<File RelativePath="..\memoryref.f90"/>
-		<File RelativePath="..\typeinfo.f90"/>
 		<File RelativePath="..\basestring.f90"/>
-		<File RelativePath=".\ref.f90"/>
-		<File RelativePath=".\string.f90"/>
-		<File RelativePath=".\basetypes.f90"/>
-		<File RelativePath=".\item.f90"/>
-		<File RelativePath=".\list.f90"/>
-		<File RelativePath=".\hashmap.f90"/>
-		<File RelativePath="..\list_impl.f90"/>
-		<File RelativePath="..\item_impl.f90"/>
-		<File RelativePath=".\hashmap_impl.f90"/>
-		<File RelativePath="..\ref_impl.f90"/>
-		<File RelativePath="..\crc_impl.f90"/>
-		<File RelativePath="..\string_impl.f90"/>
 		<File RelativePath="..\basestring_impl.f90"/>
+		<File RelativePath="..\basetypes.f90"/>
+		<File RelativePath="..\crc.f90"/>
+		<File RelativePath="..\crc_impl.f90"/>
+		<File RelativePath="..\hashmap.f90"/>
+		<File RelativePath="..\hashmap_impl.f90"/>
+		<File RelativePath="..\item.f90"/>
+		<File RelativePath="..\item_impl.f90"/>
+		<File RelativePath="..\list.f90"/>
+		<File RelativePath="..\list_impl.f90"/>
+		<File RelativePath="..\memoryref.f90"/>
+		<File RelativePath="..\ref.f90"/>
+		<File RelativePath="..\ref_impl.f90"/>
+		<File RelativePath="..\string.f90"/>
+		<File RelativePath="..\string_impl.f90"/>
+		<File RelativePath="..\typeinfo.f90"/>
 		<File RelativePath="..\typeinfo_impl.f90"/></Filter></Files>
 	<Globals/></VisualStudioProject>

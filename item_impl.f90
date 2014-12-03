@@ -1,7 +1,7 @@
 
 #include "adt/itfUtil.fpp"
 
-module adt_item__
+module impl_item__
   use adt_item
   use adt_typeinfo
   use adt_string
@@ -29,7 +29,7 @@ end module
 !_PROC_EXPORT(item_object_size_c)
   integer(kind=4) &
   function item_object_size_c() result(res)
-    use adt_item__; implicit none
+    use impl_item__; implicit none
     type (Item_t) :: tmp
     res = storage_size(tmp) / 8
   end function
@@ -37,7 +37,7 @@ end module
 
 !_PROC_EXPORT(item_init_by_item_c)
   subroutine item_init_by_item_c( self, has_proto, proto )
-    use adt_item__
+    use impl_item__
     implicit none
     type(Item_t),    intent(inout) :: self
     integer(kind=4), intent(in)    :: has_proto
@@ -50,7 +50,7 @@ end module
 
 
   function item_reshape_( self, new_typeInfo ) result(res)
-    use adt_item__, only: Item_t, TypeInfo_t
+    use impl_item__, only: Item_t, TypeInfo_t
     implicit none
     type(Item_t)                         :: self
     type(TypeInfo_t), target, intent(in) :: new_typeInfo
@@ -72,7 +72,7 @@ end module
 
 !_PROC_EXPORT(item_is_valid_c)
   logical function item_is_valid_c( self ) result(res)
-    use adt_item__
+    use impl_item__
     implicit none
     type(Item_t), intent(in) :: self
     res = associated( self%typeInfo )
@@ -81,7 +81,7 @@ end module
 
 !_PROC_EXPORT(item_dynamic_type)
   function item_dynamic_type( self ) result(res)
-    use adt_item__
+    use impl_item__
     implicit none
     type(Item_t),  intent(in) :: self
     type(TypeInfo_t), pointer :: res
@@ -94,7 +94,7 @@ end module
 
 !_PROC_EXPORT(item_dynamic_type_c)
   subroutine item_dynamic_type_c( res, self )
-    use adt_item__
+    use impl_item__
     implicit none
     type(TypeSpecs_t), intent(inout) :: res
     type(Item_t),      intent(in)    :: self
@@ -110,7 +110,7 @@ end module
 !_PROC_EXPORT(item_delete_c)
   recursive &
   subroutine item_delete_c( self )
-    use adt_item__
+    use impl_item__
     implicit none
     type(Item_t) :: self
     
@@ -128,7 +128,7 @@ end module
 # define _implement_constructor_(typeId, baseType, proto) \
   function _paste(item_of_,typeId)( val ) result(res)    ;\
     use iso_c_binding                                    ;\
-    use adt_item__; implicit none                        ;\
+    use impl_item__; implicit none                       ;\
     baseType             :: val                          ;\
     baseType,    pointer :: ptr                          ;\
     type(Item_t), target :: res                          ;\
@@ -173,7 +173,7 @@ end module
 
 !_EXPORT_CONSTRUCTOR(charstring)
   function item_of_charstring( val ) result(res)
-    use adt_item__
+    use impl_item__
     implicit none
     character(len=*)        :: val
     type(String_t), pointer :: ptr
@@ -188,7 +188,7 @@ end module
 
 !_EXPORT_CONSTRUCTOR(refencoding)
   function item_of_refencoding( val ) result(res)
-    use adt_item__
+    use impl_item__
     implicit none
     type(RefEncoding_t), dimension(:) :: val
     type(Ref_t),              pointer :: ptr
@@ -202,7 +202,7 @@ end module
 
 !_EXPORT_CONSTRUCTOR(item)
   function item_of_item( val ) result(res)
-    use adt_item__
+    use impl_item__
     implicit none
     type(Item_t) :: val
     type(Item_t) :: res
@@ -215,7 +215,7 @@ end module
 # define _EXPORT_GETTER(typeId)    _PROC_EXPORT(_paste(item_get_,typeId))
 # define _implement_getter_(typeId, baseType)            \
   function _paste(item_get_,typeId)( self ) result(res) ;\
-    use adt_item__; implicit none                       ;\
+    use impl_item__; implicit none                      ;\
     type(Item_t), target :: self                        ;\
     baseType,    pointer :: res                         ;\
     baseType             :: var                         ;\
@@ -259,7 +259,7 @@ end module
 
 !_PROC_EXPORT(item_memoryref_c)
   subroutine item_memoryref_c( res, self )
-    use adt_item__
+    use impl_item__
     implicit none
     type(Item_t), target, intent(in) :: self
     type(MemoryRef_t), intent(inout) :: res
@@ -278,7 +278,7 @@ end module
 # define _EXPORT_ASSIGN(typeId)    _PROC_EXPORT(_paste(item_assign_,typeId)_c)
 # define _implement_assign_(typeId, baseType)           \
   subroutine _paste(item_assign_,typeId)_c( lhs, rhs ) ;\
-    use adt_item__; implicit none                      ;\
+    use impl_item__; implicit none                     ;\
     type(Item_t), target, intent(inout) :: lhs         ;\
     baseType,                intent(in) :: rhs         ;\
     baseType,                   pointer :: ptr         ;\
@@ -323,7 +323,7 @@ end module
 
 !_EXPORT_ASSIGN(charstring)
   subroutine item_assign_charstring_c( lhs, rhs )
-    use adt_item__
+    use impl_item__
     implicit none
     type(Item_t), target, intent(inout) :: lhs
     character(len=*),        intent(in) :: rhs
@@ -337,7 +337,7 @@ end module
   
 !_PROC_EXPORT(item_assign_refencoding_)
   subroutine item_assign_refencoding_( lhs, rhs )
-    use adt_item__
+    use impl_item__
     implicit none
     type(Item_t),           target, intent(inout) :: lhs
     type(RefEncoding_t), dimension(:), intent(in) :: rhs
@@ -351,7 +351,7 @@ end module
 
 !_EXPORT_ASSIGN(item)
   subroutine item_assign_item_c( lhs, rhs )
-    use adt_item__
+    use impl_item__
     implicit none
     type(Item_t), intent(inout) :: lhs
     type(Item_t)                :: rhs
@@ -378,7 +378,7 @@ end module
 # define _EXPORT_ASSIGN_TO(typeId)    _PROC_EXPORT(_paste(item_assign_to_,typeId)_c)
 # define _implement_assign_to_(typeId, baseType)            \
   subroutine _paste(item_assign_to_,typeId)_c( lhs, rhs )  ;\
-    use adt_item__; implicit none                          ;\
+    use impl_item__; implicit none                         ;\
     baseType, intent(inout) :: lhs                         ;\
     type(Item_t),    target :: rhs                         ;\
     baseType,       pointer :: ptr                         ;\
@@ -430,7 +430,7 @@ end module
 # define _EXPORT_TYPECHECK(typeId)    _PROC_EXPORT(_paste(item_is_,typeId)_c)
 # define _implement_typecheck_(typeId, baseType)                  \
   logical function _paste(item_is_,typeId)_c( self ) result(res) ;\
-    use adt_item__; implicit none                                ;\
+    use impl_item__; implicit none                               ;\
     type(Item_t), intent(in) :: self                             ;\
     baseType                 :: var                              ;\
     res = associated( static_type(var), self%typeInfo )          ;\

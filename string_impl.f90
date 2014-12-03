@@ -1,7 +1,7 @@
 
 #include "adt/itfUtil.fpp"
 
-module adt_string__
+module impl_string__
   use adt_string
   use adt_basestring
   use iso_c_binding
@@ -23,7 +23,7 @@ end module
 !_PROC_EXPORT(string_object_size_c)
   integer(kind=4) &
   function string_object_size_c() result(res)
-    use adt_string__; implicit none
+    use impl_string__; implicit none
     type (String_t) :: tmp
     res = storage_size(tmp) / 8
   end function
@@ -33,7 +33,7 @@ end module
 
 !_PROC_EXPORT(string_from_charstring)
   function string_from_charstring( cs ) result(res)
-    use adt_string__; implicit none
+    use impl_string__; implicit none
     character(len=*), intent(in) :: cs
     type(String_t)               :: res
     call basestring_init_by_charstring_c( res%str, attribute_volatile, cs )
@@ -41,7 +41,7 @@ end module
 
 !_PROC_EXPORT(string_from_buf)
   function string_from_buf( buf ) result(res)
-    use adt_string__; implicit none
+    use impl_string__; implicit none
     character(len=1), dimension(:), intent(in) :: buf
     type(String_t)                             :: res
     call basestring_init_by_buf( res%str, attribute_volatile, buf )
@@ -51,7 +51,7 @@ end module
   ! str
 !_PROC_EXPORT(string_str)
   function string_str( self ) result(res)
-    use adt_string__; implicit none
+    use impl_string__; implicit none
     type(String_t)                        :: self
     character(len=_reflen(self)), pointer :: res
     type(c_ptr)                           :: ptr
@@ -65,7 +65,7 @@ end module
   ! char
 !_PROC_EXPORT(string_char)
   function string_char( self ) result(res)
-    use adt_string__; implicit none
+    use impl_string__; implicit none
     type(String_t)            :: self
     character(len=_len(self)) :: res
     res = _ptr(self)
@@ -76,7 +76,7 @@ end module
   ! char - fixed length
 !_PROC_EXPORT(string_char_l)
   function string_char_l( self, length ) result(res)
-    use adt_string__; implicit none
+    use impl_string__; implicit none
     type(String_t)        :: self
     integer,   intent(in) :: length
     character(len=length) :: res
@@ -92,7 +92,7 @@ end module
   ! achar
 !_PROC_EXPORT(string_achar)
   function string_achar( self ) result(res)
-    use adt_string__; implicit none
+    use impl_string__; implicit none
     type(String_t), intent(in) :: self
     character(len=1)           :: res(_len(self))
     res = _array(self)
@@ -103,7 +103,7 @@ end module
   ! achar - fixed length
 !_PROC_EXPORT(string_achar_l)
   function string_achar_l( self, length ) result(res)
-    use adt_string__; implicit none
+    use impl_string__; implicit none
     type(String_t), intent(in) :: self
     integer,   intent(in)      :: length
     character(len=1)           :: res(length)
@@ -119,7 +119,7 @@ end module
   ! assignments
 !_PROC_EXPORT(charstring_assign_string_c)
   subroutine charstring_assign_string_c( lhs, rhs )
-    use adt_string__; implicit none
+    use impl_string__; implicit none
     character(len=*), intent(out) :: lhs
     type(String_t),    intent(in) :: rhs
     lhs = _ptr(rhs)
@@ -131,7 +131,7 @@ end module
   ! adjustl
 !_PROC_EXPORT(string_adjustl)
   function string_adjustl( self ) result(res)
-    use adt_string__; implicit none
+    use impl_string__; implicit none
     type(String_t), intent(in) :: self
     character(len=_len(self))  :: res
     res = adjustl(_ptr(self))
@@ -141,7 +141,7 @@ end module
   ! adjustr
 !_PROC_EXPORT(string_adjustr)
   function string_adjustr( self ) result(res)
-    use adt_string__; implicit none
+    use impl_string__; implicit none
     type(String_t), intent(in) :: self
     character(len=_len(self))  :: res
     res = adjustr(_ptr(self))
@@ -152,7 +152,7 @@ end module
   ! iachar
 !_PROC_EXPORT(string_iachar)
   function string_iachar( self ) result(res)
-    use adt_string__; implicit none
+    use impl_string__; implicit none
     type(String_t), intent(in) :: self
     integer                    :: res(_len(self))
     res = iachar(_array(self))
@@ -163,7 +163,7 @@ end module
   ! ichar
 !_PROC_EXPORT(string_ichar)
   function string_ichar( self ) result(res)
-    use adt_string__; implicit none
+    use impl_string__; implicit none
     type(String_t), intent(in) :: self
     integer                    :: res(_len(self))
     res = ichar(_array(self))
@@ -174,7 +174,7 @@ end module
   ! index
 !_PROC_EXPORT(string_idx_charstring)
   function string_idx_charstring( strg, sub, back ) result(res)
-    use adt_string__; implicit none
+    use impl_string__; implicit none
     type(String_t),        intent(in) :: strg
     character(len=*),      intent(in) :: sub
     logical,     intent(in), optional :: back
@@ -185,7 +185,7 @@ end module
 
 !_PROC_EXPORT(charstring_idx_string)
   function charstring_idx_string( strg, sub, back ) result(res)
-    use adt_string__; implicit none
+    use impl_string__; implicit none
     character(len=*),  intent(in) :: strg
     type(String_t),    intent(in) :: sub
     logical, optional, intent(in) :: back
@@ -196,7 +196,7 @@ end module
 
 !_PROC_EXPORT(string_idx_string)
   function string_idx_string( strg, sub, back ) result(res)
-    use adt_string__; implicit none
+    use impl_string__; implicit none
     type(String_t),    intent(in) :: strg
     type(String_t),    intent(in) :: sub
     logical, optional, intent(in) :: back
@@ -210,7 +210,7 @@ end module
   ! len
 !_PROC_EXPORT(string_len_c)
   function string_len_c( self ) result(length)
-    use adt_string__; implicit none
+    use impl_string__; implicit none
     type(String_t), intent(in) :: self
     integer(kind=c_size_t)     :: length
     length = _len(self)
@@ -221,7 +221,7 @@ end module
   ! len_trim
 !_PROC_EXPORT(string_len_trim_c)
   function string_len_trim_c( self ) result(length)
-    use adt_string__; implicit none
+    use impl_string__; implicit none
     type(String_t), intent(in) :: self
     integer(kind=c_size_t)     :: length
     length = len_trim(_ptr(self))
@@ -232,7 +232,7 @@ end module
   ! lge
 !_PROC_EXPORT(string_lge_charstring_c)
   function string_lge_charstring_c( strgA, strgB ) result(res)
-    use adt_string__; implicit none
+    use impl_string__; implicit none
     type(String_t),   intent(in) :: strgA
     character(len=*), intent(in) :: strgB
     logical                      :: res
@@ -242,7 +242,7 @@ end module
 
 !_PROC_EXPORT(charstring_lge_string_c)
   function charstring_lge_string_c( strgA, strgB ) result(res)
-    use adt_string__; implicit none
+    use impl_string__; implicit none
     character(len=*), intent(in) :: strgA
     type(String_t),   intent(in) :: strgB
     logical                      :: res
@@ -252,7 +252,7 @@ end module
 
 !_PROC_EXPORT(string_lge_string_c)
   function string_lge_string_c( strgA, strgB ) result(res)
-    use adt_string__; implicit none
+    use impl_string__; implicit none
     type(String_t), intent(in) :: strgA
     type(String_t), intent(in) :: strgB
     logical                    :: res
@@ -265,7 +265,7 @@ end module
   ! lgt
 !_PROC_EXPORT(string_lgt_charstring_c)
   function string_lgt_charstring_c( strgA, strgB ) result(res)
-    use adt_string__; implicit none
+    use impl_string__; implicit none
     type(String_t),   intent(in) :: strgA
     character(len=*), intent(in) :: strgB
     logical                      :: res
@@ -275,7 +275,7 @@ end module
 
 !_PROC_EXPORT(charstring_lgt_string_c)
   function charstring_lgt_string_c( strgA, strgB ) result(res)
-    use adt_string__; implicit none
+    use impl_string__; implicit none
     character(len=*), intent(in) :: strgA
     type(String_t),   intent(in) :: strgB
     logical                      :: res
@@ -285,7 +285,7 @@ end module
 
 !_PROC_EXPORT(string_lgt_string_c)
   function string_lgt_string_c( strgA, strgB ) result(res)
-    use adt_string__; implicit none
+    use impl_string__; implicit none
     type(String_t), intent(in) :: strgA
     type(String_t), intent(in) :: strgB
     logical                    :: res
@@ -298,7 +298,7 @@ end module
   ! lle
 !_PROC_EXPORT(string_lle_charstring_c)
   function string_lle_charstring_c( strgA, strgB ) result(res)
-    use adt_string__; implicit none
+    use impl_string__; implicit none
     type(String_t),   intent(in) :: strgA
     character(len=*), intent(in) :: strgB
     logical                      :: res
@@ -308,7 +308,7 @@ end module
 
 !_PROC_EXPORT(charstring_lle_string_c)
   function charstring_lle_string_c( strgA, strgB ) result(res)
-    use adt_string__; implicit none
+    use impl_string__; implicit none
     character(len=*), intent(in) :: strgA
     type(String_t),   intent(in) :: strgB
     logical                      :: res
@@ -318,7 +318,7 @@ end module
 
 !_PROC_EXPORT(string_lle_string_c)
   function string_lle_string_c( strgA, strgB ) result(res)
-    use adt_string__; implicit none
+    use impl_string__; implicit none
     type(String_t), intent(in) :: strgA
     type(String_t), intent(in) :: strgB
     logical                    :: res
@@ -331,7 +331,7 @@ end module
   ! llt
 !_PROC_EXPORT(string_llt_charstring_c)
   function string_llt_charstring_c( strgA, strgB ) result(res)
-    use adt_string__; implicit none
+    use impl_string__; implicit none
     type(String_t),   intent(in) :: strgA
     character(len=*), intent(in) :: strgB
     logical                      :: res
@@ -341,7 +341,7 @@ end module
 
 !_PROC_EXPORT(charstring_llt_string_c)
   function charstring_llt_string_c( strgA, strgB ) result(res)
-    use adt_string__; implicit none
+    use impl_string__; implicit none
     character(len=*), intent(in) :: strgA
     type(String_t),   intent(in) :: strgB
     logical                      :: res
@@ -351,7 +351,7 @@ end module
 
 !_PROC_EXPORT(string_llt_string_c)
   function string_llt_string_c( strgA, strgB ) result(res)
-    use adt_string__; implicit none
+    use impl_string__; implicit none
     type(String_t), intent(in) :: strgA
     type(String_t), intent(in) :: strgB
     logical                    :: res
@@ -364,7 +364,7 @@ end module
   ! concatenation
 !_PROC_EXPORT(string_concat_charstring)
   function string_concat_charstring( lhs, rhs ) result(res)
-    use adt_string__; implicit none
+    use impl_string__; implicit none
     type(String_t),        intent(in) :: lhs
     character(len=*),      intent(in) :: rhs
     character(len=_len(lhs)+len(rhs)) :: res
@@ -374,7 +374,7 @@ end module
 
 !_PROC_EXPORT(charstring_concat_string)
   function charstring_concat_string( lhs, rhs ) result(res)
-    use adt_string__; implicit none
+    use impl_string__; implicit none
     character(len=*),      intent(in) :: lhs
     type(String_t),        intent(in) :: rhs
     character(len=len(lhs)+_len(rhs)) :: res
@@ -384,7 +384,7 @@ end module
 
 !_PROC_EXPORT(string_concat_string)
   function string_concat_string( lhs, rhs ) result(res)
-    use adt_string__; implicit none
+    use impl_string__; implicit none
     type(String_t),         intent(in) :: lhs
     type(String_t),         intent(in) :: rhs
     character(len=_len(lhs)+_len(rhs)) :: res
@@ -397,7 +397,7 @@ end module
   ! equality
 !_PROC_EXPORT(string_eq_charstring_c)
   function string_eq_charstring_c( lhs, rhs ) result(res)
-    use adt_string__; implicit none
+    use impl_string__; implicit none
     type(String_t),   intent(in) :: lhs
     character(len=*), intent(in) :: rhs
     logical                      :: res
@@ -407,7 +407,7 @@ end module
 
 !_PROC_EXPORT(charstring_eq_string_c)
   function charstring_eq_string_c( lhs, rhs ) result(res)
-    use adt_string__; implicit none
+    use impl_string__; implicit none
     character(len=*), intent(in) :: lhs
     type(String_t),   intent(in) :: rhs
     logical                      :: res
@@ -417,7 +417,7 @@ end module
 
 !_PROC_EXPORT(string_eq_string_c)
   function string_eq_string_c( lhs, rhs ) result(res)
-    use adt_string__; implicit none
+    use impl_string__; implicit none
     type(String_t), intent(in) :: lhs
     type(String_t), intent(in) :: rhs
     logical                    :: res
@@ -430,7 +430,7 @@ end module
   ! inequality
 !_PROC_EXPORT(string_ne_charstring_c)
   function string_ne_charstring_c( lhs, rhs ) result(res)
-    use adt_string__; implicit none
+    use impl_string__; implicit none
     type(String_t),   intent(in) :: lhs
     character(len=*), intent(in) :: rhs
     logical                      :: res
@@ -440,7 +440,7 @@ end module
 
 !_PROC_EXPORT(charstring_ne_string_c)
   function charstring_ne_string_c( lhs, rhs ) result(res)
-    use adt_string__; implicit none
+    use impl_string__; implicit none
     character(len=*), intent(in) :: lhs
     type(String_t),   intent(in) :: rhs
     logical                      :: res
@@ -450,7 +450,7 @@ end module
 
 !_PROC_EXPORT(string_ne_string_c)
   function string_ne_string_c( lhs, rhs ) result(res)
-    use adt_string__; implicit none
+    use impl_string__; implicit none
     type(String_t), intent(in) :: lhs
     type(String_t), intent(in) :: rhs
     logical                    :: res
@@ -463,7 +463,7 @@ end module
   ! lower than
 !_PROC_EXPORT(string_lt_charstring_c)
   function string_lt_charstring_c( lhs, rhs ) result(res)
-    use adt_string__; implicit none
+    use impl_string__; implicit none
     type(String_t),   intent(in) :: lhs
     character(len=*), intent(in) :: rhs
     logical                      :: res
@@ -473,7 +473,7 @@ end module
 
 !_PROC_EXPORT(charstring_lt_string_c)
   function charstring_lt_string_c( lhs, rhs ) result(res)
-    use adt_string__; implicit none
+    use impl_string__; implicit none
     character(len=*), intent(in) :: lhs
     type(String_t),   intent(in) :: rhs
     logical                      :: res
@@ -483,7 +483,7 @@ end module
 
 !_PROC_EXPORT(string_lt_string_c)
   function string_lt_string_c( lhs, rhs ) result(res)
-    use adt_string__; implicit none
+    use impl_string__; implicit none
     type(String_t), intent(in) :: lhs
     type(String_t), intent(in) :: rhs
     logical                    :: res
@@ -496,7 +496,7 @@ end module
   ! lower equal
 !_PROC_EXPORT(string_le_charstring_c)
   function string_le_charstring_c( lhs, rhs ) result(res)
-    use adt_string__; implicit none
+    use impl_string__; implicit none
     type(String_t),   intent(in) :: lhs
     character(len=*), intent(in) :: rhs
     logical                      :: res
@@ -506,7 +506,7 @@ end module
 
 !_PROC_EXPORT(charstring_le_string_c)
   function charstring_le_string_c( lhs, rhs ) result(res)
-    use adt_string__; implicit none
+    use impl_string__; implicit none
     character(len=*), intent(in) :: lhs
     type(String_t),   intent(in) :: rhs
     logical                      :: res
@@ -516,7 +516,7 @@ end module
 
 !_PROC_EXPORT(string_le_string_c)
   function string_le_string_c( lhs, rhs ) result(res)
-    use adt_string__; implicit none
+    use impl_string__; implicit none
     type(String_t), intent(in) :: lhs
     type(String_t), intent(in) :: rhs
     logical                    :: res
@@ -529,7 +529,7 @@ end module
   ! greater than
 !_PROC_EXPORT(string_gt_charstring_c)
   function string_gt_charstring_c( lhs, rhs ) result(res)
-    use adt_string__; implicit none
+    use impl_string__; implicit none
     type(String_t),   intent(in) :: lhs
     character(len=*), intent(in) :: rhs
     logical                      :: res
@@ -539,7 +539,7 @@ end module
 
 !_PROC_EXPORT(charstring_gt_string_c)
   function charstring_gt_string_c( lhs, rhs ) result(res)
-    use adt_string__; implicit none
+    use impl_string__; implicit none
     character(len=*), intent(in) :: lhs
     type(String_t),   intent(in) :: rhs
     logical                      :: res
@@ -549,7 +549,7 @@ end module
 
 !_PROC_EXPORT(string_gt_string_c)
   function string_gt_string_c( lhs, rhs ) result(res)
-    use adt_string__; implicit none
+    use impl_string__; implicit none
     type(String_t), intent(in) :: lhs
     type(String_t), intent(in) :: rhs
     logical                    :: res
@@ -562,7 +562,7 @@ end module
   ! greater equal
 !_PROC_EXPORT(string_ge_charstring_c)
   function string_ge_charstring_c( lhs, rhs ) result(res)
-    use adt_string__; implicit none
+    use impl_string__; implicit none
     type(String_t),   intent(in) :: lhs
     character(len=*), intent(in) :: rhs
     logical                      :: res
@@ -572,7 +572,7 @@ end module
 
 !_PROC_EXPORT(charstring_ge_string_c)
   function charstring_ge_string_c( lhs, rhs ) result(res)
-    use adt_string__; implicit none
+    use impl_string__; implicit none
     character(len=*), intent(in) :: lhs
     type(String_t),   intent(in) :: rhs
     logical                      :: res
@@ -582,7 +582,7 @@ end module
 
 !_PROC_EXPORT(string_ge_string_c)
   function string_ge_string_c( lhs, rhs ) result(res)
-    use adt_string__; implicit none
+    use impl_string__; implicit none
     type(String_t), intent(in) :: lhs
     type(String_t), intent(in) :: rhs
     logical                    :: res
