@@ -111,22 +111,22 @@
 			<FileConfiguration Name="Release|Win32">
 				<Tool Name="VFCustomBuildTool" CommandLine="python $(ProjectDir)..\typegen.py $(InputPath) -o ../$(InputName)" Outputs="../$(InputName)"/></FileConfiguration></File></Filter>
 		<Filter Name="Source Files" Filter="f90;for;f;fpp;ftn;def;odl;idl">
-		<File RelativePath="..\basestring.f90"/>
-		<File RelativePath="..\basestring_impl.f90"/>
-		<File RelativePath="..\basetypes.f90"/>
 		<File RelativePath="..\crc.f90"/>
-		<File RelativePath="..\crc_impl.f90"/>
-		<File RelativePath="..\hashmap.f90"/>
-		<File RelativePath="..\hashmap_impl.f90"/>
-		<File RelativePath="..\item.f90"/>
-		<File RelativePath="..\item_impl.f90"/>
-		<File RelativePath="..\list.f90"/>
-		<File RelativePath="..\list_impl.f90"/>
 		<File RelativePath="..\memoryref.f90"/>
-		<File RelativePath="..\ref.f90"/>
-		<File RelativePath="..\ref_impl.f90"/>
-		<File RelativePath="..\string.f90"/>
-		<File RelativePath="..\string_impl.f90"/>
 		<File RelativePath="..\typeinfo.f90"/>
+		<File RelativePath="..\basestring.f90"/>
+		<File RelativePath="..\basetypes.f90"/>
+		<File RelativePath="..\string.f90"/>
+		<File RelativePath="..\ref.f90"/>
+		<File RelativePath="..\item.f90"/>
+		<File RelativePath="..\list.f90"/>
+		<File RelativePath="..\hashmap.f90"/>
+		<File RelativePath="..\basestring_impl.f90"/>
+		<File RelativePath="..\crc_impl.f90"/>
+		<File RelativePath="..\hashmap_impl.f90"/>
+		<File RelativePath="..\item_impl.f90"/>
+		<File RelativePath="..\list_impl.f90"/>
+		<File RelativePath="..\ref_impl.f90"/>
+		<File RelativePath="..\string_impl.f90"/>
 		<File RelativePath="..\typeinfo_impl.f90"/></Filter></Files>
 	<Globals/></VisualStudioProject>
