@@ -9,7 +9,7 @@
 				<Tool Name="VFLinkerTool" OutputFile="$(OutDir)\$(ProjectName).0.$(ConfigurationName).$(PlatformName).dll" LinkIncremental="linkIncrementalNo" SuppressStartupBanner="true" GenerateDebugInformation="true" SubSystem="subSystemWindows" LinkDLL="true"/>
 				<Tool Name="VFResourceCompilerTool"/>
 				<Tool Name="VFMidlTool" SuppressStartupBanner="true"/>
-				<Tool Name="VFCustomBuildTool" CommandLine="$(ProjectDir)..\release_to.bat $(OutDir) $(ProjectDir)..\lib\$(ConfigurationName).$(PlatformName) _flag_" Outputs="$(ProjectDir)..\lib\$(ConfigurationName).$(PlatformName)\_flag_"/>
+				<Tool Name="VFCustomBuildTool" CommandLine="$(ProjectDir)..\copylib.bat $(OutDir) $(ProjectDir)..\lib\$(ConfigurationName).$(PlatformName) _flag_" Description="copy library files to $(ProjectDir)..\lib\$(ConfigurationName).$(PlatformName)" Outputs="$(ProjectDir)..\lib\$(ConfigurationName).$(PlatformName)\_flag_"/>
 				<Tool Name="VFPreLinkEventTool"/>
 				<Tool Name="VFPreBuildEventTool"/>
 				<Tool Name="VFPostBuildEventTool"/>
@@ -19,7 +19,7 @@
 				<Tool Name="VFLinkerTool" OutputFile="$(OutDir)\$(ProjectName).0.$(ConfigurationName).$(PlatformName).dll" LinkIncremental="linkIncrementalNo" SuppressStartupBanner="true" SubSystem="subSystemWindows" LinkDLL="true"/>
 				<Tool Name="VFResourceCompilerTool"/>
 				<Tool Name="VFMidlTool" SuppressStartupBanner="true"/>
-				<Tool Name="VFCustomBuildTool" CommandLine="$(ProjectDir)..\release_to.bat $(OutDir) $(ProjectDir)..\lib\$(ConfigurationName).$(PlatformName) _flag_" Outputs="$(ProjectDir)..\lib\$(ConfigurationName).$(PlatformName)\_flag_"/>
+				<Tool Name="VFCustomBuildTool" CommandLine="$(ProjectDir)..\copylib.bat $(OutDir) $(ProjectDir)..\lib\$(ConfigurationName).$(PlatformName) _flag_" Description="copy library files to $(ProjectDir)..\lib\$(ConfigurationName).$(PlatformName)" Outputs="$(ProjectDir)..\lib\$(ConfigurationName).$(PlatformName)\_flag_"/>
 				<Tool Name="VFPreLinkEventTool"/>
 				<Tool Name="VFPreBuildEventTool"/>
 				<Tool Name="VFPostBuildEventTool"/>
@@ -29,7 +29,7 @@
 				<Tool Name="VFLinkerTool" OutputFile="$(OutDir)\$(ProjectName).0.$(ConfigurationName).$(PlatformName).dll" LinkIncremental="linkIncrementalNo" SuppressStartupBanner="true" GenerateDebugInformation="true" SubSystem="subSystemWindows" LinkDLL="true"/>
 				<Tool Name="VFResourceCompilerTool"/>
 				<Tool Name="VFMidlTool" SuppressStartupBanner="true" TargetEnvironment="midlTargetAMD64"/>
-				<Tool Name="VFCustomBuildTool" CommandLine="$(ProjectDir)..\release_to.bat $(OutDir) $(ProjectDir)..\lib\$(ConfigurationName).$(PlatformName) _flag_" Outputs="$(ProjectDir)..\lib\$(ConfigurationName).$(PlatformName)\_flag_"/>
+				<Tool Name="VFCustomBuildTool" CommandLine="$(ProjectDir)..\copylib.bat $(OutDir) $(ProjectDir)..\lib\$(ConfigurationName).$(PlatformName) _flag_" Description="copy library files to $(ProjectDir)..\lib\$(ConfigurationName).$(PlatformName)" Outputs="$(ProjectDir)..\lib\$(ConfigurationName).$(PlatformName)\_flag_"/>
 				<Tool Name="VFPreLinkEventTool"/>
 				<Tool Name="VFPreBuildEventTool"/>
 				<Tool Name="VFPostBuildEventTool"/>
@@ -39,7 +39,7 @@
 				<Tool Name="VFLinkerTool" OutputFile="$(OutDir)\$(ProjectName).0.$(ConfigurationName).$(PlatformName).dll" LinkIncremental="linkIncrementalNo" SuppressStartupBanner="true" SubSystem="subSystemWindows" LinkDLL="true"/>
 				<Tool Name="VFResourceCompilerTool"/>
 				<Tool Name="VFMidlTool" SuppressStartupBanner="true" TargetEnvironment="midlTargetAMD64"/>
-				<Tool Name="VFCustomBuildTool" CommandLine="$(ProjectDir)..\release_to.bat $(OutDir) $(ProjectDir)..\lib\$(ConfigurationName).$(PlatformName) _flag_" Outputs="$(ProjectDir)..\lib\$(ConfigurationName).$(PlatformName)\_flag_"/>
+				<Tool Name="VFCustomBuildTool" CommandLine="$(ProjectDir)..\copylib.bat $(OutDir) $(ProjectDir)..\lib\$(ConfigurationName).$(PlatformName) _flag_" Description="copy library files to $(ProjectDir)..\lib\$(ConfigurationName).$(PlatformName)" Outputs="$(ProjectDir)..\lib\$(ConfigurationName).$(PlatformName)\_flag_"/>
 				<Tool Name="VFPreLinkEventTool"/>
 				<Tool Name="VFPreBuildEventTool"/>
 				<Tool Name="VFPostBuildEventTool"/>
