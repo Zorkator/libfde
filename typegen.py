@@ -476,7 +476,7 @@ class ListNode(TypeSpec):
       type(ListIndex_t)              :: idx
       {baseType}{dimSpec},   pointer :: res
       type({typeId}_node_t), pointer :: ptr
-      call c_f_pointer( c_loc(idx%node), ptr )
+      call c_f_pointer( cptr(idx), ptr )
       res => ptr%value
     end function
     """

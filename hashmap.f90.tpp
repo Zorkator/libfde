@@ -19,6 +19,15 @@ module adt_hashmap
     integer                             :: indexLimits(2) =  default_indexLimits
   end type
 
+
+  type, public :: HashMapIndex_t
+    private
+    type(HashMap_t), pointer :: host => null()
+    integer                  :: idx  =  -1
+    type(ListIndex_t)        :: bucket
+  end type
+
+
   !_TypeGen_declare_RefType( public, HashMap, type(HashMap_t), scalar, \
   !     initProc   = hashmap_init_by_hashmap_c, \
   !     assignProc = hashmap_assign_hashmap_c,  \

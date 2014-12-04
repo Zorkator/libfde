@@ -23,9 +23,9 @@ module adt_list
 
   type, public :: ListIndex_t
     private
-    type (ListNode_t), public, pointer :: node   => null()
-    type (List_t),             pointer :: host   => null()
-    integer(kind=4)                    :: stride = 1
+    type (ListNode_t), pointer :: node   => null()
+    type (List_t),     pointer :: host   => null()
+    integer(kind=4)            :: stride = 1
   end type
 
 
@@ -48,7 +48,7 @@ module adt_list
   public :: delete
   public :: clear
   public :: dynamic_type
-  public :: index
+  public :: index, cptr
   public :: prev, set_prev, get_prev
   public :: next, set_next, get_next
   public :: insert
@@ -154,6 +154,15 @@ module adt_list
       integer(kind=4), optional, intent(in) :: at
       integer(kind=4), optional, intent(in) :: stride
       type(ListIndex_t)                     :: res
+    end function
+  end interface
+
+  interface cptr
+    function listindex_cptr( self ) result(res)
+      use iso_c_binding
+      import ListIndex_t
+      type(ListIndex_t), intent(in) :: self
+      type(c_ptr)                   :: res
     end function
   end interface
 

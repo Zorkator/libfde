@@ -29,9 +29,9 @@ module impl_list__
   end type
 
   type, public :: ListIndex_t
-    type (ListNode_t), public, pointer :: node   => null()
-    type (List_t),             pointer :: host   => null()
-    integer(kind=4)                    :: stride = 1
+    type (ListNode_t), pointer :: node   => null()
+    type (List_t),     pointer :: host   => null()
+    integer(kind=4)            :: stride = 1
   end type
 
   type(List_t) :: list_stale_list
@@ -437,6 +437,16 @@ end module
     integer(kind=4),     optional :: stride
     type(ListIndex_t)             :: res
     res = list_index_node_( self%host, self%node, stride )
+  end function
+
+
+!_PROC_EXPORT(listindex_cptr)
+  function listindex_cptr( self ) result(res)
+    use impl_list__
+    implicit none
+    type(ListIndex_t), intent(in) :: self
+    type(c_ptr)                   :: res
+    res = c_loc( self%node )
   end function
 
 

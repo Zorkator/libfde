@@ -30,12 +30,20 @@ module impl_hashmap__
     end subroutine
   end interface
 
-# define HashMap_t    HashMap_t__impl__
+# define HashMap_t        HashMap_t__impl__
+# define HashMapIndex_t   HashMapIndex_t__impl__
 
   type, public :: HashMap_t
     type(List_t), dimension(:), pointer :: indexVector    => null()
     integer                             :: items          =  0, resize_cnt = 0
     integer                             :: indexLimits(2) = default_indexLimits
+  end type
+
+
+  type, public :: HashMapIndex_t
+    type(HashMap_t), pointer :: host => null()
+    integer                  :: idx  =  0
+    type(ListIndex_t)        :: bucket
   end type
 
 
@@ -120,8 +128,13 @@ module impl_hashmap__
     subroutine hashmap_pre_cache( numItems )
       integer(kind=4) :: numItems
     end subroutine
-  end interface
 
+    logical &
+    function hashmapindex_next_bucket( self ) result(res)
+      import HashMapIndex_t
+      type(HashMapIndex_t) :: self
+    end function
+  end interface
 contains
 
   !_TypeGen_implementAll()
@@ -618,5 +631,45 @@ end module
     character(len=*), intent(in) :: key
     type(ListIndex_t)            :: bucket
     res = hashmap_locate_item_( self, key, bucket )
+  end function
+
+
+!_PROC_EXPORT(hashmap_index)
+  function hashmap_index( self ) result(res)
+    use impl_hashmap__; implicit none
+    type(HashMap_t), target, intent(in) :: self
+    type(HashMapIndex_t)                :: res
+    logical                             :: ok
+    res%host => self
+    ok = hashmapindex_next_bucket( res )
+  end function
+
+
+  logical &
+  function hashmapindex_next_bucket( self ) result(res)
+    use impl_hashmap__, only: HashMapIndex_t, index, is_valid
+    implicit none
+    type(HashMapIndex_t) :: self
+  
+    res      = .false.
+    self%idx = self%idx + 1
+    do while (self%idx < size(self%host%indexVector))
+      self%bucket = index( self%host%indexVector( self%idx ) )
+      if (is_valid( self%bucket )) then
+        res = .true.
+        exit
+      end if
+      self%idx = self%idx + 1
+    end do
+  end function
+
+  
+  pure logical &
+  function hashmapindex_is_valid_c( self ) result(res)
+    use impl_hashmap__; implicit none
+    type(HashMapIndex_t), intent(in) :: self
+    res = associated( self%host )
+    if (res) &
+      res = self%idx < size(self%host%indexVector)
   end function
 
