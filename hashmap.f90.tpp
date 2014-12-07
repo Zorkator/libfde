@@ -40,7 +40,7 @@ module adt_hashmap
   public :: len
   public :: clear
   public :: delete
-  public :: set, get, remove, unset, pop
+  public :: set, get, getPtr, remove, unset, pop
   public :: setDefault, hasKey
   public :: hashmap_clear_cache, hashmap_get_stats
   public :: assign, assignment(=)

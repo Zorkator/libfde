@@ -49,6 +49,15 @@ module adt_basetypes
   !_TypeGen_declare_ListNode( alias, String, character(len=*), scalar )
   !_TypeGen_declare_ListNode( alias, String, character(len=1), dimension(:) )
 
+
+  abstract interface
+    subroutine Callback_itf(); end subroutine
+  end interface
+
+  !_TypeGen_declare_RefType( public, Callback, procedure(Callback_itf), scalar )
+  ! TODO: _TypeGen_declare_ListNode not possible yet!
+
+
   contains
 
   !_TypeGen_implementAll()
