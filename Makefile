@@ -6,7 +6,7 @@ MYOR ?= 0
 
 mk_F90_FLAGS_gfortran_debug   = -ggdb -cpp -ffree-line-length-none $(_F90_FLAGS)
 mk_F90_FLAGS_gfortran_release = -O3 -cpp -ffree-line-length-none $(_F90_FLAGS)
-mk_F90C_gfortran              = gfortran-4.9
+mk_F90C_gfortran              = gfortran #< need 4.9 or later, prior versions are just too buggy!
 
 mk_F90_FLAGS_ifort_debug      = -g -fpp -allow nofpp-comments $(_F90_FLAGS)
 mk_F90_FLAGS_ifort_release    = -O3 -fpp -allow nofpp-comments $(_F90_FLAGS)
@@ -38,6 +38,8 @@ base: $(BASE_OBJ)
 libadt: clean
 	$(MAKE) _F90_FLAGS="-fpic -DBUILT_TYPE=SHARED_LIB" base
 	$(mk_F90C) -shared -m$(ARCH) $(BASE_OBJ) -o $@.$(mk_TAG).so
+	mkdir -p lib/$(F90C).$(ARCH)
+	cp $@.$(mk_TAG).so adt_*.mod lib/$(F90C).$(ARCH)
 
 libcall: libadt test_lib_call.o
 	$(mk_F90C) test_lib_call.o -L. -ladt.$(mk_TAG) -lcrc -o $@.$(mk_TAG)
