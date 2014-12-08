@@ -6,10 +6,6 @@ module type_references
   private
 
   abstract interface
-    subroutine simpleCall(); end subroutine
-  end interface
-
-  abstract interface
     function func( x ) result(res)
       real*4 :: x, res
     end function
@@ -20,12 +16,11 @@ module type_references
     real*4    :: val3
   end type
 
-  public :: simpleCall, func, sub_a, func_a
+  public :: func, sub_a, func_a
 
   !_TypeGen_declare_ListNode( public, intXY, integer*4, dimension(5,4) )
 
   !_TypeGen_declare_RefType( public, intXY,    integer*4, dimension(:,:) )
-  !_TypeGen_declare_RefType( public, CallBack, procedure(simpleCall),  scalar )
   !_TypeGen_declare_RefType( public, CalcFunc, procedure(func),  scalar )
   !_TypeGen_declare_RefType( public, ADing, type(Ding),  scalar, cloneMode = _type, deleteProc = ding_clear )
 

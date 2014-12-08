@@ -15,11 +15,11 @@ program testinger
   integer*4, dimension(:)  , pointer :: ptr1d => null()
   integer*4,                 pointer :: ptr0d => null()
   !procedure(bla), dimension(:), pointer :: procPtr #< not possible to create array of proc pointers!
-  procedure(func),       pointer :: f  => null()
-  procedure(simpleCall), pointer :: sc => null()
-  type(Ding)                     :: dong
-  integer*4                      :: i, j
-  type(TypeInfo_t),      pointer :: ti
+  procedure(func),         pointer :: f  => null()
+  procedure(Callback_itf), pointer :: sc => null()
+  type(Ding)                       :: dong
+  integer*4                        :: i, j
+  type(TypeInfo_t),        pointer :: ti
 
   type(c_ptr)         :: cpointer
   type(Ref_t)         :: ref1, ref2, ref3, ref4

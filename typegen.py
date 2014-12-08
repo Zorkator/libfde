@@ -1,5 +1,5 @@
 
-"""Usage: refgen FILE [-o OUTFILE]
+"""Usage: typegen FILE [-o OUTFILE]
 
 Preprocess FILE and expand type reference declarations.
 The result is output to stdout.
