@@ -69,6 +69,10 @@ test: clean dynstring gref item alist map
 	./alist.$(mk_TAG)
 	./map.$(mk_TAG)
 
+testsim: libadt
+	$(MAKE) _F90_FLAGS="-fpic" test_simulator.o
+	$(mk_F90C) -shared -m$(ARCH) -L. -ladt.$(mk_TAG) test_simulator.o -o test_simulator.so
+
 
 %.f90: %.f90.tpp
 	python typegen.py $< -o $@

@@ -1,6 +1,7 @@
 
 from ctypes  import *
 from _object import Object
+from _item   import Item
 from _ftypes import mappedType
 
 
@@ -15,8 +16,8 @@ class HashMap(Object):
 
 
 	def get( self, key, default = None ):
-		ptr = POINTER(c_void_p)()
+		ptr = POINTER(Item)()
 		self.get_ptr_( byref(ptr), byref(self), c_char_p(key), c_int(len(key)) )
-		if ptr: return ptr.contents
+		if ptr: return ptr.contents._asReference.value
 		else  : return default
 
