@@ -1,7 +1,7 @@
 
 F90C ?= gfortran
 CFG  ?= debug
-ARCH ?= 32
+ARCH ?= 64
 MYOR ?= 0
 
 mk_F90_FLAGS_gfortran_debug   = -ggdb -cpp -ffree-line-length-none $(_F90_FLAGS)
@@ -71,8 +71,13 @@ test: clean dynstring gref item alist map
 
 testsim: libadt
 	$(MAKE) _F90_FLAGS="-fpic" test_simulator.o
-	$(mk_F90C) -shared -m$(ARCH) -L. -ladt.$(mk_TAG) test_simulator.o -o test_simulator.so
+	$(mk_F90C) -ggdb -shared -m$(ARCH) -L. -ladt.$(mk_TAG) test_simulator.o -o test_simulator.$(mk_TAG).so
+	ln -fs test_simulator.$(mk_TAG).so test_simulator.so
 
+testsimdriver: testsim
+	$(MAKE) test_simulator_driver.o
+	$(mk_F90C) -ggdb -m$(ARCH) -L. test_simulator_driver.o -ladt.$(mk_TAG) test_simulator.$(mk_TAG).so -o test_simulator_driver.$(mk_TAG)
+	ln -fs test_simulator_driver.$(mk_TAG) test_simulator_driver
 
 %.f90: %.f90.tpp
 	python typegen.py $< -o $@

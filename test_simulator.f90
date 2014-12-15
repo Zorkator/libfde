@@ -23,7 +23,8 @@ module sim_access
   procedure(Callback_itf), pointer :: null_cb => null()
 
 # define _add_stateSymbol( sym ) \
-    call set( stateMap_, _str(sym), Item_of(ref_of(sym)) )
+    call set( stateMap_, trim(adjustl(_str(sym))), Item_of(ref_of(sym)) ) ;\
+    print *, "added symbol <" // trim(adjustl(_str(sym))) // ">"
 
 # define _set_hookPointTo( hookId, cb ) \
     call set( hookMap_, hookId, Item_of(ref_from_Callback(cb)) )
@@ -102,12 +103,12 @@ end function
 
 
 program simulator
-  call initialize()
-  call run()
+  call init_simulator()
+  call run_simulation()
 end 
 
 
-subroutine initialize()
+subroutine init_simulator()
   use sim_data
   implicit none
 
@@ -119,7 +120,7 @@ subroutine initialize()
 end subroutine
 
   
-subroutine run()
+subroutine run_simulation()
   use sim_data
   use sim_access
   implicit none
