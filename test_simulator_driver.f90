@@ -18,6 +18,12 @@ module sim_itf
 
     subroutine run_simulation()
     end subroutine
+
+    logical &
+    function set_callback( hookId, cb )
+      character(len=*) :: hookId
+      external :: cb
+    end function
   end interface
 
 end module
@@ -36,6 +42,8 @@ program sim_driver
   call c_f_pointer( hooks_ptr, hooks )
   call init_simulator()
 
+  print *, set_callback( 'step', callback )
+
   print *, len(state)
   print *, len(hooks)
 
@@ -43,5 +51,13 @@ program sim_driver
   real_ref => real8(ref(get( state, 't' )))
 
   print *, real_ref
+
+  call run_simulation()
+
+  contains
+
+  subroutine callback()
+    print *, 'callback @ t =', real8(ref(get( state, 't' )))
+  end subroutine
 
 end
