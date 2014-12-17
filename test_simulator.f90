@@ -75,6 +75,7 @@ module sim_access
 
 end module
 
+!_PROC_EXPORT(get_maps)  
 subroutine get_maps( stateMap, hookMap )
   use sim_access
   use iso_c_binding
@@ -86,6 +87,7 @@ subroutine get_maps( stateMap, hookMap )
 end subroutine
 
 
+!_PROC_EXPORT(set_callback)  
 logical &
 function set_callback( hookId, cb ) result(res)
   use sim_access
@@ -138,6 +140,7 @@ program simulator
 end 
 
 
+!_PROC_EXPORT(init_simulator)  
 subroutine init_simulator()
   use sim_data
   implicit none
@@ -150,6 +153,7 @@ subroutine init_simulator()
 end subroutine
 
   
+!_PROC_EXPORT(run_simulation)  
 subroutine run_simulation()
   use sim_data
   use sim_access
