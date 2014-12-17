@@ -5,7 +5,8 @@
 		<Platform Name="x64"/></Platforms>
 	<Configurations>
 		<Configuration Name="Debug|Win32" OutputDirectory="$(ConfigurationName).$(PlatformName)" IntermediateDirectory="$(ConfigurationName).$(PlatformName)">
-				<Tool Name="VFFortranCompilerTool" SuppressStartupBanner="true" DebugInformationFormat="debugEnabled" Optimization="optimizeDisabled" AdditionalIncludeDirectories="../include" WarnInterfaces="true" ExternalNameInterpretation="extNameLowerCase" ExternalNameUnderscore="true" Traceback="true" BoundsCheck="true" RuntimeLibrary="rtMultiThreadedDLL"/>
+				<Tool Name="VFFortranCompilerTool" AdditionalOptions="/fpscomp:general /fpp:&quot;-f_com=no&quot;
+/I../lib/Release.$(PlatformName)" SuppressStartupBanner="true" DebugInformationFormat="debugEnabled" Optimization="optimizeDisabled" AdditionalIncludeDirectories="../include" WarnInterfaces="true" ExternalNameInterpretation="extNameLowerCase" ExternalNameUnderscore="true" Traceback="true" BoundsCheck="true" RuntimeLibrary="rtMultiThreadedDLL"/>
 				<Tool Name="VFLinkerTool" AdditionalOptions="/LIBPATH:../lib/Release.$(PlatformName)
 /LIBPATH:$(ConfigurationName).$(PlatformName)
 libadt.0.Release.$(PlatformName).lib
@@ -19,7 +20,8 @@ TestSimulator.lib
 				<Tool Name="VFPostBuildEventTool"/>
 				<Tool Name="VFManifestTool" SuppressStartupBanner="true"/></Configuration>
 		<Configuration Name="Release|Win32" OutputDirectory="$(ConfigurationName).$(PlatformName)" IntermediateDirectory="$(ConfigurationName).$(PlatformName)">
-				<Tool Name="VFFortranCompilerTool" SuppressStartupBanner="true" AdditionalIncludeDirectories="../include" ExternalNameInterpretation="extNameLowerCase" ExternalNameUnderscore="true" RuntimeLibrary="rtMultiThreadedDLL"/>
+				<Tool Name="VFFortranCompilerTool" AdditionalOptions="/fpscomp:general /fpp:&quot;-f_com=no&quot;
+/I../lib/Release.$(PlatformName)" SuppressStartupBanner="true" AdditionalIncludeDirectories="../include" ExternalNameInterpretation="extNameLowerCase" ExternalNameUnderscore="true" RuntimeLibrary="rtMultiThreadedDLL"/>
 				<Tool Name="VFLinkerTool" AdditionalOptions="/LIBPATH:../lib/Release.$(PlatformName)
 /LIBPATH:$(ConfigurationName).$(PlatformName)
 libadt.0.Release.$(PlatformName).lib
@@ -48,7 +50,8 @@ TestSimulator.lib
 				<Tool Name="VFPostBuildEventTool"/>
 				<Tool Name="VFManifestTool" SuppressStartupBanner="true"/></Configuration>
 		<Configuration Name="Release|x64" OutputDirectory="$(ConfigurationName).$(PlatformName)" IntermediateDirectory="$(ConfigurationName).$(PlatformName)">
-				<Tool Name="VFFortranCompilerTool" SuppressStartupBanner="true" AdditionalIncludeDirectories="../include" ExternalNameInterpretation="extNameLowerCase" ExternalNameUnderscore="true" RuntimeLibrary="rtMultiThreadedDLL"/>
+				<Tool Name="VFFortranCompilerTool" AdditionalOptions="/fpscomp:general /fpp:&quot;-f_com=no&quot;
+/I../lib/Release.$(PlatformName)" SuppressStartupBanner="true" AdditionalIncludeDirectories="../include" ExternalNameInterpretation="extNameLowerCase" ExternalNameUnderscore="true" RuntimeLibrary="rtMultiThreadedDLL"/>
 				<Tool Name="VFLinkerTool" AdditionalOptions="/LIBPATH:../lib/Release.$(PlatformName)
 /LIBPATH:$(ConfigurationName).$(PlatformName)
 libadt.0.Release.$(PlatformName).lib
