@@ -1,33 +1,4 @@
 
-module sim_itf
-  use adt_hashmap
-  use adt_item
-  use adt_ref
-  use adt_basetypes
-  use iso_c_binding
-  implicit none
-
-  interface
-    subroutine get_maps( state_ptr, hooks_ptr )
-      import c_ptr
-      type(c_ptr), intent(inout) :: state_ptr, hooks_ptr
-    end subroutine
-
-    subroutine init_simulator()
-    end subroutine
-
-    subroutine run_simulation()
-    end subroutine
-
-    logical &
-    function set_callback( hookId, cb )
-      character(len=*) :: hookId
-      external :: cb
-    end function
-  end interface
-
-end module
-
 program sim_driver
   use sim_itf
   implicit none
