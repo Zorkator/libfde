@@ -40,6 +40,9 @@ libadt: clean
 	$(mk_F90C) -shared -m$(ARCH) $(BASE_OBJ) -o $@.$(mk_TAG).so
 	mkdir -p lib/$(F90C).$(ARCH)
 	cp $@.$(mk_TAG).so adt_*.mod lib/$(F90C).$(ARCH)
+	ln -sf $@.$(mk_TAG).so lib/$(F90C).$(ARCH)/$@.$(MYOR).$(F90C).$(ARCH).so
+	ln -sf $@.$(mk_TAG).so lib/$(F90C).$(ARCH)/$@.$(F90C).$(ARCH).so
+	ln -sf $@.$(mk_TAG).so lib/$(F90C).$(ARCH)/$@.$(F90C).so
 
 libcall: libadt test_lib_call.o
 	$(mk_F90C) test_lib_call.o -L. -ladt.$(mk_TAG) -lcrc -o $@.$(mk_TAG)
@@ -61,6 +64,9 @@ map: $(BASE_OBJ) test_hash_map.o
 
 clean:
 	rm -f *.mod *.o *.$(mk_TAG) $(TPP_FILES:%.tpp=%)
+
+mrproper: clean
+	rm *.so
 
 test: clean dynstring gref item alist map
 	./dynstring.$(mk_TAG)
