@@ -41,7 +41,7 @@ module adt_basetypes
   !_TypeGen_declare_ListNode( public, complex16,  complex*16,  scalar )
   !_TypeGen_declare_ListNode( public, complex32,  complex*32,  scalar )
   !_TypeGen_declare_ListNode( public, c_void_ptr, type(c_ptr), scalar )
-  
+
   !_TypeGen_declare_ListNode( public, ref, type(Ref_t),        scalar )
   !_TypeGen_declare_ListNode( alias, ref, type(RefEncoding_t), dimension(:) )
 
@@ -57,6 +57,11 @@ module adt_basetypes
 
   !_TypeGen_declare_RefType( public, Callback, procedure(Callback_itf), scalar )
   ! TODO: _TypeGen_declare_ListNode not possible yet!
+
+
+!_TypeGen_declare_RefType( public, int4_1d, integer*4, dimension(:) )
+!_TypeGen_declare_RefType( public, char10_1d, character(len=10), dimension(:) )
+
 
 
   contains
