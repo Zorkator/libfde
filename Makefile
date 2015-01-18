@@ -1,7 +1,7 @@
 
 F90C ?= gfortran
 CFG  ?= debug
-ARCH ?= 64
+ARCH ?= 32
 MYOR ?= 0
 
 mk_F90_FLAGS_gfortran_debug   = -ggdb -cpp -ffree-line-length-none $(_F90_FLAGS)

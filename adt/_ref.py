@@ -41,6 +41,9 @@ class Ref(TypedObject):
   def contents( self ):
     return cast( self.ptr, POINTER(self.contentsType) ).contents
 
+  def castTo( self, tgtType ):
+    return cast( self.ptr, POINTER(tgtType) ).contents
+
   def clone( self ):
     other = Ref()
     self.clone_( byref(other), byref(self) )

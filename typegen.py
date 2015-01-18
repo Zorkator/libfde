@@ -23,8 +23,10 @@ class TypeSpec(object):
   _dimSize     = '(?::|\d+)'
   _dimSpec     = '\s*dimension\s*\(\s*%s(?:\s*,\s*%s)*\s*\)\s*' % (_dimSize, _dimSize)
   _keyAssign   = '\s*(\w+)\s*=\s*(\w+)\s*'
+  _varLength   = '.*\((?:len=)?[:*]\).*'
   procItfMatch = re.compile( _procItf ).match
   dimSpecMatch = re.compile( _dimSpec ).match
+  varBaseMatch = re.compile( _varLength ).match
   declWatcher  = dict()
 
   _template = dict(
@@ -43,6 +45,7 @@ class TypeSpec(object):
     self._isProc   = bool(self.procItfMatch( baseType ))
     self._isScalar = dimType == 'scalar'
     self._isArray  = bool(self.dimSpecMatch( dimType ))
+    self._varBase  = bool(self.varBaseMatch( baseType ))
 
     # sanity checks
     if not (self._isScalar ^ self._isArray):
@@ -51,16 +54,20 @@ class TypeSpec(object):
     if access not in ('public', 'private'):
       raise ValueError('ERROR at processing type "%s": invalid access specification "%s"' % (typeId, access))
 
-    self.access    = access
-    self.typeId    = typeId
-    self.baseType  = baseType
-    self.dimType   = dimType
-    self.dimSize   = ('', ', %s' % dimType)[self._isArray]
-    self.dimSpec   = ('', ', dimension(%s)' % ','.join( [':'] * (dimType.count(',')+1) ))[self._isArray]
-    self.baseExtra = ('', ', nopass')[self._isProc]
-    self.valAttrib = (', target, intent(in)', '')[self._isProc]
-    self.shapeArg  = ('', ', shape(src)')[self._isArray]
-    self.typegenId = type(self).__name__
+    if self._varBase:
+      baseType = baseType.replace('len=*', 'len=:')
+
+    self.access       = access
+    self.typeId       = typeId
+    self.baseType     = baseType
+    self.baseType_arg = baseType.replace('len=:', 'len=*')
+    self.dimType      = dimType
+    self.dimSize      = ('', ', %s' % dimType)[self._isArray]
+    self.dimSpec      = ('', ', dimension(%s)' % ','.join( [':'] * (dimType.count(',')+1) ))[self._isArray]
+    self.baseExtra    = ('', ', nopass')[self._isProc]
+    self.valAttrib    = (', target, intent(in)', '')[self._isProc]
+    self.shapeArg     = ('', ', shape(src)')[self._isArray]
+    self.typegenId    = type(self).__name__
 
     self._declared    = False
     self._implemented = False
@@ -139,19 +146,19 @@ class RefType(TypeSpec):
     access_proc = "ref_from_{typeId}, {typeId}_from_ref, is_{typeId}",
   
     # parameters:
-    #   typeId:     type identifier
-    #   baseType:   fortran base type | type(...) | procedure(...)
-    #   dimSpec:    ('', ', dimension(:,...)')[has_dimension]
+    #   typeId:       type identifier
+    #   baseType_arg: fortran base type | type(...) | procedure(...)
+    #   dimSpec:      ('', ', dimension(:,...)')[has_dimension]
     #
     ref_encoder = """
 !_PROC_EXPORT({typeId}_encode_ref_)
 !_ARG_REFERENCE1(val)
     function {typeId}_encode_ref_( val ) result(res)
       use iso_c_binding
-      {baseType}{dimSpec}{valAttrib}   :: val
-      type({typeId}_encoder_t), target :: encoder
-      type(RefEncoding_t)              :: dummy
-      type(RefEncoding_t)              :: res( ceiling( storage_size(encoder) / real(storage_size(dummy)) ) )
+      {baseType_arg}{dimSpec}{valAttrib} :: val
+      type({typeId}_encoder_t),   target :: encoder
+      type(RefEncoding_t)                :: dummy
+      type(RefEncoding_t)                :: res( ceiling( storage_size(encoder) / real(storage_size(dummy)) ) )
       type(RefEncoding_t), dimension(:), pointer :: fptr
 
       encoder%typeInfo     => static_type(val)
@@ -208,7 +215,7 @@ class RefType(TypeSpec):
       subroutine {typeId}_clone_ptr_( tgt, src )
         use iso_c_binding
         {baseType}{dimSpec}, pointer, intent(out) :: tgt
-        {baseType}{dimSpec},           intent(in) :: src
+        {baseType}{dimSpec}, pointer,  intent(in) :: src
         character(len=1), dimension(:),   pointer :: tmp
         allocate( tmp( product(shape(src)) * storage_size(src)/8 ) )
         call c_f_pointer( c_loc(tmp(1)), tgt{shapeArg} )
@@ -217,12 +224,12 @@ class RefType(TypeSpec):
       """,
 
       # parameters:
-      #   typeId:      type identifier
-      #   baseType:    fortran base type | type(...)
+      #   typeId:   type identifier
+      #   baseType: fortran base type | type(...)
       _type = """
       subroutine {typeId}_clone_ptr_( tgt, src )
         {baseType}, pointer, intent(out) :: tgt
-        {baseType},           intent(in) :: src
+        {baseType}, pointer,  intent(in) :: src
         type(TypeInfo_t),        pointer :: ti
 
         allocate( tgt ) !< initializes res as default {typeId}
@@ -258,18 +265,18 @@ class RefType(TypeSpec):
     """,
 
     # parameters:
-    #   typeId:     type identifier
-    #   baseType:   fortran base type | type(...) | procedure(...)
-    #   dimSpec:    ('', ', dimension(:,...)')[has_dimension]
-    #   initProc:   ', initProc = <funcId>'
-    #   assignProc: ', assignProc = <funcId>'
-    #   deleteProc: ', deleteProc = <funcId>'
-    #   shapeProc:  ', shapeProc = <funcId>'
+    #   typeId:       type identifier
+    #   baseType_arg: fortran argument base type | type(...) | procedure(...)
+    #   dimSpec:      ('', ', dimension(:,...)')[has_dimension]
+    #   initProc:     ', initProc = <funcId>'
+    #   assignProc:   ', assignProc = <funcId>'
+    #   deleteProc:   ', deleteProc = <funcId>'
+    #   shapeProc:    ', shapeProc = <funcId>'
     ref_typeinfo = """
 !_PROC_EXPORT({typeId}_typeinfo_)
 !_ARG_REFERENCE1(self)
     function {typeId}_typeinfo_( self ) result(res)
-      {baseType}{dimSpec}       :: self
+      {baseType_arg}{dimSpec}   :: self
       type(TypeInfo_t), pointer :: res
 
       res => type_{typeId}
@@ -282,14 +289,14 @@ class RefType(TypeSpec):
     """,
 
     # parameters:
-    #   typeId:     type identifier
-    #   baseType:   fortran base type | type(...) | procedure(...)
-    #   dimSpec:    ('', ', dimension(:,...)')[has_dimension]
+    #   typeId:       type identifier
+    #   baseType_arg: fortran argument base type | type(...) | procedure(...)
+    #   dimSpec:      ('', ', dimension(:,...)')[has_dimension]
     proc_typeinfo = """
 !_PROC_EXPORT({typeId}_typeinfo_)
 !_ARG_REFERENCE1(self)
     function {typeId}_typeinfo_( self ) result(res)
-      {baseType}{dimSpec}       :: self
+      {baseType_arg}{dimSpec}       :: self
       type(TypeInfo_t), pointer :: res
 
       res => type_{typeId}
@@ -398,9 +405,9 @@ class ListNode(TypeSpec):
 !_PROC_EXPORT({typeId}_nodetype_)
 !_ARG_REFERENCE1(val)
     function {typeId}_nodetype_( val ) result(res)
-      {baseType}{dimSpec}, intent(in) :: val
-      type(TypeInfo_t),       pointer :: res
-      type({typeId}_node_t)           :: node
+      {baseType_arg}{dimSpec}, intent(in) :: val
+      type(TypeInfo_t),           pointer :: res
+      type({typeId}_node_t)               :: node
       res => type_{typeId}_node
       if (.not. res%initialized) &
         call typeinfo_init( res, '{typeId}_node', 'type({typeId}_node_t)', &
@@ -431,9 +438,9 @@ class ListNode(TypeSpec):
 !_PROC_EXPORT({typeId}_new_node_of_)
 !_ARG_REFERENCE1(val)
     function {typeId}_new_node_of_( val ) result(res)
-      {baseType}{dimSpec}, intent(in) :: val
-      type(ListNode_t),       pointer :: res
-      {baseType}{dimSpec},    pointer :: val_ptr
+      {baseType_arg}{dimSpec}, intent(in) :: val
+      type(ListNode_t),           pointer :: res
+      {baseType}{dimSpec},        pointer :: val_ptr
       res     => {typeId}_new_node_( val_ptr )
       val_ptr =  val
     end function
@@ -443,9 +450,9 @@ class ListNode(TypeSpec):
 !_PROC_EXPORT({typeId}{aliasId}_new_node_of_)
 !_ARG_REFERENCE1(val)
     function {typeId}{aliasId}_new_node_of_( val ) result(res)
-      {baseType}{dimSpec},            intent(in) :: val
-      type(ListNode_t),                  pointer :: res
-      {aliasBaseType}{aliasDimSpec},     pointer :: val_ptr
+      {baseType_arg}{dimSpec},    intent(in) :: val
+      type(ListNode_t),              pointer :: res
+      {aliasBaseType}{aliasDimSpec}, pointer :: val_ptr
       res     => {typeId}_new_node_( val_ptr )
       val_ptr =  val
     end function
@@ -518,7 +525,7 @@ class TypeGenerator(object):
   count = dict()
 
   _ident     = '\s*(\w+)\s*'      #< some type identifier
-  _baseType  = '\s*([\w *=()]+)'  #< e.g. integer(kind=4), type(Struct), character(len=*), <interfaceId>, ...
+  _baseType  = '\s*([\w :*=()]+)' #< e.g. integer(kind=4), type(Struct), character(len=*), <interfaceId>, ...
   _dimType   = '\s*([\w ,:()]+)'  #< e.g. scalar, dimension(:,:), procedure
   _keySpecs  = '((?:,\s*\w+\s*=\s*\w+\s*)*)'
   _typeDecl  = '^\s*!\s*_TypeGen_declare_RefType\(%s,%s,%s,%s%s\)' % (_ident, _ident, _baseType, _dimType, _keySpecs)

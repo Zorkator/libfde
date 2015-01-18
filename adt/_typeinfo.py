@@ -28,8 +28,8 @@ class TypeInfo(Compound):
     else           : return cType
 
   def __str__( self ):
-    what = ('scalar', '{4}-dimensional array, each', 'scalar')[bool(self.rank)]
-    return '{0} <{1}>, {2} of {3} bytes'.format( self.typeId, self.baseType, what, self.byteSize, self.rank )
+    fmt = ('{0} <{1}>, scalar of {2} bytes', '{0} <{1}>, {3}-dimensional array, each of {2} bytes')[bool(self.rank)]
+    return fmt.format( self.typeId, self.baseType, self.byteSize, self.rank )
 
 
 

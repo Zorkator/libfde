@@ -6,6 +6,8 @@ module sim_data
 
   integer :: cnt, ios
   real*8  :: t, dt, te
+  real*4, dimension(:),   allocatable :: real4_array
+  real*4, dimension(:,:), allocatable :: real4_matrix
 
 end module
 
@@ -31,6 +33,10 @@ module sim_access
 
 # define _add_hookPoint( hookId ) \
     _set_hookPointTo( hookId, null_cb )
+
+# define _ALLOCATE( sym, dim ) \
+    allocate( sym dim );       \
+    _add_stateSymbol( sym )
 
   contains
 
@@ -143,6 +149,7 @@ end
 !_PROC_EXPORT(init_simulator)  
 subroutine init_simulator()
   use sim_data
+  use sim_access
   implicit none
 
   ! initialize
@@ -150,6 +157,10 @@ subroutine init_simulator()
   dt  = 0.1
   te  = 10.0
   cnt = 0
+
+  _ALLOCATE( real4_array,  (10) );    real4_array  = 0;
+  _ALLOCATE( real4_matrix, (10,20) ); real4_matrix = 1;
+
 end subroutine
 
   
@@ -164,6 +175,7 @@ subroutine run_simulation()
     call invoke_callback('step')
     write(6,*,iostat=ios) "t: ", t 
     cnt = cnt + 1
+    real4_array(mod(cnt, size(real4_array)) + 1) = cnt
     t = t + dt
   end do
   call invoke_callback('finish')

@@ -1,21 +1,6 @@
 
 from ctypes import *
 
-#_typeMap_f2py = {
-#  "logical*1"        : c_uint8,
-#  "logical*2"        : c_uint16,
-#  "logical*4"        : c_uint32,
-#  "logical*8"        : c_uint64,
-#  "integer*1"        : c_int8,
-#  "integer*2"        : c_int16,
-#  "integer*4"        : c_int32,
-#  "integer*8"        : c_int64,
-#  "real*4"           : c_float,
-#  "real*8"           : c_double,
-#  "real*16"          : c_longdouble,
-#  "type(c_ptr)"      : c_void_p,
-#  "character(*)"     : c_char }
-#
 
 class MemoryRef(Structure):
   _fields_ = [('ptr', c_void_p),

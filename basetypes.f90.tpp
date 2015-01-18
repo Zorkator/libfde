@@ -26,6 +26,38 @@ module adt_basetypes
   !_TypeGen_declare_RefType( public, complex32,  complex*32,  scalar )
   !_TypeGen_declare_RefType( public, c_void_ptr, type(c_ptr), scalar )
 
+  !_TypeGen_declare_RefType( public, bool1_1d,      logical*1,   dimension(:) )
+  !_TypeGen_declare_RefType( public, bool2_1d,      logical*2,   dimension(:) )
+  !_TypeGen_declare_RefType( public, bool4_1d,      logical*4,   dimension(:) )
+  !_TypeGen_declare_RefType( public, bool8_1d,      logical*8,   dimension(:) )
+  !_TypeGen_declare_RefType( public, int1_1d,       integer*1,   dimension(:) )
+  !_TypeGen_declare_RefType( public, int2_1d,       integer*2,   dimension(:) )
+  !_TypeGen_declare_RefType( public, int4_1d,       integer*4,   dimension(:) )
+  !_TypeGen_declare_RefType( public, int8_1d,       integer*8,   dimension(:) )
+  !_TypeGen_declare_RefType( public, real4_1d,      real*4,      dimension(:) )
+  !_TypeGen_declare_RefType( public, real8_1d,      real*8,      dimension(:) )
+  !_TypeGen_declare_RefType( public, real16_1d,     real*16,     dimension(:) )
+  !_TypeGen_declare_RefType( public, complex8_1d,   complex*8,   dimension(:) )
+  !_TypeGen_declare_RefType( public, complex16_1d,  complex*16,  dimension(:) )
+  !_TypeGen_declare_RefType( public, complex32_1d,  complex*32,  dimension(:) )
+  !_TypeGen_declare_RefType( public, c_void_ptr_1d, type(c_ptr), dimension(:) )
+
+  !_TypeGen_declare_RefType( public, bool1_2d,      logical*1,   dimension(:,:) )
+  !_TypeGen_declare_RefType( public, bool2_2d,      logical*2,   dimension(:,:) )
+  !_TypeGen_declare_RefType( public, bool4_2d,      logical*4,   dimension(:,:) )
+  !_TypeGen_declare_RefType( public, bool8_2d,      logical*8,   dimension(:,:) )
+  !_TypeGen_declare_RefType( public, int1_2d,       integer*1,   dimension(:,:) )
+  !_TypeGen_declare_RefType( public, int2_2d,       integer*2,   dimension(:,:) )
+  !_TypeGen_declare_RefType( public, int4_2d,       integer*4,   dimension(:,:) )
+  !_TypeGen_declare_RefType( public, int8_2d,       integer*8,   dimension(:,:) )
+  !_TypeGen_declare_RefType( public, real4_2d,      real*4,      dimension(:,:) )
+  !_TypeGen_declare_RefType( public, real8_2d,      real*8,      dimension(:,:) )
+  !_TypeGen_declare_RefType( public, real16_2d,     real*16,     dimension(:,:) )
+  !_TypeGen_declare_RefType( public, complex8_2d,   complex*8,   dimension(:,:) )
+  !_TypeGen_declare_RefType( public, complex16_2d,  complex*16,  dimension(:,:) )
+  !_TypeGen_declare_RefType( public, complex32_2d,  complex*32,  dimension(:,:) )
+  !_TypeGen_declare_RefType( public, c_void_ptr_2d, type(c_ptr), dimension(:,:) )
+
   !_TypeGen_declare_ListNode( public, bool1,      logical*1,   scalar )
   !_TypeGen_declare_ListNode( public, bool2,      logical*2,   scalar )
   !_TypeGen_declare_ListNode( public, bool4,      logical*4,   scalar )
@@ -58,11 +90,8 @@ module adt_basetypes
   !_TypeGen_declare_RefType( public, Callback, procedure(Callback_itf), scalar )
   ! TODO: _TypeGen_declare_ListNode not possible yet!
 
-
-!_TypeGen_declare_RefType( public, int4_1d, integer*4, dimension(:) )
-!_TypeGen_declare_RefType( public, char10_1d, character(len=10), dimension(:) )
-
-
+  !!_TypeGen_declare_RefType( public, charString_1d, character(len=:), dimension(:) )
+  !! FIXME: ^ this type causes gfortran to freak out with an internal compiler error >:-(
 
   contains
 

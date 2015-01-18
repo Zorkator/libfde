@@ -24,10 +24,12 @@ class Simulator(object):
     self._cbs = dict()
     
   def __getitem__( self, ident ):
-    return self._state.get(ident).contents.value
+    return self._state.get(ident).contents
     
   def __setitem__( self, ident, val ):
-    self._state.get(ident).contents.value = val
+    ref = self._state.get(ident)
+    if ref.rank: ref.contents[:]    = val
+    else       : ref.contents.value = val
     
   def run( self ):
     self._hdl.run_simulation_()
@@ -44,7 +46,7 @@ def step_cb():
 
 s.setCallback( 'step', step_cb )
 s.run()
-s['t'] = 0
-s['dt'] = 0.001
-s.run()
+#s['t'] = 0
+#s['dt'] = 0.001
+#s.run()
 
