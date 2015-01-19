@@ -57,7 +57,7 @@ program testinger
   ref2 = ref_of(ref1)
   ref3 = ref(ref2)
 
-  ptr2d => intXY(ref3)
+  ptr2d => int4_2d(ref3)
 
 
   do i = 1, 300
@@ -89,7 +89,7 @@ program testinger
   call delete( ref3 )
 
   ref1 = ref_of(intArray)
-  ptr2d => intXY(ref1)
+  ptr2d => int4_2d(ref1)
   ptr2d = 42
   cpointer = cptr(ref1)
 
@@ -108,7 +108,7 @@ program testinger
   call bind( ref1, .true. )
 
   ptr2d => null()
-  ptr2d => intXY(ref1)
+  ptr2d => int4_2d(ref1)
   ptr2d = 21
 
   ref2 = ref_from_CallBack( sub_a )
@@ -127,7 +127,7 @@ program testinger
   print *, shape(ref1)
   ref2 = clone(ref1)
   print *, shape(ref2)
-  print *, intXY(ref2)
+  print *, int4_2d(ref2)
 
   call delete(ref1)
   call delete(ref2)

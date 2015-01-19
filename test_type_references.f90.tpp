@@ -18,9 +18,6 @@ module type_references
 
   public :: func, sub_a, func_a
 
-  !_TypeGen_declare_ListNode( public, intXY, integer*4, dimension(5,4) )
-
-  !_TypeGen_declare_RefType( public, intXY,    integer*4, dimension(:,:) )
   !_TypeGen_declare_RefType( public, CalcFunc, procedure(func),  scalar )
   !_TypeGen_declare_RefType( public, ADing, type(Ding),  scalar, cloneMode = _type, deleteProc = ding_clear )
 

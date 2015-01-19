@@ -22,6 +22,9 @@ class Simulator(object):
     self._hooks = hooks.contents
     self._hdl.init_simulator_()
     self._cbs = dict()
+    ids, names = self._state.get('id_table'), self._state.get('name_table')
+    self._id_table   = ids.castTo( (c_char * 10) * ids.shape[0] )
+    self._name_table = names.castTo( (c_char * 48) * names.shape[0] )
     
   def __getitem__( self, ident ):
     return self._state.get(ident).contents
@@ -45,6 +48,10 @@ def step_cb():
   print s['t']
 
 s.setCallback( 'step', step_cb )
+for i in s._id_table:
+  print i[:]
+for i in s._name_table:
+  print i[:]
 s.run()
 #s['t'] = 0
 #s['dt'] = 0.001

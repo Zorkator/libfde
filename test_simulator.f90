@@ -8,6 +8,8 @@ module sim_data
   real*8  :: t, dt, te
   real*4, dimension(:),   allocatable :: real4_array
   real*4, dimension(:,:), allocatable :: real4_matrix
+  character(10), dimension(:), allocatable :: id_table
+  character(48), dimension(:), allocatable :: name_table
 
 end module
 
@@ -151,6 +153,7 @@ subroutine init_simulator()
   use sim_data
   use sim_access
   implicit none
+  integer :: i
 
   ! initialize
   t   = 0
@@ -160,6 +163,16 @@ subroutine init_simulator()
 
   _ALLOCATE( real4_array,  (10) );    real4_array  = 0;
   _ALLOCATE( real4_matrix, (10,20) ); real4_matrix = 1;
+  _ALLOCATE( id_table, (10) );        id_table     = ' '
+  _ALLOCATE( name_table, (20) );      name_table   = ' ' !<< FIXME: id_table and name_table share the same typeinfo, whose byteSize
+                                                         !           is set to the size of the first ref'ed table ...
+  do i = 1,size(id_table)
+    write( id_table(i), '(i10)' ), i
+  end do
+
+  do i = 1,size(name_table)
+    write( name_table(i), * ), 'name entry', i
+  end do
 
 end subroutine
 

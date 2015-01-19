@@ -85,12 +85,12 @@ module adt_basetypes
   abstract interface
     subroutine Callback_itf(); end subroutine
   end interface
-	public :: Callback_itf
+  public :: Callback_itf
 
   !_TypeGen_declare_RefType( public, Callback, procedure(Callback_itf), scalar )
   ! TODO: _TypeGen_declare_ListNode not possible yet!
 
-  !!_TypeGen_declare_RefType( public, charString_1d, character(len=:), dimension(:) )
+  !_TypeGen_declare_RefType( public, charString_1d, character(len=:), dimension(:) )
   !! FIXME: ^ this type causes gfortran to freak out with an internal compiler error >:-(
 
   contains
