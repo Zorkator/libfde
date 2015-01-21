@@ -2,14 +2,17 @@
 #include "adt/itfUtil.fpp"
 
 module sim_data
+  use adt_string
   implicit none
 
   integer :: cnt, ios
   real*8  :: t, dt, te
   real*4, dimension(:),   allocatable :: real4_array
   real*4, dimension(:,:), allocatable :: real4_matrix
-  character(10), dimension(:), allocatable :: id_table
-  character(48), dimension(:), allocatable :: name_table
+  character(10), dimension(:), allocatable  :: id_array
+  character(48), dimension(:), allocatable  :: name_array
+  character(5), dimension(:,:), allocatable :: id_table
+  type(String_t), dimension(:), allocatable :: string_array
 
 end module
 
@@ -163,15 +166,17 @@ subroutine init_simulator()
 
   _ALLOCATE( real4_array,  (10) );    real4_array  = 0;
   _ALLOCATE( real4_matrix, (10,20) ); real4_matrix = 1;
-  _ALLOCATE( id_table, (10) );        id_table     = ' '
-  _ALLOCATE( name_table, (20) );      name_table   = ' ' !<< FIXME: id_table and name_table share the same typeinfo, whose byteSize
+  _ALLOCATE( string_array, (10) );
+  _ALLOCATE( id_array, (10) );        id_array     = ' '
+  _ALLOCATE( id_table, (6,7) );       id_table     = ' '
+  _ALLOCATE( name_array, (20) );      name_array   = ' ' !<< FIXME: id_array and name_array share the same typeinfo, whose byteSize
                                                          !           is set to the size of the first ref'ed table ...
-  do i = 1,size(id_table)
-    write( id_table(i), '(i10)' ), i
+  do i = 1,size(id_array)
+    write( id_array(i), '(i10)' ), i
   end do
 
-  do i = 1,size(name_table)
-    write( name_table(i), * ), 'name entry', i
+  do i = 1,size(name_array)
+    write( name_array(i), * ), 'name entry', i
   end do
 
 end subroutine
@@ -182,6 +187,10 @@ subroutine run_simulation()
   use sim_data
   use sim_access
   implicit none
+  
+  call test_charstring_table( 'id_array' )
+  call test_charstring_table( 'name_array' )
+  call test_string_array()
 
   call invoke_callback('start')
   do while (t <= te)
@@ -192,6 +201,42 @@ subroutine run_simulation()
     t = t + dt
   end do
   call invoke_callback('finish')
+
+  contains
+
+  subroutine test_charstring_table( id )
+    use sim_data
+    use sim_access
+    implicit none
+    
+    character(len=*),            intent(in) :: id
+    type(ref_t)                             :: ref1
+    character(len=:), dimension(:), pointer :: table_ptr
+    character(len=:), pointer :: cs_ptr
+
+    print*, storage_size(cs_ptr)
+    ref1 = get( stateMap_, id )
+    table_ptr => charString_1d(ref1)
+    print*, size(table_ptr)
+    if (size(table_ptr) > 0) then
+      print*, storage_size(table_ptr(1))/8
+    end if
+  end subroutine
+
+  subroutine test_string_array()
+    use sim_data
+    use sim_access
+    implicit none
+
+    type(String_t), dimension(:), pointer :: table
+    integer*4 :: i
+  
+    table => String_1d(ref(get( stateMap_, 'string_array' )))
+    do i = 1, size(table)
+      print*, str(table(i))
+    end do
+
+  end subroutine
 
 end subroutine
 

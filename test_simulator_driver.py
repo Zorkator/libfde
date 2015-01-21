@@ -5,7 +5,7 @@ Created on Sat Dec 13 00:16:33 2014
 @author: zapp
 """
 
-import os, sys
+import os, sys, operator
 import adt
 from ctypes import *
 
@@ -22,9 +22,10 @@ class Simulator(object):
     self._hooks = hooks.contents
     self._hdl.init_simulator_()
     self._cbs = dict()
-    ids, names = self._state.get('id_table'), self._state.get('name_table')
-    self._id_table   = ids.castTo( (c_char * 10) * ids.shape[0] )
-    self._name_table = names.castTo( (c_char * 48) * names.shape[0] )
+    ids, idtab, names = self._state.get('id_array'), self._state.get('id_table'), self._state.get('name_array')
+    self._id_array    = ids.castTo( (c_char * 10) * ids.shape[0] )
+    self._id_table    = idtab.castTo( (c_char * 5) * reduce( operator.mul, idtab.shape ) )
+    self._name_array  = names.castTo( (c_char * 48) * names.shape[0] )
     
   def __getitem__( self, ident ):
     return self._state.get(ident).contents
@@ -48,12 +49,16 @@ def step_cb():
   print s['t']
 
 s.setCallback( 'step', step_cb )
-for i in s._id_table:
+for i in s._id_array:
   print i[:]
-for i in s._name_table:
+for i in s._name_array:
   print i[:]
 s.run()
+
+for i in s['string_array']:
+  i.value = "dynamic string %s" % repr(i)
+
 #s['t'] = 0
 #s['dt'] = 0.001
-#s.run()
+s.run()
 

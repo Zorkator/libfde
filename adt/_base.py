@@ -55,10 +55,9 @@ class _Meta(type(Union)):
 class Compound(Union):
   __metaclass__ = _Meta
   __typeprocs__ = [] #< no procedures for Compound
-  __slots__     = ['_is_reference']
 
   def __getattr__( self, name ):
-    if name is '_is_reference': #< if we end up here, slot _is_reference has not been set!
+    if name is '_needs_delete': #< if we end up here, slot _needs_delete has not been set!
       return False
     if name in ('__members__', '__methods__'):
       return {}

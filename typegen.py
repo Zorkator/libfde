@@ -61,6 +61,7 @@ class TypeSpec(object):
     self.typeId       = typeId
     self.baseType     = baseType
     self.baseType_arg = baseType.replace('len=:', 'len=*')
+    self.baseSizeExpr = ('storage_size(self)', '0')[self._varBase]
     self.dimType      = dimType
     self.dimSize      = ('', ', %s' % dimType)[self._isArray]
     self.dimSpec      = ('', ', dimension(%s)' % ','.join( [':'] * (dimType.count(',')+1) ))[self._isArray]
@@ -266,7 +267,9 @@ class RefType(TypeSpec):
 
     # parameters:
     #   typeId:       type identifier
+    #   baseType:     fortran base type | type(...) | procedure(...)
     #   baseType_arg: fortran argument base type | type(...) | procedure(...)
+    #   baseSizeExpr: fortran expression to determine byte size of baseType
     #   dimSpec:      ('', ', dimension(:,...)')[has_dimension]
     #   initProc:     ', initProc = <funcId>'
     #   assignProc:   ', assignProc = <funcId>'
@@ -282,7 +285,7 @@ class RefType(TypeSpec):
       res => type_{typeId}
       if (.not. res%initialized) &
         call typeinfo_init( res, '{typeId}', '{baseType}' &
-                            , int(storage_size(self),4) &
+                            , int({baseSizeExpr},4) &
                             , size(shape(self)){initProc}{assignProc}{deleteProc}{shapeProc}{cloneProc} &
                             , cloneRefProc = {typeId}_clone_ref_ )
     end function

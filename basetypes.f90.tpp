@@ -58,6 +58,7 @@ module adt_basetypes
   !_TypeGen_declare_RefType( public, complex32_2d,  complex*32,  dimension(:,:) )
   !_TypeGen_declare_RefType( public, c_void_ptr_2d, type(c_ptr), dimension(:,:) )
 
+
   !_TypeGen_declare_ListNode( public, bool1,      logical*1,   scalar )
   !_TypeGen_declare_ListNode( public, bool2,      logical*2,   scalar )
   !_TypeGen_declare_ListNode( public, bool4,      logical*4,   scalar )
@@ -77,10 +78,17 @@ module adt_basetypes
   !_TypeGen_declare_ListNode( public, ref, type(Ref_t),        scalar )
   !_TypeGen_declare_ListNode( alias, ref, type(RefEncoding_t), dimension(:) )
 
+
+  !_TypeGen_declare_RefType( public, charString_1d, character(len=:), dimension(:) )
+  !_TypeGen_declare_RefType( public, charString_2d, character(len=:), dimension(:,:) )
+  !! FIXME: ^ these two types cause gfortran to freak out with an internal compiler error >:-(
+
+  !_TypeGen_declare_RefType( public, String_1d, type(String_t),  dimension(:) )
+  !_TypeGen_declare_RefType( public, String_2d, type(String_t),  dimension(:,:) )
+
   !_TypeGen_declare_ListNode( public, String, type(String_t),  scalar )
   !_TypeGen_declare_ListNode( alias, String, character(len=*), scalar )
   !_TypeGen_declare_ListNode( alias, String, character(len=1), dimension(:) )
-
 
   abstract interface
     subroutine Callback_itf(); end subroutine
@@ -89,9 +97,6 @@ module adt_basetypes
 
   !_TypeGen_declare_RefType( public, Callback, procedure(Callback_itf), scalar )
   ! TODO: _TypeGen_declare_ListNode not possible yet!
-
-  !_TypeGen_declare_RefType( public, charString_1d, character(len=:), dimension(:) )
-  !! FIXME: ^ this type causes gfortran to freak out with an internal compiler error >:-(
 
   contains
 

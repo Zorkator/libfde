@@ -5,11 +5,7 @@ from _ftypes import _typeMap_py2id as _id_map, _typeMap_py2ct as _ct_map
 
 
 class Object(Compound):
-
-  @property
-  def _asReference( self ):
-    self._is_reference = True
-    return self
+  __slots__ = ['_needs_delete']
 
   @property
   def value( self ):
@@ -28,6 +24,12 @@ class Object(Compound):
     except: raise TypeError( "%s.%s doesn't support %s" % (type(self).__name__, name, _type) )
 
 
+  def __new__( _class, *args, **kwArgs ):
+    self = super(Compound, _class).__new__( _class, *args, **kwArgs )
+    self._needs_delete = True
+    return self
+
+
   def __init__( self, other = None ):
     proto = self if other is None else other
     _call = self._lookup_method( 'init_by', type(proto) )
@@ -40,7 +42,9 @@ class Object(Compound):
 
 
   def __del__( self ):
-    self._is_reference or self.delete_( byref(self) )
+    if self._needs_delete:
+      print "__del__ %s" % repr(self)
+      self.delete_( byref(self) )
 
 
   def delete( self ):

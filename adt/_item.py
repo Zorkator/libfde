@@ -15,8 +15,7 @@ class Item(TypedObject):
     if ct:
       mr = MemoryRef()
       self.memoryref_( byref(mr), byref(self) )
-      obj = cast( mr.ptr, POINTER(ct) ).contents
-      ref = getattr( obj, '_asReference', obj )
+      ref = cast( mr.ptr, POINTER(ct) ).contents
       return getattr( ref, 'value', ref )
     return None
 
