@@ -43,7 +43,6 @@ class Object(Compound):
 
   def __del__( self ):
     if self._needs_delete:
-      print "__del__ %s" % repr(self)
       self.delete_( byref(self) )
 
 
