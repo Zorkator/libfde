@@ -275,32 +275,37 @@ end module
 
 !_PROC_EXPORT(hashmap_assign_hashmap_c)
   subroutine hashmap_assign_hashmap_c( lhs, rhs )
-    use impl_hashmap__, only: HashMap_t, HashNode_t, ListIndex_t, hashmap_pre_cache, hashmap_setup_index_, &
-                             hashmap_nodeCache, insert, index, len, is_valid, HashNode, assign, next, tail
+    use impl_hashmap__, only: HashMap_t, HashNode_t, ListIndex_t, hashmap_pre_cache, hashmap_setup_index_, hashmap_flush_, &
+                              hashmap_nodeCache, insert, index, len, is_valid, HashNode, assign, next, tail
     implicit none
     type(HashMap_t), target, intent(inout) :: lhs
     type(HashMap_t), target,    intent(in) :: rhs
     type(ListIndex_t)                      :: l_idx, r_idx
     type(HashNode_t),              pointer :: l_node, r_node
-    integer(kind=4)                        :: i
+    integer(kind=4)                        :: i, bucket_len
    
     if (.not. associated( lhs%indexVector, rhs%indexVector )) then
       lhs%indexLimits = rhs%indexLimits
+      call hashmap_flush_( lhs, hashmap_nodeCache, .false. )
       call hashmap_pre_cache( rhs%items )
       call hashmap_setup_index_( lhs, size(rhs%indexVector), hashmap_nodeCache )
       do i = 0, size( lhs%indexVector ) - 1
-        call insert( index( lhs%indexVector(i), tail, 0 ), index( hashmap_nodeCache, -len( rhs%indexVector(i) ) ) )
-        l_idx = index( lhs%indexVector(i) )
-        r_idx = index( rhs%indexVector(i) )
-        do while (is_valid(r_idx))
-          l_node => HashNode(l_idx)
-          r_node => HashNode(r_idx)
-          call assign( l_node%key, r_node%key )
-          call assign( l_node%value, r_node%value )
-          call next( l_idx )
-          call next( r_idx )
-        end do
+        bucket_len = len( rhs%indexVector(i) )
+        if (bucket_len > 0) then
+          call insert( index( lhs%indexVector(i), tail, 0 ), index( hashmap_nodeCache, -bucket_len ) )
+          l_idx = index( lhs%indexVector(i) )
+          r_idx = index( rhs%indexVector(i) )
+          do while (is_valid(r_idx))
+            l_node => HashNode(l_idx)
+            r_node => HashNode(r_idx)
+            call assign( l_node%key, r_node%key )
+            call assign( l_node%value, r_node%value )
+            call next( l_idx )
+            call next( r_idx )
+          end do
+        end if
       end do
+      lhs%items = rhs%items
     end if
   end subroutine  
 

@@ -62,18 +62,22 @@ alist: $(BASE_OBJ) test_abstract_list.o
 map: $(BASE_OBJ) test_hash_map.o
 	$(mk_F90C) $(mk_F90_FLAGS) $(mk_INCLUDE_PATHLIST) $? -o $@.$(mk_TAG)
 
+test_adt: $(BASE_OBJ) test_adt.o
+	$(mk_F90C) $(mk_F90_FLAGS) $(mk_INCLUDE_PATHLIST) $? -o $@.$(mk_TAG)
+
 clean:
 	rm -f *.mod *.o *.$(mk_TAG) $(TPP_FILES:%.tpp=%)
 
 mrproper: clean
 	rm *.so
 
-test: clean dynstring gref item alist map
+test: clean dynstring gref item alist map test_adt
 	./dynstring.$(mk_TAG)
 	./gref.$(mk_TAG)
 	./item.$(mk_TAG)
 	./alist.$(mk_TAG)
 	./map.$(mk_TAG)
+	./test_adt.$(mk_TAG)
 
 testsim: libadt
 	$(MAKE) _F90_FLAGS="-fpic" test_simulator.o

@@ -80,11 +80,12 @@ end module
     if (has_proto /= 0) then;
       _ref_init( self%refstat, _ref_hardness(proto%refstat) )
       call basestring_init_by_basestring_c( self%ref_str, 1, proto%ref_str )
+      self%typeInfo => proto%typeInfo
     else;
       self%refstat = _ref_HardLent
       call basestring_init_by_basestring_c( self%ref_str, 0, self%ref_str )
+      self%typeInfo => null()
     end if
-    self%typeInfo => null()
   end subroutine
 
 

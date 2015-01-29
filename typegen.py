@@ -235,9 +235,11 @@ class RefType(TypeSpec):
 
         allocate( tgt ) !< initializes res as default {typeId}
         ti => static_type( tgt )
-        if (associated( ti%initProc )) &
+        if (associated( ti%initProc )) then
           call ti%initProc( tgt, 1, src )
-        tgt = src
+        else
+          tgt = src
+        end if
       end subroutine
       """
     ),

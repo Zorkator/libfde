@@ -57,9 +57,9 @@ class _Meta(type(Union)):
 
     if fields:
       _Struct = type( '_Struct', (Structure,), dict(_fields_=fields, _anonymous_=anonym) )
-      size = max(size, sizeof(_Struct))
-      fields = [('_struct', _Struct)]
-      anonym = ['_struct']
+      size    = max(size, sizeof(_Struct))
+      fields  = [('_struct', _Struct)]
+      anonym  = ['_struct']
 
     size and fields.append( ('_data', size * c_int8) )
     members.update( _fields_=fields, _anonymous_=anonym )
