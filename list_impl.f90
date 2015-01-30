@@ -357,7 +357,7 @@ end module
 !_PROC_EXPORT(list_clear_c)
   recursive &
   subroutine list_clear_c( self )
-    use impl_list__, only: List_t, ListNode_t, ValueNode_t
+    use impl_list__, only: List_t, ListNode_t, ValueNode_t, listnode_init_
     use iso_c_binding
     implicit none
     type(List_t), target, intent(inout) :: self
