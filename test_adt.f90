@@ -218,6 +218,20 @@ module test_basedata
 end module
 
 
+subroutine do_assert( expr_bool, expr_str )
+  logical,          intent(in) :: expr_bool
+  character(len=*), intent(in) :: expr_str
+  if (.not. expr_bool) &
+    print *, expr_str // ': ', expr_bool
+end subroutine
+
+# define _assert( expr ) \
+    call do_assert( expr, _str(expr) )
+
+# define _assert_not( expr ) \
+    call do_assert( .not. expr, _str(expr) )
+
+
 subroutine test_string()
   use test_basedata
   implicit none
@@ -231,13 +245,22 @@ subroutine test_ref()
 
   type(Ref_t) :: r1, r2
 
+  r1 = ref_of( v_bool1 )
+  _assert( is_valid( r1 ) )
+  _assert_not( is_valid( r2 ) )
+  r2 = ref_of( v_bool1 )
+  _assert( r1 == r2 )
+  r2 = clone( r1 )
+  _assert( r1 /= r2 )
+  r1 = r2
+  _assert( r1 == r2 )
+
 # define _ref_deref_( typeId )        \
     r1 = ref_of( _paste(v_,typeId) ) ;\
     _paste(p_,typeId) => typeId(r1)  ;\
-    print *, _str(typeId), loc(_paste(p_,typeId)) == loc(_paste(v_,typeId)); \
     r2 = clone( r1 ) ;\
+    print *, _str(typeId), loc(_paste(p_,typeId)) == loc(_paste(v_,typeId)), .not. (r2 == r1); \
     _paste(p_,typeId) => typeId(r2)
-    
 
   _ref_deref_(bool1)
   _ref_deref_(bool2)
@@ -314,9 +337,9 @@ subroutine test_hashmap()
   _map_ref(list)
   _map_ref(hashmap)
 
-  ref_1 = clone( ref_ptr )
+  call set( v_hashmap, 'submap', Item_of( clone( ref_ptr ) ) )
+  ref_1 = ref( get( v_hashmap, 'submap' ) )
   p_hashmap => hashmap( ref_1 )
-  call set( v_hashmap, 'submap', Item_of( ref_1 ) )
   p_hashmap => hashmap( ref( get( v_hashmap, 'submap' ) ) )
 
   call delete( v_hashmap )
@@ -335,5 +358,7 @@ program test_adt
   call test_item()
   call test_list()
   call test_hashmap()
+
+  call hashmap_clear_cache() ! TODO: check memory leaks!
 
 end

@@ -117,6 +117,14 @@ module adt_ref
     end subroutine
   end interface
 
+  interface is_valid
+    pure logical &
+    function ref_is_valid_c( self ) result(res)
+      import Ref_t
+      type(Ref_t), intent(in) :: self
+    end function
+  end interface
+
   ! assignment and operators
 
   interface assign
@@ -137,10 +145,30 @@ module adt_ref
     module procedure ref_assign_ref_private, ref_assign_encoding_private
   end interface
 
+  
+  ! comparision
+
+  interface equal
+    logical &
+    function ref_equal_ref_c( lhs, rhs ) result(res)
+      import Ref_t
+      type(Ref_t), intent(in) :: lhs, rhs
+    end function
+  end interface
+
+  interface operator(==)
+    module procedure ref_eqv_ref_private
+  end interface
+
+  interface operator(/=)
+    module procedure ref_ne_ref_private
+  end interface
+
 
   ! declare public interfaces 
 
   public :: assign, assignment(=)
+  public :: equal, operator(==), operator(/=)
   public :: ref_get_typereference  !< needed by generated code
   public :: rank
   public :: shape
@@ -151,6 +179,7 @@ module adt_ref
   public :: dynamic_type
   public :: permanent_ref, temporary_ref
   public :: bind
+  public :: is_valid
 
   ! declare TypeInfo necessities public
 
@@ -177,6 +206,22 @@ module adt_ref
     type(RefEncoding_t), target, intent(in) :: rhs(:)
     call assign( lhs, rhs )
   end subroutine
+
+!_PROC_EXPORT(ref_equal_ref_private)
+!_ARG_REFERENCE2(lhs, rhs)
+  logical &
+  function ref_eqv_ref_private( lhs, rhs ) result(res)
+    type(Ref_t), intent(in) :: lhs, rhs
+    res = equal( lhs, rhs )
+  end function
+
+!_PROC_EXPORT(ref_ne_ref_private)
+!_ARG_REFERENCE2(lhs, rhs)
+  logical &
+  function ref_ne_ref_private( lhs, rhs ) result(res)
+    type(Ref_t), intent(in) :: lhs, rhs
+    res = .not. equal( lhs, rhs )
+  end function
 
 end module
 

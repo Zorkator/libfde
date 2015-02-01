@@ -38,6 +38,12 @@ module impl_ref__
       type(Ref_t)             :: res
     end function
 
+    function ref_peek_cptr( self ) result(res)
+      import Ref_t, c_ptr
+      type(Ref_t), intent(in) :: self
+      type(c_ptr)             :: res
+    end function
+
     subroutine ref_assign_ref_c( lhs, rhs )
       import Ref_t
       type(Ref_t), intent(inout) :: lhs
@@ -89,15 +95,30 @@ end module
   end subroutine
 
 
+!_PROC_EXPORT(ref_equal_ref_c)
+!_ARG_REFERENCE2(lhs, rhs)
+  logical &
+  function ref_equal_ref_c( lhs, rhs ) result(res)
+    use impl_ref__
+    implicit none
+    type(Ref_t), intent(inout) :: lhs, rhs
+
+    res = c_associated( ref_peek_cptr(lhs), ref_peek_cptr(rhs) )
+    call basestring_release_weak( lhs%ref_str )
+    call basestring_release_weak( rhs%ref_str )
+  end function
+
+
 !_PROC_EXPORT(ref_assign_ref_c)
 !_ARG_REFERENCE2(lhs, rhs)
   subroutine ref_assign_ref_c( lhs, rhs )
-    use impl_ref__, only: Ref_t, ref_free_c, basestring_assign_basestring_c
+    use impl_ref__, only: Ref_t, ref_free_c, basestring_assign_basestring_c, &
+                          ref_peek_cptr, c_associated
     implicit none
     type(Ref_t), intent(inout) :: lhs
     type(Ref_t),    intent(in) :: rhs
 
-    if (.not. associated(lhs%ref_str%ptr, rhs%ref_str%ptr)) then
+    if (.not. c_associated( ref_peek_cptr(lhs), ref_peek_cptr(rhs) )) then
       call ref_free_c( lhs )
       call basestring_assign_basestring_c( lhs%ref_str, rhs%ref_str )
       lhs%typeInfo => rhs%typeInfo
@@ -226,6 +247,22 @@ end module
   end subroutine
 
 
+  function ref_peek_cptr( self ) result(res)
+    use impl_ref__, only: Ref_t, c_ptr, void_t, C_NULL_PTR, c_f_pointer, c_loc
+    implicit none
+    type(Ref_t), intent(in) :: self
+    type(c_ptr)             :: res
+    type(void_t),   pointer :: wrap
+
+    if (associated( self%ref_str%ptr )) then
+      call c_f_pointer( c_loc( self%ref_str%ptr(1) ), wrap )
+      res = c_loc(wrap%ptr)
+    else
+      res = C_NULL_PTR
+    end if
+  end function
+
+
 !_PROC_EXPORT(ref_cptr)
 !_ARG_REFERENCE1(self)
   function ref_cptr( self ) result(res)
@@ -342,4 +379,15 @@ end module
     logical                    :: do_bind
     _ref_setMine( self%refstat, merge( 1, 0, do_bind ) )
   end subroutine
+
+
+!_PROC_EXPORT(ref_is_valid_c)
+!_ARG_REFERENCE1(self)
+  pure logical &
+  function ref_is_valid_c( self ) result(res)
+    use impl_ref__
+    implicit none
+    type(Ref_t), intent(in) :: self
+    res = associated( self%typeInfo ) .and. associated( self%ref_str%ptr )
+  end function
 
