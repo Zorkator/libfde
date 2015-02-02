@@ -366,12 +366,12 @@ end module
 
     ptr => self%node%next
     do while (.not. associated( ptr, self%node ))
-      delPtr => ptr
-      ptr    => ptr%next
-      if (associated( delPtr%typeInfo%subtype%deleteProc )) then
-        call c_f_pointer( c_loc(delPtr), valNodePtr )
-        call delPtr%typeInfo%subtype%deleteProc( valNodePtr%pseudoValue )
+      if (associated( ptr%typeInfo%subtype%deleteProc )) then
+        call c_f_pointer( c_loc(ptr), valNodePtr )
+        call ptr%typeInfo%subtype%deleteProc( valNodePtr%pseudoValue )
       end if
+      delPtr => ptr
+      ptr    => ptr%next !< jump to next here, since deleteProc might have appended additional nodes ...
       deallocate( delPtr )
     end do
     call listnode_init_( self%node )

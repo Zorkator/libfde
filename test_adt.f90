@@ -215,6 +215,71 @@ module test_basedata
     end do
   end subroutine
 
+
+  subroutine cleanup_basedata()
+    implicit none
+    integer :: i, j
+
+    call delete( v_list )
+    call delete( v_hashmap )
+
+    do i = 1, 5
+      call delete( v_list_1d(i) )
+      call delete( v_hashmap_1d(i) )
+    end do
+
+    deallocate( v_hashmap_1d )
+    deallocate( v_list_1d )
+    deallocate( v_item_1d )
+    deallocate( v_ref_1d )
+    deallocate( v_string_1d )
+    deallocate( v_char10_1d )
+    deallocate( v_c_void_ptr_1d )
+    !deallocate( v_complex32_1d )
+    deallocate( v_complex16_1d )
+    deallocate( v_complex8_1d )
+    !deallocate( v_real16_1d )
+    deallocate( v_real8_1d )
+    deallocate( v_real4_1d )
+    deallocate( v_int8_1d )
+    deallocate( v_int4_1d )
+    deallocate( v_int2_1d )
+    deallocate( v_int1_1d )
+    deallocate( v_bool8_1d )
+    deallocate( v_bool4_1d )
+    deallocate( v_bool2_1d )
+    deallocate( v_bool1_1d )
+
+    do i = 1, 2
+      do j = 1, 2
+        call delete( v_list_2d(i,j) )
+        call delete( v_hashmap_2d(i,j) )
+      end do
+    end do
+
+    deallocate( v_hashmap_2d )
+    deallocate( v_list_2d )
+    deallocate( v_item_2d )
+    deallocate( v_ref_2d )
+    deallocate( v_string_2d )
+    deallocate( v_char10_2d )
+    deallocate( v_c_void_ptr_2d )
+    !deallocate( v_complex32_2d )
+    deallocate( v_complex16_2d )
+    deallocate( v_complex8_2d )
+    !deallocate( v_real16_2d )
+    deallocate( v_real8_2d )
+    deallocate( v_real4_2d )
+    deallocate( v_int8_2d )
+    deallocate( v_int4_2d )
+    deallocate( v_int2_2d )
+    deallocate( v_int1_2d )
+    deallocate( v_bool8_2d )
+    deallocate( v_bool4_2d )
+    deallocate( v_bool2_2d )
+    deallocate( v_bool1_2d )
+  end subroutine
+
 end module
 
 
@@ -338,11 +403,10 @@ subroutine test_hashmap()
   _map_ref(hashmap)
 
   call set( v_hashmap, 'submap', Item_of( clone( ref_ptr ) ) )
-  ref_1 = ref( get( v_hashmap, 'submap' ) )
-  p_hashmap => hashmap( ref_1 )
   p_hashmap => hashmap( ref( get( v_hashmap, 'submap' ) ) )
+  call set( p_hashmap, 'subsubmap', Item_of( clone( ref_ptr ) ) )
 
-  call delete( v_hashmap )
+  call delete( ref_1 )
 
 end subroutine
 
@@ -359,6 +423,7 @@ program test_adt
   call test_list()
   call test_hashmap()
 
-  call hashmap_clear_cache() ! TODO: check memory leaks!
+  call cleanup_basedata()
+  call hashmap_clear_cache()
 
 end
