@@ -42,7 +42,7 @@ module impl_hashmap__
 
   type, public :: HashMapIndex_t
     type(HashMap_t), pointer :: host => null()
-    integer                  :: idx  =  0
+    integer                  :: idx  =  -1
     type(ListIndex_t)        :: bucket
   end type
 
@@ -134,6 +134,12 @@ module impl_hashmap__
       import HashMapIndex_t
       type(HashMapIndex_t) :: self
     end function
+
+    logical &
+    function hashmapindex_set_next_c( self )
+      import HashMapIndex_t
+      type(HashMapIndex_t), intent(inout) :: self
+    end function
   end interface
 contains
 
@@ -147,6 +153,7 @@ end module
   function hashmap_object_size_c() result(res)
     use impl_hashmap__; implicit none
     type (HashMap_t) :: tmp
+
     res = storage_size(tmp) / 8
   end function
 
@@ -157,7 +164,18 @@ end module
     use impl_hashmap__; implicit none
     type(HashMap_t), intent(in) :: self
     integer(kind=4)             :: res
+
     res = self%items
+  end function
+
+
+!_PROC_EXPORT(hashmap_is_valid_c)
+  pure logical &
+  function hashmap_is_valid_c( self ) result(res)
+    use impl_hashmap__; implicit none
+    type(HashMap_t), intent(in) :: self
+
+    res = associated( self%indexVector )
   end function
 
 
@@ -191,6 +209,7 @@ end module
   subroutine hashmap_init_c( self )
     use impl_hashmap__; implicit none
     type(HashMap_t), intent(inout) :: self
+
     call hashmap_init_sized_c( self, default_indexLimits(1), default_indexLimits(2) )
   end subroutine
 
@@ -261,6 +280,7 @@ end module
   subroutine hashmap_clear_c( self )
     use impl_hashmap__; implicit none
     type(HashMap_t), intent(inout) :: self
+
     call hashmap_flush_( self, hashmap_nodeCache, .false. )
   end subroutine
 
@@ -269,6 +289,7 @@ end module
   subroutine hashmap_delete_c( self )
     use impl_hashmap__; implicit none
     type(HashMap_t), intent(inout) :: self
+
     call hashmap_flush_( self, hashmap_nodeCache, .true. )
   end subroutine
 
@@ -314,6 +335,7 @@ end module
   subroutine hashmap_clear_cache_c()
     use impl_hashmap__, only: clear, hashmap_nodeCache
     implicit none
+
     call clear( hashmap_nodeCache )
   end subroutine
 
@@ -362,7 +384,8 @@ end module
 
 !_PROC_EXPORT(hashmap_set_c)
   subroutine hashmap_set_c( self, key, val )
-    use impl_hashmap__; implicit none
+    use impl_hashmap__, only: HashMap_t, Item_t, hashmap_get_value_ref_, assign
+    implicit none
     type(HashMap_t), intent(inout) :: self
     character(len=*),   intent(in) :: key
     type(Item_t),       intent(in) :: val
@@ -375,20 +398,24 @@ end module
 
 !_PROC_EXPORT(hashmap_get)
   function hashmap_get( self, key ) result(res)
-    use impl_hashmap__; implicit none
+    use impl_hashmap__, only: HashMap_t, Item_t, hashmap_get_value_ref_
+    implicit none
     type(HashMap_t)              :: self
     character(len=*), intent(in) :: key
     type(Item_t),        pointer :: res
+
     res => hashmap_get_value_ref_( self, key, .true. )
   end function
 
 
 !_PROC_EXPORT(hashmap_get_c)
   subroutine hashmap_get_c( res, self, key )
-    use impl_hashmap__; implicit none
+    use impl_hashmap__, only: c_ptr, HashMap_t, c_loc, hashmap_get_value_ref_
+    implicit none
     type(c_ptr),      intent(inout) :: res
     type(HashMap_t)                 :: self
     character(len=*), intent(in)    :: key
+
     res = c_loc( hashmap_get_value_ref_( self, key, .true. ) )
   end subroutine
 
@@ -446,7 +473,8 @@ end module
 
 !_PROC_EXPORT(hashmap_get_ptr_c)
   subroutine hashmap_get_ptr_c( res, self, key )
-    use impl_hashmap__; implicit none
+    use impl_hashmap__, only: c_ptr, HashMap_t, Item_t, hashmap_get_ptr, c_loc, C_NULL_PTR
+    implicit none
     type(c_ptr),      intent(inout) :: res
     type(HashMap_t)                 :: self
     character(len=*), intent(in)    :: key
@@ -481,7 +509,7 @@ end module
       new_size = min( new_size, self%indexLimits(2) )
 
       if (new_size /= cur_size) then
-        items    = self%items
+        items = self%items
         call initialize( bufList )
         call hashmap_setup_index_( self, new_size, bufList )
       
@@ -504,6 +532,7 @@ end module
     type(HashMap_t), intent(in) :: self
     integer                     :: stats(6) ! 1=slots, 2=used, 3=items, 4=minLen, 5=maxLen, 6=resizeCnt
     integer                     :: i, cnt
+
     stats    = 0;
     stats(1) = size(self%indexVector)
     stats(4) = self%items
@@ -525,6 +554,7 @@ end module
     implicit none
     integer(kind=4)           :: numItems, missing
     type(HashNode_t), pointer :: mapItem
+
     missing = numItems - len( hashmap_nodeCache )
     do while (missing > 0)
       call append( hashmap_nodeCache, new_ListNode( mapItem ) )
@@ -535,10 +565,12 @@ end module
 
 !_PROC_EXPORT(hashmap_remove_key_c)
   subroutine hashmap_remove_key_c( self, key )
-    use impl_hashmap__; implicit none
+    use impl_hashmap__, only: HashMap_t, hashmap_unset_
+    implicit none
     type(HashMap_t), intent(inout) :: self
     character(len=*),   intent(in) :: key
     logical                        :: ignored
+
     ignored = hashmap_unset_( self, key )
   end subroutine
 
@@ -546,19 +578,23 @@ end module
 !_PROC_EXPORT(hashmap_unset_key_c)
   logical &
   function hashmap_unset_key_c( self, key ) result(res)
-    use impl_hashmap__; implicit none
+    use impl_hashmap__, only: HashMap_t, hashmap_unset_
+    implicit none
     type(HashMap_t), intent(inout) :: self
     character(len=*),   intent(in) :: key
+
     res = hashmap_unset_( self, key )
   end function
 
 
 !_PROC_EXPORT(hashmap_pop_key)
   function hashmap_pop_key( self, key ) result(res)
-    use impl_hashmap__; implicit none
+    use impl_hashmap__, only: HashMap_t, Item_t, hashmap_unset_
+    implicit none
     type(HashMap_t), intent(inout) :: self
     character(len=*),   intent(in) :: key
     type(Item_t),          pointer :: res
+
     if (.not. hashmap_unset_( self, key, res )) &
       res => null()
   end function
@@ -566,7 +602,8 @@ end module
 
 !_PROC_EXPORT(hashmap_pop_key_c)
   subroutine hashmap_pop_key_c( res, self, key )
-    use impl_hashmap__; implicit none
+    use impl_hashmap__, only: c_ptr, HashMap_t, Item_t, hashmap_unset_, c_loc, C_NULL_PTR
+    implicit none
     type(c_ptr),      intent(inout) :: res
     type(HashMap_t),  intent(inout) :: self
     character(len=*), intent(in)    :: key
@@ -581,7 +618,7 @@ end module
   logical &
   function hashmap_unset_( self, key, valTgt ) result(res)
     use impl_hashmap__, only: HashMap_t, Item_t, HashNode_t, ListIndex_t, &
-                             hashmap_locate_item_, hashmap_nodeCache, index, append, HashNode
+                              hashmap_locate_item_, hashmap_nodeCache, index, append, HashNode
     implicit none
     type(HashMap_t),               intent(inout) :: self
     character(len=*),                 intent(in) :: key
@@ -619,11 +656,13 @@ end module
 
 !_PROC_EXPORT(hashmap_set_default_c)
   subroutine hashmap_set_default_c( res, self, key, defaultVal )
-    use impl_hashmap__; implicit none
+    use impl_hashmap__, only: c_ptr, HashMap_t, Item_t, c_loc, hashmap_set_default
+    implicit none
     type(c_ptr),         intent(inout) :: res
     type(HashMap_t),     intent(inout) :: self
     character(len=*),       intent(in) :: key
     type(Item_t)                       :: defaultVal
+
     res = c_loc( hashmap_set_default( self, key, defaultVal ) )
   end subroutine
 
@@ -631,10 +670,12 @@ end module
 !_PROC_EXPORT(hashmap_has_key_c)
   logical &
   function hashmap_has_key_c( self, key ) result(res)
-    use impl_hashmap__; implicit none
+    use impl_hashmap__, only: HashMap_t, ListIndex_t, hashmap_locate_item_
+    implicit none
     type(HashMap_t)              :: self
     character(len=*), intent(in) :: key
     type(ListIndex_t)            :: bucket
+
     res = hashmap_locate_item_( self, key, bucket )
   end function
 
@@ -645,6 +686,7 @@ end module
     type(HashMap_t), target, intent(in) :: self
     type(HashMapIndex_t)                :: res
     logical                             :: ok
+
     res%host => self
     ok = hashmapindex_next_bucket( res )
   end function
@@ -669,12 +711,63 @@ end module
   end function
 
   
+!_PROC_EXPORT(hashmapindex_next_c)
+  subroutine hashmapindex_next_c( self )
+    use impl_hashmap__; implicit none
+    type(HashMapIndex_t), intent(inout) :: self
+    logical                             :: ok
+
+    ok = hashmapindex_set_next_c( self )
+  end subroutine
+
+  
+!_PROC_EXPORT(hashmapindex_set_next_c)
+  logical &
+  function hashmapindex_set_next_c( self ) result(res)
+    use impl_hashmap__, only: HashMapIndex_t, next, is_valid, hashmapindex_next_bucket
+    implicit none
+    type(HashMapIndex_t), intent(inout) :: self
+  
+    call next( self%bucket )
+    res = is_valid( self%bucket )
+    if (.not. res) &
+      res = hashmapindex_next_bucket( self )
+  end function
+
+
+!_PROC_EXPORT(hashmapindex_is_valid_c)
   pure logical &
   function hashmapindex_is_valid_c( self ) result(res)
     use impl_hashmap__; implicit none
     type(HashMapIndex_t), intent(in) :: self
+
     res = associated( self%host )
     if (res) &
       res = self%idx < size(self%host%indexVector)
+      ! NOTE: it's not needed to check the validity of bucket here, since the only way to
+      ! get bucket invalid is to exhaust it. This can only happen for the
+      ! last bucket, in which case idx gets equal to the size of hosts indexVector.
+  end function
+
+
+  function hashmapindex_key( self ) result(res)
+    use impl_hashmap__, only: HashMapIndex_t, String_t, HashNode_t, HashNode
+    type(HashMapIndex_t), intent(in) :: self
+    type(String_t),          pointer :: res
+    type(HashNode_t),        pointer :: node
+
+    node => HashNode( self%bucket )
+    res  => node%key
+  end function
+
+
+  function hashmapindex_value( self ) result(res)
+    use impl_hashmap__, only: HashMapIndex_t, Item_t, HashNode_t, HashNode
+    type(HashMapIndex_t), intent(in) :: self
+    type(Item_t),            pointer :: res
+    type(HashNode_t),        pointer :: node
+
+    node => HashNode( self%bucket )
+    res  => node%value
   end function
 

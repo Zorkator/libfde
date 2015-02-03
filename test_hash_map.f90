@@ -19,7 +19,7 @@ subroutine test_HashMap( num, idx_min, idx_max )
   implicit none
 
   type (HashMap_t)       :: map
-  character(20)          :: key
+  character(20)          :: key_buf
   integer                :: num, idx_min, idx_max, i, stats(6)
   logical                :: ok
   type (Item_t)          :: val, val2
@@ -39,8 +39,8 @@ subroutine test_HashMap( num, idx_min, idx_max )
   ! fill map
   call startTiming(t)
   do i = 1, num
-    write( key, '(i10)' ) i
-    call set( map, key, Item_of(i) )
+    write( key_buf, '(i10)' ) i
+    call set( map, key_buf, Item_of(i) )
   end do
   call getTiming('write',t)
 
@@ -49,19 +49,19 @@ subroutine test_HashMap( num, idx_min, idx_max )
   if (stats(3) .ne. len(map)) &
     write(*,*) "item count missmatch! counted: ", stats(3), " vs. registered: ", len(map)
 
-  write( key, '(i10)' ) 42
-  ok = unset( map, key )
+  write( key_buf, '(i10)' ) 42
+  ok = unset( map, key_buf )
 
   ! read back ...
   call startTiming(t)
   do i = 1, num
-    write( key, '(i10)' ) i
-    val = get( map, key )
+    write( key_buf, '(i10)' ) i
+    val = get( map, key_buf )
     if (is_valid(val)) then
       if (int4(val) == i) &
         cycle
     end if
-    print*, trim(key), " = ????"
+    print*, trim(key_buf), " = ????"
   end do
   call getTiming('read',t)
 
@@ -84,7 +84,7 @@ program testinger
   type(HashMap_t)         :: map, map2
   type(Item_t),   pointer :: val
   type(String_t), pointer :: s
-  character(len=20)       :: key
+  character(len=20)       :: key_buf
   integer                 :: i
 
   call initialize( map )
@@ -144,13 +144,13 @@ program testinger
 
   call initialize( map2, 10, 569 )
   do i = 0, 999
-    write(key,"(A3,I6)") "key", i
-    call set( map2, key, Item_of(i) )
+    write(key_buf,"(A3,I6)") "key", i
+    call set( map2, key_buf, Item_of(i) )
   end do
 
   do i = 0, 999
-    write(key,"(A3,I6)") "key", i
-    if (i /= int4( get( map2, key ) )) &
+    write(key_buf,"(A3,I6)") "key", i
+    if (i /= int4( get( map2, key_buf ) )) &
       print *, "mismatch for value ", i
   end do
 

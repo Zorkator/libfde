@@ -371,8 +371,11 @@ subroutine test_hashmap()
   use test_basedata
   implicit none
 
-  type(Ref_t), pointer :: ref_ptr
-  type(Ref_t)          :: ref_1
+  type(Ref_t),      pointer :: ref_ptr
+  type(Ref_t)               :: ref_1
+  type(HashMapIndex_t)      :: idx
+  type(Item_t),     pointer :: val
+  type(TypeInfo_t), pointer :: ti
 
 # define _map_get( typeId ) \
     _paste(p_,typeId) => typeId( get( v_hashmap, _str(typeId) ) ) ;\
@@ -405,6 +408,19 @@ subroutine test_hashmap()
   call set( v_hashmap, 'submap', Item_of( clone( ref_ptr ) ) )
   p_hashmap => hashmap( ref( get( v_hashmap, 'submap' ) ) )
   call set( p_hashmap, 'subsubmap', Item_of( clone( ref_ptr ) ) )
+
+  idx = index( p_hashmap )
+  do while (is_valid(idx))
+    val => value(idx)
+    if (is_ref(val)) then
+      ref_ptr => ref( val )
+      ti      => dynamic_type( ref_ptr )
+    else
+      ti => dynamic_type( val )
+    end if
+    print *, str(key(idx)), ' => ', trim(ti%baseType)
+    call next( idx )
+  end do
 
   call delete( ref_1 )
 

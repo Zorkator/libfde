@@ -38,10 +38,12 @@ module adt_hashmap
 
   public :: initialize
   public :: len
+  public :: is_valid
   public :: clear
   public :: delete
   public :: set, get, getPtr, remove, unset, pop
   public :: setDefault, hasKey
+  public :: index, next, set_next, key, value
   public :: hashmap_clear_cache, hashmap_get_stats
   public :: assign, assignment(=)
   public :: default_indexLimits
@@ -71,6 +73,20 @@ module adt_hashmap
       import HashMap_t
       type(HashMap_t), intent(in) :: self
       integer(kind=4)             :: res
+    end function
+  end interface
+
+  interface is_valid
+    pure logical &
+    function hashmap_is_valid_c( self )
+      import HashMap_t
+      type(HashMap_t), intent(in) :: self
+    end function
+
+    pure logical &
+    function hashmapindex_is_valid_c( self )
+      import HashMapIndex_t
+      type(HashMapIndex_t), intent(in) :: self
     end function
   end interface
 
@@ -137,7 +153,7 @@ module adt_hashmap
 
   interface unset
     logical &
-    function hashmap_unset_key_c( self, key ) result(res)
+    function hashmap_unset_key_c( self, key )
       import HashMap_t
       type(HashMap_t), intent(inout) :: self
       character(len=*),   intent(in) :: key
@@ -169,6 +185,45 @@ module adt_hashmap
       import HashMap_t
       type(HashMap_t)              :: self
       character(len=*), intent(in) :: key
+    end function
+  end interface
+
+  interface index       
+    function hashmap_index( self ) result(res)
+      import HashMap_t, HashMapIndex_t
+      type(HashMap_t), target, intent(in) :: self
+      type(HashMapIndex_t)                :: res
+    end function
+  end interface
+
+  interface next        
+    subroutine hashmapindex_next_c( self )
+      import HashMapIndex_t
+      type(HashMapIndex_t), intent(inout) :: self
+    end subroutine
+  end interface
+
+  interface set_next
+    logical &
+    function hashmapindex_set_next_c( self )
+      import HashMapIndex_t
+      type(HashMapIndex_t), intent(inout) :: self
+    end function
+  end interface
+
+  interface key
+    function hashmapindex_key( self ) result(res)
+      import HashMapIndex_t, String_t
+      type(HashMapIndex_t), intent(in) :: self
+      type(String_t),          pointer :: res
+    end function
+  end interface
+
+  interface value
+    function hashmapindex_value( self ) result(res)
+      import HashMapIndex_t, Item_t
+      type(HashMapIndex_t), intent(in) :: self
+      type(Item_t),            pointer :: res
     end function
   end interface
 
