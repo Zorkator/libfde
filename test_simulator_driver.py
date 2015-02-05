@@ -22,16 +22,16 @@ class Simulator(object):
     self._hooks = hooks.contents
     self._hdl.init_simulator_()
     self._cbs = dict()
-    ids, idtab, names = self._state.get('id_array'), self._state.get('id_table'), self._state.get('name_array')
-    self._id_array    = ids.castTo( (c_char * 10) * ids.shape[0] )
-    self._id_table    = idtab.castTo( (c_char * 5) * reduce( operator.mul, idtab.shape ) )
-    self._name_array  = names.castTo( (c_char * 48) * names.shape[0] )
+    #ids, idtab, names = self['id_array'], self['id_table'], self['name_array']
+    #self._id_array    = ids.castTo( (c_char * 10) * ids.shape[0] )
+    #self._id_table    = idtab.castTo( (c_char * 5) * reduce( operator.mul, idtab.shape ) )
+    #self._name_array  = names.castTo( (c_char * 48) * names.shape[0] )
     
   def __getitem__( self, ident ):
-    return self._state.get(ident).contents
+    return self._state.get(ident).value.contents
     
   def __setitem__( self, ident, val ):
-    ref = self._state.get(ident)
+    ref = self._state.get(ident).value
     if ref.rank: ref.contents[:]    = val
     else       : ref.contents.value = val
     
@@ -48,15 +48,15 @@ s = Simulator()
 def step_cb():
   print s['t']
 
-s.setCallback( 'step', step_cb )
-for i in s._id_array:
-  print i[:]
-for i in s._name_array:
-  print i[:]
-s.run()
-
-for i in s['string_array']:
-  i.value = "dynamic string %s" % repr(i)
+#s.setCallback( 'step', step_cb )
+#for i in s._id_array:
+#  print i[:]
+#for i in s._name_array:
+#  print i[:]
+#s.run()
+#
+#for i in s['string_array']:
+#  i.value = "dynamic string %s" % repr(i)
 
 #s['t'] = 0
 #s['dt'] = 0.001

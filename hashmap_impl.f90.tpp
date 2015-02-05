@@ -8,6 +8,7 @@ module impl_hashmap__
   use adt_item
   use adt_ref
   use adt_crc
+  use adt_memoryref
   use iso_c_binding
 
   type(List_t), target :: hashmap_nodeCache
@@ -153,6 +154,16 @@ end module
   function hashmap_object_size_c() result(res)
     use impl_hashmap__; implicit none
     type (HashMap_t) :: tmp
+
+    res = storage_size(tmp) / 8
+  end function
+
+
+!_PROC_EXPORT(hashmapindex_object_size_c)
+  integer(kind=4) &
+  function hashmapindex_object_size_c() result(res)
+    use impl_hashmap__; implicit none
+    type (HashMapIndex_t) :: tmp
 
     res = storage_size(tmp) / 8
   end function
@@ -692,6 +703,20 @@ end module
   end function
 
 
+!_PROC_EXPORT(hashmap_index_c)
+  subroutine hashmap_index_c( res, self )
+    use impl_hashmap__; implicit none
+    type(HashMapIndex_t), intent(inout) :: res
+    type(HashMap_t), target, intent(in) :: self
+    type(HashMapIndex_t)                :: proto
+    logical                             :: ok
+
+    res      =  proto
+    res%host => self
+    ok = hashmapindex_next_bucket( res )
+  end subroutine
+
+
   logical &
   function hashmapindex_next_bucket( self ) result(res)
     use impl_hashmap__, only: HashMapIndex_t, index, is_valid
@@ -750,8 +775,10 @@ end module
   end function
 
 
+!_PROC_EXPORT(hashmapindex_key)
   function hashmapindex_key( self ) result(res)
     use impl_hashmap__, only: HashMapIndex_t, String_t, HashNode_t, HashNode
+    implicit none
     type(HashMapIndex_t), intent(in) :: self
     type(String_t),          pointer :: res
     type(HashNode_t),        pointer :: node
@@ -761,8 +788,10 @@ end module
   end function
 
 
+!_PROC_EXPORT(hashmapindex_value)
   function hashmapindex_value( self ) result(res)
     use impl_hashmap__, only: HashMapIndex_t, Item_t, HashNode_t, HashNode
+    implicit none
     type(HashMapIndex_t), intent(in) :: self
     type(Item_t),            pointer :: res
     type(HashNode_t),        pointer :: node
@@ -770,4 +799,19 @@ end module
     node => HashNode( self%bucket )
     res  => node%value
   end function
+
+
+!_PROC_EXPORT(hashmapindex_item_c)
+  subroutine hashmapindex_item_c( key, val, self )
+    use impl_hashmap__, only: MemoryRef_t, c_ptr, HashMapIndex_t, HashNode_t, HashNode, c_loc
+    implicit none
+    type(MemoryRef_t), intent(inout) :: key
+    type(c_ptr),       intent(inout) :: val
+    type(HashMapIndex_t), intent(in) :: self
+    type(HashNode_t),        pointer :: node
+    
+    node   => HashNode( self%bucket )
+    call basestring_memoryref_c( key, node%key )
+    val = c_loc( node%value )
+  end subroutine
 
