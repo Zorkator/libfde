@@ -329,7 +329,7 @@ end module
   subroutine list_append_node_c( self, node )
     use impl_list__, only: List_t, ListNode_t, list_link_node_
     implicit none
-    type (List_t), target :: self
+    type (List_t),     target :: self
     type (ListNode_t), target :: node
     call list_link_node_( node, self%node%prev, self%node )
     self%length = self%length + 1
@@ -361,7 +361,7 @@ end module
     use iso_c_binding
     implicit none
     type(List_t), target, intent(inout) :: self
-    type(ListNode_t),               pointer :: ptr, delPtr
+    type(ListNode_t),           pointer :: ptr, delPtr
     type(ValueNode_t),          pointer :: valNodePtr
 
     ptr => self%node%next
@@ -416,11 +416,11 @@ end module
   function list_index_node_( self, at, stride ) result(res)
     use impl_list__, only: List_t, ListNode_t, ListIndex_t
     implicit none
-    type(List_t), target, intent(in) :: self
-    type(ListNode_t),   target, optional :: at
-    integer(kind=4),            optional :: stride
-    type(ListIndex_t)                    :: res
-    logical                              :: ok
+    type(List_t),   target, intent(in) :: self
+    type(ListNode_t), target, optional :: at
+    integer(kind=4),          optional :: stride
+    type(ListIndex_t)                  :: res
+    logical                            :: ok
     res%host => self
     if (present(at))   then; res%node => at
                        else; res%node => self%node%next

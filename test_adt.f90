@@ -356,13 +356,50 @@ end subroutine
 subroutine test_item()
   use test_basedata
   implicit none
-
+  !type(Item_t) :: item_array(5)
+  !item_array(1:) = v_item_1d(1:) !< shallow copy! fortran can't do proper array assignment with derived types!!!
 end subroutine
 
 
 subroutine test_list()
   use test_basedata
   implicit none
+  type(ListIndex_t)         :: idx
+  type(TypeInfo_t), pointer :: ti
+  !type(List_t) :: list_array(5)
+  !list_array(1:) = v_list_1d(1:) !< shallow copy! fortran can't do proper array assignment with derived types!!!
+
+# define _list_append( typeId ) \
+    call append( v_list, new_ListNode_of( _paste(v_,typeId) ) )
+  
+  _list_append(bool1)
+  _list_append(bool2)
+  _list_append(bool4)
+  _list_append(bool8)
+  _list_append(int1)
+  _list_append(int2)
+  _list_append(int4)
+  _list_append(int8)
+  _list_append(real4)
+  _list_append(real8)
+  _list_append(complex8)
+  _list_append(complex16)
+  _list_append(c_void_ptr)
+  _list_append(char10)
+  _list_append(string)
+  _list_append(ref)
+  _list_append(item)
+  _list_append(list)
+  _list_append(hashmap)
+
+  idx = index( v_list )
+  do while (is_valid(idx))
+    ti => dynamic_type( idx )
+    print *, trim(ti%baseType)
+    call next( idx )
+  end do
+
+  call delete( v_list )
 
 end subroutine
 
@@ -421,7 +458,7 @@ subroutine test_hashmap()
     print *, str(key(idx)), ' => ', trim(ti%baseType)
     call next( idx )
   end do
-
+  
   call delete( ref_1 )
 
 end subroutine
