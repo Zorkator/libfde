@@ -79,12 +79,12 @@ module adt_basetypes
   !_TypeGen_declare_ListNode( alias, ref, type(RefEncoding_t), dimension(:) )
 
 
-  !_TypeGen_declare_RefType( public, charString_1d, character(len=:), dimension(:) )
-  !_TypeGen_declare_RefType( public, charString_2d, character(len=:), dimension(:,:) )
+  !!_TypeGen_declare_RefType( public, charString_1d, character(len=:), dimension(:) )
+  !!_TypeGen_declare_RefType( public, charString_2d, character(len=:), dimension(:,:) )
   !! FIXME: ^ these two types cause gfortran to freak out with an internal compiler error >:-(
-  !!_TypeGen_declare_RefType( public, char10,    character(len=10), scalar )
-  !!_TypeGen_declare_RefType( public, char10_1d, character(len=10), dimension(:) )
-  !!_TypeGen_declare_RefType( public, char10_2d, character(len=10), dimension(:,:) )
+  !_TypeGen_declare_RefType( public, char10,    character(len=10), scalar )
+  !_TypeGen_declare_RefType( public, char10_1d, character(len=10), dimension(:) )
+  !_TypeGen_declare_RefType( public, char10_2d, character(len=10), dimension(:,:) )
 
   !_TypeGen_declare_RefType( public, String_1d, type(String_t),  dimension(:) )
   !_TypeGen_declare_RefType( public, String_2d, type(String_t),  dimension(:,:) )

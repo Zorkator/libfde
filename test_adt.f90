@@ -356,7 +356,8 @@ end subroutine
 subroutine test_item()
   use test_basedata
   implicit none
-  !type(Item_t) :: item_array(5)
+  type(Item_t) :: item_array(5)
+
   !item_array(1:) = v_item_1d(1:) !< shallow copy! fortran can't do proper array assignment with derived types!!!
 end subroutine
 
@@ -364,11 +365,11 @@ end subroutine
 subroutine test_list()
   use test_basedata
   implicit none
+  !type(List_t) :: list_array(5)
   type(ListIndex_t)         :: idx
   type(TypeInfo_t), pointer :: ti
-  !type(List_t) :: list_array(5)
-  !list_array(1:) = v_list_1d(1:) !< shallow copy! fortran can't do proper array assignment with derived types!!!
 
+  !list_array(1:) = v_list_1d(1:) !< shallow copy! fortran can't do proper array assignment with derived types!!!
 # define _list_append( typeId ) \
     call append( v_list, new_ListNode_of( _paste(v_,typeId) ) )
   
@@ -463,11 +464,70 @@ subroutine test_hashmap()
 
 end subroutine
 
+module blablu
+  contains
 
+pure integer*4 &
+function dings( val, buf ) result(res)
+  real*4,          intent(in) :: val
+  character(len=*), pointer :: buf
+  write(buf,*) val
+  res = len_trim(buf)
+end function
+
+
+function dings2( val, buf ) result(res)
+  real*4, intent(in) :: val
+  character(len=*), pointer :: buf
+  character(len=dings(val,buf)), pointer :: res
+  res => buf
+end function
+
+
+  subroutine bla1( val, ptr )
+    real*4,                       intent(in) :: val
+    character(len=:), pointer, intent(inout) :: ptr
+    write(ptr,*) val
+  end subroutine
+
+  function len_trim_ptr( buf ) result(res)
+    character(len=*), target,  intent(in) :: buf
+    character(len=len_trim(adjustl(buf))), pointer :: res
+    res => buf
+  end function
+
+  function val_to_str( val, buf ) result(res)
+    real*4,              intent(in) :: val
+    character(len=*), intent(inout) :: buf
+    character(len=:),       pointer :: res
+    write(buf, *) val
+    res => len_trim_ptr(buf)
+  end function
+
+  function func1( val, buf ) result(res)
+    real*4,              intent(in) :: val
+    character(len=*), target, intent(inout) :: buf
+    character(len=:),       pointer :: res
+    character(len=30)               :: valbuf
+    integer*4                       :: begin
+    write(valbuf, *) val
+    begin = len_trim(buf)+1
+    buf(begin:begin+len_trim(valbuf)) = trim(adjustl(valbuf))
+    res => buf
+  end function
+
+end module
 
 
 program test_adt
   use test_basedata
+  use blablu
+  character(len=30), target :: buffer
+
+  write(buffer,*) 234.4
+  print*, len_trim_ptr(buffer)
+  
+  print *, func1( 2.5, buffer ) // func1( 1.34, buffer ) // func1( -234.8, buffer )
 
   call init_basedata()
   call test_string()
