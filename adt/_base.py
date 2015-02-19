@@ -2,6 +2,7 @@
 from ctypes import CDLL, Union, sizeof, Structure, c_int8
 from os     import environ as _env, pathsep as _pathsep, path as _path
 import sys, platform
+from distutils.sysconfig import get_python_lib
 
 _archBit     = (32, 64)[sys.maxsize > 2**32]
 _archWin     = ('Win32', 'x64')[sys.maxsize > 2**32]
@@ -22,7 +23,9 @@ _libNames    = (
 
 
 def _iter_searchPaths():
-  pathList = ['.']
+  pathList = ['.',
+              get_python_lib()
+             ]
   pathList.extend( (_env.get('LD_LIBRARY_PATH') or _env['PATH']).split( _pathsep ) )
   return iter(pathList)
 
@@ -76,7 +79,7 @@ class Compound(Union):
       return False
     if name in ('__members__', '__methods__'):
       return {}
-  
+
     for fmt in self.__typeprocs__:
       try   : attr = getattr(_libHandle, fmt.format(name)); break
       except: pass
