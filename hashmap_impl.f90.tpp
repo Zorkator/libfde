@@ -142,6 +142,7 @@ module impl_hashmap__
       type(HashMapIndex_t), intent(inout) :: self
     end function
   end interface
+
 contains
 
   !_TypeGen_implementAll()
@@ -803,14 +804,14 @@ end module
 
 !_PROC_EXPORT(hashmapindex_item_c)
   subroutine hashmapindex_item_c( key, val, self )
-    use impl_hashmap__, only: MemoryRef_t, c_ptr, HashMapIndex_t, HashNode_t, HashNode, c_loc
+    use impl_hashmap__, only: MemoryRef_t, c_ptr, HashMapIndex_t, HashNode_t, HashNode, c_loc, basestring_memoryref_c
     implicit none
     type(MemoryRef_t), intent(inout) :: key
     type(c_ptr),       intent(inout) :: val
     type(HashMapIndex_t), intent(in) :: self
     type(HashNode_t),        pointer :: node
     
-    node   => HashNode( self%bucket )
+    node => HashNode( self%bucket )
     call basestring_memoryref_c( key, node%key )
     val = c_loc( node%value )
   end subroutine

@@ -4,6 +4,7 @@
 module adt_string
   use iso_c_binding
   use adt_ref
+  use adt_memoryref
   use adt_basestring, only: BaseString_t, basestring_len_ref, &
                             attribute_permanent, attribute_volatile, permanent_string, temporary_string
   implicit none
@@ -32,6 +33,7 @@ module adt_string
   public :: delete
   public :: set_attribute, attribute_permanent, attribute_volatile
   public :: permanent_string, temporary_string
+  public :: basestring_memoryref_c
 
   public :: adjustl
   public :: adjustr
@@ -494,6 +496,12 @@ module adt_string
       type(String_t), intent(inout) :: ds
       integer,        intent(in)    :: has_proto
       type(String_t), intent(in)    :: proto
+    end subroutine
+
+    subroutine basestring_memoryref_c( res, bs )
+      import MemoryRef_t, String_t
+      type(MemoryRef_t), intent(inout) :: res
+      type(String_t),    intent(in)    :: bs
     end subroutine
   end interface
 
