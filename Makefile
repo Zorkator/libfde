@@ -22,7 +22,7 @@ mk_TAG              = $(MYOR).$(F90C).$(CFG).$(ARCH)
 .SECONDARY:
 .PHONY: clean
 
-TPP_FILES = $(wildcard *.tpp)
+TPP_FILES = $(wildcard *.f90_tpp)
 BASE_OBJ  = crc.o crc_impl.o memoryref.o typeinfo.o typeinfo_impl.o basestring.o basestring_impl.o ref.o ref_impl.o string.o string_impl.o \
 						list.o list_impl.o basetypes.o item.o item_impl.o hashmap.o hashmap_impl.o
 
@@ -66,7 +66,7 @@ test_adt: $(BASE_OBJ) test_adt.o
 	$(mk_F90C) $(mk_F90_FLAGS) $(mk_INCLUDE_PATHLIST) $? -o $@.$(mk_TAG)
 
 clean:
-	rm -f *.mod *.o *.$(mk_TAG) $(TPP_FILES:%.tpp=%)
+	rm -f *.mod *.o *.$(mk_TAG) $(TPP_FILES:%.f90_tpp=%)
 
 mrproper: clean
 	rm *.so
@@ -89,7 +89,7 @@ testsimdriver: testsim
 	$(mk_F90C) -ggdb -m$(ARCH) -L. test_simulator_driver.o -ladt.$(mk_TAG) test_simulator.$(mk_TAG).so -o test_simulator_driver.$(mk_TAG)
 	ln -fs test_simulator_driver.$(mk_TAG) test_simulator_driver
 
-%.f90: %.f90.tpp
+%.f90: %.f90_tpp
 	python typegen.py $< -o $@
 
 %.o: %.f90
