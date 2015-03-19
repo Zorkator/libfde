@@ -1,6 +1,4 @@
 
-SHELL = /bin/bash
-
 TPP_FILES       = $(wildcard *.f90_tpp)
 SOURCE_FILES    = $(filter-out test_%.f90,$(wildcard *.f90)) $(TPP_FILES:%.f90_tpp:%.f90)
 OUT_TYPE        = shared
@@ -35,4 +33,9 @@ $(mk_OUT_FILE): $(mk_OBJECTS)
 	$(cmd_FINALIZE)
 
 $(mk_OBJECTS): | $(sort $(mk_OUTPUT_DIRS:%=%\/))
+
+
+BINARY_TAG.exe = 'tag text                           [br]' \
+                 'SVN Revision: $(svn_revision)      [br]' \
+                 '$(if $(strip $(svn_status)),Modifications:[br] - $(call mk_join,[br] - ,$(svn_status)),)'
 
