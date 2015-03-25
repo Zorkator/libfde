@@ -10,7 +10,7 @@ class HashMap(Object):
 
   def __getptr( self, getter, ident ):
     ptr = POINTER(Item)()
-    dummy = "{}".format(ptr) # de-optimize Python (????), so next line works
+    dummy = "{0}".format(ptr) # de-optimize Python (????), so next line works
     getter( byref(ptr), byref(self), c_char_p(ident), c_int(len(ident)) )
     return ptr
 

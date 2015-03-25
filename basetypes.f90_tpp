@@ -82,6 +82,10 @@ module adt_basetypes
   !!_TypeGen_declare_RefType( public, charString_1d, character(len=:), dimension(:) )
   !!_TypeGen_declare_RefType( public, charString_2d, character(len=:), dimension(:,:) )
   !! FIXME: ^ these two types cause gfortran to freak out with an internal compiler error >:-(
+  !! Until this gets finally fixed we've to options:
+  !!  1. build libadt using ifort ... ;-)
+  !!  2. work around that by defining the following three types that use a fixed length.
+  !!     HOWEVER: we can have only one certain length - otherwise fortran is nagging about ambiguity!
   !_TypeGen_declare_RefType( public, char10,    character(len=10), scalar )
   !_TypeGen_declare_RefType( public, char10_1d, character(len=10), dimension(:) )
   !_TypeGen_declare_RefType( public, char10_2d, character(len=10), dimension(:,:) )

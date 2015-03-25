@@ -10,6 +10,10 @@ _libHandle   = None
 _libFilePath = None
 _libNames    = (
   """
+	libadt.debug.{arch}.gfortran.so
+	libadt.release.{arch}.gfortran.so
+	libadt.debug.{arch}.ifort.so
+	libadt.release.{arch}.ifort.so
   libadt.0.gfortran.debug.{arch}.so
   libadt.0.gfortran.release.{arch}.so
   libadt.0.ifort.debug.{arch}.so
