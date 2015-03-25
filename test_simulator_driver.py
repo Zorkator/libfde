@@ -13,8 +13,8 @@ class Simulator(object):
   
   CALLBACK = CFUNCTYPE(None)
   
-  def __init__( self ):
-    self._hdl = CDLL('test_simulator.so')
+  def __init__( self, soname ):
+    self._hdl = CDLL( soname )
     
     state, hooks = POINTER(adt.HashMap)(), POINTER(adt.HashMap)()
     self._hdl.get_maps_( byref(state), byref(hooks) )
@@ -43,7 +43,7 @@ class Simulator(object):
       self._cbs[cbId] = func = self.CALLBACK(func)
     return self._hdl.set_callback_( c_char_p(cbId), func, c_int(len(cbId)) )
 
-s = Simulator()
+s = Simulator('exe/libtestsim_so.debug.64.gfortran.so')
 
 def step_cb():
   print s['t']

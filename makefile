@@ -17,13 +17,27 @@ FC_CFLAGS.release = $(fc_O3)
 crc_impl.gfortran = -fno-range-check $(mk_FC_CFLAGS)
 crc_impl.ifort    = -assume noold_boz $(mk_FC_CFLAGS)
 
-
 %.f90: %.f90_tpp
 	python typegen.py $< -o $@
 
-map_test:
-	@$(MAKE) built OUT_TYPE=static
-	@$(MAKE) built OUT_TYPE=exe OUT_NAME=$@ SOURCE_FILES=test_hash_map.f90 FC_LIBRARIES=adt.$(mk_TAG) FC_INCLUDE_DIRS=$(OUT_DIR)
+
+exe_opts = OUT_TYPE=exe OUT_DIR=exe OUT_NAME=$@ \
+           FC_INCLUDE_DIRS="$(OUT_DIR) include" \
+           FC_LIBRARY_DIRS=lib/$(mk_TAG)				\
+           FC_LIBRARIES=adt.$(mk_TAG)
+
+map_test: built
+	@$(MAKE) built $(exe_opts)              \
+	         SOURCE_FILES=test_hash_map.f90
+
+testsim: built
+	@$(MAKE) built $(exe_opts) \
+	         SOURCE_FILES=test_simulator.f90
+
+testsim_so: built
+	@$(MAKE) built $(exe_opts) OUT_TYPE=shared \
+	         SOURCE_FILES=test_simulator.f90
+
 
 ifneq ($(MAKEIT_DIR),)
 include $(MAKEIT_DIR)/mk.fortran

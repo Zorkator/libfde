@@ -10,8 +10,8 @@ module sim_data
   real*4, dimension(:),   allocatable :: real4_array
   real*4, dimension(:,:), allocatable :: real4_matrix
   character(10), dimension(:), allocatable  :: id_array
-  character(48), dimension(:), allocatable  :: name_array
-  character(5), dimension(:,:), allocatable :: id_table
+  character(10), dimension(:), allocatable  :: name_array
+  character(10), dimension(:,:), allocatable :: id_table
   type(String_t), dimension(:), allocatable :: string_array
 
 end module
@@ -164,6 +164,7 @@ subroutine init_simulator()
   te  = 10.0
   cnt = 0
 
+  call init_access()
   _ALLOCATE( real4_array,  (10) );    real4_array  = 0;
   _ALLOCATE( real4_matrix, (10,20) ); real4_matrix = 1;
   _ALLOCATE( string_array, (10) );
@@ -176,7 +177,7 @@ subroutine init_simulator()
   end do
 
   do i = 1,size(name_array)
-    write( name_array(i), * ), 'name entry', i
+    write( name_array(i), '(A4I5)' ), 'name', i
   end do
 
 end subroutine
@@ -216,7 +217,7 @@ subroutine run_simulation()
 
     print*, storage_size(cs_ptr)
     ref1 = get( stateMap_, id )
-    table_ptr => charString_1d(ref1)
+    table_ptr => char10_1d(ref1)
     print*, size(table_ptr)
     if (size(table_ptr) > 0) then
       print*, storage_size(table_ptr(1))/8
