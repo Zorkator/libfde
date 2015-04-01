@@ -26,7 +26,9 @@ def library_files():
                  './lib/Release.Win32/libadt.0.Release.Win32.dll']
     else:
         files = ['./lib/ifort.32/libadt.0.ifort.release.32.so',
-                 './lib/ifort.64/libadt.0.ifort.release.64.so']
+                 './lib/ifort.64/libadt.0.ifort.release.64.so',
+                 './lib/gfortran.32/libadt.0.gfortran.release.32.so',
+                 './lib/gfortran.64/libadt.0.gfortran.release.64.so']
 
     return files
 
