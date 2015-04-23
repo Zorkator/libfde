@@ -12,7 +12,7 @@ def _import( modId, what ):
 
 
 _import( 'adt._base',     [] )
-_import( 'adt._ftypes',   ['Complex8', 'Complex16', 'Complex32', 'MemoryRef'] )
+_import( 'adt._ftypes',   ['Complex8', 'Complex16', 'Complex32', 'MemoryRef', 'CALLBACK'] )
 _import( 'adt._typeinfo', ['TypeInfo'] )
 _import( 'adt._string',   ['String'] )
 _import( 'adt._item',     ['Item'] )

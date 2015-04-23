@@ -11,8 +11,6 @@ from ctypes import *
 
 class Simulator(object):
   
-  CALLBACK = CFUNCTYPE(None)
-  
   def __init__( self, soname ):
     self._hdl = CDLL( soname )
     
@@ -39,8 +37,8 @@ class Simulator(object):
     self._hdl.run_simulation_()
     
   def setCallback( self, cbId, func ):
-    if type(type(func)) is not type(self.CALLBACK):
-      self._cbs[cbId] = func = self.CALLBACK(func)
+    if type(type(func)) is not type(adt.CALLBACK):
+      self._cbs[cbId] = func = adt.CALLBACK(func)
     return self._hdl.set_callback_( c_char_p(cbId), func, c_int(len(cbId)) )
 
 s = Simulator('exe/libtestsim_so.debug.64.gfortran.so')
@@ -48,7 +46,7 @@ s = Simulator('exe/libtestsim_so.debug.64.gfortran.so')
 def step_cb():
   print s['t']
 
-#s.setCallback( 'step', step_cb )
+s.setCallback( 'step', step_cb )
 #for i in s._id_array:
 #  print i[:]
 #for i in s._name_array:

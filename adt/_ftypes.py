@@ -71,8 +71,9 @@ _mapType( 'int2',  'integer*2', c_int16 )
 _mapType( 'int4',  'integer*4', c_int32, int )
 _mapType( 'int8',  'integer*8', c_int64 )
 
-_mapType( 'real4',  'real*4', c_float )
-_mapType( 'real8',  'real*8', c_double, float )
+_mapType( 'real4',  'real*4',  c_float )
+_mapType( 'real8',  'real*8',  c_double, float )
+_mapType( 'real16', 'real*16', c_longdouble )
 
 _mapType( 'c_void_ptr', 'type(c_ptr)', POINTER(c_void_p), type(POINTER(c_void_p)) )
 
@@ -80,4 +81,6 @@ _complexType( 'complex8',  'complex*8',  c_float )
 _complexType( 'complex16', 'complex*16', c_double, complex )
 _complexType( 'complex32', 'complex*32', c_longdouble )
 
+CALLBACK = CFUNCTYPE(None)
+_mapType( 'Callback', 'procedure(Callback_itf)', CALLBACK )
 
