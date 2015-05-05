@@ -37,14 +37,19 @@ def _iter_searchPaths():
 class BreakLoops(Exception): pass
 
 try:
-  for path in _iter_searchPaths():
-    for lib in _libNames:
-      _libFilePath = _path.abspath( path ) + _path.sep + lib
-      if _path.isfile( _libFilePath ):
-        _libHandle = CDLL( _libFilePath )
-        raise BreakLoops
+  _libFilePath = _env.get('LIBADT')
+  if _libFilePath:
+    _libHandle = CDLL( _libFilePath )
+    raise BreakLoops
   else:
-    raise OSError("unable to locate ADT's shared library")
+    for path in _iter_searchPaths():
+      for lib in _libNames:
+        _libFilePath = _path.abspath( path ) + _path.sep + lib
+        if _path.isfile( _libFilePath ):
+          _libHandle = CDLL( _libFilePath )
+          raise BreakLoops
+    else:
+      raise OSError("unable to locate ADT's shared library")
 except BreakLoops:
   print "loaded shared library " + _libFilePath
 
