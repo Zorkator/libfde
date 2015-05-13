@@ -35,7 +35,7 @@ module block_try
       res = func( itr + 42 )
       print *, itr, ": res = ", res
     _tryCatch(10, _catchAny, what)
-      case default; print *, "catched exception: " // what
+      case default; print *, "caught exception: " // what
     _tryEnd(10)
 
 
@@ -48,12 +48,12 @@ module block_try
         print *, func( -1 )
 
       _tryCatch(12, (/ArithmeticError/), what)
-        case default; print *, "catched ArithmeticError: " // what
+        case default; print *, "caught ArithmeticError: " // what
       _tryEnd(12)
       print *, "leaving outer block"
 
     _tryCatch(11, _catchAny, what)
-      case default; print *, "catched exception: " // what
+      case default; print *, "caught exception: " // what
     _tryEnd(11)
 
 
@@ -96,6 +96,12 @@ module block_try
       case default;        continue
     _tryEndFor(30)
 
+    _tryBlock(40)
+      call test_onError()
+    _tryCatch(40, _catchAny, what )
+      case default; print *, "caught exception: " // what
+    _tryEnd(40)
+
     print *, val, loop
 
   end subroutine
@@ -111,6 +117,25 @@ module block_try
       call throw( OverflowError, str('value too large')  )
     res = 1.0/(x - 5)
   end function
+
+
+  subroutine test_onError()
+    integer, dimension(:), pointer :: numArrayPtr => null()
+
+    call onError( proc(cleanup) )
+    
+    allocate( numArrayPtr(5) )
+    numArrayPtr = 42
+    print *, numArrayPtr
+    numArrayPtr(1) = func( numArrayPtr(2) )
+    call cleanup()
+
+  contains
+    subroutine cleanup()
+      print *, "cleanup: ", numArrayPtr
+      deallocate( numArrayPtr )
+    end subroutine
+  end subroutine
 
 end module
 

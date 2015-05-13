@@ -74,6 +74,11 @@ module exception
       integer(kind=c_int), value :: code
       type (StringRef)           :: what
     end subroutine
+
+    subroutine onError( handler ) bind(C,name="f_onError")
+      use, intrinsic :: iso_c_binding
+      type (c_funptr), value, intent(in) :: handler
+    end subroutine
   end interface
 
   contains

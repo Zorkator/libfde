@@ -53,11 +53,13 @@ struct StringRef
 #pragma pack(pop)
 
 
+typedef void (*FortranProcedure)( ... );
 
 struct CheckPoint
 {
   // Note: for storing the exception codes we use a ordered set, with descending order!
-  typedef std::vector<int>  CodeSet;
+  typedef std::vector<int>               CodeSet;
+  typedef std::vector<FortranProcedure>  ProcedureList;
 
 
     CheckPoint( int *codeList, size_t len )
@@ -86,6 +88,8 @@ struct CheckPoint
 
       if (this->codes.empty() || it != this->codes.end())
       {
+        for (int i = errorHandlers.size(); i > 0; i--)
+          { errorHandlers[i-1](); }
         what->assignTo( this->msg );
         std::longjmp( this->env, code );
       }
@@ -93,14 +97,14 @@ struct CheckPoint
 
   std::jmp_buf  env;
   CodeSet       codes;
+  ProcedureList errorHandlers;
   std::string   msg;
 };
 
 
-typedef void (*FortranProcedure)( ... );
-typedef void *                      ArgRef;
 typedef std::vector<CheckPoint>     CatchStack;
 typedef std::map<int, CatchStack>   ContextMap;
+typedef void *                      ArgRef;
 
 
 /**
@@ -236,4 +240,14 @@ f_throw( int code, const StringRef *what )
    */
   throw;
 }
+
+
+extern "C" _dllExport
+void
+f_onError( FortranProcedure proc )
+{
+  CheckPoint &here = getContext().back();
+  here.errorHandlers.push_back( proc );
+}
+
 
