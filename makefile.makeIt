@@ -22,13 +22,9 @@ OUT_NAME        := adt
 OUT_DIR          = lib/$(mk_TAG)
 FC_INCLUDE_DIRS := ./include
 
-CONFIGURATIONS    = debug release
 FC_CFLAGS.%       = $(fc_fpp) $(call fc_form,free,none)
-FC_CFLAGS.debug   = $(fc_g)
-FC_CFLAGS.release = $(fc_O3)
-
-crc_impl.gfortran = -fno-range-check $(mk_FC_CFLAGS)
-crc_impl.ifort    = -assume noold_boz $(mk_FC_CFLAGS)
+crc_impl.gfortran = -fno-range-check
+crc_impl.ifort    = -assume noold_boz
 
 %.f90: %.f90_tpp
 	python typegen.py $< -o $@
