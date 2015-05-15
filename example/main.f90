@@ -9,12 +9,15 @@ module block_try
 
   integer*4 :: itr, x, y
   real*8    :: res
+  real*8, dimension(:), pointer :: A => null(), B => null(), C => null()
+  character(len=100) :: what
 
   contains
 
-  recursive subroutine main_prog()
+  recursive &
+  subroutine main_prog()
+    implicit none
     integer*4 :: loop, val
-    character(len=100) :: what
     type (StringRef) :: strRef
     type (c_ptr)     :: ptr
     integer(kind=c_long) :: xlen
@@ -108,6 +111,7 @@ module block_try
 
 
   real*8 function func( x ) result(res)
+    implicit none
     integer*4 :: x
     if (x < 0) &
       call throw( NotImplementedError, str("value lower zero") )
@@ -120,6 +124,7 @@ module block_try
 
 
   subroutine test_onError()
+    implicit none
     integer, dimension(:), pointer :: numArrayPtr => null()
 
     call onError( proc(cleanup) )
@@ -137,13 +142,70 @@ module block_try
     end subroutine
   end subroutine
 
+  recursive &
+  subroutine hello_omp( n )
+    implicit none
+    integer*4 :: i, n, threadId, omp_get_thread_num
+    !call omp_set_num_threads(4)
+    
+    allocate( A(n), B(n) )
+    do i = 1, size(A)
+      A(i) = i**2
+    end do
+    B = 0.0d0
+    !$OMP PARALLEL num_threads(4) private(threadId)
+      threadId = omp_get_thread_num()
+      call calc_loop( threadId )
+    !$OMP END PARALLEL
+    deallocate( A, B )
+  end subroutine
+
+  recursive &
+  subroutine calc_loop( threadId )
+    implicit none
+    integer*4 :: i, threadId
+
+    print *, 'starting thread ', threadId
+    _tryBlock(50)
+      do i = 2, size(A)
+        B(i) = (A(i) + A(i-1) - f(A(i))) / 2.0d0
+      end do
+    _tryCatch(50, (/ArithmeticError, RuntimeError/), what)
+      ! ignore
+    _tryEnd(50)
+
+  end subroutine
+
+  recursive &
+  function f( v )
+    implicit none
+    real*8 :: v, f
+    real*8, dimension(:), pointer :: tmp
+    allocate( tmp(int(v)) )
+    f = v - 1.0 + g(v, tmp)
+    deallocate( tmp )
+  end function
+
+  function g( v, buff )
+    implicit none
+    real*8 :: v, g
+    real*8, dimension(:) :: buff
+    if (v == 64.0) then
+      !call throw( ArithmeticError, str('this is kind of illegal!') )
+    end if
+    buff = v * 2.0 - 1.5
+    g = sum( buff )
+  end function
+
 end module
 
 
 program main
   use block_try
 
+  !call init_exception()
   call main_prog()
+  call hello_omp( 200 )
   print *, "main finish"
   
 end program

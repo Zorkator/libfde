@@ -118,15 +118,34 @@ typedef void *                      ArgRef;
  *   portability issues.
  */
 
+typedef void (*Synchronizer)( void **, int );
+
+extern "C" _dllExport
+void
+f_getContext( void **context, int contextId )
+{
+  static ContextMap _contextMap;
+  *context = &_contextMap[contextId];
+}
+
+
+Synchronizer _synchonizer = (Synchronizer)f_getContext;
+
+extern "C" _dllExport
+void
+f_init( Synchronizer sync )
+{
+  _synchonizer = sync;
+}
+
 inline CatchStack &
 getContext( void )
 {
-  static ContextMap _contextMap;
-
-  // TODO: synchronize here!
-  int threadId = 0 /*<< TODO: replace this by current thread-Id! */;
-  return _contextMap[threadId];
+  void *context = NULL;
+  _synchonizer( &context, 0 );
+  return *static_cast<CatchStack *>(context);
 }
+
 
 
 extern "C" _dllExport

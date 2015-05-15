@@ -79,6 +79,18 @@ module exception
       use, intrinsic :: iso_c_binding
       type (c_funptr), value, intent(in) :: handler
     end subroutine
+
+    subroutine init( sync ) bind(C,name="f_init")
+      use, intrinsic :: iso_c_binding
+      type (c_funptr), value, intent(in) :: sync
+    end subroutine
+
+    subroutine getContextOf( context, contextId ) bind(C,name="f_getContext")
+      use, intrinsic :: iso_c_binding
+      type (c_ptr),  intent(inout) :: context
+      integer*4, value, intent(in) :: contextId
+    end subroutine
+
   end interface
 
   contains
@@ -89,6 +101,24 @@ module exception
     type (c_funptr) :: res
     res = c_funloc( sub )
   end function
+
+
+  recursive &
+  subroutine synchronizer( context, id )
+    type (c_ptr)     :: context
+    integer*4, value :: id
+    integer*4        :: omp_get_thread_num
+
+#   ifdef _OMP
+#     define _get_threadId()  omp_get_thread_num()
+#   else
+#     define _get_threadId()  0
+#   endif
+    !omp critical
+      call getContextOf( context, _get_threadId() )
+    !omp end critical
+  end subroutine
+
 
 end module
 
