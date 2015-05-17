@@ -24,10 +24,13 @@ struct StringRef
     {
       if (_ref != NULL)
       {
-        this->clear(); //< clear string buffer by spaces to make fortran happy
-        if (str.length() < _len)
-          { _len = str.length(); }
-        memcpy( _ref, str.c_str(), _len );
+        uint32_t cpyLen = std::min( _len, (uint32_t)str.length() );
+        memcpy( _ref, str.c_str(), cpyLen );
+        if (_len > cpyLen)
+        {
+          memset( _ref + cpyLen, ' ', _len - cpyLen ); //< fill string buffer by spaces to make fortran happy
+          _len = cpyLen;
+        }
       }
       return *this;
     }
@@ -35,10 +38,6 @@ struct StringRef
   void
     assignTo( std::string &str ) const
       { str.assign( _ref, _len ); }
-
-  void
-    clear( void )
-      { memset( _ref, ' ', _len ); }
 
   void
     erase( void )
@@ -108,7 +107,7 @@ typedef void *                      ArgRef;
 
 
 /**
- * Note, that this try-catch mechanism NOT fit for threading yet!
+ * Note, that this try-catch mechanism is NOT fit for threading yet!
  * This is mostly because of one static CatchStack.
  * Even synchronized, it would happily mix up CheckPoints that originate from try-calls
  *   of different threads - and that's surely not healthy!
@@ -118,22 +117,21 @@ typedef void *                      ArgRef;
  *   portability issues.
  */
 
-typedef void (*Synchronizer)( void **, int );
 
 extern "C" _dllExport
 void
-f_getContext( void **context, int contextId )
+f_getContext( CatchStack **context, int contextId )
 {
   static ContextMap _contextMap;
   *context = &_contextMap[contextId];
 }
 
-
-Synchronizer _synchonizer = (Synchronizer)f_getContext;
+typedef void (*Synchronizer)( CatchStack **, int );
+Synchronizer _synchonizer = f_getContext;
 
 extern "C" _dllExport
 void
-f_init( Synchronizer sync )
+f_setSynchronizer( Synchronizer sync )
 {
   _synchonizer = sync;
 }
@@ -141,9 +139,9 @@ f_init( Synchronizer sync )
 inline CatchStack &
 getContext( void )
 {
-  void *context = NULL;
+  CatchStack *context = NULL;
   _synchonizer( &context, 0 );
-  return *static_cast<CatchStack *>(context);
+  return *context;
 }
 
 

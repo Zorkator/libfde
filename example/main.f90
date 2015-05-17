@@ -113,6 +113,7 @@ module block_try
   real*8 function func( x ) result(res)
     implicit none
     integer*4 :: x
+    call onError( proc(cleanup) )
     if (x < 0) &
       call throw( NotImplementedError, str("value lower zero") )
     if (x == 5) &
@@ -120,6 +121,10 @@ module block_try
     if (x >= 20) &
       call throw( OverflowError, str('value too large')  )
     res = 1.0/(x - 5)
+    contains
+    subroutine cleanup()
+      print *, "func cleanup"
+    end subroutine
   end function
 
 
@@ -171,7 +176,7 @@ module block_try
         B(i) = (A(i) + A(i-1) - f(A(i))) / 2.0d0
       end do
     _tryCatch(50, (/ArithmeticError, RuntimeError/), what)
-      ! ignore
+      case (ArithmeticError); print *, 'thread ', threadId, what
     _tryEnd(50)
 
   end subroutine
@@ -191,7 +196,7 @@ module block_try
     real*8 :: v, g
     real*8, dimension(:) :: buff
     if (v == 64.0) then
-      !call throw( ArithmeticError, str('this is kind of illegal!') )
+      call throw( ArithmeticError, str('this is kind of illegal!') )
     end if
     buff = v * 2.0 - 1.5
     g = sum( buff )
@@ -203,7 +208,7 @@ end module
 program main
   use block_try
 
-  !call init_exception()
+  call init_exception()
   call main_prog()
   call hello_omp( 200 )
   print *, "main finish"
