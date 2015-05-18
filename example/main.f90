@@ -151,7 +151,6 @@ module block_try
   subroutine hello_omp( n )
     implicit none
     integer*4 :: i, n, threadId, omp_get_thread_num
-    !call omp_set_num_threads(4)
     
     allocate( A(n), B(n) )
     do i = 1, size(A)

@@ -98,6 +98,10 @@ module exception
     end subroutine
   end interface
 
+# ifdef _OMP 
+  integer(c_size_t) :: lock
+# endif
+
   contains
 
   function proc( sub ) result(res)
@@ -110,6 +114,7 @@ module exception
 
   subroutine init_exception()
 #   ifdef _OMP
+      call omp_init_lock( lock )
       call setSynchronizer( proc(ompSync) )
   end subroutine
 
@@ -118,10 +123,10 @@ module exception
     type (c_ptr)     :: context
     integer*4, value :: id
     integer*4        :: omp_get_thread_num
-    
-    !omp critical
-      call getContextOf( context, omp_get_thread_num() )
-    !omp end critical
+
+    call omp_set_lock( lock )
+    call getContextOf( context, omp_get_thread_num() )
+    call omp_unset_lock( lock )
 #   endif
   end subroutine
 
