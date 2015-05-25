@@ -261,6 +261,13 @@ module adt_item
     end subroutine
   end interface
 
+  public :: on_type_mismatch
+  interface on_type_mismatch
+    subroutine item_on_type_mismatch_c( handler )
+      external :: handler
+    end subroutine
+  end interface
+
   public :: is_valid
   interface is_valid
     logical function item_is_valid_c( self ) result(res)

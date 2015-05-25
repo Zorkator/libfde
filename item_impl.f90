@@ -11,8 +11,9 @@ module impl_item__
 
 # define Item_t   Item_t__impl__
 
-  type (String_t) :: string_var
-  type (Ref_t)    :: ref_var
+  type (String_t)      :: string_var
+  type (Ref_t)         :: ref_var
+  procedure(), pointer :: type_mismatch_handler_ => null()
 
   interface
     function item_reshape_( self, new_typeInfo ) result(res)
@@ -68,6 +69,14 @@ end module
       self%typeInfo => new_typeInfo
     end if
   end function
+
+
+!_PROC_EXPORT(item_on_type_mismatch_c)
+  subroutine item_on_type_mismatch_c( handler )
+    use impl_item__; implicit none
+    external :: handler
+    type_mismatch_handler_ => handler
+  end subroutine
 
 
 !_PROC_EXPORT(item_is_valid_c)
@@ -385,6 +394,8 @@ end module
     if (associated( static_type(lhs), rhs%typeInfo )) then ;\
       call c_f_pointer( c_loc(rhs%data(1)), ptr )          ;\
       lhs = ptr                                            ;\
+    elseif (associated( type_mismatch_handler_ )) then     ;\
+      call type_mismatch_handler_()                        ;\
     end if                                                 ;\
   end subroutine
   ! CAUTION: Fortran assignment is a real mess - it just copies everything that dares to stand on the
