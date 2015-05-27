@@ -9,13 +9,13 @@
 # You can test it without hassle by creating a static link to this file:
 #   ln -s makefile.makeIt makefile
 #
-# Type 'make' to get the help screen, or 'make built' to start building libadt.
+# Type 'make' to get the help screen, or 'make built' to start building libfortres.
 #
 
 TARGET_doc      := building libfortres
 SOURCE_FILES    := exception.cpp
 OUT_TYPE        := shared
-OUT_FILE_NAME    = libfortres.x$(mk_ARCH).so
+OUT_NAME         = fortres.x$(mk_ARCH)
 OUT_DIR          = release
 MAYOR           := 0
 CC_INCLUDE_DIRS := .
