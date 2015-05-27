@@ -15,9 +15,10 @@
 TARGET_doc      := building libfortres
 SOURCE_FILES    := exception.cpp
 OUT_TYPE        := shared
-OUT_NAME        := fortres
-OUT_DIR         := release
-CC_INCLUDE_DIRS := . #./include
+OUT_FILE_NAME    = libfortres.x$(mk_ARCH).so
+OUT_DIR          = release
+MAYOR           := 0
+CC_INCLUDE_DIRS := .
 
 ifneq ($(MAKEIT_DIR),)
 include $(MAKEIT_DIR)/mk.c++

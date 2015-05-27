@@ -9,15 +9,12 @@ module block_try
 
   integer*4 :: itr, x, y
   real*8    :: res
-  real*8, dimension(:), pointer :: A => null(), B => null(), C => null()
-  character(len=100) :: what
 
   contains
 
-  recursive &
-  subroutine main_prog()
-    implicit none
+  recursive subroutine main_prog()
     integer*4 :: loop, val
+    character(len=100) :: what
     type (StringRef) :: strRef
     type (c_ptr)     :: ptr
     integer(kind=c_long) :: xlen
@@ -38,7 +35,7 @@ module block_try
       res = func( itr + 42 )
       print *, itr, ": res = ", res
     _tryCatch(10, _catchAny, what)
-      case default; print *, "caught exception: " // what
+      case default; print *, "catched exception: " // what
     _tryEnd(10)
 
 
@@ -51,12 +48,12 @@ module block_try
         print *, func( -1 )
 
       _tryCatch(12, (/ArithmeticError/), what)
-        case default; print *, "caught ArithmeticError: " // what
+        case default; print *, "catched ArithmeticError: " // what
       _tryEnd(12)
       print *, "leaving outer block"
 
     _tryCatch(11, _catchAny, what)
-      case default; print *, "caught exception: " // what
+      case default; print *, "catched exception: " // what
     _tryEnd(11)
 
 
@@ -99,21 +96,13 @@ module block_try
       case default;        continue
     _tryEndFor(30)
 
-    _tryBlock(40)
-      call test_onError()
-    _tryCatch(40, _catchAny, what )
-      case default; print *, "caught exception: " // what
-    _tryEnd(40)
-
     print *, val, loop
 
   end subroutine
 
 
   real*8 function func( x ) result(res)
-    implicit none
     integer*4 :: x
-    call onError( proc(cleanup) )
     if (x < 0) &
       call throw( NotImplementedError, str("value lower zero") )
     if (x == 5) &
@@ -121,84 +110,6 @@ module block_try
     if (x >= 20) &
       call throw( OverflowError, str('value too large')  )
     res = 1.0/(x - 5)
-    contains
-    subroutine cleanup()
-      print *, "func cleanup"
-    end subroutine
-  end function
-
-
-  subroutine test_onError()
-    implicit none
-    integer, dimension(:), pointer :: numArrayPtr => null()
-
-    call onError( proc(cleanup) )
-    
-    allocate( numArrayPtr(5) )
-    numArrayPtr = 42
-    print *, numArrayPtr
-    numArrayPtr(1) = func( numArrayPtr(2) )
-    call cleanup()
-
-  contains
-    subroutine cleanup()
-      print *, "cleanup: ", numArrayPtr
-      deallocate( numArrayPtr )
-    end subroutine
-  end subroutine
-
-  recursive &
-  subroutine hello_omp( n )
-    implicit none
-    integer*4 :: i, n, threadId, omp_get_thread_num
-    
-    allocate( A(n), B(n) )
-    do i = 1, size(A)
-      A(i) = i**2
-    end do
-    B = 0.0d0
-    !$OMP PARALLEL num_threads(4) private(threadId)
-      threadId = omp_get_thread_num()
-      call calc_loop( threadId )
-    !$OMP END PARALLEL
-    deallocate( A, B )
-  end subroutine
-
-  recursive &
-  subroutine calc_loop( threadId )
-    implicit none
-    integer*4 :: i, threadId
-
-    print *, 'starting thread ', threadId
-    _tryBlock(50)
-      do i = 2, size(A)
-        B(i) = (A(i) + A(i-1) - f(A(i))) / 2.0d0
-      end do
-    _tryCatch(50, (/ArithmeticError, RuntimeError/), what)
-      case (ArithmeticError); print *, 'thread ', threadId, what
-    _tryEnd(50)
-
-  end subroutine
-
-  recursive &
-  function f( v )
-    implicit none
-    real*8 :: v, f
-    real*8, dimension(:), pointer :: tmp
-    allocate( tmp(int(v)) )
-    f = v - 1.0 + g(v, tmp)
-    deallocate( tmp )
-  end function
-
-  function g( v, buff )
-    implicit none
-    real*8 :: v, g
-    real*8, dimension(:) :: buff
-    if (v == 64.0) then
-      call throw( ArithmeticError, str('this is kind of illegal!') )
-    end if
-    buff = v * 2.0 - 1.5
-    g = sum( buff )
   end function
 
 end module
@@ -207,9 +118,7 @@ end module
 program main
   use block_try
 
-  call init_exception()
   call main_prog()
-  call hello_omp( 200 )
   print *, "main finish"
   
 end program

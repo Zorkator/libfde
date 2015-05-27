@@ -24,13 +24,10 @@ struct StringRef
     {
       if (_ref != NULL)
       {
-        uint32_t cpyLen = std::min( _len, (uint32_t)str.length() );
-        memcpy( _ref, str.c_str(), cpyLen );
-        if (_len > cpyLen)
-        {
-          memset( _ref + cpyLen, ' ', _len - cpyLen ); //< fill string buffer by spaces to make fortran happy
-          _len = cpyLen;
-        }
+        this->clear(); //< clear string buffer by spaces to make fortran happy
+        if (str.length() < _len)
+          { _len = str.length(); }
+        memcpy( _ref, str.c_str(), _len );
       }
       return *this;
     }
@@ -38,6 +35,10 @@ struct StringRef
   void
     assignTo( std::string &str ) const
       { str.assign( _ref, _len ); }
+
+  void
+    clear( void )
+      { memset( _ref, ' ', _len ); }
 
   void
     erase( void )
@@ -52,13 +53,11 @@ struct StringRef
 #pragma pack(pop)
 
 
-typedef void (*FortranProcedure)( ... );
 
 struct CheckPoint
 {
   // Note: for storing the exception codes we use a ordered set, with descending order!
-  typedef std::vector<int>               CodeSet;
-  typedef std::vector<FortranProcedure>  ProcedureList;
+  typedef std::vector<int>  CodeSet;
 
 
     CheckPoint( int *codeList, size_t len )
@@ -87,8 +86,6 @@ struct CheckPoint
 
       if (this->codes.empty() || it != this->codes.end())
       {
-        for (int i = errorHandlers.size(); i > 0; i--)
-          { errorHandlers[i-1](); }
         what->assignTo( this->msg );
         std::longjmp( this->env, code );
       }
@@ -96,18 +93,18 @@ struct CheckPoint
 
   std::jmp_buf  env;
   CodeSet       codes;
-  ProcedureList errorHandlers;
   std::string   msg;
 };
 
 
+typedef void (*FortranProcedure)( ... );
+typedef void *                      ArgRef;
 typedef std::vector<CheckPoint>     CatchStack;
 typedef std::map<int, CatchStack>   ContextMap;
-typedef void *                      ArgRef;
 
 
 /**
- * Note, that this try-catch mechanism is NOT fit for threading yet!
+ * Note, that this try-catch mechanism NOT fit for threading yet!
  * This is mostly because of one static CatchStack.
  * Even synchronized, it would happily mix up CheckPoints that originate from try-calls
  *   of different threads - and that's surely not healthy!
@@ -117,33 +114,15 @@ typedef void *                      ArgRef;
  *   portability issues.
  */
 
-
-extern "C" _dllExport
-void
-f_getContext( CatchStack **context, int contextId )
-{
-  static ContextMap _contextMap;
-  *context = &_contextMap[contextId];
-}
-
-typedef void (*Synchronizer)( CatchStack **, int );
-Synchronizer _synchonizer = f_getContext;
-
-extern "C" _dllExport
-void
-f_setSynchronizer( Synchronizer sync )
-{
-  _synchonizer = sync;
-}
-
 inline CatchStack &
 getContext( void )
 {
-  CatchStack *context = NULL;
-  _synchonizer( &context, 0 );
-  return *context;
-}
+  static ContextMap _contextMap;
 
+  // TODO: synchronize here!
+  int threadId = 0 /*<< TODO: replace this by current thread-Id! */;
+  return _contextMap[threadId];
+}
 
 
 extern "C" _dllExport
@@ -257,14 +236,4 @@ f_throw( int code, const StringRef *what )
    */
   throw;
 }
-
-
-extern "C" _dllExport
-void
-f_onError( FortranProcedure proc )
-{
-  CheckPoint &here = getContext().back();
-  here.errorHandlers.push_back( proc );
-}
-
 

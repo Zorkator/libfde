@@ -4,7 +4,6 @@
 module exception
   use iso_c_binding
   implicit none
-  public
 
   ! Predefinition of hierarchical exception types.
   ! Hierarchical means that catching a certain type of Error
@@ -75,32 +74,7 @@ module exception
       integer(kind=c_int), value :: code
       type (StringRef)           :: what
     end subroutine
-
-    subroutine onError( handler ) bind(C,name="f_onError")
-      use, intrinsic :: iso_c_binding
-      type (c_funptr), value, intent(in) :: handler
-    end subroutine
   end interface
-
-  private :: setSynchronizer
-  private :: getContextOf
-
-  interface
-    subroutine setSynchronizer( sync ) bind(C,name="f_setSynchronizer")
-      use, intrinsic :: iso_c_binding
-      type (c_funptr), value, intent(in) :: sync
-    end subroutine
-
-    subroutine getContextOf( context, contextId ) bind(C,name="f_getContext")
-      use, intrinsic :: iso_c_binding
-      type (c_ptr),  intent(inout) :: context
-      integer*4, value, intent(in) :: contextId
-    end subroutine
-  end interface
-
-# ifdef _OMP 
-  integer(c_size_t) :: lock
-# endif
 
   contains
 
@@ -110,25 +84,6 @@ module exception
     type (c_funptr) :: res
     res = c_funloc( sub )
   end function
-
-
-  subroutine init_exception()
-#   ifdef _OMP
-      call omp_init_lock( lock )
-      call setSynchronizer( proc(ompSync) )
-  end subroutine
-
-  recursive &
-  subroutine ompSync( context, id )
-    type (c_ptr)     :: context
-    integer*4, value :: id
-    integer*4        :: omp_get_thread_num
-
-    call omp_set_lock( lock )
-    call getContextOf( context, omp_get_thread_num() )
-    call omp_unset_lock( lock )
-#   endif
-  end subroutine
 
 end module
 
