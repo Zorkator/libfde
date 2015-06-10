@@ -8,6 +8,7 @@ module adt_item
   use adt_string
   use adt_basetypes
   use adt_list
+  use adt_typeinfo
   implicit none
   private
 
@@ -39,6 +40,15 @@ module adt_item
     _chunkType                :: data(numChunks) = 0
   end type
 
+
+  public :: UserAssignment
+  abstract interface
+    subroutine UserAssignment( lhsPtr, lhsType, rhsPtr, rhsType )
+      import c_ptr, TypeSpecs_t
+      type(c_ptr),       intent(in) :: lhsPtr,  rhsPtr
+      type(TypeSpecs_t), intent(in) :: lhsType, rhsType
+    end subroutine
+  end interface
 
   !_TypeGen_declare_RefType( public, Item, type(Item_t), scalar, \
   !     initProc   = item_init_by_item_c, \

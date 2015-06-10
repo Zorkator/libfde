@@ -11,9 +11,9 @@ module impl_item__
 
 # define Item_t   Item_t__impl__
 
-  type (String_t)      :: string_var
-  type (Ref_t)         :: ref_var
-  procedure(), pointer :: type_mismatch_handler_ => null()
+  type (String_t)                    :: string_var
+  type (Ref_t)                       :: ref_var
+  procedure(UserAssignment), pointer :: user_assignment_ => null()
 
   interface
     function item_reshape_( self, new_typeInfo ) result(res)
@@ -21,6 +21,20 @@ module impl_item__
       type(Item_t)                         :: self
       type(TypeInfo_t), target, intent(in) :: new_typeInfo
       logical                              :: res
+    end function
+
+    logical &
+    function auto_assignable_( lhsPtr, lhsType, rhs )
+      import c_ptr, TypeInfo_t, Item_t
+      type(c_ptr)               :: lhsPtr
+      type(TypeInfo_t), pointer :: lhsType, rhsType
+      type(Item_t),      target :: rhs
+    end function
+
+    function item_dynamic_type( self ) result(res)
+      import Item_t, TypeInfo_t
+      type(Item_t),  intent(in) :: self
+      type(TypeInfo_t), pointer :: res
     end function
   end interface
 
@@ -75,7 +89,7 @@ end module
   subroutine item_on_type_mismatch_c( handler )
     use impl_item__; implicit none
     external :: handler
-    type_mismatch_handler_ => handler
+    user_assignment_ => handler
   end subroutine
 
 
@@ -90,7 +104,7 @@ end module
 
 !_PROC_EXPORT(item_dynamic_type)
   function item_dynamic_type( self ) result(res)
-    use impl_item__
+    use impl_item__, only: Item_t, TypeInfo_t, void_type
     implicit none
     type(Item_t),  intent(in) :: self
     type(TypeInfo_t), pointer :: res
@@ -384,25 +398,41 @@ end module
 
 ! implement assign-to routines
 
+  logical &
+  function auto_assignable_( lhsPtr, lhsType, rhs ) result(res)
+    use impl_item__, only: c_ptr, c_loc, TypeInfo_t, Item_t, item_dynamic_type, user_assignment_
+    implicit none          
+    type(c_ptr)               :: lhsPtr
+    type(TypeInfo_t), pointer :: lhsType, rhsType
+    type(Item_t),      target :: rhs
+    integer,        parameter :: stdout = 6
+    integer                   :: stat
+  
+    rhsType => item_dynamic_type(rhs)
+    res     =  associated( lhsType, rhsType )
+    if (.not. res) then
+      if (associated( user_assignment_ )) then
+        call user_assignment_( lhsPtr, lhsType%typeSpecs, c_loc(rhs%data(1)), rhsType%typeSpecs )
+      else
+        write(stdout,*,iostat=stat) "ERROR: skipping illegal assignment " // &
+          "<" // trim(lhsType%typeId) // "> := <" // trim(rhsType%typeId) // ">"
+      end if
+    end if
+  end function
+
+
 # define _EXPORT_ASSIGN_TO(typeId)    _PROC_EXPORT(_paste(item_assign_to_,typeId)_c)
-# define _implement_assign_to_(typeId, baseType)            \
-  subroutine _paste(item_assign_to_,typeId)_c( lhs, rhs )  ;\
-    use impl_item__; implicit none                         ;\
-    baseType, intent(inout) :: lhs                         ;\
-    type(Item_t),    target :: rhs                         ;\
-    baseType,       pointer :: ptr                         ;\
-    if (associated( static_type(lhs), rhs%typeInfo )) then ;\
-      call c_f_pointer( c_loc(rhs%data(1)), ptr )          ;\
-      lhs = ptr                                            ;\
-    elseif (associated( type_mismatch_handler_ )) then     ;\
-      call type_mismatch_handler_()                        ;\
-    end if                                                 ;\
+# define _implement_assign_to_(typeId, baseType)                     \
+  subroutine _paste(item_assign_to_,typeId)_c( lhs, rhs )           ;\
+    use impl_item__; implicit none                                  ;\
+    baseType,     target, intent(inout) :: lhs                      ;\
+    type(Item_t), target                :: rhs                      ;\
+    baseType,                   pointer :: ptr                      ;\
+    if (auto_assignable_( c_loc(lhs), static_type(lhs), rhs )) then ;\
+      call c_f_pointer( c_loc(rhs%data(1)), ptr )                   ;\
+      lhs = ptr                                                     ;\
+    end if                                                          ;\
   end subroutine
-  ! CAUTION: Fortran assignment is a real mess - it just copies everything that dares to stand on the
-  !   right side of the assignment. Who came up with that crap?
-  ! For the pointer check (associated) above it is really important to give static_type() as the
-  !   first argument, otherwise Fortrans starts to deref self%typeInfo (WTH!?)
-  !   and compares the pointer returned by static_type() to this copy - which is of course different.
 
 !_EXPORT_ASSIGN_TO(bool1)
   _implement_assign_to_(bool1,      logical*1)

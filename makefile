@@ -23,29 +23,33 @@ OUT_DIR          = lib/$(mk_TAG)
 FC_INCLUDE_DIRS := ./include
 
 FC_CFLAGS.%       = $(fc_fpp) $(call fc_form,free,none)
-crc_impl.gfortran = -fno-range-check
-crc_impl.ifort    = -assume noold_boz
+crc_impl.gfortran = $(call fc_cflags_of,.f90) -fno-range-check
+crc_impl.ifort    = $(call fc_cflags_of,.f90) -assume noold_boz
 
 %.f90: %.f90_tpp
 	python typegen.py $< -o $@
 
 
 exe_opts = OUT_TYPE=exe OUT_DIR=exe OUT_NAME=$@ \
-           FC_INCLUDE_DIRS="$(OUT_DIR) include" \
-           FC_LIBRARY_DIRS=lib/$(mk_TAG)				\
-           FC_LIBRARIES=adt.$(mk_TAG)
+           FC_INCLUDE_DIRS="exe include"
+exe_libs = FC_LIBRARY_DIRS=lib/$(mk_TAG)				\
+           FC_LIBRARIES=adt
 
 map_test: built
-	@$(MAKE) built $(exe_opts)              \
+	@$(MAKE) built $(exe_opts) $(exe_libs)        \
 	         SOURCE_FILES=test_hash_map.f90
 
 testsim: built
-	@$(MAKE) built $(exe_opts) \
+	@$(MAKE) built $(exe_opts) $(exe_libs) \
 	         SOURCE_FILES=test_simulator.f90
 
 testsim_so: built
-	@$(MAKE) built $(exe_opts) OUT_TYPE=shared \
+	@$(MAKE) built $(exe_opts) $(exe_libs) OUT_TYPE=shared \
 	         SOURCE_FILES=test_simulator.f90
+
+testsimdriver: testsim_so
+	@$(MAKE) built $(exe_opts) FC_LIBRARY_DIRS="exe lib/$(mk_TAG)" FC_LIBRARIES="testsim_so adt"\
+	         SOURCE_FILES=test_simulator_driver.f90				
 
 
 ifneq ($(MAKEIT_DIR),)
