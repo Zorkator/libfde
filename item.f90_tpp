@@ -274,7 +274,8 @@ module adt_item
   public :: on_type_mismatch
   interface on_type_mismatch
     subroutine item_on_type_mismatch_c( handler )
-      external :: handler
+      import UserAssignment
+      procedure(UserAssignment) :: handler
     end subroutine
   end interface
 

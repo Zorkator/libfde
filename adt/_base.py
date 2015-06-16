@@ -10,10 +10,10 @@ _libHandle   = None
 _libFilePath = None
 _libNames    = (
   """
-	libadt.debug.{arch}.gfortran.so
-	libadt.release.{arch}.gfortran.so
-	libadt.debug.{arch}.ifort.so
-	libadt.release.{arch}.ifort.so
+  libadt.debug.{arch}.gfortran.so
+  libadt.release.{arch}.gfortran.so
+  libadt.debug.{arch}.ifort.so
+  libadt.release.{arch}.ifort.so
   libadt.0.gfortran.debug.{arch}.so
   libadt.0.gfortran.release.{arch}.so
   libadt.0.ifort.debug.{arch}.so
@@ -83,17 +83,18 @@ class Compound(Union):
   __metaclass__ = _Meta
   __typeprocs__ = [] #< no procedures for Compound
 
-  def __getattr__( self, name ):
+  @classmethod
+  def __getattr__( _class, name ):
     if name is '_needs_delete': #< if we end up here, slot _needs_delete has not been set!
       return False
     if name in ('__members__', '__methods__'):
       return {}
 
-    for fmt in self.__typeprocs__:
+    for fmt in _class.__typeprocs__:
       try   : attr = getattr(_libHandle, fmt.format(name)); break
       except: pass
     else:
-      raise AttributeError("'%s' object has no attribute '%s'" % (self.__class__.__name__, name))
-    setattr(type(self), name, attr)
+      raise AttributeError("'%s' object has no attribute '%s'" % (_class.__name__, name))
+    setattr(_class, name, attr)
     return attr
 

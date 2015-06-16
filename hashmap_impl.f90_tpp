@@ -56,7 +56,7 @@ module impl_hashmap__
       type(ListIndex_t)            :: res
     end function
 
-    function hashmap_get_value_ref_( self, key, clearStale ) result(res)
+    function hashmap_get_ref_( self, key, clearStale ) result(res)
       import HashMap_t, Item_t
       type(HashMap_t)              :: self
       character(len=*), intent(in) :: key
@@ -98,6 +98,14 @@ module impl_hashmap__
       import HashMap_t, Item_t
       type(HashMap_t)              :: self
       character(len=*), intent(in) :: key
+      type(Item_t),        pointer :: res
+    end function
+
+    function hashmap_get_ptr_create( self, key, createMissing ) result(res)
+      import HashMap_t, Item_t
+      type(HashMap_t)              :: self
+      character(len=*), intent(in) :: key
+      logical                      :: createMissing
       type(Item_t),        pointer :: res
     end function
 
@@ -396,43 +404,43 @@ end module
 
 !_PROC_EXPORT(hashmap_set_c)
   subroutine hashmap_set_c( self, key, val )
-    use impl_hashmap__, only: HashMap_t, Item_t, hashmap_get_value_ref_, assign
+    use impl_hashmap__, only: HashMap_t, Item_t, hashmap_get_ref_, assign
     implicit none
     type(HashMap_t), intent(inout) :: self
     character(len=*),   intent(in) :: key
     type(Item_t),       intent(in) :: val
     type(Item_t),          pointer :: valPtr
 
-    valPtr => hashmap_get_value_ref_( self, key, .false. )
+    valPtr => hashmap_get_ref_( self, key, .false. )
     call assign( valPtr, val )
   end subroutine
 
 
 !_PROC_EXPORT(hashmap_get)
   function hashmap_get( self, key ) result(res)
-    use impl_hashmap__, only: HashMap_t, Item_t, hashmap_get_value_ref_
+    use impl_hashmap__, only: HashMap_t, Item_t, hashmap_get_ref_
     implicit none
     type(HashMap_t)              :: self
     character(len=*), intent(in) :: key
     type(Item_t),        pointer :: res
 
-    res => hashmap_get_value_ref_( self, key, .true. )
+    res => hashmap_get_ref_( self, key, .true. )
   end function
 
 
 !_PROC_EXPORT(hashmap_get_c)
   subroutine hashmap_get_c( res, self, key )
-    use impl_hashmap__, only: c_ptr, HashMap_t, c_loc, hashmap_get_value_ref_
+    use impl_hashmap__, only: c_ptr, HashMap_t, c_loc, hashmap_get_ref_
     implicit none
     type(c_ptr),      intent(inout) :: res
     type(HashMap_t)                 :: self
     character(len=*), intent(in)    :: key
 
-    res = c_loc( hashmap_get_value_ref_( self, key, .true. ) )
+    res = c_loc( hashmap_get_ref_( self, key, .true. ) )
   end subroutine
 
 
-  function hashmap_get_value_ref_( self, key, clearStale ) result(res)
+  function hashmap_get_ref_( self, key, clearStale ) result(res)
     use impl_hashmap__, only: HashMap_t, Item_t, HashNode_t, ListIndex_t, HashNode, hashmap_nodeCache, &
                              hashmap_locate_item_, first, new_ListNode, insert, delete, pop, is_valid, assign
     implicit none
@@ -483,6 +491,21 @@ end module
   end function
 
 
+!_PROC_EXPORT(hashmap_get_ptr_create)
+  function hashmap_get_ptr_create( self, key, createMissing ) result(res)
+    use impl_hashmap__, only: HashMap_t, Item_t, hashmap_get_ref_, hashmap_get_ptr
+    implicit none
+    type(HashMap_t)              :: self
+    character(len=*), intent(in) :: key
+    logical                      :: createMissing
+    type(Item_t),        pointer :: res
+
+    if (createMissing) then; res => hashmap_get_ref_( self, key, .true. )
+                       else; res => hashmap_get_ptr( self, key )
+    end if
+  end function
+
+
 !_PROC_EXPORT(hashmap_get_ptr_c)
   subroutine hashmap_get_ptr_c( res, self, key )
     use impl_hashmap__, only: c_ptr, HashMap_t, Item_t, hashmap_get_ptr, c_loc, C_NULL_PTR
@@ -493,6 +516,23 @@ end module
     type(Item_t),           pointer :: ptr
 
     ptr => hashmap_get_ptr( self, key )
+    if (associated(ptr)) then; res = c_loc(ptr)
+                         else; res = C_NULL_PTR
+    end if
+  end subroutine
+
+
+!_PROC_EXPORT(hashmap_get_ptr_create_c)
+  subroutine hashmap_get_ptr_create_c( res, self, key, createMissing )
+    use impl_hashmap__, only: c_ptr, HashMap_t, Item_t, hashmap_get_ptr_create, c_loc, C_NULL_PTR
+    implicit none
+    type(c_ptr),      intent(inout) :: res
+    type(HashMap_t)                 :: self
+    character(len=*), intent(in)    :: key
+    logical                         :: createMissing
+    type(Item_t),           pointer :: ptr
+
+    ptr => hashmap_get_ptr_create( self, key, createMissing )
     if (associated(ptr)) then; res = c_loc(ptr)
                          else; res = C_NULL_PTR
     end if
@@ -652,14 +692,14 @@ end module
 
 !_PROC_EXPORT(hashmap_set_default)
   function hashmap_set_default( self, key, defaultVal ) result(res)
-    use impl_hashmap__, only: HashMap_t, Item_t, hashmap_get_value_ref_, is_valid, assign, delete
+    use impl_hashmap__, only: HashMap_t, Item_t, hashmap_get_ref_, is_valid, assign, delete
     implicit none
     type(HashMap_t),     intent(inout) :: self
     character(len=*),       intent(in) :: key
     type(Item_t)                       :: defaultVal
     type(Item_t),              pointer :: res
 
-    res => hashmap_get_value_ref_( self, key, .true. )
+    res => hashmap_get_ref_( self, key, .true. )
     if (.not. is_valid(res)) then; call assign( res, defaultVal ) !< key didn't exist before
                              else; call delete( defaultVal )      !< key existed - so delete given defaultVal
     end if

@@ -1,6 +1,6 @@
 
 from ctypes    import *
-from _typeinfo import TypedObject
+from _typeinfo import TypedObject, TypeSpecs
 from _ftypes   import mappedType, MemoryRef, Complex8, Complex16, Complex32
 from _string   import String
 from _ref      import Ref
@@ -8,7 +8,16 @@ from _ref      import Ref
 
 @mappedType( 'item', 'type(Item_t)' )
 class Item(TypedObject):
+
+  UserAssignment = CFUNCTYPE( None, POINTER(c_void_p), POINTER(TypeSpecs), POINTER(c_void_p), POINTER(TypeSpecs) )
+
+  @classmethod
+  def onTypeMismatch( _class, func ):
+    if type(type(func)) is not type(_class.UserAssignment):
+      _class.__onTypeMismatch = func = _class.UserAssignment(func or 0)
+    _class.__getattr__('on_type_mismatch_')( func )
   
+
   @TypedObject.value.getter
   def value( self ):
     ct = self.ctype

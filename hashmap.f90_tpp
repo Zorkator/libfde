@@ -141,6 +141,14 @@ module adt_hashmap
       character(len=*), intent(in) :: key
       type(Item_t),        pointer :: res
     end function
+
+    function hashmap_get_ptr_create( self, key, createMissing ) result(res)
+      import HashMap_t, Item_t
+      type(HashMap_t)              :: self
+      character(len=*), intent(in) :: key
+      logical                      :: createMissing
+      type(Item_t),        pointer :: res
+    end function
   end interface
 
   interface remove

@@ -16,16 +16,17 @@ module impl_item__
   procedure(UserAssignment), pointer :: user_assignment_ => null()
 
   interface
-    function item_reshape_( self, new_typeInfo ) result(res)
+    logical &
+    function item_reshape_( self, new_typeInfo )
       import Item_t, TypeInfo_t
       type(Item_t)                         :: self
       type(TypeInfo_t), target, intent(in) :: new_typeInfo
-      logical                              :: res
     end function
 
     logical &
-    function auto_assignable_( lhsPtr, lhsType, rhs )
+    function auto_assignable_( src, lhsPtr, lhsType, rhs )
       import c_ptr, TypeInfo_t, Item_t
+      type(c_ptr),  intent(out) :: src
       type(c_ptr)               :: lhsPtr
       type(TypeInfo_t), pointer :: lhsType, rhsType
       type(Item_t),      target :: rhs
@@ -35,6 +36,12 @@ module impl_item__
       import Item_t, TypeInfo_t
       type(Item_t),  intent(in) :: self
       type(TypeInfo_t), pointer :: res
+    end function
+
+    function item_get_ref( self ) result(res)
+      import Item_t, Ref_t
+      type(Item_t), target :: self
+      type(Ref_t), pointer :: res
     end function
   end interface
 
@@ -88,7 +95,7 @@ end module
 !_PROC_EXPORT(item_on_type_mismatch_c)
   subroutine item_on_type_mismatch_c( handler )
     use impl_item__; implicit none
-    external :: handler
+    procedure(UserAssignment) :: handler
     user_assignment_ => handler
   end subroutine
 
@@ -236,16 +243,17 @@ end module
 ! implement getter routines
 
 # define _EXPORT_GETTER(typeId)    _PROC_EXPORT(_paste(item_get_,typeId))
-# define _implement_getter_(typeId, baseType)            \
-  function _paste(item_get_,typeId)( self ) result(res) ;\
-    use impl_item__; implicit none                      ;\
-    type(Item_t), target :: self                        ;\
-    baseType,    pointer :: res                         ;\
-    baseType             :: var                         ;\
-    if (item_reshape_( self, static_type(var) )) then   ;\
-      call self%typeInfo%initProc( self%data, 0 )       ;\
-    end if                                              ;\
-    call c_f_pointer( c_loc(self%data(1)), res )        ;\
+# define _implement_getter_(typeId, baseType)              \
+  function _paste(item_get_,typeId)( self ) result(res)   ;\
+    use impl_item__, only: Item_t, Ref_t, String_t, c_ptr ,\
+        static_type, item_reshape_, c_f_pointer, c_loc    ;\
+    type(Item_t), target :: self                          ;\
+    baseType,    pointer :: res                           ;\
+    baseType             :: var                           ;\
+    if (item_reshape_( self, static_type(var) )) then     ;\
+      call self%typeInfo%initProc( self%data, 0 )         ;\
+    end if                                                ;\
+    call c_f_pointer( c_loc(self%data(1)), res )          ;\
   end function
 
 !_EXPORT_GETTER(bool1)
@@ -399,23 +407,49 @@ end module
 ! implement assign-to routines
 
   logical &
-  function auto_assignable_( lhsPtr, lhsType, rhs ) result(res)
-    use impl_item__, only: c_ptr, c_loc, TypeInfo_t, Item_t, item_dynamic_type, user_assignment_
+  function auto_assignable_( src, lhsPtr, lhsType, rhs ) result(res)
+    use impl_item__, only: c_ptr, TypeInfo_t, Item_t, Ref_t, item_dynamic_type, item_get_ref, user_assignment_ &
+                         , temporary_ref, static_type, dynamic_type, ref, cptr, c_loc
     implicit none          
+    type(c_ptr),  intent(out) :: src
     type(c_ptr)               :: lhsPtr
-    type(TypeInfo_t), pointer :: lhsType, rhsType
+    type(TypeInfo_t), pointer :: lhsType, rhsType, refType
     type(Item_t),      target :: rhs
+    type(Ref_t),      pointer :: refPtr
     integer,        parameter :: stdout = 6
     integer                   :: stat
   
     rhsType => item_dynamic_type(rhs)
     res     =  associated( lhsType, rhsType )
-    if (.not. res) then
-      if (associated( user_assignment_ )) then
-        call user_assignment_( lhsPtr, lhsType%typeSpecs, c_loc(rhs%data(1)), rhsType%typeSpecs )
-      else
-        write(stdout,*,iostat=stat) "ERROR: skipping illegal assignment " // &
-          "<" // trim(lhsType%typeId) // "> := <" // trim(rhsType%typeId) // ">"
+    if (res) then
+      ! types match
+      src = c_loc(rhs%data(1))
+    else
+      ! type mismatch - check if rhs is reference
+      refType => static_type(temporary_ref)
+      if (associated( rhsType, refType )) then
+        ! rhs is reference: deref as far as possible ...
+        refPtr => item_get_ref(rhs)
+        do while (.true.)
+          rhsType => dynamic_type(refPtr)
+          if (.not. associated( rhsType, refType )) &
+            exit
+          refPtr => ref(refPtr)
+        end do
+        ! get target pointer and re-check type
+        src = cptr(refPtr)
+        res = associated( lhsType, rhsType )
+      end if
+    
+      ! types don't match ...
+      if (.not. res) then
+        ! try user-assignment or write error to stdout
+        if (associated( user_assignment_ )) then
+          call user_assignment_( lhsPtr, lhsType%typeSpecs, src, rhsType%typeSpecs )
+        else
+          write(stdout,*,iostat=stat) "ERROR: skipping illegal assignment " // &
+            "<" // trim(lhsType%typeId) // "> := <" // trim(rhsType%typeId) // ">"
+        end if
       end if
     end if
   end function
@@ -428,8 +462,9 @@ end module
     baseType,     target, intent(inout) :: lhs                      ;\
     type(Item_t), target                :: rhs                      ;\
     baseType,                   pointer :: ptr                      ;\
-    if (auto_assignable_( c_loc(lhs), static_type(lhs), rhs )) then ;\
-      call c_f_pointer( c_loc(rhs%data(1)), ptr )                   ;\
+    type(c_ptr)                         :: src                      ;\
+    if (auto_assignable_( src, c_loc(lhs), static_type(lhs), rhs )) then ;\
+      call c_f_pointer( src, ptr )                                  ;\
       lhs = ptr                                                     ;\
     end if                                                          ;\
   end subroutine

@@ -34,6 +34,9 @@ class HashMap(Object):
     ptr = self.__getptr( self.get_, ident )
     ptr.contents.value = val
 
+  def __delitem__( self, ident ):
+    self.remove_key_( byref(self), ident, len(ident) )
+
   def __contains__( self, ident ):
     return self.has_key_( byref(self), c_char_p(ident), c_int(len(ident)) ) != 0
 
@@ -69,6 +72,15 @@ class HashMap(Object):
     valPtr = POINTER(Item)()
     self.set_default_( byref(valPtr), byref(self), c_char_p(ident), byref(Item(default)), c_int(len(ident)) )
     return valPtr.contents
+
+  def update( self, other = {}, **kwArgs ):
+    if hasattr( other, 'keys' ):
+      for k in other:
+        self[k] = other[k]
+    else:
+      for k, v in other:
+        self[k] = v
+
 
 
 
