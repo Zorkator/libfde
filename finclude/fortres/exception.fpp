@@ -42,7 +42,7 @@
    end function
 
 #define _throw( exc, msg ) \
-  throw( exc, str(_str(exc)//": "//msg) )
+  throw( exc, _str(exc)//": "//msg )
 
 #define _catch_1(a)                [a, 0]
 #define _catch_2(a,b)              [a,b, 0]
