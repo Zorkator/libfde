@@ -1,0 +1,50 @@
+#ifndef __PPUTIL_XPP
+#define __PPUTIL_XPP
+
+# define _same(a)       a
+
+#if defined(__GFORTRAN__)
+# define _str(a)                "a"
+# define _paste(a,b)            _same(a)_same(b)
+# define _paste_3(a,b,c)        _same(a)_same(b)_same(c)
+# define _paste_4(a,b,c,d)      _same(a)_same(b)_same(c)_same(d)
+
+#else
+
+# define _pp_str(a)             #a
+# define _pp_merge(a,b)         a ## b
+# define _pp_merge_3(a,b,c)     a ## b ## c
+# define _pp_merge_4(a,b,c,d)   a ## b ## c ## d
+
+# define _str(a)                _pp_ ## str(a)
+# define _paste(a,b)            _pp_ ## merge(a,b)
+# define _paste_3(a,b,c)        _pp_ ## merge_3(a,b,c)
+# define _paste_4(a,b,c,d)      _pp_ ## merge_4(a,b,c,d)
+
+#endif
+
+# define _eatArgList_1(a)
+# define _eatArgList_2(a,b)
+# define _eatArgList_3(a,b,c)
+# define _eatArgList_4(a,b,c,d)
+
+
+#if 0
+! Two little helper macros for mapping items of Xtables.
+! for example, define an Xtable like this:
+! # define Xtable_Type \
+!       XtableItem(Type)( Sphere  ) \
+!       XtableItem(Type)( Cone    )
+!       ...
+! ... and you might use it like that:
+! # define foreach_Type( elementId ) \
+!       print *, # elementId
+! XtableExpand(Type)
+! # undef foreach_Type
+#endif
+
+# define XtableItem(tableId)             _paste(foreach_,tableId)
+# define XtableExpand(tableId)           _paste(Xtable_,tableId)
+
+#endif
+

@@ -1,137 +1,182 @@
 
+#include "StringRef.hpp"
+
+#include <csetjmp>
+#include <stdarg.h>
+#include <algorithm>
+#include <functional>
 #include <vector>
 #include <map>
-#include <algorithm>
-#include <csetjmp>
-#include <functional>
-#include <string>
-#include <string.h>
-#include <stdarg.h>
 
 #if defined _MSC_VER
 #	define _dllExport         __declspec(dllexport)
-  typedef unsigned __int32  uint32_t;
 #else
 #	define _dllExport
-# include <stdint.h>
 #endif
 
-#pragma pack(push, 4)
-struct StringRef
+typedef void (*Procedure)( ... );
+
+class CatchStack
 {
-  const StringRef &
-    operator = ( const std::string &str )
+  private:
+    struct CheckPoint
     {
-      if (_ref != NULL)
-      {
-        this->clear(); //< clear string buffer by spaces to make fortran happy
-        if (str.length() < _len)
-          { _len = str.length(); }
-        memcpy( _ref, str.c_str(), _len );
-      }
-      return *this;
-    }
+      typedef std::vector<int>        CodeSet;
+      typedef std::vector<Procedure>  ProcList;
 
-  void
-    assignTo( std::string &str ) const
-      { str.assign( _ref, _len ); }
-
-  void
-    clear( void )
-      { memset( _ref, ' ', _len ); }
-
-  void
-    erase( void )
-    {
-      _ref = NULL;
-      _len = 0;
-    }
-
-  char     *_ref;
-  uint32_t  _len;
-};
-#pragma pack(pop)
-
-
-
-struct CheckPoint
-{
-  // Note: for storing the exception codes we use a ordered set, with descending order!
-  typedef std::vector<int>  CodeSet;
-
-
-    CheckPoint( int *codeList, size_t len )
-    : codes( codeList, codeList + len )
-    {
-      memset( &this->env, 0, sizeof(std::jmp_buf) );
-      std::sort( this->codes.begin(), this->codes.end(), std::greater<int>() );
-    }
-
-
-  void
-    handle( int code, const StringRef *what ) //< NOTE: might not return!
-    {
-      CodeSet::iterator it = this->codes.begin();
-
-      // iterate over codes (sorted by descending order!)
-      // This means we get the exception codes from most to least specific.
-      for (; it != this->codes.end(); ++it)
-      {
-        if ((*it & code) == *it)
+      
+        CheckPoint( int *codeList, size_t len )
+        : _codes( codeList, codeList + len )
         {
-          code = *it; //< use most specific exception code found
-          break;
+          memset( &_env, 0, sizeof(std::jmp_buf) );
+          std::sort( _codes.begin(), _codes.end(), std::greater<int>() );
+        }
+
+
+      void
+        check( int code, const StringRef *what ) //< NOTE: might not return!
+        {
+          CodeSet::iterator it = _codes.begin();
+
+          // iterate over codes (sorted by descending order!)
+          // This means we get the exception codes from most to least specific.
+          for (; it != _codes.end(); ++it)
+          {
+            if ((*it & code) == *it)
+            {
+              code = *it; //< use most specific exception code found
+              break;
+            }
+          }
+
+          if (_codes.empty() || it != _codes.end())
+          {
+            // call cleanup procedures in reverse order ...
+            for (size_t i = _procs.size(); i > 0; --i)
+              { _procs[i-1](); }
+
+            what->assignTo( _msg );
+            std::longjmp( _env, code );
+          }
+        }
+
+      void
+        push( Procedure proc )
+          { _procs.push_back( proc ); }
+
+      void
+        pop( bool exec )
+        {
+          if (exec)
+            { _procs.back()(); }
+          _procs.pop_back();
+        }
+        
+      // members ...
+      std::jmp_buf  _env;
+      CodeSet       _codes;
+      ProcList      _procs;
+      std::string   _msg;
+    };
+
+    std::vector<CheckPoint> _checkPoints;
+
+  public:
+    std::jmp_buf &
+      openFrame( int *codeList ) //< expects 0-terminated codeList!
+      {
+        size_t len;
+        for (len = 0; codeList[len]; ++len);
+        _checkPoints.push_back( CheckPoint( codeList, len ) );
+        return _checkPoints.back()._env;
+      }
+    
+    void
+      closeFrame( void )
+        { _checkPoints.pop_back(); }
+
+    void
+      handle( int code, const StringRef *what )
+      {
+        while (_checkPoints.size())
+        {
+          _checkPoints.back().check( code, what );
+          _checkPoints.pop_back();
         }
       }
 
-      if (this->codes.empty() || it != this->codes.end())
-      {
-        what->assignTo( this->msg );
-        std::longjmp( this->env, code );
-      }
-    }
+    void
+      push_cleanup( Procedure proc )
+        { _checkPoints.back().push( proc ); }
 
-  std::jmp_buf  env;
-  CodeSet       codes;
-  std::string   msg;
+    void
+      pop_cleanup( bool exec )
+        { _checkPoints.back().pop( exec ); }
+
+    std::string &
+      message( void )
+        { return _checkPoints.back()._msg; }
 };
 
 
-typedef void (*FortranProcedure)( ... );
-typedef void *                      ArgRef;
-typedef std::vector<CheckPoint>     CatchStack;
-typedef std::map<int, CatchStack>   ContextMap;
-
-
 /**
- * Note, that this try-catch mechanism NOT fit for threading yet!
- * This is mostly because of one static CatchStack.
- * Even synchronized, it would happily mix up CheckPoints that originate from try-calls
- *   of different threads - and that's surely not healthy!
- * We'd rather have to associate a separate CatchStack to each thread.
- * This could be fixed easily by mapping the thread-id to a CatchStack.
- * However, since there's no theadding standard yet (thanks M$!) this causes again
- *   portability issues.
+ * The following routines try to get the try-catch mechanism suitable for threading.
+ * Since there are various types of threading, there is no "standard way" to synchronize threads
+ *   and to keep the CatchStacks separated.
+ * Additionally, we don't know what type of threading is applied by the program using libfortres.
+ * Thats why we handle this as "not-my-business" and expect the program to hook a synchronizer procedure.
+ * Basically, such procedure could be kept as easy as the following example (C-pseudo):
+ * 
+ * void my_synchronizer( CatchStack **context, int )
+ * {
+ *   mutex->lock();
+ *     f_get_context( context, get_current_thread_id() );
+ *   mutex->release();
+ * }
  */
 
-inline CatchStack &
-getContext( void )
+extern "C" _dllExport
+void
+f_get_context( CatchStack **context, int contextId )
 {
-  static ContextMap _contextMap;
-
-  // TODO: synchronize here!
-  int threadId = 0 /*<< TODO: replace this by current thread-Id! */;
-  return _contextMap[threadId];
+  static std::map<int, CatchStack>  _contextMap;
+  *context = &_contextMap[contextId];
 }
+
+typedef void (*Synchronizer)( CatchStack **, int );
+Synchronizer _synchronizer = f_get_context;
 
 
 extern "C" _dllExport
-int
-f_try( int *catchList, StringRef *what, FortranProcedure proc, ... )
+void
+f_set_synchronizer( Synchronizer proc )
+  { _synchronizer = proc; }
+
+
+inline CatchStack *
+getContext( void )
 {
-  va_list  vaArgs;
-  ArgRef   argBuf[32];
-  size_t   nrArgs;
+  CatchStack *context = NULL;
+  _synchronizer( &context, 0 );
+  return context;
+}
+
+
+/**
+ * The remaining routines care for marking catch points (f_try), throwing exceptions (f_throw)
+ *   and registering code that needs to be executed exception-safe (e.g. cleanup-code).
+ */
+
+extern "C" _dllExport
+int
+f_try( int *catchList, StringRef *what, Procedure proc, ... )
+{
+  typedef  void *  ArgRef;
+
+  va_list     vaArgs;
+  ArgRef      argBuf[32];
+  size_t      nrArgs;
+  CatchStack *context;
 
   va_start( vaArgs, proc );
   {
@@ -142,16 +187,9 @@ f_try( int *catchList, StringRef *what, FortranProcedure proc, ... )
   }
   va_end( vaArgs );
 
-  // convert 0-terminated catchList into CheckPoint and push it onto catchStack
-  int len;
-  for (len = 0; catchList[len]; ++len);
-
-  CatchStack &catchStack = getContext();
-  catchStack.push_back( CheckPoint( catchList, len ) );
-
-  // mark current stack location as point of return ...
-  CheckPoint &here = catchStack.back();
-  int        code  = setjmp( here.env ); //< for marking setjmp returns 0!
+  context  = getContext();
+  int code = setjmp( context->openFrame( catchList ) ); //< mark current stack location as point of return ...
+                                                        //  NOTE that setjmp returns 0 for marking!
   
   //<<< longjmp ends up here with some code different from 0!
   if (code == 0)
@@ -208,13 +246,11 @@ f_try( int *catchList, StringRef *what, FortranProcedure proc, ... )
   }
   else
   {
-    // Here, we've just landed the longjmp and the stack is not the same any more.
-    // HENCE, we can't rely on the 'here' reference taken above!
-    CheckPoint &here = catchStack.back();
-    *what = here.msg;
+    // Here, we've just landed the longjmp ...
+    *what = context->message();
   }
 
-  catchStack.pop_back();
+  context->closeFrame();
   return code;
 }
 
@@ -223,17 +259,27 @@ extern "C" _dllExport
 void
 f_throw( int code, const StringRef *what )
 {
-  CatchStack &catchStack = getContext();
-
-  while (catchStack.size())
-  {
-    catchStack.back().handle( code, what );
-    catchStack.pop_back();
-  }
+  getContext()->handle( code, what );
   /**
    * If we arrive here there's no matching catch point!
-   * Hence, we just can't catch this exception ... sorry!
+   * This means, we just can't catch this exception ... sorry and bye!
    */
   throw;
+}
+
+
+extern "C" _dllExport
+void
+f_push_cleanup( Procedure proc )
+{
+  getContext()->push_cleanup( proc );
+}
+
+
+extern "C" _dllExport
+void
+f_pop_cleanup( int exec )
+{
+  getContext()->pop_cleanup( exec != 0 );
 }
 

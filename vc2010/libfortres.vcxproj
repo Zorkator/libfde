@@ -67,27 +67,27 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>false</LinkIncremental>
-    <TargetName>$(ProjectName).0.$(PlatformName)</TargetName>
-    <OutDir>$(SolutionDir)$(Configuration)\</OutDir>
-    <IntDir>$(Platform)\$(Configuration)\</IntDir>
+    <TargetName>$(ProjectName).1.$(PlatformName)</TargetName>
+    <OutDir>$(SolutionDir)$(Configuration).$(PlatformName)\</OutDir>
+    <IntDir>$(SolutionDir).work\$(TargetName)\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>false</LinkIncremental>
-    <TargetName>$(ProjectName).0.$(PlatformName)</TargetName>
-    <OutDir>$(SolutionDir)$(Configuration)\</OutDir>
-    <IntDir>$(Platform)\$(Configuration)\</IntDir>
+    <TargetName>$(ProjectName).1.$(PlatformName)</TargetName>
+    <OutDir>$(SolutionDir)$(Configuration).$(PlatformName)\</OutDir>
+    <IntDir>$(SolutionDir).work\$(TargetName)\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
-    <TargetName>$(ProjectName).0.$(PlatformName)</TargetName>
-    <OutDir>$(SolutionDir)$(Configuration)\</OutDir>
-    <IntDir>$(Platform)\$(Configuration)\</IntDir>
+    <TargetName>$(ProjectName).1.$(PlatformName)</TargetName>
+    <OutDir>$(SolutionDir)$(Configuration).$(PlatformName)\</OutDir>
+    <IntDir>$(SolutionDir).work\$(TargetName)\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
-    <TargetName>$(ProjectName).0.$(PlatformName)</TargetName>
-    <OutDir>$(SolutionDir)$(Configuration)\</OutDir>
-    <IntDir>$(Platform)\$(Configuration)\</IntDir>
+    <TargetName>$(ProjectName).1.$(PlatformName)</TargetName>
+    <OutDir>$(SolutionDir)$(Configuration).$(PlatformName)\</OutDir>
+    <IntDir>$(SolutionDir).work\$(TargetName)\</IntDir>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -102,7 +102,8 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
     <CustomBuildStep>
-      <Command>copy "$(OUTDIR)$(ProjectName).0.$(PlatformName).dll" "$(OUTDIR)$(ProjectName).0.$(PlatformName).lib" "$(OUTDIR)$(ProjectName).0.$(PlatformName).pdb" ..\bin </Command>
+      <Command>
+      </Command>
       <Outputs>
       </Outputs>
     </CustomBuildStep>
@@ -143,7 +144,8 @@
       <OptimizeReferences>true</OptimizeReferences>
     </Link>
     <CustomBuildStep>
-      <Command>copy "$(OUTDIR)$(ProjectName).0.$(PlatformName).dll" "$(OUTDIR)$(ProjectName).0.$(PlatformName).lib" "$(OUTDIR)$(ProjectName).0.$(PlatformName).pdb" ..\bin </Command>
+      <Command>
+      </Command>
       <Outputs>
       </Outputs>
     </CustomBuildStep>
@@ -165,7 +167,8 @@
       <OptimizeReferences>true</OptimizeReferences>
     </Link>
     <CustomBuildStep>
-      <Command>copy "$(OUTDIR)$(ProjectName).0.$(PlatformName).dll" "$(OUTDIR)$(ProjectName).0.$(PlatformName).lib" "$(OUTDIR)$(ProjectName).0.$(PlatformName).pdb" ..\bin </Command>
+      <Command>
+      </Command>
       <Outputs>
       </Outputs>
     </CustomBuildStep>

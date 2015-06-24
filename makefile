@@ -17,7 +17,7 @@ SOURCE_FILES    := exception.cpp
 OUT_TYPE        := shared
 OUT_NAME         = fortres.x$(mk_ARCH)
 OUT_DIR          = release
-MAYOR           := 0
+MAYOR           := 1
 CC_INCLUDE_DIRS := .
 
 ifneq ($(MAKEIT_DIR),)
