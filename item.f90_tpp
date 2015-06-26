@@ -46,7 +46,7 @@ module adt_item
     subroutine UserAssignment( lhsPtr, lhsType, rhsPtr, rhsType )
       import c_ptr, TypeSpecs_t
       type(c_ptr),       intent(in) :: lhsPtr,  rhsPtr
-      type(TypeSpecs_t), intent(in) :: lhsType, rhsType
+      type(TypeSpecs_t), target, intent(in) :: lhsType, rhsType
     end subroutine
   end interface
 
