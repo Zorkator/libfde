@@ -3,6 +3,7 @@ from distutils.sysconfig import get_python_lib
 # cannot use setuptools, because it includes every file in svn :-(
 
 import sys
+import os
 import platform
 
 __version__ = ""  # get rid of warning, really import it __init__.py
@@ -22,17 +23,18 @@ except:
 def library_files():
     # TODO: Check during packaging which versions of DLL/so are available
     if platform.system() == "Windows":
-        files = ['./lib/Release.x64/libadt.0.Release.x64.dll',
-                 './lib/Release.Win32/libadt.0.Release.Win32.dll']
+        files = ['./lib/Release.x64/libadt.1.Release.x64.dll',
+                 './lib/Release.Win32/libadt.1.Release.Win32.dll']
     else:
-        files = ['./lib/ifort.32/libadt.0.ifort.release.32.so',
-                 './lib/ifort.64/libadt.0.ifort.release.64.so',
-                 './lib/gfortran.32/libadt.0.gfortran.release.32.so',
-                 './lib/gfortran.64/libadt.0.gfortran.release.64.so']
+        files = ['./lib/ifort.32/libadt.1.ifort.release.32.so',
+                 './lib/ifort.64/libadt.1.ifort.release.64.so',
+                 './lib/gfortran.32/libadt.1.gfortran.release.32.so',
+                 './lib/gfortran.64/libadt.1.gfortran.release.64.so']
 
     return files
 
-__install_data_path__ = get_python_lib()
+# hack necessary, because absolute path does not work anymore?!?
+__install_data_path__ = os.path.relpath(get_python_lib(), sys.prefix)
 
 if len(sys.argv) > 1 and sys.argv[1] == 'bdist_wininst':
     __install_data_path__ = '..\\PURELIB\\'

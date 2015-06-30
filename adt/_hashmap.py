@@ -11,6 +11,14 @@ class HashMap(Object):
   def __getptr( self, getter, ident ):
     ptr = POINTER(Item)()
     dummy = "{0}".format(ptr) # de-optimize Python (????), so next line works
+    print ptr
+    print self
+    print ident
+    print byref(ptr)
+    print byref(self)
+    print c_char_p(ident)
+    print c_int(len(ident))
+    print getter
     getter( byref(ptr), byref(self), c_char_p(ident), c_int(len(ident)) )
     return ptr
 
@@ -98,6 +106,6 @@ class HashMapIndex(Compound):
   def next( self ):
     if self.set_next_( byref(self) ) == 0:
       raise StopIteration
-  
-  
+
+
 

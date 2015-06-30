@@ -14,14 +14,14 @@ _libNames    = (
   libadt.release.{arch}.gfortran.so
   libadt.debug.{arch}.ifort.so
   libadt.release.{arch}.ifort.so
-  libadt.0.gfortran.debug.{arch}.so
-  libadt.0.gfortran.release.{arch}.so
-  libadt.0.ifort.debug.{arch}.so
-  libadt.0.ifort.release.{arch}.so
+  libadt.1.gfortran.debug.{arch}.so
+  libadt.1.gfortran.release.{arch}.so
+  libadt.1.ifort.debug.{arch}.so
+  libadt.1.ifort.release.{arch}.so
   """.format( arch = _archBit ),
   """
-  libadt.0.Debug.{arch}.dll
-  libadt.0.Release.{arch}.dll
+  libadt.1.Debug.{arch}.dll
+  libadt.1.Release.{arch}.dll
   """.format( arch = _archWin )
 )[platform.system() == "Windows"].split()
 
