@@ -522,12 +522,12 @@ end module
 program test_adt
   use test_basedata
   use blablu
-  character(len=30), target :: buffer
-
-  write(buffer,*) 234.4
-  print*, len_trim_ptr(buffer)
-  
-  print *, func1( 2.5, buffer ) // func1( 1.34, buffer ) // func1( -234.8, buffer )
+  !character(len=30), target :: buffer
+  !
+  !write(buffer,*) 234.4
+  !print*, len_trim_ptr(buffer)
+  !
+  !print *, func1( 2.5, buffer ) // func1( 1.34, buffer ) // func1( -234.8, buffer )
 
   call init_basedata()
   call test_string()

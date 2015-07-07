@@ -207,7 +207,7 @@ module adt_ref
     call assign( lhs, rhs )
   end subroutine
 
-!_PROC_EXPORT(ref_equal_ref_private)
+!_PROC_EXPORT(ref_eqv_ref_private)
 !_ARG_REFERENCE2(lhs, rhs)
   logical &
   function ref_eqv_ref_private( lhs, rhs ) result(res)
