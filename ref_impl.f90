@@ -146,15 +146,18 @@ end module
     integer(kind=4),              parameter :: size_typeInfo = storage_size(TypeInfo_ptr_t(null())) / 8
     integer(kind=4),              parameter :: size_encoding = storage_size(RefEncoding_t(null())) / 8
     character(len=1), dimension(:), pointer :: stream
-    type(TypeInfo_ptr_t),           pointer :: typeInfo
+    type(TypeInfo_ptr_t), dimension(:), pointer :: typeInfo
     type(c_ptr)                             :: encoding
     
     call ref_free_c( lhs )
     encoding = c_loc(rhs(1))
-    call c_f_pointer( encoding, typeInfo )
+    call c_f_pointer( encoding, typeInfo, (/2/) )
     call c_f_pointer( encoding, stream, (/ size(rhs) * size_encoding /) )
-    call basestring_assign_buf( lhs%ref_str, stream(size_typeInfo + 1:) )
-    lhs%typeInfo => typeInfo%ptr
+    call basestring_assign_buf( lhs%ref_str, stream(2 * size_typeInfo + 1:) )
+    lhs%typeInfo => typeInfo(1)%ptr
+    if (associated( typeInfo(2)%ptr )) then
+      _ref_setMine( lhs%refstat, 1 )
+    end if
   end subroutine
 
 

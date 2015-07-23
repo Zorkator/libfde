@@ -109,8 +109,8 @@ class RefType(TypeSpec):
     end type
 
     type, private :: {typeId}_encoder_t
-      type(TypeInfo_t), pointer :: typeInfo
-      type({typeId}_wrap_t)     :: ref_wrap
+      type(TypeInfo_ptr_t)  :: typeInfo(2)
+      type({typeId}_wrap_t) :: ref_wrap
     end type
 
     type(TypeInfo_t), target :: type_{typeId}
@@ -154,16 +154,21 @@ class RefType(TypeSpec):
     ref_encoder = """
 !_PROC_EXPORT({typeId}_encode_ref_)
 !_ARG_REFERENCE1(val)
-    function {typeId}_encode_ref_( val ) result(res)
+    function {typeId}_encode_ref_( val, bind ) result(res)
       use iso_c_binding
       {baseType_arg}{dimSpec}{valAttrib} :: val
+      logical, optional                  :: bind
       type({typeId}_encoder_t),   target :: encoder
       type(RefEncoding_t)                :: dummy
       type(RefEncoding_t)                :: res( ceiling( storage_size(encoder) / real(storage_size(dummy)) ) )
       type(RefEncoding_t), dimension(:), pointer :: fptr
 
-      encoder%typeInfo     => static_type(val)
-      encoder%ref_wrap%ptr => val
+      encoder%typeInfo(1)%ptr => static_type(val)
+      if (present(bind)) then
+        if (bind) &
+          encoder%typeInfo(2)%ptr => encoder%typeInfo(1)%ptr
+      end if
+      encoder%ref_wrap%ptr    => val
       call c_f_pointer( c_loc(encoder), fptr, shape(res) )
       res = fptr
     end function

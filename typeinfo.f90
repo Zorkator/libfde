@@ -32,7 +32,7 @@ module adt_typeinfo
 
   
   type, public :: TypeInfo_ptr_t
-    type(TypeInfo_t), pointer :: ptr
+    type(TypeInfo_t), pointer :: ptr => null()
   end type
 
 

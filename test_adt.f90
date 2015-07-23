@@ -310,7 +310,7 @@ subroutine test_ref()
 
   type(Ref_t) :: r1, r2
 
-  r1 = ref_of( v_bool1 )
+  r1 = ref_of( v_bool1, bind = .false. )
   _assert( is_valid( r1 ) )
   _assert_not( is_valid( r2 ) )
   r2 = ref_of( v_bool1 )
@@ -479,6 +479,28 @@ subroutine test_hashmap()
 end subroutine
 
 
+subroutine test_hashmap_nesting()
+  use test_basedata
+  implicit none
+
+  type(HashMap_t), pointer :: p_map
+  type(Ref_t)              :: ref1
+  integer                  :: i
+  character(len=10)        :: buff
+
+  call bind( ref1, .false. )!< not needed
+  allocate( p_map ); call initialize( p_map )
+  ref1 = ref_of( p_map, bind = .true. )
+
+  do i = 1,3
+    write(buff,'(A7,I02)'), 'submap_', i
+    call set( p_map, trim(buff), Item_of( clone(ref1) ) )
+  end do
+
+  call delete( ref1 )
+end subroutine
+
+
 program test_adt
   use test_basedata
 
@@ -488,6 +510,7 @@ program test_adt
   call test_item()
   call test_list()
   call test_hashmap()
+  call test_hashmap_nesting()
 
   call cleanup_basedata()
   call hashmap_clear_cache()

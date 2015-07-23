@@ -69,7 +69,7 @@ program sim_driver
 
   subroutine callback()
     real*8, pointer :: t
-    integer*8       :: t_val
+    real*8       :: t_val
 
     t => _getValRef( 't', real8 )
     t_val = _getVal( 't' )

@@ -202,6 +202,8 @@ subroutine run_simulation()
     t = t + dt
   end do
   call invoke_callback('finish')
+  call delete( stateMap_ )
+  call delete( hookMap_ )
 
   contains
 
@@ -222,6 +224,7 @@ subroutine run_simulation()
     if (size(table_ptr) > 0) then
       print*, storage_size(table_ptr(1))/8
     end if
+    call delete( ref1 )
   end subroutine
 
   subroutine test_string_array()
