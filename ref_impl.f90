@@ -50,6 +50,12 @@ module impl_ref__
       type(Ref_t),    intent(in) :: rhs
     end subroutine
 
+    subroutine ref_assign_encoding( lhs, rhs )
+      import Ref_t, RefEncoding_t
+      type(Ref_t),              intent(inout) :: lhs
+      type(RefEncoding_t), target, intent(in) :: rhs(:)
+    end subroutine
+
     function ref_get_typereference( self ) result(res)
       import Ref_t, c_ptr
       type(Ref_t), intent(in) :: self
@@ -132,7 +138,8 @@ end module
 !_PROC_EXPORT(ref_assign_encoding)
 !_ARG_REFERENCE2(lhs, rhs)
   subroutine ref_assign_encoding( lhs, rhs )
-    use impl_ref__
+    use impl_ref__, only: Ref_t, RefEncoding_t, TypeInfo_ptr_t, basestring_assign_buf
+    use iso_c_binding
     implicit none
     type(Ref_t),              intent(inout) :: lhs
     type(RefEncoding_t), target, intent(in) :: rhs(:)
@@ -245,6 +252,21 @@ end module
     type(Ref_t), intent(in)    :: self
     call ref_assign_ref_c( res, ref_clone( self ) )
   end subroutine
+
+
+!_PROC_EXPORT(ref_clone_encoding)
+!_ARG_REFERENCE1(enc)
+  function ref_clone_encoding( enc ) result(res)
+    use impl_ref__
+    implicit none
+    type(RefEncoding_t), target, intent(in) :: enc(:)
+    type(Ref_t)                             :: res
+    
+    call ref_assign_encoding( res, enc )
+    call ref_assign_ref_c( res, ref_clone( res ) )
+    call basestring_set_attribute( res%ref_str, attribute_volatile )
+    _ref_setHard( res%refstat, 0 )
+  end function
 
 
   function ref_peek_cptr( self ) result(res)

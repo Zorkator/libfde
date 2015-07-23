@@ -75,6 +75,12 @@ module adt_ref
       type(Ref_t), intent(in) :: self
       type(Ref_t)             :: res
     end function
+
+    function ref_clone_encoding( enc ) result(res)
+      import RefEncoding_t, Ref_t
+      type(RefEncoding_t), intent(in) :: enc(:)
+      type(Ref_t)                     :: res
+    end function
   end interface
 
   interface cptr

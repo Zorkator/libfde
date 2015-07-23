@@ -320,10 +320,20 @@ subroutine test_ref()
   r1 = r2
   _assert( r1 == r2 )
 
+  r1 = ref_of( v_bool1 )
+  print *, bool1(r1)
+  r2 = clone( r1 )
+  print *, bool1(r2)
+  r2 = clone( ref_of( v_bool1 ) )
+  print *, bool1(r2)
+  _assert( r1 /= r2 )
+  print *, bool1(r1), bool1(r2)
+
 # define _ref_deref_( typeId )        \
     r1 = ref_of( _paste(v_,typeId) ) ;\
     _paste(p_,typeId) => typeId(r1)  ;\
-    r2 = clone( r1 ) ;\
+    r2 = clone( r1 )                 ;\
+    r2 = clone( ref_of( _paste(v_,typeId) ) ) ;\
     print *, _str(typeId), loc(_paste(p_,typeId)) == loc(_paste(v_,typeId)), .not. (r2 == r1); \
     _paste(p_,typeId) => typeId(r2)
 
@@ -339,7 +349,11 @@ subroutine test_ref()
   _ref_deref_(real8)
   _ref_deref_(complex8)
   _ref_deref_(complex16)
+#ifdef __GNUC__
+  print *, "skipping 'c_void_ptr' since gfortran doesn't support it"
+#else
   _ref_deref_(c_void_ptr)
+#endif
   _ref_deref_(char10)
   _ref_deref_(string)
   _ref_deref_(ref)
@@ -464,70 +478,9 @@ subroutine test_hashmap()
 
 end subroutine
 
-module blablu
-  contains
-
-pure integer*4 &
-function dings( val, buf ) result(res)
-  real*4,          intent(in) :: val
-  character(len=*), pointer :: buf
-  write(buf,*) val
-  res = len_trim(buf)
-end function
-
-
-function dings2( val, buf ) result(res)
-  real*4, intent(in) :: val
-  character(len=*), pointer :: buf
-  character(len=dings(val,buf)), pointer :: res
-  res => buf
-end function
-
-
-  subroutine bla1( val, ptr )
-    real*4,                       intent(in) :: val
-    character(len=:), pointer, intent(inout) :: ptr
-    write(ptr,*) val
-  end subroutine
-
-  function len_trim_ptr( buf ) result(res)
-    character(len=*), target,  intent(in) :: buf
-    character(len=len_trim(adjustl(buf))), pointer :: res
-    res => buf
-  end function
-
-  function val_to_str( val, buf ) result(res)
-    real*4,              intent(in) :: val
-    character(len=*), intent(inout) :: buf
-    character(len=:),       pointer :: res
-    write(buf, *) val
-    res => len_trim_ptr(buf)
-  end function
-
-  function func1( val, buf ) result(res)
-    real*4,              intent(in) :: val
-    character(len=*), target, intent(inout) :: buf
-    character(len=:),       pointer :: res
-    character(len=30)               :: valbuf
-    integer*4                       :: begin
-    write(valbuf, *) val
-    begin = len_trim(buf)+1
-    buf(begin:begin+len_trim(valbuf)) = trim(adjustl(valbuf))
-    res => buf
-  end function
-
-end module
-
 
 program test_adt
   use test_basedata
-  use blablu
-  !character(len=30), target :: buffer
-  !
-  !write(buffer,*) 234.4
-  !print*, len_trim_ptr(buffer)
-  !
-  !print *, func1( 2.5, buffer ) // func1( 1.34, buffer ) // func1( -234.8, buffer )
 
   call init_basedata()
   call test_string()

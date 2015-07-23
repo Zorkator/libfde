@@ -23,6 +23,8 @@ MAYOR           := 1
 OUT_DIR          = lib/$(mk_TAG)
 FC_INCLUDE_DIRS := ./include
 
+FC_list = ifort gfortran
+
 FC_CFLAGS.%       = $(fc_fpp) $(call fc_form,free,none)
 crc_impl.gfortran = $(call fc_cflags_of,.f90) -fno-range-check
 crc_impl.ifort    = $(call fc_cflags_of,.f90) -assume noold_boz
@@ -31,27 +33,42 @@ crc_impl.ifort    = $(call fc_cflags_of,.f90) -assume noold_boz
 	python typegen.py $< -o $@
 
 
-exe_opts = OUT_TYPE=exe OUT_DIR=exe OUT_NAME=$@ \
-           FC_INCLUDE_DIRS="exe include"
+exe_opts = OUT_TYPE=exe OUT_DIR=exe OUT_NAME=$@.$(mk_TAG) \
+           FC_INCLUDE_DIRS="include lib/$(mk_TAG)"
 exe_libs = FC_LIBRARY_DIRS=lib/$(mk_TAG)				\
-           FC_LIBRARIES=adt
+           FC_LIBRARIES=adt.$(mk_TAG)
 
-map_test: built
+ref_test:
+	@$(MAKE) built OUT_NAME=adt.$(mk_TAG)
+	@$(MAKE) built $(exe_opts) $(exe_libs)        \
+	         SOURCE_FILES="test_ref.f90 test_type_references.f90"
+
+test_adt:
+	@$(MAKE) built OUT_NAME=adt.$(mk_TAG)
+	@$(MAKE) built $(exe_opts) $(exe_libs)        \
+	         SOURCE_FILES=test_adt.f90
+
+map_test:
+	@$(MAKE) built OUT_NAME=adt.$(mk_TAG)
 	@$(MAKE) built $(exe_opts) $(exe_libs)        \
 	         SOURCE_FILES=test_hash_map.f90
 
-testsim: built
+testsim:
+	@$(MAKE) built OUT_NAME=adt.$(mk_TAG)
 	@$(MAKE) built $(exe_opts) $(exe_libs) \
 	         SOURCE_FILES=test_simulator.f90
 
-testsim_so: built
+testsim_so:
+	@$(MAKE) built OUT_NAME=adt.$(mk_TAG)
 	@$(MAKE) built $(exe_opts) $(exe_libs) OUT_TYPE=shared \
 	         SOURCE_FILES=test_simulator.f90
 
 testsimdriver: testsim_so
-	@$(MAKE) built $(exe_opts) FC_LIBRARY_DIRS="exe lib/$(mk_TAG)" FC_LIBRARIES="testsim_so adt"\
+	@$(MAKE) built OUT_NAME=adt.$(mk_TAG)
+	@$(MAKE) built $(exe_opts) FC_LIBRARY_DIRS="exe lib/$(mk_TAG)" FC_LIBRARIES="testsim_so.$(mk_TAG) adt.$(mk_TAG)"\
 	         SOURCE_FILES=test_simulator_driver.f90				
 
+all: ref_test test_adt map_test testsim testsimdriver
 
 ifneq ($(MAKEIT_DIR),)
 include $(MAKEIT_DIR)/mk.fortran

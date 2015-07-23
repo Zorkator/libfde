@@ -28,8 +28,17 @@ program testinger
 
   i = 0; j = 1
 
+  ref2 = clone(ref_of(j))
+  print *, int4(ref2)
+
   ref1 = ref_of(i)
   call delete(ref1)
+
+  allocate( ptr2d(3,4) )
+  ref1 = ref_of( ptr2d )
+  call bind( ref1, .true. )
+  ptr2d => null()
+  ref2 = ref1
 
   ref1 = ref_of(i)
   ref2 = ref_of(ref1)
@@ -37,6 +46,13 @@ program testinger
 
   ref1 = ref_of(i)
   ref2 = ref_of(j)
+
+  ref3 = ref_of(j)
+  ref2 = clone(ref3)
+  print *, int4(ref2)
+
+  ref2 = clone(ref_of(j))
+  print *, int4(ref2)
 
   ref2 = clone(ref1)
   call delete(ref2)
