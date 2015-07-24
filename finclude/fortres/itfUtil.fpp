@@ -20,11 +20,22 @@
 #   define BUILT_TYPE   APPLICATION
 # endif
 
+! if not set otherwise, configure EXPORT_SYMBOLS according to built type
+# if !defined EXPORT_SYMBOLS
+#   if BUILT_TYPE == SHARED_LIB
+!     enable EXPORT_SYMBOLS
+#     define EXPORT_SYMBOLS  ENABLED
+#   else
+!     disable EXPORT_SYMBOLS
+#     define EXPORT_SYMBOLS  DISABLED
+#   endif
+# endif
+
 !
-! depending on BUILT_TYPE and target system we need to define the
-!   export macros _SYM_EXPORT and _PROC_EXPORT differently
+! if exports are enabled we need to define the export macros
+!   _SYM_EXPORT and _PROC_EXPORT according to compiler and system.
 !
-# if BUILT_TYPE == SHARED_LIB
+# if EXPORT_SYMBOLS == ENABLED
 !   prepare for building shared library
 
 #   if defined __INTEL_COMPILER
