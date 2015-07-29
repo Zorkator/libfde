@@ -161,16 +161,14 @@ class RefType(TypeSpec):
       type({typeId}_encoder_t),   target :: encoder
       type(RefEncoding_t)                :: dummy
       type(RefEncoding_t)                :: res( ceiling( storage_size(encoder) / real(storage_size(dummy)) ) )
-      type(RefEncoding_t), dimension(:), pointer :: fptr
 
+      encoder%ref_wrap%ptr    => val
       encoder%typeInfo(1)%ptr => static_type(val)
       if (present(bind)) then
         if (bind) &
           encoder%typeInfo(2)%ptr => encoder%typeInfo(1)%ptr
       end if
-      encoder%ref_wrap%ptr    => val
-      call c_f_pointer( c_loc(encoder), fptr, shape(res) )
-      res = fptr
+      res = transfer( encoder, res )
     end function
     """,
     
@@ -332,7 +330,7 @@ class RefType(TypeSpec):
     if self._isProc:
       keySpecs.setdefault( 'cloneMode', '_none' ) #< if not set explicitly, we disable cloning for procedure types
       if typeProcs:
-        print 'WARNING: given type procs %s are ignored for procedure type "%s"' % (typeProcs, typeId)
+        sys.stderr.write( 'WARNING: given type procs {0} are ignored for procedure type "{1}"\n'.format(typeProcs, typeId) )
 
     for procId in ('initProc', 'assignProc', 'deleteProc', 'shapeProc'):
       procArg  = ''

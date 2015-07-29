@@ -37,7 +37,7 @@ module adt_typeinfo
 
 
   type, public :: void_t
-    integer, pointer :: ptr
+    type(TypeInfo_t), pointer :: ptr
   end type
 
 

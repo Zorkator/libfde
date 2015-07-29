@@ -483,12 +483,12 @@ subroutine test_hashmap_nesting()
   use test_basedata
   implicit none
 
-  type(HashMap_t), pointer :: p_map
+  type(HashMap_t), pointer :: p_map => null()
   type(Ref_t)              :: ref1
   integer                  :: i
   character(len=10)        :: buff
 
-  call bind( ref1, .false. )!< not needed
+  !call bind( ref1, .false. )!< not needed
   allocate( p_map ); call initialize( p_map )
   ref1 = ref_of( p_map, bind = .true. )
 
