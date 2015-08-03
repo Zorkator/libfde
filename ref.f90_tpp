@@ -183,13 +183,21 @@ module adt_ref
   public :: delete
   public :: free
   public :: dynamic_type
-  public :: permanent_ref, temporary_ref
-  public :: bind
+  public :: bind, permanent_ref, temporary_ref
+  public :: set_attribute, attribute_permanent, attribute_volatile
   public :: is_valid
 
   ! declare TypeInfo necessities public
 
   public :: TypeInfo_t, TypeInfo_ptr_t, void_type, void_t, typeInfo_init
+
+  interface set_attribute
+    subroutine ref_set_attribute_c( self, attrib )
+      import Ref_t
+      type(Ref_t),     intent(inout) :: self
+      integer(kind=1), intent(in)    :: attrib
+    end subroutine
+  end interface
 
 !-----------------
   contains

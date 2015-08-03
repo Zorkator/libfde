@@ -56,11 +56,12 @@ module impl_hashmap__
       type(ListIndex_t)            :: res
     end function
 
-    function hashmap_get_ref_( self, key, clearStale ) result(res)
+    function hashmap_get_ref_( self, key, clearStale, created ) result(res)
       import HashMap_t, Item_t
       type(HashMap_t)              :: self
       character(len=*), intent(in) :: key
       logical                      :: clearStale
+      logical,         intent(out) :: created
       type(Item_t),        pointer :: res
     end function
 
@@ -406,12 +407,13 @@ end module
   subroutine hashmap_set_c( self, key, val )
     use impl_hashmap__, only: HashMap_t, Item_t, hashmap_get_ref_, assign
     implicit none
-    type(HashMap_t), intent(inout) :: self
+    type(HashMap_t)                :: self
     character(len=*),   intent(in) :: key
     type(Item_t),       intent(in) :: val
     type(Item_t),          pointer :: valPtr
+    logical                        :: created
 
-    valPtr => hashmap_get_ref_( self, key, .false. )
+    valPtr => hashmap_get_ref_( self, key, .false., created )
     call assign( valPtr, val )
   end subroutine
 
@@ -423,8 +425,9 @@ end module
     type(HashMap_t)              :: self
     character(len=*), intent(in) :: key
     type(Item_t),        pointer :: res
+    logical                      :: created
 
-    res => hashmap_get_ref_( self, key, .true. )
+    res => hashmap_get_ref_( self, key, .true., created )
   end function
 
 
@@ -435,26 +438,26 @@ end module
     type(c_ptr),      intent(inout) :: res
     type(HashMap_t)                 :: self
     character(len=*), intent(in)    :: key
+    logical                         :: created
 
-    res = c_loc( hashmap_get_ref_( self, key, .true. ) )
+    res = c_loc( hashmap_get_ref_( self, key, .true., created ) )
   end subroutine
 
 
-  function hashmap_get_ref_( self, key, clearStale ) result(res)
+  function hashmap_get_ref_( self, key, clearStale, created ) result(res)
     use impl_hashmap__, only: HashMap_t, Item_t, HashNode_t, ListIndex_t, HashNode, hashmap_nodeCache, &
                              hashmap_locate_item_, first, new_ListNode, insert, delete, pop, is_valid, assign
     implicit none
     type(HashMap_t)              :: self
     character(len=*), intent(in) :: key
     logical                      :: clearStale
+    logical,       intent(inout) :: created
     type(Item_t),        pointer :: res
     type(HashNode_t),    pointer :: mapItem
     type(ListIndex_t)            :: bucket, idx
   
-    if (hashmap_locate_item_( self, key, bucket )) then
-      ! hash node exists ...
-      mapItem => HashNode(bucket)
-    else
+    created = .not. hashmap_locate_item_( self, key, bucket )
+    if (created) then
       ! need to add new hash node
       idx = pop( hashmap_nodeCache, first )
       if (is_valid(idx)) then
@@ -467,6 +470,9 @@ end module
       end if
       call assign( mapItem%key, key )
       self%items = self%items + 1
+    else
+      ! hash node exists ...
+      mapItem => HashNode(bucket)
     end if
     res => mapItem%value
   end function
@@ -499,8 +505,9 @@ end module
     character(len=*), intent(in) :: key
     logical                      :: createMissing
     type(Item_t),        pointer :: res
+    logical                      :: created
 
-    if (createMissing) then; res => hashmap_get_ref_( self, key, .true. )
+    if (createMissing) then; res => hashmap_get_ref_( self, key, .true., created )
                        else; res => hashmap_get_ptr( self, key )
     end if
   end function
@@ -537,6 +544,34 @@ end module
                          else; res = C_NULL_PTR
     end if
   end subroutine
+
+
+!_PROC_EXPORT(hashmap_get_or_create)
+  logical &
+  function hashmap_get_or_create( item, self, key ) result(created)
+    use impl_hashmap__, only: HashMap_t, Item_t, hashmap_get_ref_
+    implicit none
+    type(Item_t), pointer, intent(inout) :: item
+    type(HashMap_t)                      :: self
+    character(len=*),      intent(in)    :: key
+
+    item => hashmap_get_ref_( self, key, .true., created )
+  end function
+
+
+!_PROC_EXPORT(hashmap_get_or_create_c)
+  logical &
+  function hashmap_get_or_create_c( item, self, key ) result(created)
+    use impl_hashmap__, only: HashMap_t, Item_t, c_ptr, hashmap_get_ref_, c_loc
+    implicit none
+    type(c_ptr),      intent(inout) :: item
+    type(HashMap_t),  intent(inout) :: self
+    character(len=*), intent(in)    :: key
+    type(Item_t),           pointer :: ptr
+
+    ptr => hashmap_get_ref_( self, key, .true., created )
+    item = c_loc(ptr)
+  end function
 
 
   subroutine hashmap_reindex_( self )
@@ -698,10 +733,11 @@ end module
     character(len=*),       intent(in) :: key
     type(Item_t)                       :: defaultVal
     type(Item_t),              pointer :: res
+    logical                            :: created
 
-    res => hashmap_get_ref_( self, key, .true. )
-    if (.not. is_valid(res)) then; call assign( res, defaultVal ) !< key didn't exist before
-                             else; call delete( defaultVal )      !< key existed - so delete given defaultVal
+    res => hashmap_get_ref_( self, key, .true., created )
+    if (created) then; call assign( res, defaultVal ) !< key didn't exist before
+                 else; call delete( defaultVal )      !< key existed - so delete given defaultVal
     end if
   end function
 

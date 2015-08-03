@@ -67,6 +67,12 @@ module impl_ref__
       import Ref_t
       type(Ref_t) :: self
     end subroutine
+
+    subroutine ref_set_attribute_c( self, attrib )
+      import Ref_t
+      type(Ref_t),  intent(inout) :: self
+      integer(kind=1), intent(in) :: attrib
+    end subroutine
   end interface
 end module
 
@@ -267,8 +273,7 @@ end module
     
     call ref_assign_encoding( res, enc )
     call ref_assign_ref_c( res, ref_clone( res ) )
-    call basestring_set_attribute( res%ref_str, attribute_volatile )
-    _ref_setHard( res%refstat, 0 )
+    call ref_set_attribute_c( res, attribute_volatile )
   end function
 
 
@@ -406,6 +411,19 @@ end module
   end subroutine
 
 
+!_PROC_EXPORT(ref_set_attribute_c)
+!_ARG_REFERENCE1(self)
+  subroutine ref_set_attribute_c( self, attrib )
+    use impl_ref__, only: Ref_t, basestring_set_attribute
+    implicit none
+    type(Ref_t),  intent(inout) :: self
+    integer(kind=1), intent(in) :: attrib
+    
+    call basestring_set_attribute( self%ref_str, attrib )
+    _ref_setHard( self%refstat, attrib )
+  end subroutine
+
+
 !_PROC_EXPORT(ref_is_valid_c)
 !_ARG_REFERENCE1(self)
   pure logical &
@@ -415,4 +433,5 @@ end module
     type(Ref_t), intent(in) :: self
     res = associated( self%typeInfo ) .and. associated( self%ref_str%ptr )
   end function
+
 

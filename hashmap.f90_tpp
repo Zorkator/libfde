@@ -41,7 +41,7 @@ module adt_hashmap
   public :: is_valid
   public :: clear
   public :: delete
-  public :: set, get, getPtr, remove, unset, pop
+  public :: set, get, getPtr, getOrCreate, remove, unset, pop
   public :: setDefault, hasKey
   public :: index, next, set_next, key, value
   public :: hashmap_clear_cache, hashmap_get_stats
@@ -119,7 +119,7 @@ module adt_hashmap
   interface set
     subroutine hashmap_set_c( self, key, val )
       import HashMap_t, Item_t
-      type(HashMap_t), intent(inout) :: self
+      type(HashMap_t)                :: self
       character(len=*),   intent(in) :: key
       type(Item_t),       intent(in) :: val
     end subroutine
@@ -148,6 +148,16 @@ module adt_hashmap
       character(len=*), intent(in) :: key
       logical                      :: createMissing
       type(Item_t),        pointer :: res
+    end function
+  end interface
+
+  interface getOrCreate
+    logical &
+    function hashmap_get_or_create( item, self, key )
+      import HashMap_t, Item_t
+      type(Item_t), pointer, intent(inout) :: item
+      type(HashMap_t)                      :: self
+      character(len=*),         intent(in) :: key
     end function
   end interface
 
