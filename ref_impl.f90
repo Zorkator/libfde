@@ -125,7 +125,7 @@ end module
 !_ARG_REFERENCE2(lhs, rhs)
   subroutine ref_assign_ref_c( lhs, rhs )
     use impl_ref__, only: Ref_t, ref_free_c, basestring_assign_basestring_c, &
-                          ref_peek_cptr, c_associated
+                          basestring_release_weak, ref_peek_cptr, c_associated
     implicit none
     type(Ref_t), intent(inout) :: lhs
     type(Ref_t),    intent(in) :: rhs
@@ -137,6 +137,8 @@ end module
 
       if (_ref_isWeakMine( rhs%refstat )) &
         _ref_setMine( lhs%refstat, 1 )
+    else
+      call basestring_release_weak( rhs%ref_str )
     end if
   end subroutine
 

@@ -451,7 +451,7 @@ end module
     type(HashMap_t)              :: self
     character(len=*), intent(in) :: key
     logical                      :: clearStale
-    logical,       intent(inout) :: created
+    logical,         intent(out) :: created
     type(Item_t),        pointer :: res
     type(HashNode_t),    pointer :: mapItem
     type(ListIndex_t)            :: bucket, idx
@@ -735,7 +735,7 @@ end module
     type(Item_t),              pointer :: res
     logical                            :: created
 
-    res => hashmap_get_ref_( self, key, .true., created )
+    res => hashmap_get_ref_( self, key, .false., created )
     if (created) then; call assign( res, defaultVal ) !< key didn't exist before
                  else; call delete( defaultVal )      !< key existed - so delete given defaultVal
     end if

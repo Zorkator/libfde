@@ -121,10 +121,11 @@ class RefType(TypeSpec):
     #   typeId:    type identifier
     #
     ref_itf = """
-    interface ref_of     ; module procedure {typeId}_encode_ref_ ; end interface
-    interface {typeId}   ; module procedure {typeId}_decode_ref_ ; end interface
-    interface is_{typeId}; module procedure {typeId}_in_ref_     ; end interface
-    interface static_type; module procedure {typeId}_typeinfo_   ; end interface
+    interface ref_of      ; module procedure {typeId}_encode_ref_   ; end interface
+    interface {typeId}    ; module procedure {typeId}_decode_ref_   ; end interface
+    interface is_{typeId} ; module procedure {typeId}_in_ref_       ; end interface
+    interface dynamic_cast; module procedure {typeId}_dynamic_cast_ ; end interface
+    interface static_type ; module procedure {typeId}_typeinfo_     ; end interface
     """,
 
     access_ref = "{typeId}, is_{typeId}",
@@ -138,10 +139,11 @@ class RefType(TypeSpec):
     #   For the decoder, it's obviously due to various compiler bugs ...
     #
     proc_itf = """
-    interface ref_from_{typeId}; module procedure {typeId}_encode_ref_ ; end interface
-    interface {typeId}_from_ref; module procedure {typeId}_decode_ref_ ; end interface
-    interface is_{typeId}      ; module procedure {typeId}_in_ref_     ; end interface
-    interface static_type      ; module procedure {typeId}_typeinfo_   ; end interface
+    interface ref_from_{typeId}; module procedure {typeId}_encode_ref_   ; end interface
+    interface {typeId}_from_ref; module procedure {typeId}_decode_ref_   ; end interface
+    interface is_{typeId}      ; module procedure {typeId}_in_ref_       ; end interface
+    interface dynamic_cast     ; module procedure {typeId}_dynamic_cast_ ; end interface
+    interface static_type      ; module procedure {typeId}_typeinfo_     ; end interface
     """,
 
     access_proc = "ref_from_{typeId}, {typeId}_from_ref, is_{typeId}",
@@ -260,6 +262,7 @@ class RefType(TypeSpec):
     """,
 
     # parameters:
+    #   typeId: type identifier
     ref_typechecker = """
 !_PROC_EXPORT({typeId}_in_ref_)
 !_ARG_REFERENCE1(self)
@@ -269,6 +272,29 @@ class RefType(TypeSpec):
       res = associated( dynamic_type(self), type_{typeId} )
     end function
     """,
+
+    # parameters:
+    #   typeId: type identifier
+    ref_dynamic_cast = """
+!_PROC_EXPORT({typeId}_dynamic_cast_)
+!_ARG_REFERENCE2(ptr, self)
+    logical &
+    function {typeId}_dynamic_cast_( ptr, self ) result(res)
+      use iso_c_binding
+      {baseType}{dimSpec}, pointer, intent(out) :: ptr
+      type(Ref_t),                  intent(in)  :: self
+      type({typeId}_wrap_t),            pointer :: wrap
+      
+      res = associated( dynamic_type(self), type_{typeId} )
+      if (res) then
+        call c_f_pointer( ref_get_typereference(self), wrap )
+        ptr => wrap%ptr
+      else
+        ptr => null()
+      endif
+    end function
+    """,
+
 
     # parameters:
     #   typeId:       type identifier
@@ -367,7 +393,7 @@ class RefType(TypeSpec):
   def declare( self, out ):
     if not self._declared:
       self.expand( out, 'info', 'type', self._itf )
-      self.expandAccess( out, self.access, 'ref_of', 'static_type' )
+      self.expandAccess( out, self.access, 'ref_of', 'static_type', 'dynamic_cast' )
       self.expandAccessString( out, self.access, self._template[self._access] )
       TypeGenerator.setDeclaration( self.typeId, self )
       self._declared = True
@@ -375,7 +401,7 @@ class RefType(TypeSpec):
 
   def implement( self, out ):
     if not self._implemented:
-      self.expand( out, 'header', 'ref_encoder', 'ref_decoder', 'ref_typechecker',
+      self.expand( out, 'header', 'ref_encoder', 'ref_decoder', 'ref_typechecker', 'ref_dynamic_cast',
                    self._refCloner, self._inspector, self._typeinfo )
       out( self._ptrCloner.format( **self.__dict__ ) )
       self._implemented = True
