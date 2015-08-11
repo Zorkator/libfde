@@ -559,73 +559,8 @@ subroutine test_hashmap()
 end subroutine
 
 
-module adt_scope
-  use adt_hashmap
-  use adt_item
-  use adt_ref
-  use adt_typeinfo
-  implicit none
-
-  interface getScope
-    module procedure scope_create_, scope_get_subscope_
-  end interface
-
-  contains
-
-  function scope_create_() result(scope)
-    implicit none
-    type(HashMap_t), pointer :: scope
-    allocate( scope )
-    call initialize( scope )
-  end function
-
-  function scope_get_subscope_( parent, id ) result(scope)
-    implicit none
-    type(HashMap_t), intent(inout) :: parent
-    character(len=*),   intent(in) :: id
-    type(HashMap_t),       pointer :: scope
-    type(Item_t),          pointer :: it
-
-    if (getOrCreate( it, parent, id )) then
-      allocate( scope );
-      call initialize( scope )
-      call assign( it, Item_of( ref_of( scope, bind = .true. ) ) )
-    else
-      if (dynamic_cast( scope, ref(it) )) continue;
-    endif
-  end function
-
-  recursive &
-  subroutine print_scope( scope, level )
-    type(HashMap_t)           :: scope
-    integer                   :: level
-    character(len=2*level)    :: indent
-    type(HashMapIndex_t)      :: idx
-    type(HashMap_t),  pointer :: subscope
-    type(Item_t),     pointer :: val
-    type(Ref_t),      pointer :: valRef => null()
-    type(TypeInfo_t), pointer :: ti
-
-    indent = ' '
-    idx    = index( scope )
-    do while (is_valid(idx))
-      val => value(idx)
-      ti  => dynamic_type(val)
-
-      if (is_ref(val)) then
-        valRef => ref(val)
-        ti     => dynamic_type(valRef)
-      end if
-      print *, indent // key(idx) // ' => ' // trim(ti%typeId)
-      if (associated(valRef)) then
-        if (dynamic_cast( subscope, valRef )) then
-          call print_scope( subscope, level + 1 )
-        end if
-      end if
-      call next(idx)
-    end do
-  end subroutine
-end module
+# define fileScope() \
+    trim(adjustl(file_basename( __FILE__ )))
 
 
 subroutine test_hashmap_nesting()
@@ -640,22 +575,29 @@ subroutine test_hashmap_nesting()
   character(len=10)        :: buff
   real*8, dimension(:), pointer :: r_array
 
-  ref1 = ref_of( getScope(), bind = .true. )
+  ref1 = ref_of( newScope(), bind = .true. )
 
   print *, dynamic_cast( scope, ref1 )
   print *, dynamic_cast( r_array, ref1 )
 
+  scope => getScope( scope, fileScope() )
   do i = 1,3
     write(buff,'(A7,I1)'), 'submap_', i
-    call set( scope, trim(buff), Item_of( ref_of( getScope(), bind = .true. ) ) )
+    call set( scope, trim(buff), Item_of( ref_of( newScope(), bind = .true. ) ) )
   end do
 
   allocate( r_array(10) )
+  r_array = [1,2,3,4,5,6,7,8,9,0]
   scope => getScope( scope, 'gcsm' )
   call set( scope, 'counter', Item_of( ref_of(i) ) )
   call set( getScope( scope, 'signal'), 'value', Item_of( ref_of(r_array, bind = .true.) ) )
-
   call print_scope( hashmap(ref1), 0 )
+
+  scope => getScope( getScope( getScope( hashmap(ref1), fileScope() ), 'gcsm' ), 'signal' )
+  scope => getScope( hashmap(ref1), fileScope(), 'gcsm', 'signal' )
+  
+  if (dynamic_cast( r_array, ref(get(scope, 'value')) )) &
+    print *, r_array
 
   call delete( ref1 )
 end subroutine
@@ -670,7 +612,7 @@ subroutine test_hashmap_cloning()
   type(Ref_t)                   :: r
   real*8, dimension(:), pointer :: r_array, r_ptr
 
-  r = ref_of( getScope(), bind = .true. )
+  r = ref_of( newScope(), bind = .true. )
   allocate( r_array(10) ); r_array = 1
   call set( HashMap(r), "array", Item_of( ref_of( r_array, bind = .true. ) ) )
   ! python: r_array = [1,1,1,1,1,1,1,1,1,1]
@@ -715,6 +657,26 @@ subroutine test_hashmap_cloning()
 end subroutine
 
 
+subroutine test_file_string()
+  use adt_string
+  type(String_t) :: s
+
+  s = "c:\path/test/blub.f"
+  s = file_basename(s)
+  s = fileScope()
+
+  print *, fileScope()
+  print *, file_basename("\.testinger")
+  print *, file_basename("/.testinger\bla")
+  print *, file_basename(".testinger")
+  print *, file_basename("testinger.f90")
+  print *, file_basename("path\testinger.f90")
+  print *, file_basename("c:\path/testinger.f90")
+  print *, file_basename("path/testinger")
+  print *, file_basename("testinger")
+end subroutine
+
+
 program test_adt
   use test_basedata
 
@@ -726,6 +688,7 @@ program test_adt
   call test_hashmap()
   call test_hashmap_nesting()
   call test_hashmap_cloning()
+  call test_file_string()
 
   call cleanup_basedata()
   call hashmap_clear_cache()

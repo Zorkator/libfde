@@ -56,6 +56,9 @@ module adt_string
   public :: operator(>)
   public :: operator(>=)
 
+  ! auxiliary functions
+  public :: file_basename
+
 
   ! interface definitions
 
@@ -486,6 +489,19 @@ module adt_string
       import String_t
       type(String_t), intent(in) :: lhs
       type(String_t), intent(in) :: rhs
+    end function
+  end interface
+
+  interface file_basename
+    function string_file_basename_charstring( cs ) result(res)
+      character(len=*), intent(in) :: cs
+      character(len=len(cs))       :: res
+    end function
+
+    function string_file_basename_string( ds ) result(res)
+      import String_t
+      type(String_t)               :: ds
+      character(len=_len(ds))      :: res
     end function
   end interface
 

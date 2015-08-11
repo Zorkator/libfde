@@ -125,6 +125,8 @@
 		<File RelativePath="..\memoryref.f90"/>
 		<File RelativePath="..\ref.f90"/>
 		<File RelativePath="..\ref_impl.f90"/>
+		<File RelativePath="..\scope.f90"/>
+		<File RelativePath="..\scope_impl.f90"/>
 		<File RelativePath="..\string.f90"/>
 		<File RelativePath="..\string_impl.f90"/>
 		<File RelativePath="..\typeinfo.f90"/>

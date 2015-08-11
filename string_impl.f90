@@ -591,3 +591,27 @@ end module
     _release_weak( rhs )
   end function
 
+
+!_PROC_EXPORT(string_file_basename_charstring)
+  function string_file_basename_charstring( filePath ) result(res)
+    use impl_string__; implicit none
+    character(len=*)             :: filePath
+    character(len=len(filePath)) :: res
+    integer :: i,j
+    i = max( index( filePath, '/', back=.true. ), index( filePath, '\', back=.true. ) )
+    j = index( filePath, '.', back=.true. ) - 1
+    j = merge( j, -1, j > i )
+    j = modulo( j, len(filePath) + 1 )
+    res = filePath(i+1:j)
+  end function
+
+!_PROC_EXPORT(string_file_basename_string)
+  function string_file_basename_string( filePath ) result(res)
+    use impl_string__; implicit none
+    type(String_t)                :: filePath
+    character(len=_len(filePath)) :: res
+    integer :: i,j
+    res = file_basename( _ptr(filePath) )
+    _release_weak(filePath)
+  end function
+
