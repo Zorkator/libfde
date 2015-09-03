@@ -75,6 +75,7 @@ end module
     type(Item_t),     pointer :: val
     type(Ref_t),      pointer :: valRef => null()
     type(TypeInfo_t), pointer :: ti
+    character(len=255)        :: buffer
 
     indent = ' '
     idx    = index( scope )
@@ -86,7 +87,8 @@ end module
         valRef => ref(val)
         ti     => dynamic_type(valRef)
       end if
-      print *, indent // str(key(idx)) // ' => ' // trim(ti%typeId)
+      call write( buffer, val )
+      print *, indent // str(key(idx)) // ' : ' // '[' // trim(adjustl(buffer)) // ']'
       if (associated(valRef)) then
         if (dynamic_cast( subscope, valRef )) then
           call print_scope( subscope, level + 1 )

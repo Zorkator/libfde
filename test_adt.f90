@@ -283,84 +283,83 @@ module test_basedata
 end module
 
 
-module adt_alloc
-
-  interface adt_allocate
-    module procedure hashmap_allocate
-  end interface
-
-  interface adt_alloc_ref
-    module procedure hashmap_allocate_ref__, real8_1d_allocate_ref__
-  end interface
-
-  contains
-
-  subroutine hashmap_allocate_ref__( ptr, reference, bind )
-    use adt_hashmap
-    use adt_ref, only: Ref_t
-    implicit none
-    type(HashMap_t), pointer,       intent(inout) :: ptr
-    type(Ref_t), optional,          intent(inout) :: reference
-    logical, optional                             :: bind
-
-    allocate( ptr )
-    if (present(reference)) then
-      reference = ref_of( ptr, bind )
-    end if
-  end subroutine
-
-  
-  subroutine real8_1d_allocate_ref__( ptr, d1, reference, bind )
-    use adt_ref, only: Ref_t
-    use adt_basetypes
-    implicit none
-    real*8, dimension(:), pointer,  intent(inout) :: ptr
-    integer                                       :: d1
-    type(Ref_t), optional,          intent(inout) :: reference
-    logical, optional                             :: bind
-
-    allocate( ptr(d1) )
-    if (present(reference)) then
-      reference = ref_of( ptr, bind )
-    end if
-  end subroutine
-  
-
-  function hashmap_allocate_ref( ptr ) result(res)
-    use adt_hashmap
-    use adt_ref
-    implicit none
-    type(HashMap_t),  pointer,       intent(inout) :: ptr
-    type(Ref_t)                                    :: res
-    allocate( ptr )
-    call set_attribute( res, attribute_volatile )
-    res = ref_of( ptr, bind = .true. )
-  end function
-
-  subroutine hashmap_allocate( ptr, map, id )
-    use adt_hashmap
-    use adt_item
-    implicit none
-    type(HashMap_t),  pointer,       intent(inout) :: ptr
-    type(HashMap_t),  optional,      intent(inout) :: map
-    character(len=*), optional, target, intent(in) :: id
-    character(len=10),          target             :: buffer
-    character(len=:), pointer                      :: id_ptr
-
-    allocate( ptr )
-    if (present( map )) then
-      if (present( id )) then
-        id_ptr => id
-      else
-        write(buffer,'(A2,Z8.8)') '0x', loc(ptr)
-        id_ptr => buffer
-      end if
-      call set( map, id_ptr, Item_of( ref_of(ptr) ) )
-    end if
-  end subroutine
-
-end module
-
+!module adt_alloc
+!
+!  interface adt_allocate
+!    module procedure hashmap_allocate
+!  end interface
+!
+!  interface adt_alloc_ref
+!    module procedure hashmap_allocate_ref__, real8_1d_allocate_ref__
+!  end interface
+!
+!  contains
+!
+!  subroutine hashmap_allocate_ref__( ptr, reference, bind )
+!    use adt_hashmap
+!    use adt_ref, only: Ref_t
+!    implicit none
+!    type(HashMap_t), pointer,       intent(inout) :: ptr
+!    type(Ref_t), optional,          intent(inout) :: reference
+!    logical, optional                             :: bind
+!
+!    allocate( ptr )
+!    if (present(reference)) then
+!      reference = ref_of( ptr, bind )
+!    end if
+!  end subroutine
+!
+!  
+!  subroutine real8_1d_allocate_ref__( ptr, d1, reference, bind )
+!    use adt_ref, only: Ref_t
+!    use adt_basetypes
+!    implicit none
+!    real*8, dimension(:), pointer,  intent(inout) :: ptr
+!    integer                                       :: d1
+!    type(Ref_t), optional,          intent(inout) :: reference
+!    logical, optional                             :: bind
+!
+!    allocate( ptr(d1) )
+!    if (present(reference)) then
+!      reference = ref_of( ptr, bind )
+!    end if
+!  end subroutine
+!  
+!
+!  function hashmap_allocate_ref( ptr ) result(res)
+!    use adt_hashmap
+!    use adt_ref
+!    implicit none
+!    type(HashMap_t),  pointer,       intent(inout) :: ptr
+!    type(Ref_t)                                    :: res
+!    allocate( ptr )
+!    call set_attribute( res, attribute_volatile )
+!    res = ref_of( ptr, bind = .true. )
+!  end function
+!
+!  subroutine hashmap_allocate( ptr, map, id )
+!    use adt_hashmap
+!    use adt_item
+!    implicit none
+!    type(HashMap_t),  pointer,       intent(inout) :: ptr
+!    type(HashMap_t),  optional,      intent(inout) :: map
+!    character(len=*), optional, target, intent(in) :: id
+!    character(len=10),          target             :: buffer
+!    character(len=:), pointer                      :: id_ptr
+!
+!    allocate( ptr )
+!    if (present( map )) then
+!      if (present( id )) then
+!        id_ptr => id
+!      else
+!        write(buffer,'(A2,Z8.8)') '0x', loc(ptr)
+!        id_ptr => buffer
+!      end if
+!      call set( map, id_ptr, Item_of( ref_of(ptr) ) )
+!    end if
+!  end subroutine
+!
+!end module
 
 
 subroutine do_assert( expr_bool, expr_str )
@@ -565,7 +564,7 @@ end subroutine
 
 subroutine test_hashmap_nesting()
   use test_basedata
-  use adt_alloc
+  !use adt_alloc
   use adt_scope
   implicit none
 
@@ -577,8 +576,8 @@ subroutine test_hashmap_nesting()
 
   ref1 = ref_of( newScope(), bind = .true. )
 
-  print *, dynamic_cast( scope, ref1 )
-  print *, dynamic_cast( r_array, ref1 )
+  print *, dynamic_cast( r_array, ref1 ) !< should fail
+  print *, dynamic_cast( scope, ref1 )   !< should succeed
 
   scope => getScope( scope, fileScope() )
   do i = 1,3
@@ -589,6 +588,12 @@ subroutine test_hashmap_nesting()
   allocate( r_array(10) )
   r_array = [1,2,3,4,5,6,7,8,9,0]
   scope => getScope( scope, 'gcsm' )
+  call set( scope, 'text', Item_of( ref_of(buff) ) )
+  call set( scope, 'text', Item_of( ref_of(buff) ) )
+  call set( getScope( scope, 'signal'), 'value', Item_of( ref_of(i) ) )
+
+  allocate( r_array(10) )
+  scope => getScope( hashmap(ref1), 'gcsm' )
   call set( scope, 'counter', Item_of( ref_of(i) ) )
   call set( getScope( scope, 'signal'), 'value', Item_of( ref_of(r_array, bind = .true.) ) )
   call print_scope( hashmap(ref1), 0 )
@@ -599,6 +604,7 @@ subroutine test_hashmap_nesting()
   if (dynamic_cast( r_array, ref(get(scope, 'value')) )) &
     print *, r_array
 
+  call print_scope( hashmap(ref1), 1 )
   call delete( ref1 )
 end subroutine
 

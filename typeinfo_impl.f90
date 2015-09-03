@@ -19,16 +19,17 @@
   ! @param bitSize      - the storage size of the type in bytes (=> storage_size(type))
   ! @param rank         - the rank of the type
   ! @param subtype      - the typeinfo of this type's subtype (used by container types)
-  ! @param assignProc   - the subroutine to assign a variable      : subroutine assign( lhs, rhs )
-  ! @param cloneObjProc - the function to clone an object reference: subroutine clone( tgt, src )
-  ! @param cloneRefProc - the function to clone an object          : subroutine clone( tgt, src )
-  ! @param deleteProc   - the subroutine to delete a variable      : subroutine delete( var )
-  ! @param initProc     - the subroutine to initialize a variable  : subroutine init( var, hardness )
-  ! @param shapeProc    - the function to inspect the shape        : subroutine shape( var, res, rank )
+  ! @param assignProc   - the subroutine to assign a variable       : subroutine assign( lhs, rhs )
+  ! @param cloneObjProc - the function to clone an object reference : subroutine clone( tgt, src )
+  ! @param cloneRefProc - the function to clone an object           : subroutine clone( tgt, src )
+  ! @param deleteProc   - the subroutine to delete a variable       : subroutine delete( var )
+  ! @param initProc     - the subroutine to initialize a variable   : subroutine init( var, hardness )
+  ! @param shapeProc    - the function to inspect the shape         : subroutine shape( var, res, rank )
+  ! @param writeProc    - the subroutine to write type to charBuffer: subroutine writer( buff, var )
   !*
 !_PROC_EXPORT(typeinfo_init)
   subroutine typeinfo_init( self, typeId, baseType, bitSize, rank, subtype, &
-                            assignProc, cloneObjProc, cloneRefProc, deleteProc, initProc, shapeProc )
+                            assignProc, cloneObjProc, cloneRefProc, deleteProc, initProc, shapeProc, writeProc )
     use adt_typeinfo, only: TypeInfo_t
     use iso_c_binding
     type(TypeInfo_t),    intent(inout) :: self
@@ -36,7 +37,7 @@
     integer(kind=4),        intent(in) :: bitSize
     integer(kind=4),        intent(in) :: rank
     type(TypeInfo_t), target, optional :: subtype
-    procedure(),              optional :: assignProc, cloneObjProc, cloneRefProc, deleteProc, initProc, shapeProc
+    procedure(),              optional :: assignProc, cloneObjProc, cloneRefProc, deleteProc, initProc, shapeProc, writeProc
 
     self%typeId   =  adjustl(typeId);   self%typeId_term   = 0
     self%baseType =  adjustl(baseType); self%baseType_term = 0
@@ -56,6 +57,7 @@
     self%deleteProc   => null()
     self%initProc     => null()
     self%shapeProc    => null()
+    self%writeProc    => null()
 
     if (present(assignProc))   self%assignProc   => assignProc
     if (present(cloneObjProc)) self%cloneObjProc => cloneObjProc
@@ -63,6 +65,7 @@
     if (present(deleteProc))   self%deleteProc   => deleteProc
     if (present(initProc))     self%initProc     => initProc
     if (present(shapeProc))    self%shapeProc    => shapeProc
+    if (present(writeProc))    self%writeProc    => writeProc
     self%initialized = .true.
 
   contains

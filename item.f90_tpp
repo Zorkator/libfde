@@ -54,7 +54,8 @@ module adt_item
   !     initProc   = item_init_by_item_c, \
   !     assignProc = item_assign_item_c,  \
   !     deleteProc = item_delete_c,       \
-  !     cloneMode  = _type )
+  !     cloneMode  = _type,               \
+  !     writeProc  = item_write_to_buffer )
 
   !_TypeGen_declare_ListNode( public, Item, type(Item_t), scalar )
 

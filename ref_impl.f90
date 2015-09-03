@@ -44,6 +44,12 @@ module impl_ref__
       type(c_ptr)             :: res
     end function
 
+    function ref_cptr( self ) result(res)
+      import Ref_t, c_ptr
+      type(Ref_t), intent(in) :: self
+      type(c_ptr)             :: res
+    end function
+
     subroutine ref_assign_ref_c( lhs, rhs )
       import Ref_t
       type(Ref_t), intent(inout) :: lhs
@@ -67,6 +73,12 @@ module impl_ref__
       import Ref_t
       type(Ref_t) :: self
     end subroutine
+
+    function ref_dynamic_type( self ) result(res)
+      import Ref_t, TypeInfo_t
+      type(Ref_t), intent(in) :: self
+      type(TypeInfo_t), pointer :: res
+    end function
 
     subroutine ref_set_attribute_c( self, attrib )
       import Ref_t
@@ -298,7 +310,8 @@ end module
 !_PROC_EXPORT(ref_cptr)
 !_ARG_REFERENCE1(self)
   function ref_cptr( self ) result(res)
-    use impl_ref__
+    use impl_ref__, only: Ref_t, void_t, ref_get_typereference
+		use iso_c_binding
     implicit none
     type(Ref_t), intent(in) :: self
     type(c_ptr)             :: res
@@ -375,7 +388,7 @@ end module
 !_PROC_EXPORT(ref_dynamic_type)
 !_ARG_REFERENCE1(self)
   function ref_dynamic_type( self ) result(res)
-    use impl_ref__
+    use impl_ref__, only: Ref_t, TypeInfo_t, void_type
     implicit none
     type(Ref_t), intent(in) :: self
     type(TypeInfo_t), pointer :: res
@@ -436,4 +449,19 @@ end module
     res = associated( self%typeInfo ) .and. associated( self%ref_str%ptr )
   end function
 
+
+  subroutine ref_write_to_buffer( buff, self )
+    use impl_ref__
+    implicit none
+    character(len=*)          :: buff
+    type(Ref_t)               :: self
+    type(TypeInfo_t), pointer :: ti 
+    character(len=20)         :: addressStr
+    integer*8                 :: address
+
+    ti => ref_dynamic_type( self )
+    address = transfer( ref_cptr(self), address )
+    write(addressStr, '(Z8.8)') address
+    write(buff, *) ' => ' // trim(ti%typeId) // '@0x' // trim(addressStr)
+  end subroutine
 

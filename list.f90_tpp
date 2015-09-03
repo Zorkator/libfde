@@ -33,7 +33,8 @@ module adt_list
   !     initProc   = list_init_by_list_c, \
   !     deleteProc = list_delete_c,       \
   !     assignProc = list_assign_list_c,  \
-  !     cloneMode  = _type )
+  !     cloneMode  = _type,               \
+  !     writeExpr  = "'list[',len(self),']'" )
 
   !_TypeGen_declare_ListNode( public, List, type(List_t), scalar )
 

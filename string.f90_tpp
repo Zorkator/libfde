@@ -24,7 +24,8 @@ module adt_string
   !     initProc   = basestring_init_by_basestring_c, \
   !     assignProc = basestring_assign_basestring_c,  \
   !     deleteProc = basestring_delete_c,             \
-  !     cloneMode  = _type )
+  !     cloneMode  = _type,                           \
+  !     writeExpr  = "str(self)" )
 
 
   !public :: String <= is set public by RefType declaration!

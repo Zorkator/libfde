@@ -28,6 +28,7 @@ module adt_typeinfo
     procedure(), nopass, pointer :: deleteProc   => null()
     procedure(), nopass, pointer :: initProc     => null()
     procedure(), nopass, pointer :: shapeProc    => null()
+    procedure(), nopass, pointer :: writeProc    => null()
   end type
 
   
@@ -43,14 +44,14 @@ module adt_typeinfo
 
   interface
     subroutine typeinfo_init( self, typeId, baseType, bitSize, rank, subtype, &
-                              assignProc, cloneObjProc, cloneRefProc, deleteProc, initProc, shapeProc )
+                              assignProc, cloneObjProc, cloneRefProc, deleteProc, initProc, shapeProc, writeProc )
       import TypeInfo_t
       type(TypeInfo_t),    intent(inout) :: self
       character(len=*),       intent(in) :: typeId, baseType
       integer*4,              intent(in) :: bitSize
       integer*4,              intent(in) :: rank
       type(TypeInfo_t), target, optional :: subtype
-      procedure(),              optional :: assignProc, cloneObjProc, cloneRefProc, deleteProc, initProc, shapeProc
+      procedure(),              optional :: assignProc, cloneObjProc, cloneRefProc, deleteProc, initProc, shapeProc, writeProc
     end subroutine
   end interface
 

@@ -19,10 +19,11 @@ module adt_ref
 
 
   !_TypeGen_declare_RefType( public, ref, type(Ref_t), scalar, \
-  !     initProc   = ref_init_by_ref_c, \
-  !     assignProc = ref_assign_ref_c,  \
-  !     deleteProc = ref_delete_c,      \
-  !     cloneMode  = _type )
+  !     initProc   = ref_init_by_ref_c,  \
+  !     assignProc = ref_assign_ref_c,   \
+  !     deleteProc = ref_delete_c,       \
+  !     cloneMode  = _type,              \
+  !     writeProc  = ref_write_to_buffer )
 
 
   type, public :: RefEncoding_t

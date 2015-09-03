@@ -32,7 +32,8 @@ module adt_hashmap
   !     initProc   = hashmap_init_by_hashmap_c, \
   !     assignProc = hashmap_assign_hashmap_c,  \
   !     deleteProc = hashmap_delete_c,          \
-  !     cloneMode  = _type )
+  !     cloneMode  = _type,                     \
+  !     writeExpr  = "'HashMap', len(self)"  )
 
   !_TypeGen_declare_ListNode( public, HashMap, type(HashMap_t), scalar )
 

@@ -571,4 +571,19 @@ end module
   _implement_typecheck_(complex32,   complex*32)
 # endif
 
+  subroutine item_write_to_buffer( buff, self )
+    use impl_item__;
+    implicit none
+    character(len=*)          :: buff
+    type(Item_t)              :: self
+    type(TypeInfo_t), pointer :: ti 
+
+    ti => item_dynamic_type(self)
+    if (associated(ti%writeProc)) then
+      call ti%writeProc( buff, self%data )
+    else
+      write(buff, *) trim(ti%typeId)
+    endif
+  end subroutine
+
 

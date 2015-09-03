@@ -1,5 +1,5 @@
 
-"""Usage: typegen FILE [-o OUTFILE]
+"""Usage: typegen FILE [-o OUTFILE] [--debug]
 
 Preprocess FILE and expand type reference declarations.
 The result is output to stdout.
@@ -10,7 +10,7 @@ Arguments:
 
 Options:
   -o OUTFILE --output=OUTFILE   the output file
-
+  --debug                       enable debugging
 """
 
 from docopt import docopt
@@ -20,13 +20,16 @@ import sys, re
 class TypeSpec(object):
 
   _procItf     = '\s*procedure\s*\(\s*\w*\s*\)\s*'
+  _baseTypeId  = '\s*type\s*\(\s*(\w+)\s*\)\s*'
   _dimSize     = '(?::|\d+)'
   _dimSpec     = '\s*dimension\s*\(\s*%s(?:\s*,\s*%s)*\s*\)\s*' % (_dimSize, _dimSize)
-  _keyAssign   = '\s*(\w+)\s*=\s*(\w+)\s*'
+  _keyAssign   = '\s*(\w+)\s*=\s*(\w+|(?:"[^"]*?"))'
   _varLength   = '.*\((?:len=)?[:*]\).*'
-  procItfMatch = re.compile( _procItf ).match
-  dimSpecMatch = re.compile( _dimSpec ).match
-  varBaseMatch = re.compile( _varLength ).match
+
+  procItfMatch    = re.compile( _procItf ).match
+  dimSpecMatch    = re.compile( _dimSpec ).match
+  varBaseMatch    = re.compile( _varLength ).match
+  baseTypeIdMatch = re.compile( _baseTypeId ).match
   declWatcher  = dict()
 
   _template = dict(
@@ -41,11 +44,16 @@ class TypeSpec(object):
     """
   )
 
+  @staticmethod
+  def peelString( string ):
+    return re.sub( r'^\s*"|"\s*$', '', string )
+
+
   def __init__( self, access, typeId, baseType, dimType ):
-    self._isProc   = bool(self.procItfMatch( baseType ))
-    self._isScalar = dimType == 'scalar'
-    self._isArray  = bool(self.dimSpecMatch( dimType ))
-    self._varBase  = bool(self.varBaseMatch( baseType ))
+    self._isProc    = bool(self.procItfMatch( baseType ))
+    self._isScalar  = dimType == 'scalar'
+    self._isArray   = bool(self.dimSpecMatch( dimType ))
+    self._varBase   = bool(self.varBaseMatch( baseType ))
 
     # sanity checks
     if not (self._isScalar ^ self._isArray):
@@ -57,9 +65,12 @@ class TypeSpec(object):
     if self._varBase:
       baseType = baseType.replace('len=*', 'len=:')
 
+    isDerived = self.baseTypeIdMatch( baseType )
+
     self.access       = access
     self.typeId       = typeId
     self.baseType     = baseType
+    self.baseTypeId   = isDerived and isDerived.groups()[0] or ''
     self.baseType_arg = baseType.replace('len=:', 'len=*')
     self.baseSizeExpr = ('storage_size(self)', '0')[self._varBase]
     self.dimType      = dimType
@@ -70,6 +81,7 @@ class TypeSpec(object):
     self.shapeArg     = ('', ', shape(src)')[self._isArray]
     self.typegenId    = type(self).__name__
 
+    self._isDerived   = bool(isDerived)
     self._declared    = False
     self._implemented = False
 
@@ -117,8 +129,9 @@ class RefType(TypeSpec):
     """,
 
     # parameters:
-    #   access:    private | public
-    #   typeId:    type identifier
+    #   access:     private | public
+    #   typeId:     type identifier
+    #   typeWriter: procedure id for writing character representation
     #
     ref_itf = """
     interface ref_of      ; module procedure {typeId}_encode_ref_   ; end interface
@@ -131,8 +144,9 @@ class RefType(TypeSpec):
     access_ref = "{typeId}, is_{typeId}",
   
     # parameters:
-    #   access: private | public
-    #   typeId: type identifier
+    #   access:     private | public
+    #   typeId:     type identifier
+    #   typeWriter: procedure id for writing character representation
     #
     # NOTE: we can't create operator interfaces for procedure encoders/decoders.
     #   For the encoder, this is, because fortran can't distinguish different procedure types.
@@ -147,7 +161,25 @@ class RefType(TypeSpec):
     """,
 
     access_proc = "ref_from_{typeId}, {typeId}_from_ref, is_{typeId}",
-  
+
+    # parameters:
+    #   typeId:     type identifier
+    ref_writeItf_std = """
+    interface write            ; module procedure {typeId}_write_to_buff_; end interface
+    """,
+
+    # parameters:
+    #   typeId:     type identifier
+    ref_writeItf_usr = """
+    interface write
+      subroutine {writeProcId}( buff, self )
+        {writeITF_import}
+        character(len=*)    :: buff
+        {baseType}{dimSpec} :: self
+      end subroutine
+    end interface
+    """,
+
     # parameters:
     #   typeId:       type identifier
     #   baseType_arg: fortran base type | type(...) | procedure(...)
@@ -297,6 +329,19 @@ class RefType(TypeSpec):
 
 
     # parameters:
+    #   typeId:   type identifier
+    #   baseType: fortran base type | type(...) | procedure(...)
+    #   dimSpec:  ('', ', dimension(:,...)')[has_dimension]
+    ref_writer_std = """
+    subroutine {typeId}_write_to_buff_( buff, self )
+      character(len=*)    :: buff
+      {baseType}{dimSpec} :: self
+      write(buff, *) {writeExpr}
+    end subroutine
+    """,
+
+
+    # parameters:
     #   typeId:       type identifier
     #   baseType:     fortran base type | type(...) | procedure(...)
     #   baseType_arg: fortran argument base type | type(...) | procedure(...)
@@ -306,6 +351,7 @@ class RefType(TypeSpec):
     #   assignProc:   ', assignProc = <funcId>'
     #   deleteProc:   ', deleteProc = <funcId>'
     #   shapeProc:    ', shapeProc = <funcId>'
+    #   writeProc:    ', writeProc = <funcId>'
     ref_typeinfo = """
 !_PROC_EXPORT({typeId}_typeinfo_)
 !_ARG_REFERENCE1(self)
@@ -317,7 +363,7 @@ class RefType(TypeSpec):
       if (.not. res%initialized) &
         call typeinfo_init( res, '{typeId}', '{baseType}' &
                             , int({baseSizeExpr},4) &
-                            , size(shape(self)){initProc}{assignProc}{deleteProc}{shapeProc}{cloneProc} &
+                            , size(shape(self)){initProc}{assignProc}{deleteProc}{shapeProc}{cloneProc}{writeProc} &
                             , cloneRefProc = {typeId}_clone_ref_ )
     end function
     """,
@@ -358,12 +404,13 @@ class RefType(TypeSpec):
       if typeProcs:
         sys.stderr.write( 'WARNING: given type procs {0} are ignored for procedure type "{1}"\n'.format(typeProcs, typeId) )
 
-    for procId in ('initProc', 'assignProc', 'deleteProc', 'shapeProc'):
+    for procId in ('initProc', 'assignProc', 'deleteProc', 'shapeProc', 'writeProc'):
       procArg  = ''
       procName = typeProcs.get( procId, '' )
       if procName not in ('', '_none'):
         procArg = ', %s = %s' % (procId, procName)
       setattr( self, procId, procArg )
+      setattr( self, '%sId' % procId, procName )
 
     # handle type cloning ...
     ptrClonerId     = keySpecs.get('cloneMode', '_shallow')               #< by default clone via shallow copy
@@ -383,17 +430,23 @@ class RefType(TypeSpec):
       self.code_clonePtr = 'tgt => src'
       self.cloneProc  = ''
 
-    self._itf       = ('ref_itf',       'proc_itf'     )[self._isProc]
-    self._access    = ('access_ref',    'access_proc'  )[self._isProc]
-    self._refCloner = ('ref_cloner',    ''             )[self._isProc]
-    self._inspector = ('ref_inspector', ''             )[self._isProc]
-    self._typeinfo  = ('ref_typeinfo',  'proc_typeinfo')[self._isProc]
+    self._itf       = ('ref_itf',          'proc_itf'         )[self._isProc]
+    self._access    = ('access_ref',       'access_proc'      )[self._isProc]
+    self._refCloner = ('ref_cloner',       ''                 )[self._isProc]
+    self._inspector = ('ref_inspector',    ''                 )[self._isProc]
+    self._typeinfo  = ('ref_typeinfo',     'proc_typeinfo'    )[self._isProc]
+    self._writeItf  = ('ref_writeItf_std', 'ref_writeItf_usr' )[bool(self.writeProc)]
+    self._refWriter = ('ref_writer_std',    ''                )[bool(self.writeProc)]
+
+    keySpecs.setdefault( 'writeExpr', ('self', "'%s'" % self.baseTypeId)[bool(self._isDerived)] )
+    self._kwArgs = dict( (k, self.peelString(v)) for k,v in keySpecs.items() )
+    self.writeITF_import = ('', 'import %s' % self.baseTypeId)[bool(self._isDerived)]
 
 
   def declare( self, out ):
     if not self._declared:
-      self.expand( out, 'info', 'type', self._itf )
-      self.expandAccess( out, self.access, 'ref_of', 'static_type', 'dynamic_cast' )
+      self.expand( out, 'info', 'type', self._itf, self._writeItf )
+      self.expandAccess( out, self.access, 'ref_of', 'static_type', 'dynamic_cast', 'write' )
       self.expandAccessString( out, self.access, self._template[self._access] )
       TypeGenerator.setDeclaration( self.typeId, self )
       self._declared = True
@@ -403,6 +456,8 @@ class RefType(TypeSpec):
     if not self._implemented:
       self.expand( out, 'header', 'ref_encoder', 'ref_decoder', 'ref_typechecker', 'ref_dynamic_cast',
                    self._refCloner, self._inspector, self._typeinfo )
+      print self.typeId, self._kwArgs  
+      self.expand( out, self._refWriter, **self._kwArgs )
       out( self._ptrCloner.format( **self.__dict__ ) )
       self._implemented = True
 
@@ -561,7 +616,7 @@ class TypeGenerator(object):
   _ident     = '\s*(\w+)\s*'      #< some type identifier
   _baseType  = '\s*([\w :*=()]+)' #< e.g. integer(kind=4), type(Struct), character(len=*), <interfaceId>, ...
   _dimType   = '\s*([\w ,:()]+)'  #< e.g. scalar, dimension(:,:), procedure
-  _keySpecs  = '((?:,\s*\w+\s*=\s*\w+\s*)*)'
+  _keySpecs  = '((?:,\s*\w+\s*=\s*.+\s*)*)'
   _typeDecl  = '^\s*!\s*_TypeGen_declare_RefType\(%s,%s,%s,%s%s\)' % (_ident, _ident, _baseType, _dimType, _keySpecs)
   _nodeDecl  = '^\s*!\s*_TypeGen_declare_ListNode\(%s,%s,%s,%s\)' % (_ident, _ident, _baseType, _dimType)
   _typeImpl  = '^\s*!\s*_TypeGen_implement\(%s\)' % _ident
@@ -603,6 +658,10 @@ class TypeGenerator(object):
 
   @classmethod
   def convert( _class, options ):
+    import pdb
+   
+    if options.get('--debug'):
+      pdb.set_trace()
 
     with open(options['FILE']) as f:
 
