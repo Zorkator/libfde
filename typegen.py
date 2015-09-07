@@ -79,6 +79,12 @@ class TypeSpec(object):
     self.baseExtra    = ('', ', nopass')[self._isProc]
     self.valAttrib    = (', target, intent(in)', '')[self._isProc]
     self.shapeArg     = ('', ', shape(src)')[self._isArray]
+    self.rank         = ('0', 'size(shape(self))')[self._isArray] #< NOTE: we ask for object shape only in case of arrays ...
+                                                                  # This is for two reasons:
+                                                                  #  1) for scalars rank is always 0 - so it's more straight forward
+                                                                  #  2) asking a derived type object (which is a scalar too!) for its shape might have nasty side effects!
+                                                                  #      e.g. in case of Ref_t shape(obj) triggers target resolving - even on WEAK references (!!)
+                                                                  #           ... which get freed (to prevent memory leaks!).
     self.typegenId    = type(self).__name__
 
     self._isDerived   = bool(isDerived)
@@ -363,7 +369,7 @@ class RefType(TypeSpec):
       if (.not. res%initialized) &
         call typeinfo_init( res, '{typeId}', '{baseType}' &
                             , int({baseSizeExpr},4) &
-                            , size(shape(self)){initProc}{assignProc}{deleteProc}{shapeProc}{cloneProc}{writeProc} &
+                            , {rank}{initProc}{assignProc}{deleteProc}{shapeProc}{cloneProc}{writeProc} &
                             , cloneRefProc = {typeId}_clone_ref_ )
     end function
     """,

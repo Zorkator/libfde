@@ -516,6 +516,10 @@ subroutine test_hashmap()
     ref_ptr => ref( get( v_hashmap, _str(typeId) ) ) ;\
     ref_ptr = ref_of( _paste(v_,typeId) )
 
+  ! fist, we add an array clone to test hooking weak references.
+  ! This is for checking static_type() on weak Ref_t's if typeInfo has NOT been initialized yet!
+  call set( v_hashmap, 'initial matrix-clone', Item_of( clone( ref_of(v_int4_2d) ) ) )
+
   _map_get(bool1)
   _map_get(bool2)
   _map_get(bool4)
@@ -687,11 +691,11 @@ program test_adt
   use test_basedata
 
   call init_basedata()
+  call test_hashmap()
   call test_string()
   call test_ref()
   call test_item()
   call test_list()
-  call test_hashmap()
   call test_hashmap_nesting()
   call test_hashmap_cloning()
   call test_file_string()
