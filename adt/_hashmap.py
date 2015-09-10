@@ -82,14 +82,16 @@ class HashMap(Object):
         self[k] = v
 
   def pop( self, key, default = Object.__metaclass__ ):
-	 valPtr = POINTER(Item)()
-	 self.pop_key_( byref(valPtr), byref(self), c_char_p(key), c_int(len(key)) )
-	 try   : return valPtr.contents
-	 except:
-	   if default is Object.__metaclass__:
-			raise KeyError(key)
-	   else:
-		     return default
+    valPtr = POINTER(Item)()
+    self.pop_key_( byref(valPtr), byref(self), c_char_p(key), c_int(len(key)) )
+    try   : return valPtr.contents
+    except:
+      if default is Object.__metaclass__:
+        raise KeyError(key)
+      else:
+        return default
+
+
 
 class HashMapIndex(Compound):
 

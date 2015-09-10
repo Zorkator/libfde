@@ -57,13 +57,17 @@ except BreakLoops:
 
 class _Meta(type(Union)):
 
-  def __new__( cls, name, bases, members ):
+  def __new__( _class, name, bases, members ):
     from operator import add
     method = '{0}_{{0}}c_'.format(name.lower())
+
+    # collect list of __typeprocs__ from base classes ...
     members['__typeprocs__'] = list( members.get( '__typeprocs__', [method] ) ) \
                              + reduce( add, (getattr(b, '__typeprocs__', []) for b in bases) )
 
-    fields = list( members.pop('_fields_', []) )
+    # 'inherit' fields of base classes by reserving data space...
+    fields = list( members.pop('_fields_', []) ) \
+           + list( ('_data.' + b.__name__, b._data.size * c_int8) for b in bases if hasattr(b, '_data') )
     anonym = list( members.pop('_anonymous_', []) )
     size   = getattr( _libHandle, method.format('object_size_'), lambda: 0 )()
 
@@ -75,7 +79,7 @@ class _Meta(type(Union)):
 
     size and fields.append( ('_data', size * c_int8) )
     members.update( _fields_=fields, _anonymous_=anonym )
-    return super(_Meta, cls).__new__( cls, name, bases, members )
+    return super(_Meta, _class).__new__( _class, name, bases, members )
 
 
 

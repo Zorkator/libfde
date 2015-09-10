@@ -20,14 +20,16 @@ class Item(TypedObject):
 
   @TypedObject.value.getter
   def value( self ):
+    ref = self.typed
+    return getattr( ref, 'value', ref )
+
+  @property
+  def typed( self ):
     ct = self.ctype
     if ct:
       mr = MemoryRef()
       self.memoryref_( byref(mr), byref(self) )
-      ref = cast( mr.ptr, POINTER(ct) ).contents
-      return getattr( ref, 'value', ref )
-    return None
-
+      return cast( mr.ptr, POINTER(ct) ).contents
 
   @classmethod
   def assign_void_( _class, *args ):
