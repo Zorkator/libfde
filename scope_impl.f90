@@ -7,6 +7,7 @@ module impl_scope__
   use adt_ref
   use adt_string
   use adt_typeinfo
+  use adt_basetypes
 end module
 
 
@@ -60,6 +61,24 @@ end module
     __getSubScope(id7)
     __getSubScope(id8)
     __getSubScope(id9)
+  end function
+
+
+!_PROC_EXPORT(scope_set_callback_c)
+  integer &
+  function scope_set_callback_c( self, ident, proc ) result(res)
+    use impl_scope__
+    implicit none
+    type(HashMap_t)       :: self
+    character(len=*)      :: ident
+    external              :: proc
+    type(Item_t), pointer :: itemPtr
+
+    res = 0
+    if (hasKey( self, ident )) then
+      call set( self, ident, Item_of(ref_from_Callback(proc)) )
+      res = 1
+    end if
   end function
 
 

@@ -4,7 +4,7 @@ module adt_scope
   implicit none
   private
 
-  public :: newScope, getScope
+  public :: newScope, getScope, setCallback
   public :: print_scope
 
   interface newScope
@@ -31,6 +31,16 @@ module adt_scope
     end function
   end interface
 
+  interface setCallback
+    integer &
+    function scope_set_callback_c( scope, ident, proc )
+      import HashMap_t
+      type(HashMap_t)  :: scope
+      character(len=*) :: ident
+      external         :: proc
+    end function
+  end interface
+
   interface
     recursive &
     subroutine print_scope( scope, level )
@@ -38,7 +48,6 @@ module adt_scope
       type(HashMap_t) :: scope
       integer         :: level
     end subroutine
-
   end interface
 
   contains
