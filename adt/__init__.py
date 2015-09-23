@@ -11,7 +11,7 @@ def _import( modId, what ):
   __all__.extend( what )
 
 
-_import( 'adt._base',     [] )
+_import( 'adt._base',     ['LibLoader'] )
 _import( 'adt._ftypes',   ['Complex8', 'Complex16', 'Complex32', 'MemoryRef', 'CALLBACK'] )
 _import( 'adt._typeinfo', ['TypeInfo'] )
 _import( 'adt._string',   ['String'] )

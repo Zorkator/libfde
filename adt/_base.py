@@ -1,13 +1,14 @@
 
 from ctypes import CDLL, Union, sizeof, Structure, c_int8
-from os     import environ as _env, pathsep as _pathsep, path as _path
+from os     import environ as _env, pathsep as _pathDelim, path as _path
+
 import sys, platform
 from distutils.sysconfig import get_python_lib
 
 _archBit     = (32, 64)[sys.maxsize > 2**32]
 _archWin     = ('Win32', 'x64')[sys.maxsize > 2**32]
-_libHandle   = None
-_libFilePath = None
+_isWin       = platform.system() == "Windows"
+_envBinVar   = ('LD_LIBRARY_PATH', 'PATH')[_isWin]
 _libNames    = (
   """
   libadt.debug.{arch}.gfortran.so
@@ -23,36 +24,61 @@ _libNames    = (
   libadt.1.Debug.{arch}.dll
   libadt.1.Release.{arch}.dll
   """.format( arch = _archWin )
-)[platform.system() == "Windows"].split()
+)[_isWin].split()
 
 
-def _iter_searchPaths():
-  pathList = ['.',
-              get_python_lib()
-             ]
-  pathList.extend( (_env.get('LD_LIBRARY_PATH') or _env['PATH']).split( _pathsep ) )
-  return iter(pathList)
+
+class LibLoader(object):
+
+  class Success(Exception):
+    pass
+
+  def splitEnvPaths( self, envVarId ):
+    return _env.get( envVarId, '' ).split( _pathDelim )
 
 
-class BreakLoops(Exception): pass
+  def _iter_searchPaths( self ):
+    pathList = ['.',
+                get_python_lib()
+               ]
+    pathList.extend( self.splitEnvPaths(_envBinVar) )
+    return iter(pathList)
 
-try:
-  _libFilePath = _env.get('LIBADT')
-  if _libFilePath:
-    _libHandle = CDLL( _libFilePath )
-    raise BreakLoops
-  else:
-    for path in _iter_searchPaths():
-      for lib in _libNames:
-        _libFilePath = _path.abspath( path ) + _path.sep + lib
-        if _path.isfile( _libFilePath ):
-          _libHandle = CDLL( _libFilePath )
-          raise BreakLoops
-    else:
-      raise OSError("unable to locate ADT's shared library")
-except BreakLoops:
-  print "loaded shared library " + _libFilePath
 
+  def loadDLL( self, fileName, **kwArgs ):
+    envPaths = _env[_envBinVar]
+    paths    = [_path.dirname(fileName)] + self.splitEnvPaths( kwArgs.get('prioPathEnv', '') )
+    paths.append( _env[_envBinVar] )
+
+    _env[_envBinVar] = _pathDelim.join( paths )
+    self.hdl = CDLL( fileName )
+    _env[_envBinVar] = envPaths
+    self.filePath = fileName
+    raise self.Success
+
+
+  def __init__( self, *libNames, **kwArgs ):
+    try:
+      # try to get absolute dll-filePath by either kwArgument "filePath" or by given environment variable ...
+      fp = kwArgs.get('filePath') or _env.get( kwArgs.get('fileEnv', '') )
+      if fp:
+        # dll to load was set either directly or via environment variable ...
+        self.loadDLL( fp, **kwArgs )
+      else:
+        # scan search paths for dll to load ...
+        for path in self._iter_searchPaths():
+          for lib in libNames:
+            fp = path + _path.sep + lib
+            if _path.isfile( fp ):
+              self.loadDLL( fp, **kwArgs )
+        else:
+          raise OSError( "unable to locate shared library {0}".format(fp) )
+
+    except self.Success:
+      sys.stdout.write( "loaded shared library {0}\n".format(fp) )
+
+
+_libLoader = LibLoader( *_libNames, fileEnv = 'LIBADT', prioPathEnv = 'ADTPATH' )
 
 
 class _Meta(type(Union)):
@@ -69,7 +95,7 @@ class _Meta(type(Union)):
     fields = list( members.pop('_fields_', []) ) \
            + list( ('_data.' + b.__name__, b._data.size * c_int8) for b in bases if hasattr(b, '_data') )
     anonym = list( members.pop('_anonymous_', []) )
-    size   = getattr( _libHandle, method.format('object_size_'), lambda: 0 )()
+    size   = getattr( _libLoader.hdl, method.format('object_size_'), lambda: 0 )()
 
     if fields:
       _Struct = type( '_Struct', (Structure,), dict(_fields_=fields, _anonymous_=anonym) )
@@ -95,7 +121,7 @@ class Compound(Union):
       return {}
 
     for fmt in _class.__typeprocs__:
-      try   : attr = getattr(_libHandle, fmt.format(name)); break
+      try   : attr = getattr(_libLoader.hdl, fmt.format(name)); break
       except: pass
     else:
       raise AttributeError("'%s' object has no attribute '%s'" % (_class.__name__, name))
