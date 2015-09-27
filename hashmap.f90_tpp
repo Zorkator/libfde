@@ -6,6 +6,8 @@ module adt_hashmap
   use adt_list
   use adt_item
   use adt_ref
+  use adt_visitor
+  use adt_ostream
   use iso_c_binding
   implicit none
   private
@@ -28,12 +30,18 @@ module adt_hashmap
   end type
 
 
+  type, public :: HashNode_t
+    type(String_t) :: key
+    type(Item_t)   :: value
+  end type
+
+
   !_TypeGen_declare_RefType( public, HashMap, type(HashMap_t), scalar, \
   !     initProc   = hashmap_init_by_hashmap_c, \
   !     assignProc = hashmap_assign_hashmap_c,  \
   !     deleteProc = hashmap_delete_c,          \
   !     cloneMode  = _type,                     \
-  !     writeExpr  = "'HashMap', len(self)"  )
+  !     acceptProc = hashmap_accept_ )
 
   !_TypeGen_declare_ListNode( public, HashMap, type(HashMap_t), scalar )
 

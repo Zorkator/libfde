@@ -123,6 +123,7 @@
 		<File RelativePath="..\list.f90"/>
 		<File RelativePath="..\list_impl.f90"/>
 		<File RelativePath="..\memoryref.f90"/>
+		<File RelativePath="..\ostream.f90"/>
 		<File RelativePath="..\ref.f90"/>
 		<File RelativePath="..\ref_impl.f90"/>
 		<File RelativePath="..\scope.f90"/>
@@ -130,5 +131,7 @@
 		<File RelativePath="..\string.f90"/>
 		<File RelativePath="..\string_impl.f90"/>
 		<File RelativePath="..\typeinfo.f90"/>
-		<File RelativePath="..\typeinfo_impl.f90"/></Filter></Files>
+		<File RelativePath="..\typeinfo_impl.f90"/>
+		<File RelativePath="..\visitor.f90"/>
+		<File RelativePath="..\visitor_impl.f90"/></Filter></Files>
 	<Globals/></VisualStudioProject>

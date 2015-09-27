@@ -19,17 +19,18 @@
   ! @param bitSize      - the storage size of the type in bytes (=> storage_size(type))
   ! @param rank         - the rank of the type
   ! @param subtype      - the typeinfo of this type's subtype (used by container types)
+  ! @param acceptProc   - the subroutine to accept a visitors       : subroutine accept( obj, visitor )
   ! @param assignProc   - the subroutine to assign a variable       : subroutine assign( lhs, rhs )
   ! @param cloneObjProc - the function to clone an object reference : subroutine clone( tgt, src )
   ! @param cloneRefProc - the function to clone an object           : subroutine clone( tgt, src )
   ! @param deleteProc   - the subroutine to delete a variable       : subroutine delete( var )
   ! @param initProc     - the subroutine to initialize a variable   : subroutine init( var, hardness )
   ! @param shapeProc    - the function to inspect the shape         : subroutine shape( var, res, rank )
-  ! @param writeProc    - the subroutine to write type to charBuffer: subroutine writer( buff, var )
+  ! @param streamProc   - the subroutine to stream type via charbuf : subroutine stream( var, flushFunc )
   !*
 !_PROC_EXPORT(typeinfo_init)
   subroutine typeinfo_init( self, typeId, baseType, bitSize, rank, subtype, &
-                            assignProc, cloneObjProc, cloneRefProc, deleteProc, initProc, shapeProc, writeProc )
+                            acceptProc, assignProc, cloneObjProc, cloneRefProc, deleteProc, initProc, shapeProc, streamProc )
     use adt_typeinfo, only: TypeInfo_t
     use iso_c_binding
     type(TypeInfo_t),    intent(inout) :: self
@@ -37,7 +38,7 @@
     integer(kind=4),        intent(in) :: bitSize
     integer(kind=4),        intent(in) :: rank
     type(TypeInfo_t), target, optional :: subtype
-    procedure(),              optional :: assignProc, cloneObjProc, cloneRefProc, deleteProc, initProc, shapeProc, writeProc
+    procedure(),              optional :: acceptProc, assignProc, cloneObjProc, cloneRefProc, deleteProc, initProc, shapeProc, streamProc
 
     self%typeId   =  adjustl(typeId);   self%typeId_term   = 0
     self%baseType =  adjustl(baseType); self%baseType_term = 0
@@ -51,21 +52,23 @@
     self%typeSpecs%subtype  = c_loc(subtype)
 
     ! pre-initialize optional arguments
+    self%acceptProc   => null()
     self%assignProc   => null()
     self%cloneObjProc => null()
     self%cloneRefProc => null()
     self%deleteProc   => null()
     self%initProc     => null()
     self%shapeProc    => null()
-    self%writeProc    => null()
+    self%streamProc   => null()
 
+    if (present(acceptProc))   self%acceptProc   => acceptProc
     if (present(assignProc))   self%assignProc   => assignProc
     if (present(cloneObjProc)) self%cloneObjProc => cloneObjProc
     if (present(cloneRefProc)) self%cloneRefProc => cloneRefProc
     if (present(deleteProc))   self%deleteProc   => deleteProc
     if (present(initProc))     self%initProc     => initProc
     if (present(shapeProc))    self%shapeProc    => shapeProc
-    if (present(writeProc))    self%writeProc    => writeProc
+    if (present(streamProc))   self%streamProc   => streamProc
     self%initialized = .true.
 
   contains

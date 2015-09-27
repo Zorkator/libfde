@@ -3,6 +3,8 @@
 
 module adt_list
   use adt_ref
+  use adt_visitor
+  use adt_ostream
   implicit none
   private
 
@@ -34,7 +36,7 @@ module adt_list
   !     deleteProc = list_delete_c,       \
   !     assignProc = list_assign_list_c,  \
   !     cloneMode  = _type,               \
-  !     writeExpr  = "'list[',len(self),']'" )
+  !     acceptProc = list_accept_ )
 
   !_TypeGen_declare_ListNode( public, List, type(List_t), scalar )
 

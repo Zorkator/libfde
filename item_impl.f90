@@ -571,18 +571,39 @@ end module
   _implement_typecheck_(complex32,   complex*32)
 # endif
 
-  subroutine item_write_to_buffer( buff, self )
-    use impl_item__;
+
+  recursive &
+  subroutine item_accept_( self, vstr )
+    use impl_item__
+    use adt_visitor
     implicit none
-    character(len=*)          :: buff
     type(Item_t)              :: self
+    type(Visitor_t)           :: vstr
     type(TypeInfo_t), pointer :: ti 
 
     ti => item_dynamic_type(self)
-    if (associated(ti%writeProc)) then
-      call ti%writeProc( buff, self%data )
+    if (associated(ti%acceptProc)) then
+      call ti%acceptProc( self%data, vstr )
+    endif
+  end subroutine
+
+
+  recursive &
+  subroutine item_stream_( self, outs )
+    use impl_item__
+    use adt_ostream
+    implicit none
+    type(Item_t)              :: self
+    type(ostream_t)           :: outs
+    character(len=32)         :: buff
+    type(TypeInfo_t), pointer :: ti 
+
+    ti => item_dynamic_type(self)
+    if (associated(ti%streamProc)) then
+      call ti%streamProc( self%data, outs )
     else
-      write(buff, *) trim(ti%typeId)
+      write(buff, '(A$)') trim(ti%typeId)
+      call outs%drainFunc( outs, buff )
     endif
   end subroutine
 

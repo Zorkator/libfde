@@ -7,6 +7,8 @@ module adt_basetypes
   use adt_ref
   use adt_list
   use adt_string
+  use adt_convert
+  use adt_ostream
   implicit none
   private
 
@@ -24,7 +26,7 @@ module adt_basetypes
   !_TypeGen_declare_RefType( public, complex8,   complex*8,   scalar )
   !_TypeGen_declare_RefType( public, complex16,  complex*16,  scalar )
   !_TypeGen_declare_RefType( public, complex32,  complex*32,  scalar )
-  !_TypeGen_declare_RefType( public, c_void_ptr, type(c_ptr), scalar, writeExpr="loc(self)" )
+  !_TypeGen_declare_RefType( public, c_void_ptr, type(c_ptr), scalar, writeExpr="address_str(self)" )
 
   !_TypeGen_declare_RefType( public, bool1_1d,      logical*1,   dimension(:) )
   !_TypeGen_declare_RefType( public, bool2_1d,      logical*2,   dimension(:) )

@@ -9,6 +9,8 @@ module adt_item
   use adt_basetypes
   use adt_list
   use adt_typeinfo
+  use adt_visitor
+  use adt_ostream
   implicit none
   private
 
@@ -55,7 +57,8 @@ module adt_item
   !     assignProc = item_assign_item_c,  \
   !     deleteProc = item_delete_c,       \
   !     cloneMode  = _type,               \
-  !     writeProc  = item_write_to_buffer )
+  !     streamProc = item_stream_,        \
+  !     acceptProc = item_accept_ )
 
   !_TypeGen_declare_ListNode( public, Item, type(Item_t), scalar )
 

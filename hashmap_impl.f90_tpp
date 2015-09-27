@@ -9,27 +9,18 @@ module impl_hashmap__
   use adt_ref
   use adt_crc
   use adt_memoryref
+  use adt_ostream
   use iso_c_binding
 
   type(List_t), target :: hashmap_nodeCache
 
-  type, public :: HashNode_t
-    type(String_t) :: key
-    type(Item_t)   :: value
-  end type
-
   !_TypeGen_declare_RefType( public, HashNode, type(HashNode_t), scalar, \
   !     deleteProc = hashnode_delete, \
-  !     cloneMode  = _type )
+  !     cloneMode  = _type, \
+  !     streamProc = hashnode_stream_ )
 
   !_TypeGen_declare_ListNode( public, HashNode, type(HashNode_t), scalar )
 
-  interface
-    subroutine hashnode_delete( self )
-      import HashNode_t
-      type(HashNode_t), intent(inout) :: self
-    end subroutine
-  end interface
 
 # define HashMap_t        HashMap_t__impl__
 # define HashMapIndex_t   HashMapIndex_t__impl__
@@ -139,11 +130,40 @@ module impl_hashmap__
       integer(kind=4) :: numItems
     end subroutine
 
+    function hashmap_index( self ) result(res)
+      import HashMap_t, HashMapIndex_t
+      type(HashMap_t), target, intent(in) :: self
+      type(HashMapIndex_t)                :: res
+    end function
+
+    pure logical &
+    function hashmapindex_is_valid_c( self )
+      import HashMapIndex_t
+      type(HashMapIndex_t), intent(in) :: self
+    end function
+
+    function hashmapindex_key( self ) result(res)
+      import HashMapIndex_t, String_t
+      type(HashMapIndex_t), intent(in) :: self
+      type(String_t),          pointer :: res
+    end function
+
+    function hashmapindex_value( self ) result(res)
+      import HashMapIndex_t, Item_t
+      type(HashMapIndex_t), intent(in) :: self
+      type(Item_t),            pointer :: res
+    end function
+
     logical &
     function hashmapindex_next_bucket( self ) result(res)
       import HashMapIndex_t
       type(HashMapIndex_t) :: self
     end function
+
+    subroutine hashmapindex_next_c( self )
+      import HashMapIndex_t
+      type(HashMapIndex_t), intent(inout) :: self
+    end subroutine
 
     logical &
     function hashmapindex_set_next_c( self )
@@ -156,7 +176,26 @@ contains
 
   !_TypeGen_implementAll()
 
+  subroutine hashnode_delete( self )
+    implicit none
+    type(HashNode_t), intent(inout) :: self
+    
+    call delete( self%key )
+    call delete( self%value )
+  end subroutine
+
 end module
+
+
+  subroutine hashnode_stream_( self, outs )
+    use impl_hashmap__, only: HashNode_t, stream
+    use adt_ostream
+    implicit none
+    type(HashNode_t) :: self
+    type(ostream_t)  :: outs
+    call stream( self%key, outs )
+    call stream( self%value, outs )
+  end subroutine
 
 
 !_PROC_EXPORT(hashmap_object_size_c)
@@ -198,16 +237,6 @@ end module
 
     res = associated( self%indexVector )
   end function
-
-
-  subroutine hashnode_delete( self )
-    use impl_hashmap__, only: HashNode_t, delete
-    implicit none
-    type(HashNode_t), intent(inout) :: self
-    
-    call delete( self%key )
-    call delete( self%value )
-  end subroutine
 
 
 !_PROC_EXPORT(hashmap_init_by_hashmap_c)
@@ -770,7 +799,8 @@ end module
 
 !_PROC_EXPORT(hashmap_index)
   function hashmap_index( self ) result(res)
-    use impl_hashmap__; implicit none
+    use impl_hashmap__, only: HashMap_t, HashMapIndex_t, hashmapindex_next_bucket
+    implicit none
     type(HashMap_t), target, intent(in) :: self
     type(HashMapIndex_t)                :: res
     logical                             :: ok
@@ -815,7 +845,8 @@ end module
   
 !_PROC_EXPORT(hashmapindex_next_c)
   subroutine hashmapindex_next_c( self )
-    use impl_hashmap__; implicit none
+    use impl_hashmap__, only: HashMapIndex_t, hashmapindex_set_next_c
+    implicit none
     type(HashMapIndex_t), intent(inout) :: self
     logical                             :: ok
 
@@ -840,7 +871,8 @@ end module
 !_PROC_EXPORT(hashmapindex_is_valid_c)
   pure logical &
   function hashmapindex_is_valid_c( self ) result(res)
-    use impl_hashmap__; implicit none
+    use impl_hashmap__, only: HashMapIndex_t
+    implicit none
     type(HashMapIndex_t), intent(in) :: self
 
     res = associated( self%host )
@@ -890,5 +922,23 @@ end module
     node => HashNode( self%bucket )
     call basestring_memoryref_c( key, node%key )
     val = c_loc( node%value )
+  end subroutine
+
+  
+  recursive &
+  subroutine hashmap_accept_( self, vstr )
+    use impl_hashmap__
+    use adt_visitor
+    implicit none
+    type(HashMap_t) :: self
+    type(Visitor_t) :: vstr
+    type(HashMapIndex_t) :: idx
+    type(HashNode_t), pointer :: node
+
+    idx = hashmap_index( self )
+    do while (hashmapindex_is_valid_c(idx))
+      call accept( HashNode( idx%bucket ), vstr )
+      call hashmapindex_next_c( idx )
+    end do
   end subroutine
 

@@ -450,18 +450,72 @@ end module
   end function
 
 
-  subroutine ref_write_to_buffer( buff, self )
+!_PROC_EXPORT(ref_resolve)
+!_ARG_REFERENCE1(self)
+  function ref_resolve( self ) result(res)
     use impl_ref__
+    use adt_ref, only: static_type, temporary_ref
     implicit none
-    character(len=*)          :: buff
+    type(Ref_t),       target :: self
+    type(Ref_t),      pointer :: res
+    type(TypeInfo_t), pointer :: ti, refType
+
+    type ref_wrap_t
+      type(Ref_t), pointer :: ptr
+    end type
+    type(ref_wrap_t), pointer :: wrap
+
+    refType => static_type(temporary_ref)
+    res     => self
+    do while(.true.)
+      ti => ref_dynamic_type( res )
+      if (.not. associated( ti, refType )) &
+        exit
+      call c_f_pointer( ref_get_typereference(res), wrap )
+      res => wrap%ptr
+    end do
+  end function
+
+
+  recursive &
+  subroutine ref_accept_( self, vstr )
+    use impl_ref__
+    use adt_visitor
+    implicit none
     type(Ref_t)               :: self
-    type(TypeInfo_t), pointer :: ti 
-    character(len=20)         :: addressStr
-    integer*8                 :: address
+    type(Visitor_t)           :: vstr
+    type(TypeInfo_t), pointer :: ti
+    integer,          pointer :: tgtPtr
 
     ti => ref_dynamic_type( self )
-    address = transfer( ref_cptr(self), address )
-    write(addressStr, '(Z8.8)') address
-    write(buff, *) ' => ' // trim(ti%typeId) // '@0x' // trim(addressStr)
+    if (associated( ti%acceptProc )) then
+      call c_f_pointer( ref_cptr( self ), tgtPtr )
+      call ti%acceptProc( tgtPtr, vstr )
+    end if
+  end subroutine
+
+
+  recursive &
+  subroutine ref_stream_( self, outs )
+    use impl_ref__
+    use adt_convert
+    use adt_ostream
+    implicit none
+    type(Ref_t)               :: self
+    type(ostream_t)           :: outs
+    type(TypeInfo_t), pointer :: ti
+    type(c_ptr)               :: tgt
+    integer, pointer          :: tgtPtr
+    character(len=64)         :: buff
+
+    ti  => ref_dynamic_type( self )
+    tgt =  ref_cptr( self )
+    if (associated( ti%streamProc )) then
+      call c_f_pointer( tgt, tgtPtr )
+      call ti%streamProc( tgtPtr, outs )
+    else
+      write(buff, '(A$)') trim(ti%typeId) // ' @ ' // address_str( tgt )
+      call outs%drainFunc( outs, buff )
+    end if
   end subroutine
 

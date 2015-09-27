@@ -775,3 +775,50 @@ end module
     end if
   end subroutine
 
+
+  recursive &
+  subroutine list_accept_( self, vstr )
+    use impl_list__
+    use adt_visitor
+    implicit none
+    type(List_t),       target :: self
+    type(Visitor_t)            :: vstr
+    type(TypeInfo_t),  pointer :: ti 
+    type(ListNode_t),  pointer :: ptr
+    type(ValueNode_t), pointer :: valNodePtr
+
+    ptr => self%node%next
+    do while (.not. associated( ptr, self%node ))
+      ti => ptr%typeInfo%subtype
+      if (associated( ti%acceptProc )) then
+        call c_f_pointer( c_loc(ptr), valNodePtr )
+        call ti%acceptProc( valNodePtr%pseudoValue, vstr )
+      end if
+      ptr => ptr%next
+    end do  
+  end subroutine
+
+
+  !recursive &
+  !subroutine list_stream_( self, flushFunc )
+  !  use impl_list__
+  !  use iso_c_binding
+  !  implicit none
+  !  type(List_t), target       :: self
+  !  external                   :: flushFunc
+  !  character(len=32)          :: buff
+  !  type(TypeInfo_t),  pointer :: ti 
+  !  type(ListNode_t),  pointer :: ptr
+  !  type(ValueNode_t), pointer :: valNodePtr
+
+  !  ptr => self%node%next
+  !  do while (.not. associated( ptr, self%node ))
+  !    ti => ptr%typeInfo%subtype
+  !    if (associated( ti%streamProc )) then
+  !      call c_f_pointer( c_loc(ptr), valNodePtr )
+  !      call ti%streamProc( valNodePtr%pseudoValue, flushFunc )
+  !    end if
+  !    ptr => ptr%next
+  !  end do  
+  !end subroutine
+    

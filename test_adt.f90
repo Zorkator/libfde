@@ -8,13 +8,14 @@ module test_basedata
   use adt_item
   use adt_list
   use adt_hashmap
+  use adt_visitor
   use iso_c_binding
   implicit none
 
   !---------------------------
   ! declare basetypes ...
   !---------------------------
-  logical*1         :: v_bool1      = .true.
+  logical*1         :: v_bool1      = .true.!{{{
   logical*2         :: v_bool2      = .true.
   logical*4         :: v_bool4      = .true.
   logical*8         :: v_bool8      = .true.
@@ -147,11 +148,13 @@ module test_basedata
   type(Ref_t),      dimension(:,:), pointer :: p_ref_2d
   type(Item_t),     dimension(:,:), pointer :: p_item_2d
   type(List_t),     dimension(:,:), pointer :: p_list_2d
-  type(HashMap_t),  dimension(:,:), pointer :: p_hashmap_2d
+  type(HashMap_t),  dimension(:,:), pointer :: p_hashmap_2d!}}}
 
+  type(StreamVisitor_t) :: streamer
+  
   contains
 
-  subroutine init_basedata()
+  subroutine init_basedata()!{{{
     implicit none
     integer :: i, j
 
@@ -213,10 +216,12 @@ module test_basedata
         call initialize( v_hashmap_2d(i,j) )
       end do
     end do
-  end subroutine
+    
+    streamer = StreamVisitor( 6 )
+  end subroutine!}}}
 
 
-  subroutine cleanup_basedata()
+  subroutine cleanup_basedata()!{{{
     implicit none
     integer :: i, j
 
@@ -278,12 +283,12 @@ module test_basedata
     deallocate( v_bool4_2d )
     deallocate( v_bool2_2d )
     deallocate( v_bool1_2d )
-  end subroutine
+  end subroutine!}}}
 
 end module
 
 
-!module adt_alloc
+!module adt_alloc!{{{
 !
 !  interface adt_allocate
 !    module procedure hashmap_allocate
@@ -359,10 +364,10 @@ end module
 !    end if
 !  end subroutine
 !
-!end module
+!end module!}}}
 
 
-subroutine do_assert( expr_bool, expr_str )
+subroutine do_assert( expr_bool, expr_str )!{{{
   logical,          intent(in) :: expr_bool
   character(len=*), intent(in) :: expr_str
   if (.not. expr_bool) &
@@ -374,16 +379,16 @@ end subroutine
 
 # define _assert_not( expr ) \
     call do_assert( .not. expr, _str(expr) )
+!}}}
 
-
-subroutine test_string()
+subroutine test_string()!{{{
   use test_basedata
   implicit none
 
-end subroutine
+end subroutine!}}}
 
 
-subroutine test_ref()
+subroutine test_ref()!{{{
   use test_basedata
   implicit none
 
@@ -398,6 +403,9 @@ subroutine test_ref()
   _assert( r1 /= r2 )
   r1 = r2
   _assert( r1 == r2 )
+  r1 = ref_of( v_int4 )
+  r2 = ref_of( r1 )
+  _assert( int4( resolve( r2 ) ) == 3 )
 
   r1 = ref_of( v_bool1 )
   print *, bool1(r1)
@@ -443,19 +451,19 @@ subroutine test_ref()
   call delete( r1 )
   call delete( r2 )
 
-end subroutine
+end subroutine!}}}
 
 
-subroutine test_item()
+subroutine test_item()!{{{
   use test_basedata
   implicit none
   type(Item_t) :: item_array(5)
 
   !item_array(1:) = v_item_1d(1:) !< shallow copy! fortran can't do proper array assignment with derived types!!!
-end subroutine
+end subroutine!}}}
 
 
-subroutine test_list()
+subroutine test_list()!{{{
   use test_basedata
   implicit none
   !type(List_t) :: list_array(5)
@@ -483,7 +491,7 @@ subroutine test_list()
   _list_append(string)
   _list_append(ref)
   _list_append(item)
-  _list_append(list)
+  !_list_append(list)
   _list_append(hashmap)
 
   idx = index( v_list )
@@ -493,12 +501,18 @@ subroutine test_list()
     call next( idx )
   end do
 
+  call accept( get( v_hashmap, 'initial matrix-clone' ), streamer%super )
+  
+  
+  v_ref = ref_of( v_list )
+  call accept( v_ref, streamer%super )
+
   call delete( v_list )
 
-end subroutine
+end subroutine!}}}
 
 
-subroutine test_hashmap()
+subroutine test_hashmap()!{{{
   use test_basedata
   implicit none
 
@@ -559,14 +573,14 @@ subroutine test_hashmap()
   
   call delete( ref_1 )
 
-end subroutine
+end subroutine!}}}
 
 
 # define fileScope() \
     trim(adjustl(file_basename( __FILE__ )))
 
 
-subroutine test_hashmap_nesting()
+subroutine test_hashmap_nesting()!{{{
   use test_basedata
   !use adt_alloc
   use adt_scope
@@ -580,6 +594,7 @@ subroutine test_hashmap_nesting()
 
   ref1 = ref_of( newScope(), bind = .true. )
 
+  r_array => null()
   print *, dynamic_cast( r_array, ref1 ) !< should fail
   print *, dynamic_cast( scope, ref1 )   !< should succeed
 
@@ -592,7 +607,7 @@ subroutine test_hashmap_nesting()
   allocate( r_array(10) )
   r_array = [1,2,3,4,5,6,7,8,9,0]
   scope => getScope( scope, 'gcsm' )
-  call set( scope, 'text', Item_of( ref_of(buff) ) )
+  call set( scope, 'text', Item_of( ref_of(r_array, bind=.true.) ) )
   call set( scope, 'text', Item_of( ref_of(buff) ) )
   call set( getScope( scope, 'signal'), 'value', Item_of( ref_of(i) ) )
 
@@ -600,7 +615,7 @@ subroutine test_hashmap_nesting()
   scope => getScope( hashmap(ref1), 'gcsm' )
   call set( scope, 'counter', Item_of( ref_of(i) ) )
   call set( getScope( scope, 'signal'), 'value', Item_of( ref_of(r_array, bind = .true.) ) )
-  call print_scope( hashmap(ref1), 0 )
+  !call print_scope( hashmap(ref1), 0 )
 
   scope => getScope( getScope( getScope( hashmap(ref1), fileScope() ), 'gcsm' ), 'signal' )
   scope => getScope( hashmap(ref1), fileScope(), 'gcsm', 'signal' )
@@ -608,12 +623,12 @@ subroutine test_hashmap_nesting()
   if (dynamic_cast( r_array, ref(get(scope, 'value')) )) &
     print *, r_array
 
-  call print_scope( hashmap(ref1), 1 )
+  !call print_scope( hashmap(ref1), 1 )
   call delete( ref1 )
-end subroutine
+end subroutine!}}}
 
 
-subroutine test_hashmap_cloning()
+subroutine test_hashmap_cloning()!{{{
   use test_basedata
   use adt_scope
 
@@ -664,10 +679,10 @@ subroutine test_hashmap_cloning()
   call delete( map )
   call delete( r )
 
-end subroutine
+end subroutine!}}}
 
 
-subroutine test_file_string()
+subroutine test_file_string()!{{{
   use adt_string
   type(String_t) :: s
 
@@ -684,13 +699,156 @@ subroutine test_file_string()
   print *, file_basename("c:\path/testinger.f90")
   print *, file_basename("path/testinger")
   print *, file_basename("testinger")
+
+  call delete(s)
+end subroutine!}}}
+
+
+subroutine test_visitor()
+  use test_basedata
+
+# define _visit_(typeId) \
+    call accept( _paste(v_,typeId), streamer%super )
+
+  _visit_(bool1)
+  _visit_(bool2)
+  _visit_(bool4)
+  _visit_(bool8)
+  _visit_(int1)
+  _visit_(int2)
+  _visit_(int4)
+  _visit_(int8)
+  _visit_(real4)
+  _visit_(real8)
+  _visit_(complex8)
+  _visit_(complex16)
+  _visit_(c_void_ptr)
+  _visit_(string)
+  _visit_(ref)
+  _visit_(char10)
+  _visit_(item)
+  _visit_(list)
+  _visit_(hashmap)
+
+  v_ref = ref_of( v_complex16 )
+  call accept( v_ref, streamer%super )
+  v_item = Item_of( ref_of( v_real8 ) )
+  call accept( v_item, streamer%super )
+  
 end subroutine
+
+
+module visitor_testmod!{{{
+  use adt_visitor
+  implicit none
+
+  type node_t
+    type(node_t), pointer :: next => null()
+    integer               :: value = -1
+  end type
+
+  type(node_t), target  :: list
+
+  type CountVisitor_t
+    type(Visitor_t)              :: super
+    procedure(), nopass, pointer :: visit
+    integer                      :: sum = 0
+  end type
+
+  contains
+
+  subroutine CountVisitor_step( v, n )
+    type(CountVisitor_t) :: v
+    type(node_t)         :: n
+    v%sum = v%sum + 1
+    call v%visit( v, n )
+  end subroutine
+
+  function CountVisitor( func ) result(res)
+    external             :: func
+    type(CountVisitor_t) :: res
+    res%super%visit => CountVisitor_step
+    res%visit       => func
+  end function
+  
+
+  subroutine init_list()
+    type(node_t), pointer :: ptr
+    integer               :: i
+    
+    ptr => list
+    do i = 1, 5
+      allocate(ptr%next)
+      ptr%value = i
+      ptr => ptr%next
+    end do
+  end subroutine
+
+  recursive &
+  subroutine accept( n, v )
+    type(node_t)    :: n
+    type(visitor_t) :: v
+
+    call v%visit( v, n )
+    if (associated(n%next)) &
+      call accept( n%next, v )
+  end subroutine
+
+  subroutine test()
+    type(CountVisitor_t) :: v
+
+    call init_list()
+    call accept( list, Visitor(blub) )
+    v = CountVisitor(blub)
+    call accept( list, v%super )
+    print *, v%sum
+
+    contains
+
+    subroutine blub( v, n )
+      type(visitor_t) :: v
+      type(node_t)    :: n
+      print *, 'blub', n%value 
+    end subroutine
+  end subroutine
+
+end module!}}}
 
 
 program test_adt
   use test_basedata
+  use adt_convert
+  use adt_ostream
+
+  integer,   target :: dings = 324
+  character(len=18) :: res
+  type(ostream_t) :: fout
+
+  call width( fout, 5 )
+  call write( fout, "testinger" )
+  call width( fout, 15 )
+  call write( fout, "test" )
+  call write( fout, "testing" )
+  call write( fout, "testinger" )
+  call width( fout, 0 )
+  call write( fout, "testinger" )
+  call write( fout, "testinger" )
+  call newline( fout, 0 )
+  call write( fout, "testinger" )
+  call newline( fout, 2 )
+  call write( fout, "testinger" )
+  call newline( fout, 1 )
+  call write( fout, "testinger" )
+  call newline( fout, 5 )
+  call write( fout, "testinger" )
+  call width( fout, 32 )
+  call write( fout, "testinger" )
+
+  print *, hex(dings)
+  print *, address_str( c_loc(dings) )
 
   call init_basedata()
+  call test_visitor()
   call test_hashmap()
   call test_string()
   call test_ref()

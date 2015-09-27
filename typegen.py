@@ -30,7 +30,7 @@ class TypeSpec(object):
   dimSpecMatch    = re.compile( _dimSpec ).match
   varBaseMatch    = re.compile( _varLength ).match
   baseTypeIdMatch = re.compile( _baseTypeId ).match
-  declWatcher  = dict()
+  declWatcher     = dict()
 
   _template = dict(
     header = """
@@ -137,7 +137,6 @@ class RefType(TypeSpec):
     # parameters:
     #   access:     private | public
     #   typeId:     type identifier
-    #   typeWriter: procedure id for writing character representation
     #
     ref_itf = """
     interface ref_of      ; module procedure {typeId}_encode_ref_   ; end interface
@@ -152,7 +151,6 @@ class RefType(TypeSpec):
     # parameters:
     #   access:     private | public
     #   typeId:     type identifier
-    #   typeWriter: procedure id for writing character representation
     #
     # NOTE: we can't create operator interfaces for procedure encoders/decoders.
     #   For the encoder, this is, because fortran can't distinguish different procedure types.
@@ -170,21 +168,69 @@ class RefType(TypeSpec):
 
     # parameters:
     #   typeId:     type identifier
-    ref_writeItf_std = """
-    interface write            ; module procedure {typeId}_write_to_buff_; end interface
+    ref_streamItf_std = """
+    interface stream           ; module procedure {typeId}_stream_; end interface
     """,
 
     # parameters:
     #   typeId:     type identifier
-    ref_writeItf_usr = """
-    interface write
-      subroutine {writeProcId}( buff, self )
-        {writeITF_import}
-        character(len=*)    :: buff
+    #   baseType:   fortran base type | type(...) | procedure(...)
+    #   dimSpec:    ('', ', dimension(:,...)')[has_dimension]
+    #   writeSize:  size of char buffer for writing type representaion
+    #   writeFmt:   fortran format string to write type to buffer
+    #   writeExpr:  fortran expression to write type to buffer
+    #   formatSpec: fortran write format statement or empty
+    ref_streamer_std = """
+    subroutine {typeId}_stream_( self, outs )
+      {baseType}{dimSpec}        :: self
+      type(ostream_t)            :: outs
+      character(len={writeSize}) :: buff
+      write(buff, {writeFmt}) {writeExpr}
+      call outs%drainFunc( outs, trim(buff) ){formatSpec}
+    end subroutine
+    """,
+
+    # parameters:
+    #   typeId:     type identifier
+    ref_streamItf_usr = """
+    interface stream
+      subroutine {streamProcId}( self, outs )
+        {import_baseType}
+        import ostream_t
         {baseType}{dimSpec} :: self
+        type(ostream_t)     :: outs
       end subroutine
     end interface
     """,
+
+    # parameters:
+    #   typeId:     type identifier
+    ref_acceptItf_std = """
+    interface accept      ; module procedure {typeId}_accept_       ; end interface
+    """,
+  
+    ref_acceptor_std = """
+    recursive &
+    subroutine {typeId}_accept_( self, vstr )
+      use adt_visitor
+      {baseType}{dimSpec} :: self
+      type(Visitor_t)     :: vstr
+      call vstr%visit( vstr, self, static_type(self) )
+    end subroutine
+    """,
+
+    ref_acceptItf_usr = """
+    interface accept
+      recursive &
+      subroutine {acceptProcId}( self, vstr )
+        {import_baseType}
+        import Visitor_t
+        {baseType}{dimSpec} :: self
+        type(Visitor_t)     :: vstr
+      end subroutine
+    end interface
+    """,
+
 
     # parameters:
     #   typeId:       type identifier
@@ -335,19 +381,6 @@ class RefType(TypeSpec):
 
 
     # parameters:
-    #   typeId:   type identifier
-    #   baseType: fortran base type | type(...) | procedure(...)
-    #   dimSpec:  ('', ', dimension(:,...)')[has_dimension]
-    ref_writer_std = """
-    subroutine {typeId}_write_to_buff_( buff, self )
-      character(len=*)    :: buff
-      {baseType}{dimSpec} :: self
-      write(buff, *) {writeExpr}
-    end subroutine
-    """,
-
-
-    # parameters:
     #   typeId:       type identifier
     #   baseType:     fortran base type | type(...) | procedure(...)
     #   baseType_arg: fortran argument base type | type(...) | procedure(...)
@@ -357,7 +390,7 @@ class RefType(TypeSpec):
     #   assignProc:   ', assignProc = <funcId>'
     #   deleteProc:   ', deleteProc = <funcId>'
     #   shapeProc:    ', shapeProc = <funcId>'
-    #   writeProc:    ', writeProc = <funcId>'
+    #   streamProc:   ', streamProc = <funcId>'
     ref_typeinfo = """
 !_PROC_EXPORT({typeId}_typeinfo_)
 !_ARG_REFERENCE1(self)
@@ -369,7 +402,7 @@ class RefType(TypeSpec):
       if (.not. res%initialized) &
         call typeinfo_init( res, '{typeId}', '{baseType}' &
                             , int({baseSizeExpr},4) &
-                            , {rank}{initProc}{assignProc}{deleteProc}{shapeProc}{cloneProc}{writeProc} &
+                            , {rank}{initProc}{acceptProc}{assignProc}{deleteProc}{shapeProc}{cloneProc}{streamProc} &
                             , cloneRefProc = {typeId}_clone_ref_ )
     end function
     """,
@@ -402,6 +435,9 @@ class RefType(TypeSpec):
     if keySpecs: self.keySpecStr = ', ' + ', '.join( '%s = %s' % i for i in keySpecs.items() )
     else       : self.keySpecStr = ''
 
+    typeProcs.setdefault( 'acceptProc', typeId + '_accept_' )
+    typeProcs.setdefault( 'streamProc', typeId + '_stream_' )
+
     if self._isArray:
       typeProcs.setdefault( 'shapeProc', typeId + '_inspect_' )
 
@@ -410,7 +446,7 @@ class RefType(TypeSpec):
       if typeProcs:
         sys.stderr.write( 'WARNING: given type procs {0} are ignored for procedure type "{1}"\n'.format(typeProcs, typeId) )
 
-    for procId in ('initProc', 'assignProc', 'deleteProc', 'shapeProc', 'writeProc'):
+    for procId in ('initProc', 'acceptProc', 'assignProc', 'deleteProc', 'shapeProc', 'streamProc'):
       procArg  = ''
       procName = typeProcs.get( procId, '' )
       if procName not in ('', '_none'):
@@ -436,23 +472,30 @@ class RefType(TypeSpec):
       self.code_clonePtr = 'tgt => src'
       self.cloneProc  = ''
 
-    self._itf       = ('ref_itf',          'proc_itf'         )[self._isProc]
-    self._access    = ('access_ref',       'access_proc'      )[self._isProc]
-    self._refCloner = ('ref_cloner',       ''                 )[self._isProc]
-    self._inspector = ('ref_inspector',    ''                 )[self._isProc]
-    self._typeinfo  = ('ref_typeinfo',     'proc_typeinfo'    )[self._isProc]
-    self._writeItf  = ('ref_writeItf_std', 'ref_writeItf_usr' )[bool(self.writeProc)]
-    self._refWriter = ('ref_writer_std',    ''                )[bool(self.writeProc)]
+    self._itf       = ('ref_itf',           'proc_itf'          )[self._isProc]
+    self._access    = ('access_ref',        'access_proc'       )[self._isProc]
+    self._refCloner = ('ref_cloner',        ''                  )[self._isProc]
+    self._inspector = ('ref_inspector',     ''                  )[self._isProc]
+    self._typeinfo  = ('ref_typeinfo',      'proc_typeinfo'     )[self._isProc]
+    self._acceptItf = ('ref_acceptItf_std', 'ref_acceptItf_usr' )['acceptProc' in keySpecs]
+    self._acceptor  = ('ref_acceptor_std',  ''                  )['acceptProc' in keySpecs]
+    self._streamItf = ('ref_streamItf_std', 'ref_streamItf_usr' )['streamProc' in keySpecs]
+    self._streamer  = ('ref_streamer_std',  ''                  )['streamProc' in keySpecs]
+
+    fmt = self.peelString( keySpecs.setdefault( 'streamFmt', '' ) )
+    if fmt: keySpecs['writeFmt'], keySpecs['formatSpec'] = '100', '\n100   format({0})'.format(fmt)
+    else  : keySpecs['writeFmt'], keySpecs['formatSpec'] = '*'  , ''
 
     keySpecs.setdefault( 'writeExpr', ('self', "'%s'" % self.baseTypeId)[bool(self._isDerived)] )
+    keySpecs.setdefault( 'writeSize', '64' )
     self._kwArgs = dict( (k, self.peelString(v)) for k,v in keySpecs.items() )
-    self.writeITF_import = ('', 'import %s' % self.baseTypeId)[bool(self._isDerived)]
+    self.import_baseType = ('', 'import %s' % self.baseTypeId)[bool(self._isDerived)]
 
 
   def declare( self, out ):
     if not self._declared:
-      self.expand( out, 'info', 'type', self._itf, self._writeItf )
-      self.expandAccess( out, self.access, 'ref_of', 'static_type', 'dynamic_cast', 'write' )
+      self.expand( out, 'info', 'type', self._itf, self._streamItf, self._acceptItf )
+      self.expandAccess( out, self.access, 'ref_of', 'static_type', 'dynamic_cast', 'stream', 'accept' )
       self.expandAccessString( out, self.access, self._template[self._access] )
       TypeGenerator.setDeclaration( self.typeId, self )
       self._declared = True
@@ -463,7 +506,7 @@ class RefType(TypeSpec):
       self.expand( out, 'header', 'ref_encoder', 'ref_decoder', 'ref_typechecker', 'ref_dynamic_cast',
                    self._refCloner, self._inspector, self._typeinfo )
       print self.typeId, self._kwArgs  
-      self.expand( out, self._refWriter, **self._kwArgs )
+      self.expand( out, self._streamer, self._acceptor, **self._kwArgs )
       out( self._ptrCloner.format( **self.__dict__ ) )
       self._implemented = True
 

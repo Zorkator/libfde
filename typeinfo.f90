@@ -22,13 +22,14 @@ module adt_typeinfo
     logical                   :: initialized = .false.
 
     ! type specific subroutines called by generic interfaces 
+    procedure(), nopass, pointer :: acceptProc   => null()
     procedure(), nopass, pointer :: assignProc   => null()
     procedure(), nopass, pointer :: cloneObjProc => null()
     procedure(), nopass, pointer :: cloneRefProc => null()
     procedure(), nopass, pointer :: deleteProc   => null()
     procedure(), nopass, pointer :: initProc     => null()
     procedure(), nopass, pointer :: shapeProc    => null()
-    procedure(), nopass, pointer :: writeProc    => null()
+    procedure(), nopass, pointer :: streamProc   => null()
   end type
 
   
@@ -44,14 +45,14 @@ module adt_typeinfo
 
   interface
     subroutine typeinfo_init( self, typeId, baseType, bitSize, rank, subtype, &
-                              assignProc, cloneObjProc, cloneRefProc, deleteProc, initProc, shapeProc, writeProc )
+                              acceptProc, assignProc, cloneObjProc, cloneRefProc, deleteProc, initProc, shapeProc, streamProc )
       import TypeInfo_t
       type(TypeInfo_t),    intent(inout) :: self
       character(len=*),       intent(in) :: typeId, baseType
       integer*4,              intent(in) :: bitSize
       integer*4,              intent(in) :: rank
       type(TypeInfo_t), target, optional :: subtype
-      procedure(),              optional :: assignProc, cloneObjProc, cloneRefProc, deleteProc, initProc, shapeProc, writeProc
+      procedure(),              optional :: acceptProc, assignProc, cloneObjProc, cloneRefProc, deleteProc, initProc, shapeProc, streamProc
     end subroutine
   end interface
 

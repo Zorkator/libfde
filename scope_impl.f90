@@ -96,6 +96,7 @@ end module
     type(TypeInfo_t), pointer :: ti
     character(len=255)        :: buffer
 
+    valRef => null()
     indent = ' '
     idx    = index( scope )
     do while (is_valid(idx))
@@ -106,7 +107,7 @@ end module
         valRef => ref(val)
         ti     => dynamic_type(valRef)
       end if
-      call write( buffer, val )
+      !call write( buffer, val )
       print *, indent // str(key(idx)) // ' : ' // '[' // trim(adjustl(buffer)) // ']'
       if (associated(valRef)) then
         if (dynamic_cast( subscope, valRef )) then

@@ -7,6 +7,7 @@ module adt_string
   use adt_memoryref
   use adt_basestring, only: BaseString_t, basestring_len_ref, &
                             attribute_permanent, attribute_volatile, permanent_string, temporary_string
+  use adt_ostream
   implicit none
   private
 
