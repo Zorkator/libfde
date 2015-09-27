@@ -394,6 +394,11 @@ subroutine test_ref()!{{{
 
   type(Ref_t) :: r1, r2
 
+  r1 = ref_of( v_bool1 )
+  call accept( r1, streamer%super )
+  r1 = ref_of( v_bool1_1d )
+  call accept( r1, streamer%super )
+
   r1 = ref_of( v_bool1, bind = .false. )
   _assert( is_valid( r1 ) )
   _assert_not( is_valid( r2 ) )
@@ -824,6 +829,7 @@ program test_adt
   character(len=18) :: res
   type(ostream_t) :: fout
 
+  fout = ostream( 6 )
   call width( fout, 5 )
   call write( fout, "testinger" )
   call width( fout, 15 )
@@ -848,6 +854,9 @@ program test_adt
   print *, address_str( c_loc(dings) )
 
   call init_basedata()
+
+  call stream( v_bool1_1d, fout )
+
   call test_visitor()
   call test_hashmap()
   call test_string()

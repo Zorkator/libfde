@@ -31,6 +31,10 @@ module impl_hashmap__
     integer                             :: indexLimits(2) = default_indexLimits
   end type
 
+  type HashMap_wrap_t
+    type(HashMap_t), pointer :: ptr
+  end type
+
 
   type, public :: HashMapIndex_t
     type(HashMap_t), pointer :: host => null()
@@ -926,16 +930,17 @@ end module
 
   
   recursive &
-  subroutine hashmap_accept_( self, vstr )
+  subroutine hashmap_accept_wrap_( wrap, hashmapType, vstr )
     use impl_hashmap__
     use adt_visitor
     implicit none
-    type(HashMap_t) :: self
-    type(Visitor_t) :: vstr
-    type(HashMapIndex_t) :: idx
+    type(HashMap_wrap_t)      :: wrap
+    type(TypeInfo_t)          :: hashmapType
+    type(Visitor_t)           :: vstr
+    type(HashMapIndex_t)      :: idx
     type(HashNode_t), pointer :: node
 
-    idx = hashmap_index( self )
+    idx = hashmap_index( wrap%ptr )
     do while (hashmapindex_is_valid_c(idx))
       call accept( HashNode( idx%bucket ), vstr )
       call hashmapindex_next_c( idx )

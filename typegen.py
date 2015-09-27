@@ -205,28 +205,42 @@ class RefType(TypeSpec):
 
     # parameters:
     #   typeId:     type identifier
-    ref_acceptItf_std = """
-    interface accept      ; module procedure {typeId}_accept_       ; end interface
+    ref_acceptItf = """
+    interface accept ; module procedure {typeId}_accept_ ; end interface
     """,
-  
-    ref_acceptor_std = """
-    recursive &
+
+    ref_accept = """
     subroutine {typeId}_accept_( self, vstr )
       use adt_visitor
-      {baseType}{dimSpec} :: self
-      type(Visitor_t)     :: vstr
-      call vstr%visit( vstr, self, static_type(self) )
+      {baseType}{dimSpec}{valAttrib} :: self
+      type(Visitor_t)                :: vstr
+      type(TypeInfo_t),      pointer :: ti
+      type({typeId}_wrap_t)          :: wrap
+      ti => static_type(self)
+      wrap%ptr => self
+      call ti%acceptProc( wrap, ti, vstr )
+    end subroutine
+    """,
+  
+    ref_acceptor = """
+    recursive &
+    subroutine {typeId}_accept_wrap( wrap, ti, vstr )
+      use adt_visitor
+      type({typeId}_wrap_t)     :: wrap
+      type(TypeInfo_t)          :: ti
+      type(Visitor_t)           :: vstr
+      call vstr%visit( vstr, wrap, ti )
     end subroutine
     """,
 
-    ref_acceptItf_usr = """
-    interface accept
+    ref_acceptorItf = """
+    interface
       recursive &
-      subroutine {acceptProcId}( self, vstr )
-        {import_baseType}
-        import Visitor_t
-        {baseType}{dimSpec} :: self
-        type(Visitor_t)     :: vstr
+      subroutine {acceptProcId}( wrap, ti, vstr )
+        import {typeId}_wrap_t, TypeInfo_t, Visitor_t
+        type({typeId}_wrap_t)     :: wrap
+        type(TypeInfo_t)          :: ti
+        type(Visitor_t)           :: vstr
       end subroutine
     end interface
     """,
@@ -435,7 +449,7 @@ class RefType(TypeSpec):
     if keySpecs: self.keySpecStr = ', ' + ', '.join( '%s = %s' % i for i in keySpecs.items() )
     else       : self.keySpecStr = ''
 
-    typeProcs.setdefault( 'acceptProc', typeId + '_accept_' )
+    typeProcs.setdefault( 'acceptProc', typeId + '_accept_wrap' )
     typeProcs.setdefault( 'streamProc', typeId + '_stream_' )
 
     if self._isArray:
@@ -472,15 +486,15 @@ class RefType(TypeSpec):
       self.code_clonePtr = 'tgt => src'
       self.cloneProc  = ''
 
-    self._itf       = ('ref_itf',           'proc_itf'          )[self._isProc]
-    self._access    = ('access_ref',        'access_proc'       )[self._isProc]
-    self._refCloner = ('ref_cloner',        ''                  )[self._isProc]
-    self._inspector = ('ref_inspector',     ''                  )[self._isProc]
-    self._typeinfo  = ('ref_typeinfo',      'proc_typeinfo'     )[self._isProc]
-    self._acceptItf = ('ref_acceptItf_std', 'ref_acceptItf_usr' )['acceptProc' in keySpecs]
-    self._acceptor  = ('ref_acceptor_std',  ''                  )['acceptProc' in keySpecs]
-    self._streamItf = ('ref_streamItf_std', 'ref_streamItf_usr' )['streamProc' in keySpecs]
-    self._streamer  = ('ref_streamer_std',  ''                  )['streamProc' in keySpecs]
+    self._itf         = ('ref_itf',           'proc_itf'         )[self._isProc]
+    self._access      = ('access_ref',        'access_proc'      )[self._isProc]
+    self._refCloner   = ('ref_cloner',        ''                 )[self._isProc]
+    self._inspector   = ('ref_inspector',     ''                 )[self._isProc]
+    self._typeinfo    = ('ref_typeinfo',      'proc_typeinfo'    )[self._isProc]
+    self._streamItf   = ('ref_streamItf_std', 'ref_streamItf_usr')['streamProc' in keySpecs]
+    self._streamer    = ('ref_streamer_std',  ''                 )['streamProc' in keySpecs]
+    self._acceptorItf = ('',                  'ref_acceptorItf'  )['acceptProc' in keySpecs]
+    self._acceptor    = ('ref_acceptor',      ''                 )['acceptProc' in keySpecs]
 
     fmt = self.peelString( keySpecs.setdefault( 'streamFmt', '' ) )
     if fmt: keySpecs['writeFmt'], keySpecs['formatSpec'] = '100', '\n100   format({0})'.format(fmt)
@@ -494,7 +508,7 @@ class RefType(TypeSpec):
 
   def declare( self, out ):
     if not self._declared:
-      self.expand( out, 'info', 'type', self._itf, self._streamItf, self._acceptItf )
+      self.expand( out, 'info', 'type', self._itf, self._streamItf, 'ref_acceptItf', self._acceptorItf )
       self.expandAccess( out, self.access, 'ref_of', 'static_type', 'dynamic_cast', 'stream', 'accept' )
       self.expandAccessString( out, self.access, self._template[self._access] )
       TypeGenerator.setDeclaration( self.typeId, self )
@@ -504,9 +518,9 @@ class RefType(TypeSpec):
   def implement( self, out ):
     if not self._implemented:
       self.expand( out, 'header', 'ref_encoder', 'ref_decoder', 'ref_typechecker', 'ref_dynamic_cast',
-                   self._refCloner, self._inspector, self._typeinfo )
+                   self._refCloner, self._inspector, self._typeinfo, 'ref_accept', self._acceptor )
       print self.typeId, self._kwArgs  
-      self.expand( out, self._streamer, self._acceptor, **self._kwArgs )
+      self.expand( out, self._streamer, **self._kwArgs )
       out( self._ptrCloner.format( **self.__dict__ ) )
       self._implemented = True
 

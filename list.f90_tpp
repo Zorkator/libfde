@@ -36,7 +36,7 @@ module adt_list
   !     deleteProc = list_delete_c,       \
   !     assignProc = list_assign_list_c,  \
   !     cloneMode  = _type,               \
-  !     acceptProc = list_accept_ )
+  !     acceptProc = list_accept_wrap_ )
 
   !_TypeGen_declare_ListNode( public, List, type(List_t), scalar )
 

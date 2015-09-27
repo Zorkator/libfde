@@ -29,7 +29,7 @@ module adt_visitor
     type(StreamVisitor_t) :: res
 
     interface
-      subroutine stream_visit_( vstr, obj, ti )
+      subroutine stream_visit_( vstr, ti, obj )
         import StreamVisitor_t, void_t, TypeInfo_t
         type(StreamVisitor_t) :: vstr
         type(void_t)          :: obj

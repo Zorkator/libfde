@@ -114,6 +114,7 @@
 		<File RelativePath="..\basestring.f90"/>
 		<File RelativePath="..\basestring_impl.f90"/>
 		<File RelativePath="..\basetypes.f90"/>
+		<File RelativePath="..\convert.f90"/>
 		<File RelativePath="..\crc.f90"/>
 		<File RelativePath="..\crc_impl.f90"/>
 		<File RelativePath="..\hashmap.f90"/>

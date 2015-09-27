@@ -20,7 +20,7 @@ module impl_list__
 
   type ValueNode_t
     type(ListNode_t) :: super
-    integer          :: pseudoValue
+    integer          :: pseudoValue !< type(void_t) ???
   end type
 
   type, public :: List_t
@@ -777,22 +777,31 @@ end module
 
 
   recursive &
-  subroutine list_accept_( self, vstr )
+  subroutine list_accept_wrap_( wrap, listType, vstr )
     use impl_list__
     use adt_visitor
     implicit none
-    type(List_t),       target :: self
+    type wrap_t
+       type(List_t), pointer :: ptr
+    end type
+    type(wrap_t),       target :: wrap
+    type(TypeInfo_t)           :: listType
     type(Visitor_t)            :: vstr
-    type(TypeInfo_t),  pointer :: ti 
+    type(TypeInfo_t),  pointer :: ti
     type(ListNode_t),  pointer :: ptr
     type(ValueNode_t), pointer :: valNodePtr
+    type pseudo_wrap
+      integer, pointer :: ptr
+    end type
+    type(pseudo_wrap)          :: nodeWrap
 
-    ptr => self%node%next
-    do while (.not. associated( ptr, self%node ))
+    ptr => wrap%ptr%node%next
+    do while (.not. associated( ptr, wrap%ptr%node ))
       ti => ptr%typeInfo%subtype
       if (associated( ti%acceptProc )) then
         call c_f_pointer( c_loc(ptr), valNodePtr )
-        call ti%acceptProc( valNodePtr%pseudoValue, vstr )
+        nodeWrap%ptr => valNodePtr%pseudoValue
+        call ti%acceptProc( nodeWrap, ti, vstr )
       end if
       ptr => ptr%next
     end do  

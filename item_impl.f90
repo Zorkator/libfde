@@ -573,17 +573,22 @@ end module
 
 
   recursive &
-  subroutine item_accept_( self, vstr )
+  subroutine item_accept_wrap_( wrap, itemType, vstr )
     use impl_item__
     use adt_visitor
     implicit none
-    type(Item_t)              :: self
+    type wrap_t
+       type(Item_t), pointer :: ptr
+    end type
+    type(wrap_t)              :: wrap
+    type(TypeInfo_t)          :: itemType
     type(Visitor_t)           :: vstr
-    type(TypeInfo_t), pointer :: ti 
+    type(TypeInfo_t), pointer :: ti
 
-    ti => item_dynamic_type(self)
+    ti => item_dynamic_type(wrap%ptr)
     if (associated(ti%acceptProc)) then
-      call ti%acceptProc( self%data, vstr )
+      call c_f_pointer( c_loc(wrap%ptr%data), wrap%ptr )
+      call ti%acceptProc( wrap, ti, vstr )
     endif
   end subroutine
 

@@ -16,6 +16,9 @@ module impl_ref__
     _RefStatus                :: refstat = _ref_HardLent
   end type
 
+  type ref_wrap_t
+    type(Ref_t), pointer :: ptr
+  end type
 
   interface
     pure &
@@ -459,10 +462,6 @@ end module
     type(Ref_t),       target :: self
     type(Ref_t),      pointer :: res
     type(TypeInfo_t), pointer :: ti, refType
-
-    type ref_wrap_t
-      type(Ref_t), pointer :: ptr
-    end type
     type(ref_wrap_t), pointer :: wrap
 
     refType => static_type(temporary_ref)
@@ -478,19 +477,20 @@ end module
 
 
   recursive &
-  subroutine ref_accept_( self, vstr )
+  subroutine ref_accept_wrap_( wrap, refType, vstr )
     use impl_ref__
     use adt_visitor
     implicit none
-    type(Ref_t)               :: self
+    type(ref_wrap_t)          :: wrap
+    type(TypeInfo_t)          :: refType
     type(Visitor_t)           :: vstr
     type(TypeInfo_t), pointer :: ti
-    integer,          pointer :: tgtPtr
+    type(ref_wrap_t), pointer :: tgtWrap
 
-    ti => ref_dynamic_type( self )
+    ti => ref_dynamic_type( wrap%ptr )
     if (associated( ti%acceptProc )) then
-      call c_f_pointer( ref_cptr( self ), tgtPtr )
-      call ti%acceptProc( tgtPtr, vstr )
+      call c_f_pointer( ref_get_typereference( wrap%ptr ), tgtWrap )
+      call ti%acceptProc( tgtWrap, ti, vstr )
     end if
   end subroutine
 

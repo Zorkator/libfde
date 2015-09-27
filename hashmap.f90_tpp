@@ -41,7 +41,7 @@ module adt_hashmap
   !     assignProc = hashmap_assign_hashmap_c,  \
   !     deleteProc = hashmap_delete_c,          \
   !     cloneMode  = _type,                     \
-  !     acceptProc = hashmap_accept_ )
+  !     acceptProc = hashmap_accept_wrap_ )
 
   !_TypeGen_declare_ListNode( public, HashMap, type(HashMap_t), scalar )
 
