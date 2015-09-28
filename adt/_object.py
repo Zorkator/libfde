@@ -5,7 +5,8 @@ from _ftypes import _typeMap_py2id as _id_map, _typeMap_py2ct as _ct_map
 
 
 class Object(Compound):
-  __slots__ = ['_needs_delete']
+  __typeprocs__ = [] #< no native methods for object
+  __slots__     = ['_needs_delete']
 
   @property
   def value( self ):

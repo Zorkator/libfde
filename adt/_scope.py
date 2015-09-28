@@ -10,10 +10,27 @@ _cbITF_buffer = dict()
 @mappedType( 'hashmap', 'type(HashMap_t)' )
 class Scope(HashMap):
 
+  class Index(HashMap.Index):
+    
+    def get( self ):
+      key, valRef = super(type(self), self).get()
+      try   : return (key, valRef.typed.contents)
+      except: return (key, valRef.typed)
+
+
   def __getitem__( self, ident ):
     valRef = super(Scope, self).__getitem__( ident ).typed
     try   : return valRef.contents
     except: return valRef
+
+
+  def __setitem__( self, ident, val ):
+    item = self._getptr( self.get_, ident ).contents
+    try  : item.value = val #< try setting scalar value
+    except TypeError:
+      valRef = item.typed.contents #< must be ref
+      try             : valRef[:]    = val[:] #< ref to array
+      except TypeError: valRef.value = val    #< ref to scalar
 
   
   def setCallback( self, ident, cbFunc ):

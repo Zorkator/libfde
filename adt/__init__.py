@@ -17,8 +17,8 @@ _import( 'adt._typeinfo', ['TypeInfo'] )
 _import( 'adt._string',   ['String'] )
 _import( 'adt._item',     ['Item'] )
 _import( 'adt._ref',      ['Ref'] )
-_import( 'adt._list',     ['List', 'ListIndex'] )
-_import( 'adt._hashmap',  ['HashMap', 'HashMapIndex'] )
+_import( 'adt._list',     ['List'] )
+_import( 'adt._hashmap',  ['HashMap'] )
 _import( 'adt._scope',    ['Scope'] )
 
 del _import

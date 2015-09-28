@@ -84,12 +84,20 @@ _libLoader = LibLoader( *_libNames, fileEnv = 'LIBADT', prioPathEnv = 'ADTPATH' 
 class _Meta(type(Union)):
 
   def __new__( _class, name, bases, members ):
-    from operator import add
-    method = '{0}_{{0}}c_'.format(name.lower())
+    from operator    import add
+    from collections import OrderedDict
 
-    # collect list of __typeprocs__ from base classes ...
-    members['__typeprocs__'] = list( members.get( '__typeprocs__', [method] ) ) \
-                             + reduce( add, (getattr(b, '__typeprocs__', []) for b in bases) )
+    def _mro( ident, default ):
+      scopes = (members,) + tuple( b.__dict__ for b in bases )
+      return filter( None, (s.get( ident ) for s in scopes) ) + [default]
+
+    typeName = _mro( '__typename__', name )[0]
+    method   = '{0}_{{0}}c_'.format(typeName.lower())
+
+    # collect list of __typeprocs__ from members and base classes ...
+    members.setdefault( '__typeprocs__', [method] )
+    procList = reduce( add, _mro( '__typeprocs__', [] ) )
+    members['__typeprocs__'] = list( OrderedDict.fromkeys( procList ) )
 
     # 'inherit' fields of base classes by reserving data space...
     fields = list( members.pop('_fields_', []) ) \

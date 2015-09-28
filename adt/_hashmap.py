@@ -8,7 +8,29 @@ from _ftypes import MemoryRef, mappedType
 @mappedType( 'hashmap', 'type(HashMap_t)' )
 class HashMap(Object):
 
-  def __getptr( self, getter, ident ):
+  class Index(Compound):
+    __typename__ = 'HashMapIndex'
+
+    def __nonzero__( self ):
+      return self.is_valid_( byref(self) ) != 0
+
+    def get( self ):
+      keyRef, valPtr = MemoryRef(), POINTER(Item)()
+      dummy = "{0}".format(valPtr) # de-optimize Python (????), so next line works
+      self.item_( byref(keyRef), byref(valPtr), byref(self) )
+      return (str(keyRef), valPtr.contents)
+
+    def next( self ):
+      if self.set_next_( byref(self) ) == 0:
+        raise StopIteration
+
+
+  def __init__( self, *args, **kwArgs ):
+    super(HashMap, self).__init__()
+    for k, v in dict( *args, **kwArgs ).items():
+      self[k] = v
+
+  def _getptr( self, getter, ident ):
     ptr = POINTER(Item)()
     dummy = "{0}".format(ptr) # de-optimize Python (????), so next line works
     getter( byref(ptr), byref(self), c_char_p(ident), c_int(len(ident)) )
@@ -21,17 +43,17 @@ class HashMap(Object):
     self.clear_( byref(self) )
 
   def get( self, ident, default = None ):
-    ptr = self.__getptr( self.get_ptr_, ident )
+    ptr = self._getptr( self.get_ptr_, ident )
     if ptr: return ptr.contents
     else  : return default
 
   def __getitem__( self, ident ):
-    ptr = self.__getptr( self.get_ptr_, ident )
+    ptr = self._getptr( self.get_ptr_, ident )
     if ptr: return ptr.contents
     else  : raise KeyError(ident)
 
   def __setitem__( self, ident, val ):
-    ptr = self.__getptr( self.get_, ident )
+    ptr = self._getptr( self.get_, ident )
     ptr.contents.value = val
 
   def __delitem__( self, ident ):
@@ -45,7 +67,7 @@ class HashMap(Object):
       yield item[0]
 
   def iteritems( self ):
-    idx = HashMapIndex()
+    idx = self.Index()
     self.index_( byref(idx), byref(self) )
     while idx:
       yield idx.get()
@@ -91,22 +113,6 @@ class HashMap(Object):
       else:
         return default
 
-
-
-class HashMapIndex(Compound):
-
-  def __nonzero__( self ):
-    return self.is_valid_( byref(self) ) != 0
-
-  def get( self ):
-    keyRef, valPtr = MemoryRef(), POINTER(Item)()
-    dummy = "{0}".format(valPtr) # de-optimize Python (????), so next line works
-    self.item_( byref(keyRef), byref(valPtr), byref(self) )
-    return (str(keyRef), valPtr.contents)
-
-  def next( self ):
-    if self.set_next_( byref(self) ) == 0:
-      raise StopIteration
 
 
 

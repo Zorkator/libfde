@@ -34,7 +34,8 @@ class TypeInfo(Compound):
 
 
 class TypedObject(Object):
-  _fields_ = [('_typeInfo', POINTER(TypeInfo))]
+  __typeprocs__ = [] #< no native methods for TypedObject
+  _fields_      = [('_typeInfo', POINTER(TypeInfo))]
 
   @property
   def ftype( self ):
