@@ -1,4 +1,6 @@
 
+#include "adt/itfUtil.fpp"
+
 module adt_convert
   use iso_c_binding
   implicit none
@@ -16,6 +18,7 @@ module adt_convert
 
   contains
 
+!_PROC_EXPORT(hex_1)
   function hex_1( val ) result(res)
     integer*1          :: val
     character(len=2+2) :: res
@@ -23,6 +26,7 @@ module adt_convert
 100 format('0x',Z2.2)
   end function
   
+!_PROC_EXPORT(hex_2)
   function hex_2( val ) result(res)
     integer*2          :: val
     character(len=4+2) :: res
@@ -30,6 +34,7 @@ module adt_convert
 100 format('0x',Z4.4)
   end function
   
+!_PROC_EXPORT(hex_4)
   function hex_4( val ) result(res)
     integer*4          :: val
     character(len=8+2) :: res
@@ -37,6 +42,7 @@ module adt_convert
 100 format('0x',Z8.8)
   end function
   
+!_PROC_EXPORT(hex_8)
   function hex_8( val ) result(res)
     integer*8           :: val
     character(len=16+2) :: res
@@ -45,6 +51,7 @@ module adt_convert
   end function
 
 
+!_PROC_EXPORT(address_str_cptr)
   function address_str_cptr( cptr ) result(res)
     type(c_ptr)                           :: cptr
     character(len=storage_size(cptr)/4+2) :: res

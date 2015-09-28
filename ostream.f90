@@ -1,4 +1,6 @@
 
+#include "adt/itfUtil.fpp"
+
 module adt_ostream
   implicit none
   private
@@ -19,6 +21,7 @@ module adt_ostream
 
   contains
 
+!_PROC_EXPORT(ostream_create)
   pure &
   function ostream_create( chnl ) result(res)
     integer, intent(in) :: chnl
@@ -29,6 +32,7 @@ module adt_ostream
   end function
 
 
+!_PROC_EXPORT(ostream_width)
   subroutine ostream_width( ostr, num )
     type(ostream_t) :: ostr
     integer         :: num
@@ -39,6 +43,7 @@ module adt_ostream
   end subroutine
 
 
+!_PROC_EXPORT(ostream_newline)
   subroutine ostream_newline( ostr, num )
     type(ostream_t) :: ostr
     integer         :: num
@@ -50,6 +55,7 @@ module adt_ostream
   end subroutine
 
   
+!_PROC_EXPORT(ostream_write)
   subroutine ostream_write( ostr, str )
     type(ostream_t)  :: ostr
     character(len=*) :: str

@@ -1,4 +1,6 @@
 
+#include "adt/itfUtil.fpp"
+
 module adt_visitor
   use adt_typeinfo
   use adt_ostream
@@ -16,15 +18,20 @@ module adt_visitor
 
   public :: Visitor, StreamVisitor
 
+  interface Visitor       ; module procedure visitor_create       ; end interface
+  interface StreamVisitor ; module procedure streamvisitor_create ; end interface
+
   contains
 
-  function Visitor( func ) result(res)
+!_PROC_EXPORT(visitor_create)
+  function visitor_create( func ) result(res)
     external        :: func
     type(Visitor_t) :: res
     res%visit => func    
   end function
 
-  function StreamVisitor( channel ) result(res)
+!_PROC_EXPORT(streamvisitor_create)
+  function streamvisitor_create( channel ) result(res)
     integer               :: channel
     type(StreamVisitor_t) :: res
 

@@ -57,7 +57,7 @@ module adt_item
   !     assignProc = item_assign_item_c,  \
   !     deleteProc = item_delete_c,       \
   !     cloneMode  = _type,               \
-  !     streamProc = item_stream_,        \
+  !     streamProc = item_stream_wrap_,   \
   !     acceptProc = item_accept_wrap_ )
 
   !_TypeGen_declare_ListNode( public, Item, type(Item_t), scalar )

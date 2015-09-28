@@ -9,6 +9,7 @@ module test_basedata
   use adt_list
   use adt_hashmap
   use adt_visitor
+  use adt_ostream
   use iso_c_binding
   implicit none
 
@@ -151,7 +152,8 @@ module test_basedata
   type(HashMap_t),  dimension(:,:), pointer :: p_hashmap_2d!}}}
 
   type(StreamVisitor_t) :: streamer
-  
+  type(ostream_t)       :: fout
+
   contains
 
   subroutine init_basedata()!{{{
@@ -218,6 +220,7 @@ module test_basedata
     end do
     
     streamer = StreamVisitor( 6 )
+    fout     = ostream( 6 )
   end subroutine!}}}
 
 
@@ -479,6 +482,9 @@ subroutine test_list()!{{{
 # define _list_append( typeId ) \
     call append( v_list, new_ListNode_of( _paste(v_,typeId) ) )
   
+# define _list_append_ref( typeId ) \
+    call append( v_list, new_ListNode_of( ref_of(_paste(v_,typeId)) ) )
+  
   _list_append(bool1)
   _list_append(bool2)
   _list_append(bool4)
@@ -497,7 +503,41 @@ subroutine test_list()!{{{
   _list_append(ref)
   _list_append(item)
   !_list_append(list)
-  _list_append(hashmap)
+  !_list_append(hashmap)
+  _list_append_ref(bool1_1d)
+  _list_append_ref(bool2_1d)
+  _list_append_ref(bool4_1d)
+  _list_append_ref(bool8_1d)
+  _list_append_ref(int1_1d)
+  _list_append_ref(int2_1d)
+  _list_append_ref(int4_1d)
+  _list_append_ref(int8_1d)
+  _list_append_ref(real4_1d)
+  _list_append_ref(real8_1d)
+  _list_append_ref(complex8_1d)
+  _list_append_ref(complex16_1d)
+  _list_append_ref(c_void_ptr_1d)
+  _list_append_ref(char10_1d)
+  _list_append_ref(string_1d)
+  !_list_append_ref(ref_1d)
+  !_list_append_ref(item_1d)
+  _list_append_ref(bool1_2d)
+  _list_append_ref(bool2_2d)
+  _list_append_ref(bool4_2d)
+  _list_append_ref(bool8_2d)
+  _list_append_ref(int1_2d)
+  _list_append_ref(int2_2d)
+  _list_append_ref(int4_2d)
+  _list_append_ref(int8_2d)
+  _list_append_ref(real4_2d)
+  _list_append_ref(real8_2d)
+  _list_append_ref(complex8_2d)
+  _list_append_ref(complex16_2d)
+  _list_append_ref(c_void_ptr_2d)
+  _list_append_ref(char10_2d)
+  !_list_append_ref(string_2d)
+  !_list_append_ref(ref_2d)
+  !_list_append_ref(item_2d)
 
   idx = index( v_list )
   do while (is_valid(idx))
@@ -627,6 +667,11 @@ subroutine test_hashmap_nesting()!{{{
   
   if (dynamic_cast( r_array, ref(get(scope, 'value')) )) &
     print *, r_array
+
+  call stream( scope, fout )
+
+  call accept( scope, streamer%super )
+  call accept( ref1, streamer%super )
 
   !call print_scope( hashmap(ref1), 1 )
   call delete( ref1 )
@@ -823,13 +868,10 @@ end module!}}}
 program test_adt
   use test_basedata
   use adt_convert
-  use adt_ostream
 
   integer,   target :: dings = 324
   character(len=18) :: res
-  type(ostream_t) :: fout
 
-  fout = ostream( 6 )
   call width( fout, 5 )
   call write( fout, "testinger" )
   call width( fout, 15 )

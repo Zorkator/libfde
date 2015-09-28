@@ -10,6 +10,7 @@ module impl_hashmap__
   use adt_crc
   use adt_memoryref
   use adt_ostream
+  use adt_visitor
   use iso_c_binding
 
   type(List_t), target :: hashmap_nodeCache
@@ -17,7 +18,7 @@ module impl_hashmap__
   !_TypeGen_declare_RefType( public, HashNode, type(HashNode_t), scalar, \
   !     deleteProc = hashnode_delete, \
   !     cloneMode  = _type, \
-  !     streamProc = hashnode_stream_ )
+  !     acceptProc = hashnode_accept_wrap_ )
 
   !_TypeGen_declare_ListNode( public, HashNode, type(HashNode_t), scalar )
 
@@ -191,14 +192,19 @@ contains
 end module
 
 
-  subroutine hashnode_stream_( self, outs )
-    use impl_hashmap__, only: HashNode_t, stream
-    use adt_ostream
+  recursive &
+  subroutine hashnode_accept_wrap_( wrap, nodeType, vstr )
+    use impl_hashmap__, only: HashNode_t, TypeInfo_t, accept
+    use adt_visitor
     implicit none
-    type(HashNode_t) :: self
-    type(ostream_t)  :: outs
-    call stream( self%key, outs )
-    call stream( self%value, outs )
+    type HashNode_wrap_t
+       type(HashNode_t), pointer :: ptr
+    end type
+    type(HashNode_wrap_t) :: wrap
+    type(TypeInfo_t)      :: nodeType
+    type(Visitor_t)       :: vstr
+    call accept( wrap%ptr%key, vstr )
+    call accept( wrap%ptr%value, vstr )
   end subroutine
 
 

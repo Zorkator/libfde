@@ -168,7 +168,7 @@ class RefType(TypeSpec):
 
     # parameters:
     #   typeId:     type identifier
-    ref_streamItf_std = """
+    ref_streamItf = """
     interface stream           ; module procedure {typeId}_stream_; end interface
     """,
 
@@ -176,15 +176,41 @@ class RefType(TypeSpec):
     #   typeId:     type identifier
     #   baseType:   fortran base type | type(...) | procedure(...)
     #   dimSpec:    ('', ', dimension(:,...)')[has_dimension]
-    #   writeSize:  size of char buffer for writing type representaion
+    #   writeBuf:   size of char buffer for writing type representaion
     #   writeFmt:   fortran format string to write type to buffer
     #   writeExpr:  fortran expression to write type to buffer
     #   formatSpec: fortran write format statement or empty
-    ref_streamer_std = """
+    ref_stream = """
+!_PROC_EXPORT({typeId}_stream_)
+!_ARG_REFERENCE1(self)
     subroutine {typeId}_stream_( self, outs )
-      {baseType}{dimSpec}        :: self
-      type(ostream_t)            :: outs
-      character(len={writeSize}) :: buff
+      {baseType}{dimSpec}{valAttrib} :: self
+      type(ostream_t)                :: outs
+      type(TypeInfo_t),      pointer :: ti
+      type({typeId}_wrap_t)          :: wrap
+      ti => static_type(self)
+      wrap%ptr => self
+      call ti%streamProc( wrap, ti, outs )
+    end subroutine
+    """,
+
+    ref_stream_buffered = """\n
+      character(len=16+max(16,{writeBuf})) :: buff
+      write(buff, {writeFmt}) {writeExpr}
+      call outs%drainFunc( outs, trim(buff) )
+    """,
+
+    ref_stream_direct = """\n
+      call outs%drainFunc( outs, trim({writeExpr}) )
+    """,
+
+    ref_streamer = """
+    recursive &
+    subroutine {typeId}_stream_wrap( self, ti, outs )
+      type({typeId}_wrap_t)             :: self
+      type(TypeInfo_t)                  :: ti
+      type(ostream_t)                   :: outs
+      character(len=16+max(16,{writeBuf})) :: buff
       write(buff, {writeFmt}) {writeExpr}
       call outs%drainFunc( outs, trim(buff) ){formatSpec}
     end subroutine
@@ -192,13 +218,14 @@ class RefType(TypeSpec):
 
     # parameters:
     #   typeId:     type identifier
-    ref_streamItf_usr = """
-    interface stream
-      subroutine {streamProcId}( self, outs )
-        {import_baseType}
-        import ostream_t
-        {baseType}{dimSpec} :: self
-        type(ostream_t)     :: outs
+    ref_streamerItf = """
+    interface
+      recursive &
+      subroutine {streamProcId}( wrap, ti, outs )
+        import {typeId}_wrap_t, TypeInfo_t, ostream_t
+        type({typeId}_wrap_t) :: wrap
+        type(TypeInfo_t)      :: ti
+        type(ostream_t)       :: outs
       end subroutine
     end interface
     """,
@@ -210,6 +237,8 @@ class RefType(TypeSpec):
     """,
 
     ref_accept = """
+!_PROC_EXPORT({typeId}_accept_)
+!_ARG_REFERENCE1(self)
     subroutine {typeId}_accept_( self, vstr )
       use adt_visitor
       {baseType}{dimSpec}{valAttrib} :: self
@@ -223,6 +252,8 @@ class RefType(TypeSpec):
     """,
   
     ref_acceptor = """
+!_PROC_EXPORT({typeId}_accept_wrap)
+!_ARG_REFERENCE1(wrap)
     recursive &
     subroutine {typeId}_accept_wrap( wrap, ti, vstr )
       use adt_visitor
@@ -450,7 +481,7 @@ class RefType(TypeSpec):
     else       : self.keySpecStr = ''
 
     typeProcs.setdefault( 'acceptProc', typeId + '_accept_wrap' )
-    typeProcs.setdefault( 'streamProc', typeId + '_stream_' )
+    typeProcs.setdefault( 'streamProc', typeId + '_stream_wrap' )
 
     if self._isArray:
       typeProcs.setdefault( 'shapeProc', typeId + '_inspect_' )
@@ -491,8 +522,8 @@ class RefType(TypeSpec):
     self._refCloner   = ('ref_cloner',        ''                 )[self._isProc]
     self._inspector   = ('ref_inspector',     ''                 )[self._isProc]
     self._typeinfo    = ('ref_typeinfo',      'proc_typeinfo'    )[self._isProc]
-    self._streamItf   = ('ref_streamItf_std', 'ref_streamItf_usr')['streamProc' in keySpecs]
-    self._streamer    = ('ref_streamer_std',  ''                 )['streamProc' in keySpecs]
+    self._streamerItf = ('',                  'ref_streamerItf'  )['streamProc' in keySpecs]
+    self._streamer    = ('ref_streamer',      ''                 )['streamProc' in keySpecs]
     self._acceptorItf = ('',                  'ref_acceptorItf'  )['acceptProc' in keySpecs]
     self._acceptor    = ('ref_acceptor',      ''                 )['acceptProc' in keySpecs]
 
@@ -500,15 +531,18 @@ class RefType(TypeSpec):
     if fmt: keySpecs['writeFmt'], keySpecs['formatSpec'] = '100', '\n100   format({0})'.format(fmt)
     else  : keySpecs['writeFmt'], keySpecs['formatSpec'] = '*'  , ''
 
-    keySpecs.setdefault( 'writeExpr', ('self', "'%s'" % self.baseTypeId)[bool(self._isDerived)] )
-    keySpecs.setdefault( 'writeSize', '64' )
+    keySpecs.setdefault( 'writeExpr', ('self%ptr', "'%s'" % self.baseTypeId)[bool(self._isDerived)] )
+
+    itemBuf = keySpecs.get( 'writeSize', 'storage_size(self%ptr)/2' )
+    keySpecs['writeBuf'] = ('{0}','size(self%ptr)*{0}')[self._isArray].format(itemBuf)
     self._kwArgs = dict( (k, self.peelString(v)) for k,v in keySpecs.items() )
     self.import_baseType = ('', 'import %s' % self.baseTypeId)[bool(self._isDerived)]
 
 
   def declare( self, out ):
     if not self._declared:
-      self.expand( out, 'info', 'type', self._itf, self._streamItf, 'ref_acceptItf', self._acceptorItf )
+      self.expand( out, 'info', 'type', self._itf, 'ref_streamItf', self._streamerItf,
+                   'ref_acceptItf', self._acceptorItf )
       self.expandAccess( out, self.access, 'ref_of', 'static_type', 'dynamic_cast', 'stream', 'accept' )
       self.expandAccessString( out, self.access, self._template[self._access] )
       TypeGenerator.setDeclaration( self.typeId, self )
@@ -520,7 +554,7 @@ class RefType(TypeSpec):
       self.expand( out, 'header', 'ref_encoder', 'ref_decoder', 'ref_typechecker', 'ref_dynamic_cast',
                    self._refCloner, self._inspector, self._typeinfo, 'ref_accept', self._acceptor )
       print self.typeId, self._kwArgs  
-      self.expand( out, self._streamer, **self._kwArgs )
+      self.expand( out, 'ref_stream', self._streamer, **self._kwArgs )
       out( self._ptrCloner.format( **self.__dict__ ) )
       self._implemented = True
 

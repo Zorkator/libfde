@@ -23,7 +23,7 @@ end module
     if (ti%typeId == "HashNode") &
       call newline( vstr%stream, 0 )
 
-    call ti%streamProc( obj%ptr, vstr%stream )
+    call ti%streamProc( obj, ti, vstr%stream )
     vstr%stream = tmp
   end subroutine
     

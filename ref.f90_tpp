@@ -25,7 +25,7 @@ module adt_ref
   !     assignProc = ref_assign_ref_c,   \
   !     deleteProc = ref_delete_c,       \
   !     cloneMode  = _type,              \
-  !     streamProc = ref_stream_,        \
+  !     streamProc = ref_stream_wrap_,   \
   !     acceptProc = ref_accept_wrap_ )
 
 

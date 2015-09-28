@@ -496,25 +496,24 @@ end module
 
 
   recursive &
-  subroutine ref_stream_( self, outs )
+  subroutine ref_stream_wrap_( wrap, refType, outs )
     use impl_ref__
     use adt_convert
     use adt_ostream
     implicit none
-    type(Ref_t)               :: self
+    type(ref_wrap_t)          :: wrap
     type(ostream_t)           :: outs
+    type(TypeInfo_t)          :: refType
     type(TypeInfo_t), pointer :: ti
-    type(c_ptr)               :: tgt
-    integer, pointer          :: tgtPtr
+    type(ref_wrap_t), pointer :: tgtWrap
     character(len=64)         :: buff
 
-    ti  => ref_dynamic_type( self )
-    tgt =  ref_cptr( self )
+    ti  => ref_dynamic_type( wrap%ptr )
     if (associated( ti%streamProc )) then
-      call c_f_pointer( tgt, tgtPtr )
-      call ti%streamProc( tgtPtr, outs )
+      call c_f_pointer( ref_get_typereference( wrap%ptr ), tgtWrap )
+      call ti%streamProc( tgtWrap, ti, outs )
     else
-      write(buff, '(A$)') trim(ti%typeId) // ' @ ' // address_str( tgt )
+      write(buff, '(A$)') trim(ti%typeId) // ' @ ' // address_str( ref_cptr( wrap%ptr ) )
       call outs%drainFunc( outs, buff )
     end if
   end subroutine

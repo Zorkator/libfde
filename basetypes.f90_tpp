@@ -26,7 +26,7 @@ module adt_basetypes
   !_TypeGen_declare_RefType( public, complex8,   complex*8,   scalar )
   !_TypeGen_declare_RefType( public, complex16,  complex*16,  scalar )
   !_TypeGen_declare_RefType( public, complex32,  complex*32,  scalar )
-  !_TypeGen_declare_RefType( public, c_void_ptr, type(c_ptr), scalar, writeExpr="address_str(self)" )
+  !_TypeGen_declare_RefType( public, c_void_ptr, type(c_ptr), scalar, writeExpr="address_str(self%ptr)" )
 
   !_TypeGen_declare_RefType( public, bool1_1d,      logical*1,   dimension(:) )
   !_TypeGen_declare_RefType( public, bool2_1d,      logical*2,   dimension(:) )
@@ -92,8 +92,8 @@ module adt_basetypes
   !_TypeGen_declare_RefType( public, char10_1d, character(len=10), dimension(:) )
   !_TypeGen_declare_RefType( public, char10_2d, character(len=10), dimension(:,:) )
 
-  !_TypeGen_declare_RefType( public, String_1d, type(String_t),  dimension(:), writeExpr="'String', shape(self)" )
-  !_TypeGen_declare_RefType( public, String_2d, type(String_t),  dimension(:,:), writeExpr="'String', shape(self)" )
+  !_TypeGen_declare_RefType( public, String_1d, type(String_t),  dimension(:), writeExpr="'String', shape(self%ptr)" )
+  !_TypeGen_declare_RefType( public, String_2d, type(String_t),  dimension(:,:), writeExpr="'String', shape(self%ptr)" )
 
   !_TypeGen_declare_ListNode( public, String, type(String_t),  scalar )
   !_TypeGen_declare_ListNode( alias, String, character(len=*), scalar )

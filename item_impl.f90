@@ -11,6 +11,10 @@ module impl_item__
 
 # define Item_t   Item_t__impl__
 
+  type Item_wrap_t
+    type(Item_t), pointer :: ptr
+  end type
+
   type (String_t)                    :: string_var
   type (Ref_t)                       :: ref_var
   procedure(UserAssignment), pointer :: user_assignment_ => null()
@@ -577,10 +581,7 @@ end module
     use impl_item__
     use adt_visitor
     implicit none
-    type wrap_t
-       type(Item_t), pointer :: ptr
-    end type
-    type(wrap_t)              :: wrap
+    type(Item_wrap_t)         :: wrap
     type(TypeInfo_t)          :: itemType
     type(Visitor_t)           :: vstr
     type(TypeInfo_t), pointer :: ti
@@ -594,18 +595,22 @@ end module
 
 
   recursive &
-  subroutine item_stream_( self, outs )
+  subroutine item_stream_wrap_( wrap, itemType, outs )
     use impl_item__
     use adt_ostream
     implicit none
-    type(Item_t)              :: self
+    type(Item_wrap_t)         :: wrap
+    type(TypeInfo_t)          :: itemType
     type(ostream_t)           :: outs
+    type(TypeInfo_t), pointer :: ti
+    type(void_t)              :: dataWrap
     character(len=32)         :: buff
-    type(TypeInfo_t), pointer :: ti 
+    
 
-    ti => item_dynamic_type(self)
+    ti => item_dynamic_type(wrap%ptr)
     if (associated(ti%streamProc)) then
-      call ti%streamProc( self%data, outs )
+      call c_f_pointer( c_loc(wrap%ptr%data), dataWrap%ptr )
+      call ti%streamProc( dataWrap, ti, outs )
     else
       write(buff, '(A$)') trim(ti%typeId)
       call outs%drainFunc( outs, buff )
