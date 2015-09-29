@@ -896,6 +896,7 @@ program test_adt
   print *, address_str( c_loc(dings) )
 
   call init_basedata()
+  call stream( v_item, fout )
 
   call stream( v_bool1_1d, fout )
 

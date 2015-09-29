@@ -488,10 +488,8 @@ end module
     type(ref_wrap_t), pointer :: tgtWrap
 
     ti => ref_dynamic_type( wrap%ptr )
-    if (associated( ti%acceptProc )) then
-      call c_f_pointer( ref_get_typereference( wrap%ptr ), tgtWrap )
-      call ti%acceptProc( tgtWrap, ti, vstr )
-    end if
+    call c_f_pointer( ref_get_typereference( wrap%ptr ), tgtWrap )
+    call ti%acceptProc( tgtWrap, ti, vstr )
   end subroutine
 
 
@@ -508,13 +506,8 @@ end module
     type(ref_wrap_t), pointer :: tgtWrap
     character(len=64)         :: buff
 
-    ti  => ref_dynamic_type( wrap%ptr )
-    if (associated( ti%streamProc )) then
-      call c_f_pointer( ref_get_typereference( wrap%ptr ), tgtWrap )
-      call ti%streamProc( tgtWrap, ti, outs )
-    else
-      write(buff, '(A$)') trim(ti%typeId) // ' @ ' // address_str( ref_cptr( wrap%ptr ) )
-      call outs%drainFunc( outs, buff )
-    end if
+    ti => ref_dynamic_type( wrap%ptr )
+    call c_f_pointer( ref_get_typereference( wrap%ptr ), tgtWrap )
+    call ti%streamProc( tgtWrap, ti, outs )
   end subroutine
 

@@ -194,25 +194,24 @@ class RefType(TypeSpec):
     end subroutine
     """,
 
-    ref_stream_buffered = """\n
-      character(len=16+max(16,{writeBuf})) :: buff
-      write(buff, {writeFmt}) {writeExpr}
-      call outs%drainFunc( outs, trim(buff) )
-    """,
+    ref_streaming = dict(
+      buffered = """\n
+        character(len=16+max(16,{writeBuf})) :: buff
+        write(buff, {writeFmt}) {writeExpr}
+        call outs%drainFunc( outs, trim(buff) )
+      """,
 
-    ref_stream_direct = """\n
-      call outs%drainFunc( outs, trim({writeExpr}) )
-    """,
+      direct = """\n
+        call outs%drainFunc( outs, trim({writeExpr}) )
+      """
+    ),
 
     ref_streamer = """
     recursive &
     subroutine {typeId}_stream_wrap( self, ti, outs )
       type({typeId}_wrap_t)             :: self
       type(TypeInfo_t)                  :: ti
-      type(ostream_t)                   :: outs
-      character(len=16+max(16,{writeBuf})) :: buff
-      write(buff, {writeFmt}) {writeExpr}
-      call outs%drainFunc( outs, trim(buff) ){formatSpec}
+      type(ostream_t)                   :: outs{streamWriting}{formatSpec}
     end subroutine
     """,
 
@@ -527,14 +526,23 @@ class RefType(TypeSpec):
     self._acceptorItf = ('',                  'ref_acceptorItf'  )['acceptProc' in keySpecs]
     self._acceptor    = ('ref_acceptor',      ''                 )['acceptProc' in keySpecs]
 
-    fmt = self.peelString( keySpecs.setdefault( 'streamFmt', '' ) )
-    if fmt: keySpecs['writeFmt'], keySpecs['formatSpec'] = '100', '\n100   format({0})'.format(fmt)
-    else  : keySpecs['writeFmt'], keySpecs['formatSpec'] = '*'  , ''
+    streamFmt  = self.peelString( keySpecs.setdefault( 'streamFmt', '' ) )
+    streamType = keySpecs.get('streaming', 'buffered')
+    streamTpl  = self._template['ref_streaming'][streamType]
+    writeSize  = keySpecs.get( 'writeSize', 'storage_size(self%ptr)/2' )
+    writeExpr  = ('self%ptr', "'%s'" % self.baseTypeId)[bool(self._isDerived)]
 
-    keySpecs.setdefault( 'writeExpr', ('self%ptr', "'%s'" % self.baseTypeId)[bool(self._isDerived)] )
-
-    itemBuf = keySpecs.get( 'writeSize', 'storage_size(self%ptr)/2' )
-    keySpecs['writeBuf'] = ('{0}','size(self%ptr)*{0}')[self._isArray].format(itemBuf)
+    keySpecs.update(
+      writeBuf  = ('{0}', 'size(self%ptr)*{0}')[self._isArray].format( writeSize ),
+      writeExpr = self.peelString( keySpecs.get( 'writeExpr', writeExpr ) )
+    )
+    
+    if streamFmt:
+      keySpecs.update( writeFmt = 100, formatSpec = '\n100   format({0})'.format( streamFmt ) )
+    else:
+      keySpecs.update( writeFmt = '*', formatSpec = '' )
+    keySpecs.update( streamWriting = streamTpl.format( **keySpecs ) )
+    
     self._kwArgs = dict( (k, self.peelString(v)) for k,v in keySpecs.items() )
     self.import_baseType = ('', 'import %s' % self.baseTypeId)[bool(self._isDerived)]
 

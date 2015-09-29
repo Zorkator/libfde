@@ -587,10 +587,8 @@ end module
     type(TypeInfo_t), pointer :: ti
 
     ti => item_dynamic_type(wrap%ptr)
-    if (associated(ti%acceptProc)) then
-      call c_f_pointer( c_loc(wrap%ptr%data), wrap%ptr )
-      call ti%acceptProc( wrap, ti, vstr )
-    endif
+    call c_f_pointer( c_loc(wrap%ptr%data), wrap%ptr )
+    call ti%acceptProc( wrap, ti, vstr )
   end subroutine
 
 
@@ -606,15 +604,9 @@ end module
     type(void_t)              :: dataWrap
     character(len=32)         :: buff
     
-
     ti => item_dynamic_type(wrap%ptr)
-    if (associated(ti%streamProc)) then
-      call c_f_pointer( c_loc(wrap%ptr%data), dataWrap%ptr )
-      call ti%streamProc( dataWrap, ti, outs )
-    else
-      write(buff, '(A$)') trim(ti%typeId)
-      call outs%drainFunc( outs, buff )
-    endif
+    call c_f_pointer( c_loc(wrap%ptr%data), dataWrap%ptr )
+    call ti%streamProc( dataWrap, ti, outs )
   end subroutine
 
 

@@ -798,11 +798,9 @@ end module
     ptr => wrap%ptr%node%next
     do while (.not. associated( ptr, wrap%ptr%node ))
       ti => ptr%typeInfo%subtype
-      if (associated( ti%acceptProc )) then
-        call c_f_pointer( c_loc(ptr), valNodePtr )
-        nodeWrap%ptr => valNodePtr%pseudoValue
-        call ti%acceptProc( nodeWrap, ti, vstr )
-      end if
+      call c_f_pointer( c_loc(ptr), valNodePtr )
+      nodeWrap%ptr => valNodePtr%pseudoValue
+      call ti%acceptProc( nodeWrap, ti, vstr )
       ptr => ptr%next
     end do  
   end subroutine
@@ -823,10 +821,8 @@ end module
   !  ptr => self%node%next
   !  do while (.not. associated( ptr, self%node ))
   !    ti => ptr%typeInfo%subtype
-  !    if (associated( ti%streamProc )) then
-  !      call c_f_pointer( c_loc(ptr), valNodePtr )
-  !      call ti%streamProc( valNodePtr%pseudoValue, flushFunc )
-  !    end if
+  !    call c_f_pointer( c_loc(ptr), valNodePtr )
+  !    call ti%streamProc( valNodePtr%pseudoValue, flushFunc )
   !    ptr => ptr%next
   !  end do  
   !end subroutine
