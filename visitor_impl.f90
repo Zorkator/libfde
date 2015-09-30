@@ -17,13 +17,17 @@ end module
     type(StreamVisitor_t) :: vstr
     type(void_t)          :: obj
     type(TypeInfo_t)      :: ti
-    type(ostream_t)       :: tmp
+    logical               :: no_break
 
-    tmp = vstr%stream
-    if (ti%typeId == "HashNode") &
+    no_break = (ti%typeId == "HashNode")
+
+    if (no_break) &
       call newline( vstr%stream, 0 )
 
+    call indent( vstr%stream, vstr%super%level )
     call ti%streamProc( obj, ti, vstr%stream )
-    vstr%stream = tmp
+
+    if (no_break) &
+      call newline( vstr%stream, 1 )
   end subroutine
     

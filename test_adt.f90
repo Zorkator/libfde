@@ -872,7 +872,17 @@ program test_adt
   integer,   target :: dings = 324
   character(len=18) :: res
 
+  write( *, '(A$)') '.'
+  write( *, '(    A$)') '.'
+  write( *, '(   A   $)') '.'
+  write( *, '(   A  $)') '.'
+  write( *, '(  2A$)') '.'
+  write( *, '(  2A$)') '.'
+  write( *, '(A)') 'xyz'
+
+
   call width( fout, 5 )
+  call indent( fout, 2 )
   call write( fout, "testinger" )
   call width( fout, 15 )
   call write( fout, "test" )

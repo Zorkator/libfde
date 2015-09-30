@@ -41,25 +41,26 @@ end module
 
   !**
   ! typeinfo_init initializes TypeInfo structure.
-  ! @param self         - the TypeInfo to initialize
-  ! @param typeId       - the type's id string (e.g. double)
-  ! @param baseType     - the type's base string (e.g. real(kind=8))
-  ! @param bitSize      - the storage size of the type in bytes (=> storage_size(type))
-  ! @param rank         - the rank of the type
-  ! @param subtype      - the typeinfo of this type's subtype (used by container types)
-  ! @param acceptProc   - the subroutine to accept a visitors       : subroutine accept( obj, visitor )
-  ! @param assignProc   - the subroutine to assign a variable       : subroutine assign( lhs, rhs )
-  ! @param cloneObjProc - the function to clone an object reference : subroutine clone( tgt, src )
-  ! @param cloneRefProc - the function to clone an object           : subroutine clone( tgt, src )
-  ! @param deleteProc   - the subroutine to delete a variable       : subroutine delete( var )
-  ! @param initProc     - the subroutine to initialize a variable   : subroutine init( var, hardness )
-  ! @param shapeProc    - the function to inspect the shape         : subroutine shape( var, res, rank )
-  ! @param streamProc   - the subroutine to stream type via charbuf : subroutine stream( var, flushFunc )
+  ! @param self           - the TypeInfo to initialize
+  ! @param typeId         - the type's id string (e.g. double)
+  ! @param baseType       - the type's base string (e.g. real(kind=8))
+  ! @param bitSize        - the storage size of the type in bytes (=> storage_size(type))
+  ! @param rank           - the rank of the type
+  ! @param subtype        - the typeinfo of this type's subtype (used by container types)
+  ! @param acceptProc     - the subroutine to accept a visitors       : subroutine accept( obj, visitor )
+  ! @param assignProc     - the subroutine to assign a variable       : subroutine assign( lhs, rhs )
+  ! @param cloneObjProc   - the function to clone an object reference : subroutine clone( tgt, src )
+  ! @param cloneRefProc   - the function to clone an object           : subroutine clone( tgt, src )
+  ! @param deleteProc     - the subroutine to delete a variable       : subroutine delete( var )
+  ! @param initProc       - the subroutine to initialize a variable   : subroutine init( var, hardness )
+  ! @param shapeProc      - the function to inspect the shape         : subroutine shape( var, res, rank )
+  ! @param streamProc     - the subroutine to stream type via charbuf : subroutine stream( var, flushFunc )
+  ! @param tryStreamProc - the subroutine to determine stream length : subroutine tryStream( bufLen, status )
   !*
 !_PROC_EXPORT(typeinfo_init)
   subroutine typeinfo_init( self, typeId, baseType, bitSize, rank, subtype, &
-                            acceptProc, assignProc, cloneObjProc, cloneRefProc, deleteProc, initProc, shapeProc, streamProc )
-    use impl_typeinfo__, only: TypeInfo_t, type_accept_wrap_, type_stream_wrap_
+                            acceptProc, assignProc, cloneObjProc, cloneRefProc, deleteProc, initProc, shapeProc, streamProc, tryStreamProc )
+    use impl_typeinfo__, only: TypeInfo_t, TypeSpecs_t, type_accept_wrap_, type_stream_wrap_
     use iso_c_binding
     implicit none
     type(TypeInfo_t),    intent(inout) :: self
@@ -67,7 +68,8 @@ end module
     integer(kind=4),        intent(in) :: bitSize
     integer(kind=4),        intent(in) :: rank
     type(TypeInfo_t), target, optional :: subtype
-    procedure(),              optional :: acceptProc, assignProc, cloneObjProc, cloneRefProc, deleteProc, initProc, shapeProc, streamProc
+    procedure(),              optional :: acceptProc, assignProc, cloneObjProc, cloneRefProc, deleteProc, initProc, shapeProc &
+                                        , streamProc, tryStreamProc
 
     self%typeId   =  adjustl(typeId);   self%typeId_term   = 0
     self%baseType =  adjustl(baseType); self%baseType_term = 0
@@ -98,6 +100,13 @@ end module
     if (present(initProc))     self%initProc     => initProc
     if (present(shapeProc))    self%shapeProc    => shapeProc
     if (present(streamProc))   self%streamProc   => streamProc
+
+    ! try to find length of stream buffer ...
+    if (present(tryStreamProc)) then
+      call try_streaming( self%typeSpecs, tryStreamProc )
+    else if (associated( self%subtype )) then
+      self%typeSpecs%streamLen = self%subtype%typeSpecs%streamLen
+    end if
     self%initialized = .true.
 
   contains
@@ -106,8 +115,26 @@ end module
       use adt_memoryref
       type(MemoryRef_t)        :: memref
       character(len=*), target :: what
+
       memref%loc = c_loc(what(1:1))
       memref%len = len_trim(what)
+    end subroutine
+
+
+    subroutine try_streaming( self, testStream )
+      type(TypeSpecs_t) :: self
+      procedure()       :: testStream
+      integer           :: bufLen, status
+
+      bufLen = 32; status = 1
+      do while (.true.)
+        bufLen = bufLen * 2
+        call testStream( bufLen, status )
+        if (status == 0) then
+          self%streamLen = bufLen
+          exit
+        end if
+      end do
     end subroutine
 
   end subroutine

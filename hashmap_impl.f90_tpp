@@ -944,12 +944,15 @@ end module
     type(TypeInfo_t)          :: hashmapType
     type(Visitor_t)           :: vstr
     type(HashMapIndex_t)      :: idx
-    type(HashNode_t), pointer :: node
 
     idx = hashmap_index( wrap%ptr )
+    call enter( vstr )
     do while (hashmapindex_is_valid_c(idx))
       call accept( HashNode( idx%bucket ), vstr )
-      call hashmapindex_next_c( idx )
+      if (is_valid( vstr )) then; call hashmapindex_next_c( idx )
+                            else; return !< skips visitor-leave!
+      end if
     end do
+    call leave( vstr )
   end subroutine
 

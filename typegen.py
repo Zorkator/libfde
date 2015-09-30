@@ -72,6 +72,7 @@ class TypeSpec(object):
     self.baseType     = baseType
     self.baseTypeId   = isDerived and isDerived.groups()[0] or ''
     self.baseType_arg = baseType.replace('len=:', 'len=*')
+    self.subType_decl = ('', '\n      %s :: sub' % baseType)[self._isArray]
     self.baseSizeExpr = ('storage_size(self)', '0')[self._varBase]
     self.dimType      = dimType
     self.dimSize      = ('', ', %s' % dimType)[self._isArray]
@@ -196,9 +197,12 @@ class RefType(TypeSpec):
 
     ref_streaming = dict(
       buffered = """\n
-        character(len=16+max(16,{writeBuf})) :: buff
-        write(buff, {writeFmt}) {writeExpr}
-        call outs%drainFunc( outs, trim(buff) )
+        character(len={writeBuf}) :: buff
+        integer                   :: st
+        write(buff, {writeFmt}, iostat=st) {writeExpr}
+        if (st == 0) then; call outs%drainFunc( outs, trim(buff) )
+                     else; write(0, *) '>> libadt: can not stream '//trim(ti%typeId)
+        end if
       """,
 
       direct = """\n
@@ -212,6 +216,20 @@ class RefType(TypeSpec):
       type({typeId}_wrap_t)             :: self
       type(TypeInfo_t)                  :: ti
       type(ostream_t)                   :: outs{streamWriting}{formatSpec}
+    end subroutine
+    """,
+
+    ref_try_streaming = """
+    subroutine {typeId}_stream_try_( bufLen, status )
+      integer                         :: bufLen, status
+      character(len=max(255, bufLen)) :: buffer
+      {baseType}{dimSpec}, target     :: obj
+      type({typeId}_wrap_t)           :: self
+      self%ptr => obj
+      write(buffer, {writeFmt}, iostat=status) {writeExpr}{formatSpec}
+      if (status == 0) then
+        bufLen = len_trim( buffer )
+      end if
     end subroutine
     """,
 
@@ -244,7 +262,7 @@ class RefType(TypeSpec):
       type(Visitor_t)                :: vstr
       type(TypeInfo_t),      pointer :: ti
       type({typeId}_wrap_t)          :: wrap
-      ti => static_type(self)
+      ti       => static_type(self)
       wrap%ptr => self
       call ti%acceptProc( wrap, ti, vstr )
     end subroutine
@@ -439,15 +457,15 @@ class RefType(TypeSpec):
 !_PROC_EXPORT({typeId}_typeinfo_)
 !_ARG_REFERENCE1(self)
     function {typeId}_typeinfo_( self ) result(res)
-      {baseType_arg}{dimSpec}   :: self
+      {baseType_arg}{dimSpec}   :: self{subType_decl}
       type(TypeInfo_t), pointer :: res
 
       res => type_{typeId}
       if (.not. res%initialized) &
         call typeinfo_init( res, '{typeId}', '{baseType}' &
-                            , int({baseSizeExpr},4) &
-                            , {rank}{initProc}{acceptProc}{assignProc}{deleteProc}{shapeProc}{cloneProc}{streamProc} &
-                            , cloneRefProc = {typeId}_clone_ref_ )
+                          , int({baseSizeExpr},4), {rank} &
+                          {lookupSubtype}{initProc}{acceptProc}{assignProc}{deleteProc}{shapeProc}{cloneProc}{streamProc} &
+                          , cloneRefProc = {typeId}_clone_ref_ {tryStreamProc} )
     end function
     """,
 
@@ -459,12 +477,12 @@ class RefType(TypeSpec):
 !_PROC_EXPORT({typeId}_typeinfo_)
 !_ARG_REFERENCE1(self)
     function {typeId}_typeinfo_( self ) result(res)
-      {baseType_arg}{dimSpec}       :: self
+      {baseType_arg}{dimSpec}   :: self{subType_decl}
       type(TypeInfo_t), pointer :: res
 
       res => type_{typeId}
       if (.not. res%initialized) &
-        call typeinfo_init( res, '{typeId}', '{baseType}', 0, 0 )
+        call typeinfo_init( res, '{typeId}', '{baseType}', 0, 0 {lookupSubtype}{tryStreamProc} )
     end function
     """
   )
@@ -487,6 +505,7 @@ class RefType(TypeSpec):
 
     if self._isProc:
       keySpecs.setdefault( 'cloneMode', '_none' ) #< if not set explicitly, we disable cloning for procedure types
+      keySpecs.setdefault( 'writeSize', '32' )    #< IMPORTANT: fortran might freak-out at determining the size of proc pointers!
       if typeProcs:
         sys.stderr.write( 'WARNING: given type procs {0} are ignored for procedure type "{1}"\n'.format(typeProcs, typeId) )
 
@@ -516,20 +535,10 @@ class RefType(TypeSpec):
       self.code_clonePtr = 'tgt => src'
       self.cloneProc  = ''
 
-    self._itf         = ('ref_itf',           'proc_itf'         )[self._isProc]
-    self._access      = ('access_ref',        'access_proc'      )[self._isProc]
-    self._refCloner   = ('ref_cloner',        ''                 )[self._isProc]
-    self._inspector   = ('ref_inspector',     ''                 )[self._isProc]
-    self._typeinfo    = ('ref_typeinfo',      'proc_typeinfo'    )[self._isProc]
-    self._streamerItf = ('',                  'ref_streamerItf'  )['streamProc' in keySpecs]
-    self._streamer    = ('ref_streamer',      ''                 )['streamProc' in keySpecs]
-    self._acceptorItf = ('',                  'ref_acceptorItf'  )['acceptProc' in keySpecs]
-    self._acceptor    = ('ref_acceptor',      ''                 )['acceptProc' in keySpecs]
-
     streamFmt  = self.peelString( keySpecs.setdefault( 'streamFmt', '' ) )
     streamType = keySpecs.get('streaming', 'buffered')
     streamTpl  = self._template['ref_streaming'][streamType]
-    writeSize  = keySpecs.get( 'writeSize', 'storage_size(self%ptr)/2' )
+    writeSize  = keySpecs.get( 'writeSize', 'ti%typeSpecs%streamLen' ) #< FORTRAN-COMPILERBUG: can't use storage_size on proc pointers!
     writeExpr  = ('self%ptr', "'%s'" % self.baseTypeId)[bool(self._isDerived)]
 
     keySpecs.update(
@@ -543,6 +552,25 @@ class RefType(TypeSpec):
       keySpecs.update( writeFmt = '*', formatSpec = '' )
     keySpecs.update( streamWriting = streamTpl.format( **keySpecs ) )
     
+    self._itf          = ('ref_itf',           'proc_itf'         )[self._isProc]
+    self._access       = ('access_ref',        'access_proc'      )[self._isProc]
+    self._refCloner    = ('ref_cloner',        ''                 )[self._isProc]
+    self._inspector    = ('ref_inspector',     ''                 )[self._isProc]
+    self._typeinfo     = ('ref_typeinfo',      'proc_typeinfo'    )[self._isProc]
+    self._acceptorItf  = ('',                  'ref_acceptorItf'  )['acceptProc' in keySpecs]
+    self._acceptor     = ('ref_acceptor',      ''                 )['acceptProc' in keySpecs]
+    self._streamerItf  = ('',                  'ref_streamerItf'  )['streamProc' in keySpecs]
+    self._streamer     = ('ref_streamer',      ''                 )['streamProc' in keySpecs]
+
+    if (streamType == 'buffered' and not (self._isArray or self._isProc)):
+      self._tryStreamer  = 'ref_try_streaming'
+      self.tryStreamProc = ', tryStreamProc = {0}_stream_try_'.format( typeId )
+    else:
+      self._tryStreamer  = ''
+      self.tryStreamProc = ''
+
+    self.lookupSubtype = ('', ', subtype = static_type(sub)')[self._isArray]
+
     self._kwArgs = dict( (k, self.peelString(v)) for k,v in keySpecs.items() )
     self.import_baseType = ('', 'import %s' % self.baseTypeId)[bool(self._isDerived)]
 
@@ -562,7 +590,7 @@ class RefType(TypeSpec):
       self.expand( out, 'header', 'ref_encoder', 'ref_decoder', 'ref_typechecker', 'ref_dynamic_cast',
                    self._refCloner, self._inspector, self._typeinfo, 'ref_accept', self._acceptor )
       print self.typeId, self._kwArgs  
-      self.expand( out, 'ref_stream', self._streamer, **self._kwArgs )
+      self.expand( out, 'ref_stream', self._tryStreamer, self._streamer, **self._kwArgs )
       out( self._ptrCloner.format( **self.__dict__ ) )
       self._implemented = True
 
@@ -604,8 +632,9 @@ class ListNode(TypeSpec):
       type({typeId}_node_t)               :: node
       res => type_{typeId}_node
       if (.not. res%initialized) &
-        call typeinfo_init( res, '{typeId}_node', 'type({typeId}_node_t)', &
-          int(storage_size(node),4), 0, subtype = static_type(val), cloneObjProc = {typeId}_clone_node_ )
+        call typeinfo_init( res, '{typeId}_node', 'type({typeId}_node_t)' &
+                          , int(storage_size(node),4), 0, subtype = static_type(val) &
+                          , cloneObjProc = {typeId}_clone_node_ )
     end function
     """,
 

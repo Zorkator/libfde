@@ -796,13 +796,18 @@ end module
     type(pseudo_wrap)          :: nodeWrap
 
     ptr => wrap%ptr%node%next
+    call enter( vstr )
     do while (.not. associated( ptr, wrap%ptr%node ))
       ti => ptr%typeInfo%subtype
       call c_f_pointer( c_loc(ptr), valNodePtr )
       nodeWrap%ptr => valNodePtr%pseudoValue
+
       call ti%acceptProc( nodeWrap, ti, vstr )
-      ptr => ptr%next
+      if (is_valid( vstr )) then; ptr => ptr%next
+                            else; return !< skips visitor-leave!
+      end if
     end do  
+    call leave( vstr )
   end subroutine
 
 
