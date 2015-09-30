@@ -516,7 +516,7 @@ subroutine test_list()!{{{
   _list_append_ref(real8_1d)
   _list_append_ref(complex8_1d)
   _list_append_ref(complex16_1d)
-  _list_append_ref(c_void_ptr_1d)
+  !_list_append_ref(c_void_ptr_1d)
   _list_append_ref(char10_1d)
   _list_append_ref(string_1d)
   !_list_append_ref(ref_1d)
@@ -533,7 +533,7 @@ subroutine test_list()!{{{
   _list_append_ref(real8_2d)
   _list_append_ref(complex8_2d)
   _list_append_ref(complex16_2d)
-  _list_append_ref(c_void_ptr_2d)
+  !_list_append_ref(c_void_ptr_2d)
   _list_append_ref(char10_2d)
   !_list_append_ref(string_2d)
   !_list_append_ref(ref_2d)
@@ -869,18 +869,6 @@ program test_adt
   use test_basedata
   use adt_convert
 
-  integer,   target :: dings = 324
-  character(len=18) :: res
-
-  write( *, '(A$)') '.'
-  write( *, '(    A$)') '.'
-  write( *, '(   A   $)') '.'
-  write( *, '(   A  $)') '.'
-  write( *, '(  2A$)') '.'
-  write( *, '(  2A$)') '.'
-  write( *, '(A)') 'xyz'
-
-
   call width( fout, 5 )
   call indent( fout, 2 )
   call write( fout, "testinger" )
@@ -889,6 +877,10 @@ program test_adt
   call write( fout, "testing" )
   call write( fout, "testinger" )
   call width( fout, 0 )
+  call fuselines( fout, 2 )
+  call write( fout, "testinger" )
+  call write( fout, "testinger" )
+  call write( fout, "testinger" )
   call write( fout, "testinger" )
   call write( fout, "testinger" )
   call newline( fout, 0 )
@@ -901,9 +893,6 @@ program test_adt
   call write( fout, "testinger" )
   call width( fout, 32 )
   call write( fout, "testinger" )
-
-  print *, hex(dings)
-  print *, address_str( c_loc(dings) )
 
   call init_basedata()
   call stream( v_item, fout )

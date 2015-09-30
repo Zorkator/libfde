@@ -207,6 +207,20 @@ class RefType(TypeSpec):
 
       direct = """\n
         call outs%drainFunc( outs, trim({writeExpr}) )
+      """,
+
+      array = """\n
+        integer :: i
+        {baseType}, dimension(:), pointer :: linear
+        type wrap_t
+          {baseType}, pointer :: ptr
+        end type
+        type(wrap_t)          :: wrap
+        call c_f_pointer( c_loc(self%ptr), linear, [size(self%ptr)] )
+        do i = 1, size(linear)
+          wrap%ptr => linear(i)
+          call ti%subtype%streamProc( wrap, ti%subtype, outs )
+        end do
       """
     ),
 
@@ -226,9 +240,9 @@ class RefType(TypeSpec):
       {baseType}{dimSpec}, target     :: obj
       type({typeId}_wrap_t)           :: self
       self%ptr => obj
-      write(buffer, {writeFmt}, iostat=status) {writeExpr}{formatSpec}
+      write(buffer, {writeFmt}, iostat=status) {writeExpr},'#'{formatSpec}
       if (status == 0) then
-        bufLen = len_trim( buffer )
+        bufLen = len_trim( buffer ) - 1
       end if
     end subroutine
     """,
@@ -550,7 +564,7 @@ class RefType(TypeSpec):
       keySpecs.update( writeFmt = 100, formatSpec = '\n100   format({0})'.format( streamFmt ) )
     else:
       keySpecs.update( writeFmt = '*', formatSpec = '' )
-    keySpecs.update( streamWriting = streamTpl.format( **keySpecs ) )
+    keySpecs.update( streamWriting = streamTpl.format( **dict( self.__dict__, **keySpecs ) ) )
     
     self._itf          = ('ref_itf',           'proc_itf'         )[self._isProc]
     self._access       = ('access_ref',        'access_proc'      )[self._isProc]
