@@ -7,13 +7,14 @@ module impl_typeinfo__
 
   contains
 
-  subroutine type_accept_wrap_( wrap, refType, vstr )
+  subroutine type_accept_wrap_( wrap, ti, vstr )
     use adt_visitor
     implicit none
-    type(void_t)     :: wrap
-    type(TypeInfo_t) :: refType
+    type(void_t)     :: wrap, dummy
+    type(TypeInfo_t) :: ti
     type(Visitor_t)  :: vstr
-    ! just do nothing ...
+    dummy%ptr => null()
+    call vstr%visit( vstr, dummy, ti )
   end subroutine
   
   subroutine type_stream_wrap_( wrap, ti, outs )
@@ -25,7 +26,7 @@ module impl_typeinfo__
     type(TypeInfo_t) :: ti
     type(ostream_t)  :: outs
 
-    call outs%drainFunc( outs, trim(ti%typeId) // ' @ ' // address_str(c_loc(wrap%ptr)) )
+    call write( outs, trim(ti%typeId) // ' @ ' // address_str(c_loc(wrap%ptr)) )
   end subroutine
 
 end module

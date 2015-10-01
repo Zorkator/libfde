@@ -8,7 +8,7 @@ module test_basedata
   use adt_item
   use adt_list
   use adt_hashmap
-  use adt_visitor
+  use adt_streamvisitor
   use adt_ostream
   use iso_c_binding
   implicit none
@@ -660,15 +660,18 @@ subroutine test_hashmap_nesting()!{{{
   scope => getScope( hashmap(ref1), 'gcsm' )
   call set( scope, 'counter', Item_of( ref_of(i) ) )
   call set( getScope( scope, 'signal'), 'value', Item_of( ref_of(r_array, bind = .true.) ) )
-  !call print_scope( hashmap(ref1), 0 )
 
   scope => getScope( getScope( getScope( hashmap(ref1), fileScope() ), 'gcsm' ), 'signal' )
   scope => getScope( hashmap(ref1), fileScope(), 'gcsm', 'signal' )
+
+  call set( scope, 'myfunc', Item_of( ref_from_Callback(init_basedata) ) )
   
   if (dynamic_cast( r_array, ref(get(scope, 'value')) )) &
     print *, r_array
 
   call stream( scope, fout )
+
+  call set( streamer%stream, width=-15 )
 
   call accept( scope, streamer%super )
   call accept( ref1, streamer%super )
@@ -869,30 +872,43 @@ program test_adt
   use test_basedata
   use adt_convert
 
-  call width( fout, 5 )
-  call indent( fout, 2 )
-  call write( fout, "testinger" )
-  call width( fout, 15 )
-  call write( fout, "test" )
-  call write( fout, "testing" )
-  call write( fout, "testinger" )
-  call width( fout, 0 )
-  call fuselines( fout, 2 )
-  call write( fout, "testinger" )
-  call write( fout, "testinger" )
-  call write( fout, "testinger" )
-  call write( fout, "testinger" )
-  call write( fout, "testinger" )
-  call newline( fout, 0 )
-  call write( fout, "testinger" )
-  call newline( fout, 2 )
-  call write( fout, "testinger" )
-  call newline( fout, 1 )
-  call write( fout, "testinger" )
-  call newline( fout, 5 )
-  call write( fout, "testinger" )
-  call width( fout, 32 )
-  call write( fout, "testinger" )
+  procedure(), pointer :: proc
+
+  proc => dings
+  print *, address_str(proc)
+
+  !call width( fout, 5 )
+  !call indent( fout, 2 )
+  !call write( fout, "testinger" )
+  !call width( fout, 15 )
+  !call write( fout, "test" )
+  !call write( fout, "testing" )
+  !call write( fout, "testinger" )
+  !call width( fout, 0 )
+  !call fuselines( fout, 2 )
+  !call write( fout, "testinger" )
+  !call write( fout, "testinger" )
+  !call write( fout, "testinger" )
+  !call write( fout, "testinger" )
+  !call write( fout, "testinger" )
+  !call newline( fout, 0 )
+  !call write( fout, "testinger" )
+  !call newline( fout, 2 )
+  !call write( fout, "testinger" )
+  !call newline( fout, 1 )
+  !call write( fout, "testinger" )
+  !call newline( fout, 5 )
+  !call write( fout, "testinger" )
+  !call newline( fout, 5 )
+  !call write( fout, "testinger" )
+  !call set( fout, width=32 )
+  !call write( fout, "testinger" )
+  !call set( fout, width=-32 )
+  !call write( fout, "testinger" )
+  !call write( fout, "testinger" )
+  !call write( fout, "testinger" )
+  !call write( fout, "testinger" )
+  !call write( fout, "testinger" )
 
   call init_basedata()
   call stream( v_item, fout )
@@ -911,5 +927,10 @@ program test_adt
 
   call cleanup_basedata()
   call hashmap_clear_cache()
+
+  contains
+    
+  subroutine dings()
+  end subroutine
 
 end

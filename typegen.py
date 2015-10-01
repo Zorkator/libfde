@@ -200,13 +200,13 @@ class RefType(TypeSpec):
         character(len={writeBuf}) :: buff
         integer                   :: st
         write(buff, {writeFmt}, iostat=st) {writeExpr}
-        if (st == 0) then; call outs%drainFunc( outs, trim(buff) )
-                     else; write(0, *) '>> libadt: can not stream '//trim(ti%typeId)
+        if (st == 0) then; call write( outs, buff )
+                     else; call error( outs, ti )
         end if
       """,
 
       direct = """\n
-        call outs%drainFunc( outs, trim({writeExpr}) )
+        call write( outs, {writeExpr} )
       """,
 
       array = """\n
@@ -496,7 +496,7 @@ class RefType(TypeSpec):
 
       res => type_{typeId}
       if (.not. res%initialized) &
-        call typeinfo_init( res, '{typeId}', '{baseType}', 0, 0 {lookupSubtype}{tryStreamProc} )
+        call typeinfo_init( res, '{typeId}', '{baseType}', 0, 0 {lookupSubtype}{acceptProc}{streamProc}{tryStreamProc} )
     end function
     """
   )

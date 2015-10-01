@@ -203,8 +203,10 @@ end module
     type(HashNode_wrap_t) :: wrap
     type(TypeInfo_t)      :: nodeType
     type(Visitor_t)       :: vstr
-    call accept( wrap%ptr%key, vstr )
-    call accept( wrap%ptr%value, vstr )
+    call group( vstr, 1 )
+      call accept( wrap%ptr%key, vstr )
+      call accept( wrap%ptr%value, vstr )
+    call group( vstr, -1 )
   end subroutine
 
 
