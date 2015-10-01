@@ -67,7 +67,7 @@ module adt_ostream
 
     if (num > 0) then; 
       self%fuseCnt = self%fuseCnt + sign( num, self%fuseCnt )
-    else if(self%fuseCnt) then
+    else if(self%fuseCnt /= 0) then
       write( self%channel, self%nl )
       self%fuseCnt = 0
     end if
