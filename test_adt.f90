@@ -82,6 +82,28 @@ module test_basedata
   type(List_t),      dimension(:,:), allocatable :: v_list_2d
   type(HashMap_t),   dimension(:,:), allocatable :: v_hashmap_2d
 
+  logical*1,         dimension(:,:,:), allocatable :: v_bool1_3d
+  logical*2,         dimension(:,:,:), allocatable :: v_bool2_3d
+  logical*4,         dimension(:,:,:), allocatable :: v_bool4_3d
+  logical*8,         dimension(:,:,:), allocatable :: v_bool8_3d
+  integer*1,         dimension(:,:,:), allocatable :: v_int1_3d
+  integer*2,         dimension(:,:,:), allocatable :: v_int2_3d
+  integer*4,         dimension(:,:,:), allocatable :: v_int4_3d
+  integer*8,         dimension(:,:,:), allocatable :: v_int8_3d
+  real*4,            dimension(:,:,:), allocatable :: v_real4_3d
+  real*8,            dimension(:,:,:), allocatable :: v_real8_3d
+  !real*16,           dimension(:,:,:), allocatable :: v_real16_3d
+  complex*8,         dimension(:,:,:), allocatable :: v_complex8_3d
+  complex*16,        dimension(:,:,:), allocatable :: v_complex16_3d
+  !complex*32,        dimension(:,:,:), allocatable :: v_complex32_3d
+  type(c_ptr),       dimension(:,:,:), allocatable :: v_c_void_ptr_3d
+  character(len=10), dimension(:,:,:), allocatable :: v_char10_3d
+  type(String_t),    dimension(:,:,:), allocatable :: v_string_3d
+  type(Ref_t),       dimension(:,:,:), allocatable :: v_ref_3d
+  type(Item_t),      dimension(:,:,:), allocatable :: v_item_3d
+  type(List_t),      dimension(:,:,:), allocatable :: v_list_3d
+  type(HashMap_t),   dimension(:,:,:), allocatable :: v_hashmap_3d
+
   !---------------------------------------
   ! declare pointers to basetypes ...
   !---------------------------------------
@@ -149,7 +171,29 @@ module test_basedata
   type(Ref_t),      dimension(:,:), pointer :: p_ref_2d
   type(Item_t),     dimension(:,:), pointer :: p_item_2d
   type(List_t),     dimension(:,:), pointer :: p_list_2d
-  type(HashMap_t),  dimension(:,:), pointer :: p_hashmap_2d!}}}
+  type(HashMap_t),  dimension(:,:), pointer :: p_hashmap_2d
+
+  logical*1,        dimension(:,:,:), pointer :: p_bool1_3d
+  logical*2,        dimension(:,:,:), pointer :: p_bool2_3d
+  logical*4,        dimension(:,:,:), pointer :: p_bool4_3d
+  logical*8,        dimension(:,:,:), pointer :: p_bool8_3d
+  integer*1,        dimension(:,:,:), pointer :: p_int1_3d
+  integer*2,        dimension(:,:,:), pointer :: p_int2_3d
+  integer*4,        dimension(:,:,:), pointer :: p_int4_3d
+  integer*8,        dimension(:,:,:), pointer :: p_int8_3d
+  real*4,           dimension(:,:,:), pointer :: p_real4_3d
+  real*8,           dimension(:,:,:), pointer :: p_real8_3d
+  !real*16,          dimension(:,:,:), pointer :: p_real16_3d
+  complex*8,        dimension(:,:,:), pointer :: p_complex8_3d
+  complex*16,       dimension(:,:,:), pointer :: p_complex16_3d
+  !complex*32,       dimension(:,:,:), pointer :: p_complex32_3d
+  type(c_ptr),      dimension(:,:,:), pointer :: p_c_void_ptr_3d
+  character(len=:), dimension(:,:,:), pointer :: p_char10_3d
+  type(String_t),   dimension(:,:,:), pointer :: p_string_3d
+  type(Ref_t),      dimension(:,:,:), pointer :: p_ref_3d
+  type(Item_t),     dimension(:,:,:), pointer :: p_item_3d
+  type(List_t),     dimension(:,:,:), pointer :: p_list_3d
+  type(HashMap_t),  dimension(:,:,:), pointer :: p_hashmap_3d!}}}
 
   type(StreamVisitor_t) :: streamer
   type(ostream_t)       :: fout
@@ -158,7 +202,7 @@ module test_basedata
 
   subroutine init_basedata()!{{{
     implicit none
-    integer :: i, j
+    integer :: i, j, k
 
     call initialize( v_list )
     call initialize( v_hashmap )
@@ -219,6 +263,37 @@ module test_basedata
       end do
     end do
     
+    allocate( v_bool1_3d(2,2,2) );      v_bool1_3d      = .true.
+    allocate( v_bool2_3d(2,2,2) );      v_bool2_3d      = .true.
+    allocate( v_bool4_3d(2,2,2) );      v_bool4_3d      = .true.
+    allocate( v_bool8_3d(2,2,2) );      v_bool8_3d      = .true.
+    allocate( v_int1_3d(2,2,2) );       v_int1_3d       = 1
+    allocate( v_int2_3d(2,2,2) );       v_int2_3d       = 2
+    allocate( v_int4_3d(2,2,2) );       v_int4_3d       = 3
+    allocate( v_int8_3d(2,2,2) );       v_int8_3d       = 4
+    allocate( v_real4_3d(2,2,2) );      v_real4_3d      = 0.1
+    allocate( v_real8_3d(2,2,2) );      v_real8_3d      = 0.2
+    !allocate( v_real16_3d(2,2,2) );     v_real16_3d     = 0.3             
+    allocate( v_complex8_3d(2,2,2) );   v_complex8_3d   = (1.0,-2.0)        
+    allocate( v_complex16_3d(2,2,2) );  v_complex16_3d  = (2.0,-2.0)         
+    !allocate( v_complex32_3d(2,2,2) );  v_complex32_3d  = (3.0,-2.0)         
+    allocate( v_c_void_ptr_3d(2,2,2) ); v_c_void_ptr_3d = C_NULL_PTR
+    allocate( v_char10_3d(2,2,2) );     v_char10_3d     = "abcde"
+    allocate( v_string_3d(2,2,2) );
+    allocate( v_ref_3d(2,2,2) );
+    allocate( v_item_3d(2,2,2) );
+    allocate( v_list_3d(2,2,2) );
+    allocate( v_hashmap_3d(2,2,2) );
+
+    do i = 1, 2
+      do j = 1, 2
+        do k = 1, 2
+          call initialize( v_list_3d(i,j,k) )
+          call initialize( v_hashmap_3d(i,j,k) )
+        end do
+      end do
+    end do
+    
     streamer = StreamVisitor( 6 )
     fout     = ostream( 6 )
   end subroutine!}}}
@@ -226,7 +301,7 @@ module test_basedata
 
   subroutine cleanup_basedata()!{{{
     implicit none
-    integer :: i, j
+    integer :: i, j, k
 
     call delete( v_list )
     call delete( v_hashmap )
@@ -286,6 +361,37 @@ module test_basedata
     deallocate( v_bool4_2d )
     deallocate( v_bool2_2d )
     deallocate( v_bool1_2d )
+
+    do i = 1, 2
+      do j = 1, 2
+        do k = 1, 2
+          call delete( v_list_3d(i,j,k) )
+          call delete( v_hashmap_3d(i,j,k) )
+        end do
+      end do
+    end do
+
+    deallocate( v_hashmap_3d )
+    deallocate( v_list_3d )
+    deallocate( v_item_3d )
+    deallocate( v_ref_3d )
+    deallocate( v_string_3d )
+    deallocate( v_char10_3d )
+    deallocate( v_c_void_ptr_3d )
+    !deallocate( v_complex32_3d )
+    deallocate( v_complex16_3d )
+    deallocate( v_complex8_3d )
+    !deallocate( v_real16_3d )
+    deallocate( v_real8_3d )
+    deallocate( v_real4_3d )
+    deallocate( v_int8_3d )
+    deallocate( v_int4_3d )
+    deallocate( v_int2_3d )
+    deallocate( v_int1_3d )
+    deallocate( v_bool8_3d )
+    deallocate( v_bool4_3d )
+    deallocate( v_bool2_3d )
+    deallocate( v_bool1_3d )
   end subroutine!}}}
 
 end module
@@ -538,6 +644,23 @@ subroutine test_list()!{{{
   !_list_append_ref(string_2d)
   !_list_append_ref(ref_2d)
   !_list_append_ref(item_2d)
+  _list_append_ref(bool1_3d)
+  _list_append_ref(bool2_3d)
+  _list_append_ref(bool4_3d)
+  _list_append_ref(bool8_3d)
+  _list_append_ref(int1_3d)
+  _list_append_ref(int2_3d)
+  _list_append_ref(int4_3d)
+  _list_append_ref(int8_3d)
+  _list_append_ref(real4_3d)
+  _list_append_ref(real8_3d)
+  _list_append_ref(complex8_3d)
+  _list_append_ref(complex16_3d)
+  !_list_append_ref(c_void_ptr_3d)
+  !_list_append_ref(char10_3d)
+  !_list_append_ref(string_3d)
+  !_list_append_ref(ref_3d)
+  !_list_append_ref(item_3d)
 
   idx = index( v_list )
   do while (is_valid(idx))
@@ -650,13 +773,14 @@ subroutine test_hashmap_nesting()!{{{
   end do
 
   allocate( r_array(10) )
-  r_array = [1,2,3,4,5,6,7,8,9,0]
+  r_array = [1:10]
   scope => getScope( scope, 'gcsm' )
   call set( scope, 'text', Item_of( ref_of(r_array, bind=.true.) ) )
   call set( scope, 'text', Item_of( ref_of(buff) ) )
   call set( getScope( scope, 'signal'), 'value', Item_of( ref_of(i) ) )
 
-  allocate( r_array(10) )
+  allocate( r_array(5) )
+  r_array = [1:5]
   scope => getScope( hashmap(ref1), 'gcsm' )
   call set( scope, 'counter', Item_of( ref_of(i) ) )
   call set( getScope( scope, 'signal'), 'value', Item_of( ref_of(r_array, bind = .true.) ) )
@@ -872,11 +996,6 @@ program test_adt
   use test_basedata
   use adt_convert
 
-  procedure(), pointer :: proc
-
-  proc => dings
-  print *, address_str(proc)
-
   !call width( fout, 5 )
   !call indent( fout, 2 )
   !call write( fout, "testinger" )
@@ -910,6 +1029,20 @@ program test_adt
   !call write( fout, "testinger" )
   !call write( fout, "testinger" )
 
+  character(len=20) :: text = "TestInGEr -- TäxT"
+  character(len=20) :: txtout
+  v_string = "BlUbbINGER bla uND texT"
+
+  txtout = lower( text )
+  call to_lower( text )
+  txtout = upper( text )
+  call to_upper( text )
+  print *, upper(v_string)
+  call to_lower(v_string)
+  print *, str(v_string)
+  call to_upper(v_string)
+  print *, str(v_string)
+
   call init_basedata()
   call stream( v_item, fout )
 
@@ -929,8 +1062,5 @@ program test_adt
   call hashmap_clear_cache()
 
   contains
-    
-  subroutine dings()
-  end subroutine
 
 end

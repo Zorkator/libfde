@@ -284,3 +284,44 @@
     end if
   end subroutine
 
+
+!_PROC_EXPORT(basestring_to_lower)
+  subroutine basestring_to_lower( bs )
+    use adt_basestring
+    implicit none
+    type(BaseString_t) :: bs
+    integer            :: i, ac
+
+  integer, parameter :: uc_A = iachar('A')
+  integer, parameter :: uc_Z = iachar('Z')
+  integer, parameter :: lc_a = iachar('a')
+  integer, parameter :: lc_z = iachar('z')
+
+    do i = 1, bs%len
+      ac = iachar(bs%ptr(i))
+      if (ac >= uc_A .and. ac <= uc_Z) &
+        bs%ptr(i) = achar( ibset( ac, 5 ) )
+    end do
+  end subroutine
+
+
+!_PROC_EXPORT(basestring_to_upper)
+  subroutine basestring_to_upper( bs )
+    use adt_basestring
+    implicit none
+    type(BaseString_t) :: bs
+    integer            :: i, ac
+
+  integer, parameter :: uc_A = iachar('A')
+  integer, parameter :: uc_Z = iachar('Z')
+  integer, parameter :: lc_a = iachar('a')
+  integer, parameter :: lc_z = iachar('z')
+
+    do i = 1, bs%len
+      ac = iachar( bs%ptr(i) )
+      if (ac >= lc_a .and. ac <= lc_z) &
+        bs%ptr(i) = achar( ibclr( ac, 5 ) )
+    end do
+  end subroutine
+
+

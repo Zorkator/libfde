@@ -290,8 +290,8 @@ class RefType(TypeSpec):
       use adt_visitor
       type({typeId}_wrap_t)     :: wrap
       type(TypeInfo_t)          :: ti
-      type(Visitor_t)           :: vstr
-      call vstr%visit( vstr, wrap, ti )
+      type(Visitor_t)           :: vstr{visitorGroup_beg}
+      call vstr%visit( vstr, wrap, ti ){visitorGroup_end}
     end subroutine
     """,
 
@@ -575,6 +575,13 @@ class RefType(TypeSpec):
     self._acceptor     = ('ref_acceptor',      ''                 )['acceptProc' in keySpecs]
     self._streamerItf  = ('',                  'ref_streamerItf'  )['streamProc' in keySpecs]
     self._streamer     = ('ref_streamer',      ''                 )['streamProc' in keySpecs]
+
+    if streamType == 'array':
+      self.visitorGroup_beg = '\n      call group( vstr, size(wrap%ptr) )'
+      self.visitorGroup_end = '\n      call group( vstr, -size(wrap%ptr) )'
+    else:
+      self.visitorGroup_beg = ''
+      self.visitorGroup_end = ''
 
     if (streamType == 'buffered' and not (self._isArray or self._isProc)):
       self._tryStreamer  = 'ref_try_streaming'

@@ -56,7 +56,7 @@ module adt_streamvisitor
     type(StreamVisitor_t) :: self
     integer*4             :: num
     if (num > 0) &
-      call fuselines( self%stream, num )
+      call fuselines( self%stream, num - 1 )
   end subroutine
 
 end module

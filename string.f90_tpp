@@ -37,6 +37,8 @@ module adt_string
   public :: permanent_string, temporary_string
   public :: basestring_memoryref_c
 
+  public :: lower, to_lower
+  public :: upper, to_upper
   public :: adjustl
   public :: adjustr
   public :: iachar
@@ -143,6 +145,58 @@ module adt_string
       integer,   intent(in)      :: length
       character(len=1)           :: res(length)
     end function
+  end interface
+
+
+  interface lower
+    function charstring_lower( cs ) result(res)
+      character(len=*)       :: cs
+      character(len=len(cs)) :: res
+    end function
+
+    function string_lower( ds ) result(res)
+      import String_t
+      type(String_t)          :: ds
+      character(len=_len(ds)) :: res
+    end function
+  end interface
+
+
+  interface upper
+    function charstring_upper( cs ) result(res)
+      character(len=*)       :: cs
+      character(len=len(cs)) :: res
+    end function
+
+    function string_upper( ds ) result(res)
+      import String_t
+      type(String_t)          :: ds
+      character(len=_len(ds)) :: res
+    end function
+  end interface
+
+
+  interface to_lower
+    subroutine charstring_to_lower( cs )
+      character(len=*) :: cs
+    end subroutine
+
+    subroutine string_to_lower( ds )
+      import String_t
+      type(String_t) :: ds
+    end subroutine
+  end interface
+
+
+  interface to_upper
+    subroutine charstring_to_upper( cs )
+      character(len=*) :: cs
+    end subroutine
+
+    subroutine string_to_upper( ds )
+      import String_t
+      type(String_t) :: ds
+    end subroutine
   end interface
 
 
