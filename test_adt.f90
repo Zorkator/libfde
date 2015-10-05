@@ -1042,6 +1042,9 @@ program test_adt
   print *, str(v_string)
   call to_upper(v_string)
   print *, str(v_string)
+  v_string = "shOrt"
+  print *, upper( v_string )
+  call to_lower( v_string )
 
   call init_basedata()
   call stream( v_item, fout )

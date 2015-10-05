@@ -32,18 +32,6 @@ module impl_string__
     subroutine charstring_to_lower( cs )
       character(len=*) :: cs
     end subroutine
-
-    function string_upper( ds ) result(res)
-      import String_t
-      type(String_t)          :: ds
-      character(len=_len(ds)) :: res
-    end function
-
-    function string_lower( ds ) result(res)
-      import String_t
-      type(String_t)          :: ds
-      character(len=_len(ds)) :: res
-    end function
   end interface
 
 end module
@@ -160,8 +148,8 @@ end module
   subroutine charstring_to_lower( cs )
     use impl_string__, only: uc_A, uc_Z
     implicit none
-    character(len=*)   :: cs
-    integer            :: i, ac
+    character(len=*) :: cs
+    integer          :: i, ac
 
     do i = 1, len(cs)
       ac = iachar(cs(i:i))
@@ -170,20 +158,14 @@ end module
     end do
   end subroutine
 
-!_PROC_EXPORT(charstring_to_upper)
-  subroutine charstring_to_upper( cs )
-    use impl_string__, only: lc_a, lc_z
+!_PROC_EXPORT(string_to_lower)
+  subroutine string_to_lower( self )
+    use impl_string__
     implicit none
-    character(len=*)   :: cs
-    integer            :: i, ac
-
-    do i = 1, len(cs)
-      ac = iachar(cs(i:i))
-      if (ac >= lc_a .and. ac <= lc_z) &
-        cs(i:i) = achar( ibclr( ac, 5 ) )
-    end do
+    type(String_t) :: self
+    call charstring_to_lower( _ptr(self) )
+    _release_weak( self )
   end subroutine
-
 
 !_PROC_EXPORT(charstring_lower)
   function charstring_lower( cs ) result(res)
@@ -194,6 +176,40 @@ end module
     call charstring_to_lower( res )
   end function
 
+!_PROC_EXPORT(string_lower)
+  function string_lower( self ) result(res)
+    use impl_string__; implicit none
+    type(String_t)            :: self
+    character(len=_len(self)) :: res
+    res = _ptr(self)
+    call charstring_to_lower( res )
+    _release_weak( self )
+  end function
+
+
+!_PROC_EXPORT(charstring_to_upper)
+  subroutine charstring_to_upper( cs )
+    use impl_string__, only: lc_a, lc_z
+    implicit none
+    character(len=*) :: cs
+    integer          :: i, ac
+
+    do i = 1, len(cs)
+      ac = iachar(cs(i:i))
+      if (ac >= lc_a .and. ac <= lc_z) &
+        cs(i:i) = achar( ibclr( ac, 5 ) )
+    end do
+  end subroutine
+
+!_PROC_EXPORT(string_to_upper)
+  subroutine string_to_upper( self )
+    use impl_string__
+    implicit none
+    type(String_t) :: self
+    call charstring_to_upper( _ptr(self) )
+    _release_weak( self )
+  end subroutine
+
 !_PROC_EXPORT(charstring_upper)
   function charstring_upper( cs ) result(res)
     use impl_string__; implicit none
@@ -203,45 +219,15 @@ end module
     call charstring_to_upper( res )
   end function
 
-
-!_PROC_EXPORT(string_lower)
-  function string_lower( self ) result(res)
-    use impl_string__, only: String_t, charstring_to_lower, basestring_ptr
-    implicit none
-    type(String_t)            :: self
-    character(len=_len(self)) :: res
-    res = _ptr(self)
-    call charstring_to_lower( res )
-    _release_weak( self )
-  end function
-
 !_PROC_EXPORT(string_upper)
   function string_upper( self ) result(res)
-    use impl_string__, only: String_t, charstring_to_upper, basestring_ptr
-    implicit none
+    use impl_string__; implicit none
     type(String_t)            :: self
     character(len=_len(self)) :: res
     res = _ptr(self)
     call charstring_to_upper( res )
     _release_weak( self )
   end function
-
-
-!_PROC_EXPORT(string_to_lower)
-  subroutine string_to_lower( self )
-    use impl_string__; implicit none
-    type(String_t) :: self
-    call basestring_to_lower( self%str )
-    _release_weak( self )
-  end subroutine
-
-!_PROC_EXPORT(string_to_upper)
-  subroutine string_to_upper( self )
-    use impl_string__; implicit none
-    type(String_t) :: self
-    call basestring_to_upper( self%str )
-    _release_weak( self )
-  end subroutine
 
 
   ! adjustl
