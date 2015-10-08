@@ -1,8 +1,10 @@
 
 #include "adt/itfUtil.fpp"
+#include "adt/scope.fpp"
 
 module impl_scope__
   use adt_hashmap
+  use adt_scope
   use adt_item
   use adt_ref
   use adt_string
@@ -64,6 +66,18 @@ end module
   end function
 
 
+!_PROC_EXPORT(scope_declare_callback_c)
+  subroutine scope_declare_callback_c( self, ident )
+    use impl_scope__
+    implicit none
+    type(HashMap_t)      :: self
+    character(len=*)     :: ident
+    procedure(), pointer :: null_callback
+    null_callback => null()
+    call set( self, ident, Item_of(ref_from_Callback(null_callback)) )
+  end subroutine
+
+
 !_PROC_EXPORT(scope_set_callback_c)
   integer &
   function scope_set_callback_c( self, ident, proc ) result(res)
@@ -71,51 +85,59 @@ end module
     implicit none
     type(HashMap_t)       :: self
     character(len=*)      :: ident
-    external              :: proc
+    procedure(), optional :: proc
+    procedure(), pointer  :: procPtr
     type(Item_t), pointer :: itemPtr
 
+    procPtr => proc
     res = 0
-    if (hasKey( self, ident )) then
-      call set( self, ident, Item_of(ref_from_Callback(proc)) )
+    if (hasKey( self, ident ) .or. .not. associated(procPtr)) then
+      call set( self, ident, Item_of(ref_from_Callback(procPtr)) )
       res = 1
     end if
   end function
 
 
-!_PROC_EXPORT(print_scope)
-  recursive &
-  subroutine print_scope( scope, level )
-    use impl_scope__; implicit none
-    type(HashMap_t)           :: scope
-    integer                   :: level
-    character(len=2*level)    :: indent
-    type(HashMapIndex_t)      :: idx
-    type(HashMap_t),  pointer :: subscope
-    type(Item_t),     pointer :: val
-    type(Ref_t),      pointer :: valRef => null()
-    type(TypeInfo_t), pointer :: ti
-    character(len=255)        :: buffer
+!_PROC_EXPORT(scope_try_callback_c)
+  integer &
+  function scope_try_callback_c( self, ident, argScope ) result(code)
+    ! ident : ident string of hook to call
+    ! code  : hook_undeclared | hook_not_set | hook_called
+    use impl_scope__
+    implicit none
+    type(HashMap_t)           :: self
+    character(len=*)          :: ident
+    type(HashMap_t), optional :: argScope
+    procedure(),      pointer :: cb
+    type(Item_t),     pointer :: hookItem
 
-    valRef => null()
-    indent = ' '
-    idx    = index( scope )
-    do while (is_valid(idx))
-      val => value(idx)
-      ti  => dynamic_type(val)
+    code     = hook_undeclared
+    hookItem => getPtr( self, ident )
+    if (associated( hookItem )) then
+      code = hook_not_set
+      cb   => Callback_from_ref(ref(hookItem))
+      if (associated( cb )) then
+        if (present(argScope)) &
+          call set( argScope, '__hook__', Item_of(ident) )
+        call cb()
+        if (present(argScope)) &
+          call remove( argScope, '__hook__' )
+        code = hook_called
+      end if
+    end if
+  end function
 
-      if (is_ref(val)) then
-        valRef => ref(val)
-        ti     => dynamic_type(valRef)
-      end if
-      !call write( buffer, val )
-      print *, indent // str(key(idx)) // ' : ' // '[' // trim(adjustl(buffer)) // ']'
-      if (associated(valRef)) then
-        if (dynamic_cast( subscope, valRef )) then
-          call print_scope( subscope, level + 1 )
-        end if
-      end if
-      call next(idx)
-    end do
+
+!_PROC_EXPORT(scope_invoke_callback_c)
+  subroutine scope_invoke_callback_c( self, ident, argScope )
+    ! ident : ident string of hook to call
+    use impl_scope__
+    implicit none
+    type(HashMap_t)           :: self
+    character(len=*)          :: ident
+    type(HashMap_t), optional :: argScope
+    integer*4                 :: code
+    code = tryCallback( self, ident, argScope )
   end subroutine
 
 

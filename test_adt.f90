@@ -1,5 +1,6 @@
 
 #include "adt/ppUtil.xpp"
+#include "adt/scope.fpp"
 
 module test_basedata
   use adt_basetypes
@@ -744,9 +745,6 @@ subroutine test_hashmap()!{{{
 end subroutine!}}}
 
 
-# define fileScope() \
-    trim(adjustl(file_basename( __FILE__ )))
-
 
 subroutine test_hashmap_nesting()!{{{
   use test_basedata
@@ -766,27 +764,28 @@ subroutine test_hashmap_nesting()!{{{
   print *, dynamic_cast( r_array, ref1 ) !< should fail
   print *, dynamic_cast( scope, ref1 )   !< should succeed
 
-  scope => getScope( scope, fileScope() )
+  scope => _this_scope_in( scope )
   do i = 1,3
     write(buff,'(A7,I1)'), 'submap_', i
     call set( scope, trim(buff), Item_of( ref_of( newScope(), bind = .true. ) ) )
   end do
 
   allocate( r_array(10) )
-  r_array = [1:10]
+  r_array = [1,2,3,4,5,6,7,8,9,10]
   scope => getScope( scope, 'gcsm' )
   call set( scope, 'text', Item_of( ref_of(r_array, bind=.true.) ) )
   call set( scope, 'text', Item_of( ref_of(buff) ) )
   call set( getScope( scope, 'signal'), 'value', Item_of( ref_of(i) ) )
 
   allocate( r_array(5) )
-  r_array = [1:5]
+  r_array = [1,2,3,4,5]
   scope => getScope( hashmap(ref1), 'gcsm' )
   call set( scope, 'counter', Item_of( ref_of(i) ) )
   call set( getScope( scope, 'signal'), 'value', Item_of( ref_of(r_array, bind = .true.) ) )
 
-  scope => getScope( getScope( getScope( hashmap(ref1), fileScope() ), 'gcsm' ), 'signal' )
-  scope => getScope( hashmap(ref1), fileScope(), 'gcsm', 'signal' )
+  scope => getScope( getScope( getScope( hashmap(ref1), _this_file_basename() ), 'gcsm' ), 'signal' )
+  scope => getScope( hashmap(ref1), _this_file_basename(), 'gcsm', 'signal' )
+  scope => _this_scope_in( scope )
 
   call set( scope, 'myfunc', Item_of( ref_from_Callback(init_basedata) ) )
   
@@ -800,7 +799,6 @@ subroutine test_hashmap_nesting()!{{{
   call accept( scope, streamer%super )
   call accept( ref1, streamer%super )
 
-  !call print_scope( hashmap(ref1), 1 )
   call delete( ref1 )
 end subroutine!}}}
 
@@ -865,9 +863,9 @@ subroutine test_file_string()!{{{
 
   s = "c:\path/test/blub.f"
   s = file_basename(s)
-  s = fileScope()
+  s = _this_file_basename()
 
-  print *, fileScope()
+  print *, _this_file_basename()
   print *, file_basename("\.testinger")
   print *, file_basename("/.testinger\bla")
   print *, file_basename(".testinger")

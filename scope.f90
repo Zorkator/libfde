@@ -1,11 +1,19 @@
 
+#include "adt/itfUtil.fpp"
+
 module adt_scope
   use adt_hashmap
   implicit none
   private
 
-  public :: newScope, getScope, setCallback
-  public :: print_scope
+  integer, parameter :: hook_disabled   = -2
+  integer, parameter :: hook_undeclared = -1
+  integer, parameter :: hook_not_set    =  0
+  integer, parameter :: hook_called     =  1
+
+  public :: newScope, getScope
+  public :: declareCallback, setCallback, tryCallback, invokeCallback
+  public :: hook_disabled, hook_undeclared, hook_not_set, hook_called
 
   interface newScope
     function scope_create_() result(scope)
@@ -31,26 +39,43 @@ module adt_scope
     end function
   end interface
 
+  interface declareCallback
+    subroutine scope_declare_callback_c( scope, ident )
+      import HashMap_t
+      type(HashMap_t)       :: scope
+      character(len=*)      :: ident
+    end subroutine
+  end interface
+
   interface setCallback
     integer &
     function scope_set_callback_c( scope, ident, proc )
       import HashMap_t
-      type(HashMap_t)  :: scope
-      character(len=*) :: ident
-      external         :: proc
+      type(HashMap_t)       :: scope
+      character(len=*)      :: ident
+      procedure(), optional :: proc
     end function
   end interface
 
-  interface
-    recursive &
-    subroutine print_scope( scope, level )
+  interface tryCallback
+    integer &
+    function scope_try_callback_c( self, ident, argScope ) result(code)
+      ! code  : hook_undeclared | hook_not_set | hook_called
       import HashMap_t
-      type(HashMap_t) :: scope
-      integer         :: level
-    end subroutine
+      type(HashMap_t)           :: self
+      character(len=*)          :: ident
+      type(HashMap_t), optional :: argScope
+    end function
   end interface
 
-  contains
+  interface invokeCallback
+    subroutine scope_invoke_callback_c( self, ident, argScope )
+      import HashMap_t
+      type(HashMap_t)           :: self
+      character(len=*)          :: ident
+      type(HashMap_t), optional :: argScope
+    end subroutine
+  end interface
 
 end module
 
