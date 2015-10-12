@@ -758,7 +758,7 @@ subroutine test_hashmap_nesting()!{{{
   character(len=10)        :: buff
   real*8, dimension(:), pointer :: r_array
 
-  ref1 = ref_of( newScope(), bind = .true. )
+  ref1 = ref_of( getScope('test_hashmap_nesting'), bind = .true. )
 
   r_array => null()
   print *, dynamic_cast( r_array, ref1 ) !< should fail
@@ -798,6 +798,7 @@ subroutine test_hashmap_nesting()!{{{
 
   call accept( scope, streamer%super )
   call accept( ref1, streamer%super )
+  call accept( getScope(), streamer%super )
 
   call delete( ref1 )
 end subroutine!}}}

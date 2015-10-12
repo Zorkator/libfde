@@ -2,7 +2,7 @@
 from _hashmap import HashMap
 from _ref     import Ref
 from _ftypes  import mappedType, CALLBACK
-from ctypes   import byref, c_char_p, c_int
+from ctypes   import byref, c_char_p, c_int, POINTER
 
 
 _cbITF_buffer = dict()
@@ -37,4 +37,11 @@ class Scope(HashMap):
     if type(type(cbFunc)) is not type(CALLBACK):
       _cbITF_buffer['{0}.{1}'.format(id(self), ident)] = func = CALLBACK(cbFunc or 0)
     return self.set_callback_( byref(self), c_char_p(ident), func, c_int(len(ident)) )
+
+
+  @classmethod
+  def getRootScope( _class, ident ):
+    ptr = POINTER(_class)()
+    _class.__getattr__('get_rootscope_')( byref(ptr), c_char_p(ident), c_int(len(ident)) )
+    return ptr.contents
 

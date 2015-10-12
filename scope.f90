@@ -3,6 +3,7 @@
 
 module adt_scope
   use adt_hashmap
+  use iso_c_binding
   implicit none
   private
 
@@ -10,6 +11,8 @@ module adt_scope
   integer, parameter :: hook_undeclared = -1
   integer, parameter :: hook_not_set    =  0
   integer, parameter :: hook_called     =  1
+
+  type(HashMap_t), pointer :: processScope_
 
   public :: newScope, getScope
   public :: declareCallback, setCallback, tryCallback, invokeCallback
@@ -23,18 +26,14 @@ module adt_scope
   end interface
 
   interface getScope
-    function scope_get_subscope_( parent, id ) result(scope)
-      import HashMap_t
-      type(HashMap_t)          :: parent
-      character(len=*)         :: id
-      type(HashMap_t), pointer :: scope
-    end function
+    module procedure scope_get_processscope_
+    module procedure scope_get_processscope_seq_
 
     function scope_get_subscope_seq_( parent, id1, id2, id3, id4, id5, id6, id7, id8, id9 ) result(scope)
       import HashMap_t
       type(HashMap_t)            :: parent
-      character(len=*)           :: id1, id2
-      character(len=*), optional :: id3, id4, id5, id6, id7, id8, id9
+      character(len=*)           :: id1
+      character(len=*), optional :: id2, id3, id4, id5, id6, id7, id8, id9
       type(HashMap_t),   pointer :: scope
     end function
   end interface
@@ -76,6 +75,26 @@ module adt_scope
       type(HashMap_t), optional :: argScope
     end subroutine
   end interface
+
+  contains
+
+!_PROC_EXPORT(scope_get_processscope_)
+  function scope_get_processscope_() result(res)
+    type(HashMap_t), pointer :: res
+    if (.not. associated( processScope_ )) then
+      allocate( processScope_ )
+      call initialize( processScope_ )
+    end if
+    res => processScope_
+  end function
+
+!_PROC_EXPORT(scope_get_processscope_seq_)
+  function scope_get_processscope_seq_( id1, id2, id3, id4, id5, id6, id7, id8, id9 ) result(scope)
+    character(len=*)           :: id1
+    character(len=*), optional :: id2, id3, id4, id5, id6, id7, id8, id9
+    type(HashMap_t),   pointer :: scope
+    scope => getScope( getScope(), id1, id2, id3, id4, id5, id6, id7, id8, id9 )
+  end function
 
 end module
 

@@ -22,22 +22,14 @@ end module
   end function
 
 
-!_PROC_EXPORT(scope_get_subscope_)
-  function scope_get_subscope_( parent, id ) result(scope)
-    use impl_scope__; implicit none
-    type(HashMap_t)          :: parent
-    character(len=*)         :: id
-    type(HashMap_t), pointer :: scope
-    type(Item_t),    pointer :: it
-
-    if (getOrCreate( it, parent, id )) then
-      allocate( scope );
-      call initialize( scope )
-      call assign( it, Item_of( ref_of( scope, bind = .true. ) ) )
-    else
-      if (dynamic_cast( scope, ref(it) )) continue;
-    endif
-  end function
+!_PROC_EXPORT(scope_get_rootscope_c)
+  subroutine scope_get_rootscope_c( procScope, ident )
+    use impl_scope__
+    use iso_c_binding
+    type(c_ptr), intent(inout) :: procScope
+    character(len=*)           :: ident
+    procScope = c_loc( getScope( ident ) )
+  end subroutine
 
 
 !_PROC_EXPORT(scope_get_subscope_seq_)
@@ -46,16 +38,17 @@ end module
     use adt_scope
     implicit none
     type(HashMap_t)            :: parent
-    character(len=*)           :: id1, id2
-    character(len=*), optional :: id3, id4, id5, id6, id7, id8, id9
+    character(len=*)           :: id1
+    character(len=*), optional :: id2, id3, id4, id5, id6, id7, id8, id9
     type(HashMap_t),   pointer :: scope
 
-    scope => getScope( getScope( parent, id1 ), id2 )
+    scope => get_subscope_( parent, id1 )
 
 # define __getSubScope(arg) \
     if (.not. present(arg)) return ;\
-    scope => getScope( scope, arg )
+    scope => get_subscope_( scope, arg )
 
+    __getSubScope(id2)
     __getSubScope(id3)
     __getSubScope(id4)
     __getSubScope(id5)
@@ -63,6 +56,24 @@ end module
     __getSubScope(id7)
     __getSubScope(id8)
     __getSubScope(id9)
+
+    contains
+
+    function get_subscope_( parent_, id_ ) result(scope)
+      type(HashMap_t)          :: parent_
+      character(len=*)         :: id_
+      type(HashMap_t), pointer :: scope
+      type(Item_t),    pointer :: it
+
+      if (getOrCreate( it, parent_, id_ )) then
+        allocate( scope );
+        call initialize( scope )
+        call assign( it, Item_of( ref_of( scope, bind = .true. ) ) )
+      else
+        if (dynamic_cast( scope, ref(it) )) continue;
+      endif
+    end function
+
   end function
 
 
