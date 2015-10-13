@@ -1,246 +1,130 @@
 
 #include "adt/itfUtil.fpp"
-
-module sim_data
-  use adt_string
-  implicit none
-
-  integer :: cnt, ios
-  real*8  :: t, dt, te
-  real*4, dimension(:),   allocatable :: real4_array
-  real*4, dimension(:,:), allocatable :: real4_matrix
-  character(10), dimension(:), allocatable  :: id_array
-  character(10), dimension(:), allocatable  :: name_array
-  character(10), dimension(:,:), allocatable :: id_table
-  type(String_t), dimension(:), allocatable :: string_array
-
-end module
-
+#include "adt/scope.fpp"
 
 !--------------------
-module sim_access
+module sim_reflection
   use adt_hashmap
+  use adt_scope
   use adt_item
   use adt_ref
+  use adt_string
   use adt_basetypes
+  use adt_streamvisitor
   implicit none
 
-  type(HashMap_t),          target :: stateMap_
-  type(HashMap_t),          target :: hookMap_
-  procedure(Callback_itf), pointer :: null_cb => null()
+  type(HashMap_t), pointer :: root_scope => null()
+  type(HashMap_t), pointer :: hook_scope => null()
 
-# define _add_stateSymbol( sym ) \
-    call set( stateMap_, trim(adjustl(_str(sym))), Item_of(ref_of(sym)) ) ;\
-    print *, "added symbol <" // trim(adjustl(_str(sym))) // ">"
+# define _callHook(id) \
+    call invokeCallback( hook_scope, id )
 
-# define _set_hookPointTo( hookId, cb ) \
-    call set( hookMap_, hookId, Item_of(ref_from_Callback(cb)) )
-
-# define _add_hookPoint( hookId ) \
-    _set_hookPointTo( hookId, null_cb )
-
-# define _ALLOCATE( sym, dim ) \
-    allocate( sym dim );       \
-    _add_stateSymbol( sym )
+# define _ALLOCATE( scope, sym, dim )  \
+    allocate( sym dim )               ;\
+    _set_scopeSymbol( scope, sym )
 
   contains
 
-  subroutine init_access()
-    use sim_data
-    implicit none
-    integer, save :: need_init = 1
+  subroutine init_reflection()
+    type(StreamVisitor_t) :: streamer
+  
+    _where_am_i_
+    if (.not. associated(root_scope)) then
+      _where_am_i_
+      root_scope => getScope('test_simulator')
+      hook_scope => getScope( root_scope, 'hooks' )
 
-    if (need_init /= 0) then
-      call initialize( stateMap_ )
-      call initialize( hookMap_ )
+      call declareCallback( hook_scope, 'start' )
+      call declareCallback( hook_scope, 'step' )
+      call declareCallback( hook_scope, 'finish' )
 
-      _add_stateSymbol( t )
-      _add_stateSymbol( dt )
-      _add_stateSymbol( te )
-      _add_stateSymbol( cnt )
-      _add_stateSymbol( ios )
-
-      _add_hookPoint( 'start' )
-      _add_hookPoint( 'step' )
-      _add_hookPoint( 'finish' )
-
-      need_init = 0
+      streamer = StreamVisitor(0)
+      call accept( getScope(), streamer%super )
     endif
   end subroutine
+end module
 
-  subroutine invoke_callback( hookId )
-    implicit none
-    character(len=*)                 :: hookId
-    type(Item_t),            pointer :: item
-    procedure(Callback_itf), pointer :: cb
-    integer ::array(10000)
 
-    item => getPtr( hookMap_, hookId )
-    if (associated(item)) then
-      cb => Callback_from_ref(ref(item))
-      if (associated(cb)) then
-        call cb()
-      end if
-    end if
+module sim_data
+  use sim_reflection
+  implicit none
+
+  integer                                     :: cnt, ios
+  real*8                                      :: t, dt, te
+  real*4,         dimension(:),   allocatable :: real4_array
+  real*4,         dimension(:,:), allocatable :: real4_matrix
+  character(10),  dimension(:),   allocatable :: id_array
+  character(10),  dimension(:,:), allocatable :: id_table
+  character(10),  dimension(:),   allocatable :: name_array
+
+  contains
+
+  subroutine init_sim_data()
+    integer                  :: i
+    type(HashMap_t), pointer :: scope
+
+    scope => getScope( root_scope, 'sim_data')
+    _set_scopeSymbol( scope, t )
+    _set_scopeSymbol( scope, dt )
+    _set_scopeSymbol( scope, te )
+    _set_scopeSymbol( scope, cnt )
+    _set_scopeSymbol( scope, ios )
+
+    ! initialize
+    t   = 0
+    dt  = 0.1
+    te  = 10.0
+    cnt = 0
+    _ALLOCATE( scope, real4_array,  (10) );    real4_array  = 0;
+    _ALLOCATE( scope, real4_matrix, (10,20) ); real4_matrix = 1;
+    _ALLOCATE( scope, id_array,     (10) );    id_array     = ' '
+    _ALLOCATE( scope, id_table,     (6,7) );   id_table     = ' '
+    _ALLOCATE( scope, name_array,   (20) );    name_array   = ' ' !<< FIXME: id_array and name_array share the same typeinfo, whose byteSize
+                                                                  !           is set to the size of the first ref'ed table ...
+    do i = 1,size(id_array)
+      write( id_array(i), '(i10)' ), i
+    end do
+
+    do i = 1,size(name_array)
+      write( name_array(i), '(A4I5)' ), 'name', i
+    end do
   end subroutine
-
 end module
 
-!_PROC_EXPORT(get_maps)  
-subroutine get_maps( stateMap, hookMap )
-  use sim_access
-  use iso_c_binding
-  implicit none
-  type(c_ptr), intent(inout) :: stateMap, hookMap
-  stateMap = c_loc(stateMap_)
-  hookMap  = c_loc(hookMap_)
-  call init_access()
-end subroutine
 
-
-!_PROC_EXPORT(set_callback)  
-logical &
-function set_callback( hookId, cb ) result(res)
-  use sim_access
-  implicit none
-  character(len=*) :: hookId
-  external         :: cb
-
-  res = .false.
-  if (hasKey( hookMap_, hookId )) then
-    _set_hookPointTo( hookId, cb )
-    res = .true.
-  end if
-end function
-
-
-module sim_itf
-  use adt_hashmap
-  use adt_item
-  use adt_ref
-  use adt_basetypes
-  use iso_c_binding
-  implicit none
-
-  interface
-    subroutine get_maps( state_ptr, hooks_ptr )
-      import c_ptr
-      type(c_ptr), intent(inout) :: state_ptr, hooks_ptr
-    end subroutine
-
-    logical &
-    function set_callback( hookId, cb )
-      character(len=*) :: hookId
-      external :: cb
-    end function
-
-    subroutine init_simulator()
-    end subroutine
-
-    subroutine run_simulation()
-    end subroutine
-
-  end interface
-end module
-!--------------------
-
-
-program simulator
-  call init_simulator()
-  call run_simulation()
-end 
-
-
-!_PROC_EXPORT(init_simulator)  
-subroutine init_simulator()
+!_PROC_EXPORT(run_c)
+subroutine run_c()
   use sim_data
-  use sim_access
-  implicit none
-  integer :: i
-
-  ! initialize
-  t   = 0
-  dt  = 0.1
-  te  = 10.0
-  cnt = 0
-
-  call init_access()
-  _ALLOCATE( real4_array,  (10) );    real4_array  = 0;
-  _ALLOCATE( real4_matrix, (10,20) ); real4_matrix = 1;
-  _ALLOCATE( string_array, (10) );
-  _ALLOCATE( id_array, (10) );        id_array     = ' '
-  _ALLOCATE( id_table, (6,7) );       id_table     = ' '
-  _ALLOCATE( name_array, (20) );      name_array   = ' ' !<< FIXME: id_array and name_array share the same typeinfo, whose byteSize
-                                                         !           is set to the size of the first ref'ed table ...
-  do i = 1,size(id_array)
-    write( id_array(i), '(i10)' ), i
-  end do
-
-  do i = 1,size(name_array)
-    write( name_array(i), '(A4I5)' ), 'name', i
-  end do
-
-end subroutine
-
-  
-!_PROC_EXPORT(run_simulation)  
-subroutine run_simulation()
-  use sim_data
-  use sim_access
+  use sim_reflection
   implicit none
   
-  call test_charstring_table( 'id_array' )
-  call test_charstring_table( 'name_array' )
-  call test_string_array()
+  call init_reflection()
+  call init_sim_data()
 
-  call invoke_callback('start')
+  _callHook('start')
+
+  ! main loop
   do while (t <= te)
-    call invoke_callback('step')
+    _callHook('step')
     write(6,*,iostat=ios) "t: ", t 
     cnt = cnt + 1
     real4_array(mod(cnt, size(real4_array)) + 1) = cnt
     t = t + dt
   end do
-  call invoke_callback('finish')
-  call delete( stateMap_ )
-  call delete( hookMap_ )
 
-  contains
-
-  subroutine test_charstring_table( id )
-    use sim_data
-    use sim_access
-    implicit none
-    
-    character(len=*),            intent(in) :: id
-    type(ref_t)                             :: ref1
-    character(len=:), dimension(:), pointer :: table_ptr
-    character(len=:), pointer :: cs_ptr
-
-    print*, storage_size(cs_ptr)
-    ref1 = get( stateMap_, id )
-    table_ptr => char10_1d(ref1)
-    print*, size(table_ptr)
-    if (size(table_ptr) > 0) then
-      print*, storage_size(table_ptr(1))/8
-    end if
-    call delete( ref1 )
-  end subroutine
-
-  subroutine test_string_array()
-    use sim_data
-    use sim_access
-    implicit none
-
-    type(String_t), dimension(:), pointer :: table
-    integer*4 :: i
-  
-    table => String_1d(ref(get( stateMap_, 'string_array' )))
-    do i = 1, size(table)
-      print*, str(table(i))
-    end do
-
-  end subroutine
-
+  _callHook('finish')
 end subroutine
+
+
+program simulator
+  call run_c()
+end 
+
+
+!_PROC_EXPORT(initialize_c)
+subroutine initialize_c()
+  use sim_reflection
+  call init_reflection()
+end subroutine
+
 
