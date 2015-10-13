@@ -22,13 +22,12 @@ end module
   end function
 
 
-!_PROC_EXPORT(scope_get_rootscope_c)
-  subroutine scope_get_rootscope_c( procScope, ident )
+!_PROC_EXPORT(scope_get_processscope_c)
+  subroutine scope_get_processscope_c( procScope )
     use impl_scope__
     use iso_c_binding
     type(c_ptr), intent(inout) :: procScope
-    character(len=*)           :: ident
-    procScope = c_loc( getScope( ident ) )
+    procScope = c_loc( getScope() )
   end subroutine
 
 

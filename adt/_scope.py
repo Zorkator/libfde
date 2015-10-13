@@ -40,8 +40,8 @@ class Scope(HashMap):
 
 
   @classmethod
-  def getRootScope( _class, ident ):
+  def getProcessScope( _class ):
     ptr = POINTER(_class)()
-    _class.__getattr__('get_rootscope_')( byref(ptr), c_char_p(ident), c_int(len(ident)) )
+    _class.__getattr__('get_processscope_')( byref(ptr) )
     return ptr.contents
 
