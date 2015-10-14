@@ -200,13 +200,13 @@ class RefType(TypeSpec):
         character(len={writeBuf}) :: buff
         integer                   :: st
         write(buff, {writeFmt}, iostat=st) {writeExpr}
-        if (st == 0) then; call write( outs, buff )
+        if (st == 0) then; call stream( outs, buff )
                      else; call error( outs, ti )
         end if
       """,
 
       direct = """\n
-        call write( outs, {writeExpr} )
+        call stream( outs, {writeExpr} )
       """,
 
       array = """\n
@@ -511,9 +511,6 @@ class RefType(TypeSpec):
     if keySpecs: self.keySpecStr = ', ' + ', '.join( '%s = %s' % i for i in keySpecs.items() )
     else       : self.keySpecStr = ''
 
-    typeProcs.setdefault( 'acceptProc', typeId + '_accept_wrap' )
-    typeProcs.setdefault( 'streamProc', typeId + '_stream_wrap' )
-
     if self._isArray:
       typeProcs.setdefault( 'shapeProc', typeId + '_inspect_' )
 
@@ -522,6 +519,9 @@ class RefType(TypeSpec):
       keySpecs.setdefault( 'writeSize', '32' )    #< IMPORTANT: fortran might freak-out at determining the size of proc pointers!
       if typeProcs:
         sys.stderr.write( 'WARNING: given type procs {0} are ignored for procedure type "{1}"\n'.format(typeProcs, typeId) )
+
+    typeProcs.setdefault( 'acceptProc', typeId + '_accept_wrap' )
+    typeProcs.setdefault( 'streamProc', typeId + '_stream_wrap' )
 
     for procId in ('initProc', 'acceptProc', 'assignProc', 'deleteProc', 'shapeProc', 'streamProc'):
       procArg  = ''

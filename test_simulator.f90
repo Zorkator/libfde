@@ -28,9 +28,7 @@ module sim_reflection
   subroutine init_reflection()
     type(StreamVisitor_t) :: streamer
   
-    _where_am_i_
     if (.not. associated(root_scope)) then
-      _where_am_i_
       root_scope => getScope('test_simulator')
       hook_scope => getScope( root_scope, 'hooks' )
 

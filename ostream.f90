@@ -10,6 +10,7 @@ module adt_ostream
     private
     procedure(), nopass, pointer :: drainFunc => null()
     integer                      :: channel   =  6
+    integer                      :: status    =  0
     character(len=10)            :: fmt       =  "(A     $)"
     character(len=10)            :: nl        =  "(     /$)"
     integer                      :: width     =  0
@@ -23,10 +24,10 @@ module adt_ostream
   interface indent    ; module procedure ostream_indent    ; end interface
   interface fuselines ; module procedure ostream_fuselines ; end interface
   interface set       ; module procedure ostream_set       ; end interface
-  interface write     ; module procedure ostream_write     ; end interface
+  interface stream    ; module procedure ostream_stream    ; end interface
   interface error     ; module procedure ostream_error     ; end interface
 
-  public :: ostream, width, newline, indent, fuselines, set, write, error
+  public :: ostream, width, newline, indent, fuselines, set, stream, error
 
   contains
 
@@ -68,7 +69,7 @@ module adt_ostream
     if (num > 0) then; 
       self%fuseCnt = self%fuseCnt + sign( num, self%fuseCnt )
     else if(self%fuseCnt /= 0) then
-      write( self%channel, self%nl )
+      write( self%channel, self%nl, iostat=self%status )
       self%fuseCnt = 0
     end if
   end subroutine
@@ -98,8 +99,8 @@ module adt_ostream
   end subroutine
 
 
-!_PROC_EXPORT(ostream_write)
-  subroutine ostream_write( self, str )
+!_PROC_EXPORT(ostream_stream)
+  subroutine ostream_stream( self, str )
     type(ostream_t)  :: self
     character(len=*) :: str
     call self%drainFunc( self, trim(str) )
@@ -113,14 +114,14 @@ module adt_ostream
 
     ! write indentation ... only if line fusion is not in effect!
     if (self%indents > 0 .and. self%fuseCnt >= 0) &
-      write( self%channel, '(A$)' ) repeat("   ", self%indents)
+      write( self%channel, '(A$)', iostat=self%status ) repeat("   ", self%indents)
 
     ! write given character string
-    write( self%channel, self%fmt ) str
+    write( self%channel, self%fmt, iostat=self%status ) str
 
     padding = self%width - len(str)
     if (padding > 0) &
-      write( self%channel, '(A$)' ) repeat(" ", padding)
+      write( self%channel, '(A$)', iostat=self%status ) repeat(" ", padding)
 
     ! check for line fusion ...
     if      (self%fuseCnt > 0) then; self%fuseCnt = -self%fuseCnt    !< start line fusion
@@ -129,7 +130,7 @@ module adt_ostream
 
     ! ... and write newline[s] if line fusion done or not in effect
     if (self%fuseCnt == 0) &
-      write( self%channel, self%nl )
+      write( self%channel, self%nl, iostat=self%status )
   end subroutine
 
   
@@ -137,7 +138,7 @@ module adt_ostream
   subroutine ostream_error( self, ti )
     type(ostream_t)  :: self
     type(TypeInfo_t) :: ti
-    write( 0, * ) ">> libadt: can't stream " // trim(ti%typeId)
+    write( self%channel, *, iostat=self%status ) ">> libadt: can't stream " // trim(ti%typeId)
   end subroutine
 
 end module

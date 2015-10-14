@@ -154,13 +154,13 @@
     implicit none
     type(c_ptr),        intent(inout) :: res
     type(BaseString_t)                :: bs
-    integer,                parameter :: stdout = 6
+    integer,                parameter :: stderr = 0
     integer                           :: stat
 
     res = C_NULL_PTR
     if (_ref_isWeakMine( bs%refstat )) then
 # if ADT_DEBUG == ENABLED
-      write(stdout,*,iostat=stat) "WARNING: applied basestring_cptr_c on weak reference string!"
+      write(stderr,*,iostat=stat) "WARNING: applied basestring_cptr_c on weak reference string!"
 # endif
       deallocate( bs%ptr )
     else if (associated(bs%ptr) .and. bs%len > 0) then

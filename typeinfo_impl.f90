@@ -26,7 +26,7 @@ module impl_typeinfo__
     type(TypeInfo_t) :: ti
     type(ostream_t)  :: outs
 
-    call write( outs, trim(ti%typeId) // ' @ ' // address_str(c_loc(wrap%ptr)) )
+    call stream( outs, trim(ti%typeId) // ' @ ' // address_str(c_loc(wrap%ptr)) )
   end subroutine
 
 end module
