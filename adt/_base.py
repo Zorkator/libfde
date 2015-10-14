@@ -85,7 +85,7 @@ class _Meta(type(Union)):
 
   def __new__( _class, name, bases, members ):
     from operator    import add
-    from collections import OrderedDict
+    #from collections import OrderedDict
 
     def _mro( ident, default ):
       scopes = (members,) + tuple( b.__dict__ for b in bases )
@@ -97,7 +97,7 @@ class _Meta(type(Union)):
     # collect list of __typeprocs__ from members and base classes ...
     members.setdefault( '__typeprocs__', [method] )
     procList = reduce( add, _mro( '__typeprocs__', [] ) )
-    members['__typeprocs__'] = list( OrderedDict.fromkeys( procList ) )
+    members['__typeprocs__'] = procList #list( OrderedDict.fromkeys( procList ) )
 
     # 'inherit' fields of base classes by reserving data space...
     fields = list( members.pop('_fields_', []) ) \

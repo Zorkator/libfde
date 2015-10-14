@@ -610,7 +610,6 @@ class RefType(TypeSpec):
     if not self._implemented:
       self.expand( out, 'header', 'ref_encoder', 'ref_decoder', 'ref_typechecker', 'ref_dynamic_cast',
                    self._refCloner, self._inspector, self._typeinfo, 'ref_accept', self._acceptor )
-      print self.typeId, self._kwArgs  
       self.expand( out, 'ref_stream', self._tryStreamer, self._streamer, **self._kwArgs )
       out( self._ptrCloner.format( **self.__dict__ ) )
       self._implemented = True

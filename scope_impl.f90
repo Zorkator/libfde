@@ -24,10 +24,12 @@ end module
 
 !_PROC_EXPORT(scope_get_processscope_c)
   subroutine scope_get_processscope_c( procScope )
-    use impl_scope__
+    ! CAUTION: without the following use restriction gfortran
+    !          screws up the c_loc assignment below!
+    use adt_scope, only: getScope
     use iso_c_binding
     type(c_ptr), intent(inout) :: procScope
-    procScope = c_loc( getScope() )
+    procScope = c_loc( getScope() ) !< !!!
   end subroutine
 
 
