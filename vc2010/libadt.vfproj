@@ -4,7 +4,7 @@
 		<Platform Name="Win32"/>
 		<Platform Name="x64"/></Platforms>
 	<Configurations>
-		<Configuration Name="Debug|Win32" OutputDirectory="$(SolutionDir)$(ProjectName).$(ConfigurationName).$(PlatformName)" IntermediateDirectory="$(SolutionDir).work\$(ProjectName).$(ConfigurationName).$(PlatformName)" ConfigurationType="typeDynamicLibrary">
+		<Configuration Name="Debug|Win32" OutputDirectory="..\lib\$(ConfigurationName).$(PlatformName)" IntermediateDirectory=".work\$(ConfigurationName).$(PlatformName)" ConfigurationType="typeDynamicLibrary">
 				<Tool Name="VFFortranCompilerTool" SuppressStartupBanner="true" DebugInformationFormat="debugEnabled" Optimization="optimizeDisabled" Preprocess="preprocessYes" AdditionalIncludeDirectories="../include" PreprocessorDefinitions="BUILT_TYPE=SHARED_LIB;ADT_DEBUG=ENABLED" ExternalNameInterpretation="extNameLowerCase" ExternalNameUnderscore="true" Traceback="true" BoundsCheck="true" RuntimeLibrary="rtMultiThreadedDLL"/>
 				<Tool Name="VFLinkerTool" OutputFile="$(OutDir)\$(ProjectName).1.$(ConfigurationName).$(PlatformName).dll" LinkIncremental="linkIncrementalNo" SuppressStartupBanner="true" GenerateManifest="false" GenerateDebugInformation="true" ProgramDatabaseFile="$(OutDir)\$(ProjectName).1.$(ConfigurationName).$(PlatformName).pdb" SubSystem="subSystemWindows" ImportLibrary="$(OutDir)\$(ProjectName).1.$(ConfigurationName).$(PlatformName).lib" LinkDLL="true"/>
 				<Tool Name="VFResourceCompilerTool"/>
@@ -14,7 +14,7 @@
 				<Tool Name="VFPreBuildEventTool"/>
 				<Tool Name="VFPostBuildEventTool"/>
 				<Tool Name="VFManifestTool" SuppressStartupBanner="true"/></Configuration>
-		<Configuration Name="Release|Win32" OutputDirectory="$(SolutionDir)$(ProjectName).$(ConfigurationName).$(PlatformName)" IntermediateDirectory="$(SolutionDir).work\$(ProjectName).$(ConfigurationName).$(PlatformName)" ConfigurationType="typeDynamicLibrary">
+		<Configuration Name="Release|Win32" OutputDirectory="..\lib\$(ConfigurationName).$(PlatformName)" IntermediateDirectory=".work\$(ConfigurationName).$(PlatformName)" ConfigurationType="typeDynamicLibrary">
 				<Tool Name="VFFortranCompilerTool" SuppressStartupBanner="true" Preprocess="preprocessYes" AdditionalIncludeDirectories="../include" PreprocessorDefinitions="BUILT_TYPE=SHARED_LIB" ExternalNameInterpretation="extNameLowerCase" ExternalNameUnderscore="true" RuntimeLibrary="rtMultiThreadedDLL"/>
 				<Tool Name="VFLinkerTool" OutputFile="$(OutDir)\$(ProjectName).1.$(ConfigurationName).$(PlatformName).dll" LinkIncremental="linkIncrementalNo" SuppressStartupBanner="true" GenerateManifest="false" GenerateDebugInformation="true" ProgramDatabaseFile="$(OutDir)\$(ProjectName).1.$(ConfigurationName).$(PlatformName).pdb" SubSystem="subSystemWindows" ImportLibrary="$(OutDir)\$(ProjectName).1.$(ConfigurationName).$(PlatformName).lib" LinkDLL="true"/>
 				<Tool Name="VFResourceCompilerTool"/>
@@ -24,7 +24,7 @@
 				<Tool Name="VFPreBuildEventTool"/>
 				<Tool Name="VFPostBuildEventTool"/>
 				<Tool Name="VFManifestTool" SuppressStartupBanner="true"/></Configuration>
-		<Configuration Name="Debug|x64" OutputDirectory="$(SolutionDir)$(ProjectName).$(ConfigurationName).$(PlatformName)" IntermediateDirectory="$(SolutionDir).work\$(ProjectName).$(ConfigurationName).$(PlatformName)" ConfigurationType="typeDynamicLibrary">
+		<Configuration Name="Debug|x64" OutputDirectory="..\lib\$(ConfigurationName).$(PlatformName)" IntermediateDirectory=".work\$(ConfigurationName).$(PlatformName)" ConfigurationType="typeDynamicLibrary">
 				<Tool Name="VFFortranCompilerTool" SuppressStartupBanner="true" DebugInformationFormat="debugEnabled" Optimization="optimizeDisabled" Preprocess="preprocessYes" AdditionalIncludeDirectories="../include" PreprocessorDefinitions="BUILT_TYPE=SHARED_LIB;ADT_DEBUG=ENABLED" ExternalNameInterpretation="extNameLowerCase" ExternalNameUnderscore="true" Traceback="true" BoundsCheck="true" RuntimeLibrary="rtMultiThreadedDLL"/>
 				<Tool Name="VFLinkerTool" OutputFile="$(OutDir)\$(ProjectName).1.$(ConfigurationName).$(PlatformName).dll" LinkIncremental="linkIncrementalNo" SuppressStartupBanner="true" GenerateManifest="false" GenerateDebugInformation="true" ProgramDatabaseFile="$(OutDir)\$(ProjectName).1.$(ConfigurationName).$(PlatformName).pdb" SubSystem="subSystemWindows" ImportLibrary="$(OutDir)\$(ProjectName).1.$(ConfigurationName).$(PlatformName).lib" LinkDLL="true"/>
 				<Tool Name="VFResourceCompilerTool"/>
@@ -34,7 +34,7 @@
 				<Tool Name="VFPreBuildEventTool"/>
 				<Tool Name="VFPostBuildEventTool"/>
 				<Tool Name="VFManifestTool" SuppressStartupBanner="true"/></Configuration>
-		<Configuration Name="Release|x64" OutputDirectory="$(SolutionDir)$(ProjectName).$(ConfigurationName).$(PlatformName)" IntermediateDirectory="$(SolutionDir).work\$(ProjectName).$(ConfigurationName).$(PlatformName)" ConfigurationType="typeDynamicLibrary">
+		<Configuration Name="Release|x64" OutputDirectory="..\lib\$(ConfigurationName).$(PlatformName)" IntermediateDirectory=".work\$(ConfigurationName).$(PlatformName)" ConfigurationType="typeDynamicLibrary">
 				<Tool Name="VFFortranCompilerTool" SuppressStartupBanner="true" Preprocess="preprocessYes" AdditionalIncludeDirectories="../include" PreprocessorDefinitions="BUILT_TYPE=SHARED_LIB" ExternalNameInterpretation="extNameLowerCase" ExternalNameUnderscore="true" RuntimeLibrary="rtMultiThreadedDLL"/>
 				<Tool Name="VFLinkerTool" OutputFile="$(OutDir)\$(ProjectName).1.$(ConfigurationName).$(PlatformName).dll" LinkIncremental="linkIncrementalNo" SuppressStartupBanner="true" GenerateManifest="false" GenerateDebugInformation="true" ProgramDatabaseFile="$(OutDir)\$(ProjectName).1.$(ConfigurationName).$(PlatformName).pdb" SubSystem="subSystemWindows" ImportLibrary="$(OutDir)\$(ProjectName).1.$(ConfigurationName).$(PlatformName).lib" LinkDLL="true"/>
 				<Tool Name="VFResourceCompilerTool"/>
