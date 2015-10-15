@@ -349,7 +349,9 @@ class RefType(TypeSpec):
       type({typeId}_wrap_t), pointer :: wrap
       
       call c_f_pointer( ref_get_typereference(val), wrap )
-      res => wrap%ptr
+      if (associated(wrap)) then; res => wrap%ptr
+                            else; res => null()
+      end if
     end function
     """,
     

@@ -82,11 +82,16 @@ end module
   subroutine scope_declare_callback_c( self, ident )
     use impl_scope__
     implicit none
-    type(HashMap_t)      :: self
-    character(len=*)     :: ident
-    procedure(), pointer :: null_callback
-    null_callback => null()
-    call set( self, ident, Item_of(ref_from_Callback(null_callback)) )
+    type(HashMap_t)       :: self
+    character(len=*)      :: ident
+    type(Item_t), pointer :: cbItem
+    procedure(),  pointer :: cbPtr
+    
+    cbItem => get( self, ident )
+    cbPtr  => Callback_from_ref(ref(cbItem))
+    if (.not. associated(cbPtr)) then
+      cbItem = ref_from_Callback(cbPtr)
+    end if
   end subroutine
 
 
