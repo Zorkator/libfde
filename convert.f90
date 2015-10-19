@@ -11,7 +11,7 @@ module adt_convert
   end interface
 
   interface address_str
-    module procedure address_str_cptr, address_str_proc
+    module procedure address_str_cptr, address_str_proc, address_str_cfunptr
   end interface
 
   public :: hex, address_str
@@ -74,6 +74,16 @@ module adt_convert
   end function
 
 
+!_PROC_EXPORT(address_str_cfunptr)
+  function address_str_cfunptr( proc ) result(res)
+    type(c_funptr)              :: proc
+    character(len=c_size_t*2+9) :: res
+    integer(kind=c_size_t)      :: address
+    
+    address = transfer( proc, address )
+    write( res, 100 ) hex( address )
+100 format('proc @ ',A)
+  end function
 
 end module
 

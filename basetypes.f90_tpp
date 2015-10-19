@@ -120,7 +120,7 @@ module adt_basetypes
   end interface
   public :: Callback_itf
 
-  !_TypeGen_declare_RefType( public, Callback, procedure(Callback_itf), scalar, writeExpr="address_str(self%ptr)", streaming=direct )
+  !_TypeGen_declare_RefType( public, Callback, procedure(Callback_itf), scalar, writeExpr="address_str(c_funloc(self%ptr))", streaming=direct )
   ! TODO: _TypeGen_declare_ListNode not possible yet!
 
   contains
