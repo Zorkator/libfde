@@ -23,6 +23,8 @@
       
         private :: stringref_create, stringref_of_str
         private :: stringref_to_str, stringref_len
+
+        character(len=0), private, target :: empty_string_ = ""
       
       !-------------------
         contains
@@ -58,7 +60,11 @@
         function stringref_to_str( strRef ) result(fptr)
           type (StringRef_t),     intent(in) :: strRef
           character(len=strRef%len), pointer :: fptr
-          call c_f_pointer( strRef%loc, fptr )
+          if (strRef%len > 0) then
+            call c_f_pointer( strRef%loc, fptr )
+          else
+            fptr => empty_string_
+          end if
         end function
       
 !_PROC_EXPORT(stringRef_to_char)
