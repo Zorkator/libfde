@@ -1,18 +1,11 @@
 
-#include "StringRef.hpp"
-
 #include <csetjmp>
 #include <stdarg.h>
 #include <algorithm>
 #include <functional>
 #include <vector>
 #include <map>
-
-#if defined _MSC_VER
-#	define _dllExport         __declspec(dllexport)
-#else
-#	define _dllExport
-#endif
+#include "fortres/StringRef.hpp"
 
 typedef void (*Procedure)( ... );
 
@@ -135,7 +128,7 @@ class CatchStack
  * }
  */
 
-extern "C" _dllExport
+_dllExport_C
 void
 f_get_context( CatchStack **context, int contextId )
 {
@@ -147,7 +140,7 @@ typedef void (*Synchronizer)( CatchStack **, int );
 Synchronizer _synchronizer = f_get_context;
 
 
-extern "C" _dllExport
+_dllExport_C
 void
 f_set_synchronizer( Synchronizer proc )
   { _synchronizer = proc; }
@@ -167,7 +160,7 @@ getContext( void )
  *   and registering code that needs to be executed exception-safe (e.g. cleanup-code).
  */
 
-extern "C" _dllExport
+_dllExport_C
 int
 f_try( int *catchList, StringRef *what, Procedure proc, ... )
 {
@@ -255,7 +248,7 @@ f_try( int *catchList, StringRef *what, Procedure proc, ... )
 }
 
 
-extern "C" _dllExport
+_dllExport_C
 void
 f_throw( int code, const StringRef *what )
 {
@@ -268,7 +261,7 @@ f_throw( int code, const StringRef *what )
 }
 
 
-extern "C" _dllExport
+_dllExport_C
 void
 f_push_cleanup( Procedure proc )
 {
@@ -276,7 +269,7 @@ f_push_cleanup( Procedure proc )
 }
 
 
-extern "C" _dllExport
+_dllExport_C
 void
 f_pop_cleanup( int exec )
 {

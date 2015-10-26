@@ -3,12 +3,7 @@
 
 #include <string>
 #include <string.h>
-
-#if defined _MSC_VER
-  typedef unsigned __int32  uint32_t;
-#else
-# include <stdint.h>
-#endif
+#include "fortres/portdef.h"
 
 #pragma pack(push, 4)
 class StringRef
@@ -33,6 +28,17 @@ class StringRef
     void
       assignTo( std::string &str ) const
         { str.assign( _ref, _len ); }
+
+    void
+      referTo( char *ref )
+      {
+        _ref = ref;
+        _len = strlen( ref );
+      }
+
+    std::string
+      str( void ) const
+        { return std::string( _ref, _len ); }
 
     void
       erase( void )

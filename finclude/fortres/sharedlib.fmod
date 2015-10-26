@@ -1,0 +1,54 @@
+#ifndef __FORTRES_SHAREDLIB_FMOD
+#define __FORTRES_SHAREDLIB_FMOD
+
+#include "fortres/itfUtil.fpp"
+
+      module sharedlib
+        use stringref
+        implicit none
+      
+        interface
+          subroutine set_plugin_path( path ) _cID(f_set_plugin_path)
+            import StringRef_t
+            type(StringRef_t), intent(in) :: path
+          end subroutine
+
+          subroutine register_plugin( id ) _cID(f_register_plugin)
+            import StringRef_t
+            type(StringRef_t), intent(in) :: id
+          end subroutine
+        end interface
+
+        public :: str
+
+        contains
+!
+!!_PROC_EXPORT(proc)
+!        function proc( sub ) result(res)
+!          procedure()     :: sub
+!          type (c_funptr) :: res
+!          res = c_funloc( sub )
+!        end function
+!
+!!_PROC_EXPORT(throw)
+!        subroutine throw( code, what )
+!          ! explicit procedure forces compiler to keep what-string alive!
+!          implicit none
+!          integer,          intent(in) :: code
+!          character(len=*), intent(in) :: what
+!
+!          interface
+!            subroutine f_throw( code, what ) _cID(f_throw)
+!              use, intrinsic :: iso_c_binding
+!              import StringRef_t
+!              integer(kind=c_int), value :: code
+!              type (StringRef_t)         :: what
+!            end subroutine
+!          end interface
+!
+!          call f_throw( code, str(what) )
+!        end subroutine
+      end module
+
+#endif
+
