@@ -7,23 +7,9 @@
 
     Author:  Kevlin Henney (kevlin@acm.org, kevlin@curbralan.com)
     History: Created March 1997. Updated June 2003.
-
-             Oct 2015: Minor modifications to get it platform independent.
-
     Rights:  See end of file.
     
 */
-
-#if !defined _MSC_VER
-  /* assume POSIX compatible compiler */
-# include <dirent.h>
-# define PATH_DELIM         "/"
-# define other_PATH_DELIM   "\\"
-
-#else
-  /* sorry, it's M$ ... */
-# define PATH_DELIM         "\\"
-# define other_PATH_DELIM   "/"
 
 #ifdef __cplusplus
 extern "C"
@@ -60,8 +46,6 @@ void          rewinddir(DIR *);
 #ifdef __cplusplus
 }
 #endif
-
-#endif /* _MSC_VER */
 
 #endif /* DIRENT_INCLUDED */
 

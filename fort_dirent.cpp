@@ -1,8 +1,9 @@
 
-#include "fortres/StringRef.hpp"
-#include "fortres/dirent.h"
 #include <sys/stat.h>
 #include <errno.h>
+
+#define  _DLL_EXPORT_IMPLEMENTATION_
+#include "fortres/dirent.hpp"
 
 /* TODO:
  *  - specify and implement FORTRAN compatible interface functions

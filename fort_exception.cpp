@@ -5,11 +5,11 @@
 #include <functional>
 #include <vector>
 #include <map>
-#include "fortres/StringRef.hpp"
 
-typedef void (*Procedure)( ... );
+#define  _DLL_EXPORT_IMPLEMENTATION_
+#include "fortres/exception.hpp"
 
-class CatchStack
+class Context
 {
   private:
     struct CheckPoint
@@ -120,7 +120,7 @@ class CatchStack
  * Thats why we handle this as "not-my-business" and expect the program to hook a synchronizer procedure.
  * Basically, such procedure could be kept as easy as the following example (C-pseudo):
  * 
- * void my_synchronizer( CatchStack **context, int )
+ * void my_synchronizer( Context **context, int )
  * {
  *   mutex->lock();
  *     f_get_context( context, get_current_thread_id() );
@@ -130,13 +130,12 @@ class CatchStack
 
 _dllExport_C
 void
-f_get_context( CatchStack **context, int contextId )
+f_get_context( Context **context, int contextId )
 {
-  static std::map<int, CatchStack>  _contextMap;
+  static std::map<int, Context>  _contextMap;
   *context = &_contextMap[contextId];
 }
 
-typedef void (*Synchronizer)( CatchStack **, int );
 Synchronizer _synchronizer = f_get_context;
 
 
@@ -146,10 +145,10 @@ f_set_synchronizer( Synchronizer proc )
   { _synchronizer = proc; }
 
 
-inline CatchStack *
+inline Context *
 getContext( void )
 {
-  CatchStack *context = NULL;
+  Context *context = NULL;
   _synchronizer( &context, 0 );
   return context;
 }
@@ -166,10 +165,10 @@ f_try( int *catchList, StringRef *what, Procedure proc, ... )
 {
   typedef  void *  ArgRef;
 
-  va_list     vaArgs;
-  ArgRef      argBuf[32];
-  size_t      nrArgs;
-  CatchStack *context;
+  va_list  vaArgs;
+  ArgRef   argBuf[32];
+  size_t   nrArgs;
+  Context *context;
 
   va_start( vaArgs, proc );
   {

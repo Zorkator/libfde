@@ -1,13 +1,18 @@
 
-#include "fortres/StringRef.hpp"
-#include "fortres/dirent.h"
 #include <map>
 #include <memory>
 #include <iostream>
+#include <algorithm>
+#include <functional>
+#include <cctype>
+
+#define  _DLL_EXPORT_IMPLEMENTATION_
+#include "fortres/sharedlib.hpp"
+#include "fortres/dirent.hpp"
 
 #if defined _MSC_VER
 # include <windows.h>
-# define LIB_PREFIX         ""
+# define LIB_PREFIX         "lib"
 # define LIB_SUFFIX         ".dll"
 
 # define dlOpen(lib)        LoadLibrary( (LPCSTR)lib )
@@ -26,15 +31,66 @@
 # define dlError()          dlerror()
 #endif
 
+# define _str(strRef)       strRef->str()
+# define _cstr(strRef)      strRef->str().c_str()
+
+//template<typename T>
+//class auto_ptr
+//{
+//  public:
+//      typedef auto_ptr<T>   Type;
+//
+//      auto_ptr( T *ptr = NULL ): _ptr(ptr) { /* empty */ }
+//
+//     ~auto_ptr( void )
+//       { if (_ptr) delete(_ptr); }
+//
+//    T *
+//      release( void )
+//      {
+//        T *res = _ptr;
+//        _ptr = NULL;
+//        return res;
+//      }
+//    
+//    
+//
+//    T &
+//      operator -> ( void )
+//        { return *_ptr; }
+//
+//    T &
+//      operator * ( void )
+//        { return *_ptr; }
+//
+//    T &
+//      operator = ( Type &other )
+//      {
+//        if (this->_ptr != other._ptr)
+//        {
+//          if (_ptr) delete(_ptr);
+//          _ptr = other._ptr;
+//          other._ptr = NULL;
+//        }
+//      }
+//
+//  private:
+//    T *_ptr;
+//};
+
 
 class SharedLib
 {
   public:
       typedef std::auto_ptr<SharedLib>  Handle;
+      typedef void (*Function)( void );
 
       SharedLib( const char *libFile )
-      : _libFile(libFile)
-        { _hdl = dlOpen( libFile ); }
+      {
+        SetLastError(0);
+        _hdl = dlOpen( libFile );
+        std::cerr << GetLastError() << std::endl;
+      }
 
     virtual
       ~SharedLib( void )
@@ -54,68 +110,123 @@ class SharedLib
       operator bool ( void ) const
         { return (_hdl != NULL); }
 
-    const std::string &
-      libFile( void ) const
-        { return _libFile; }
-
   private:
-    void       *_hdl;
-    std::string _libFile;
+    void *_hdl;
 };
 
 
-static std::string _libPrefix( LIB_PREFIX );
-static std::string _libSuffix( LIB_SUFFIX );
+class String
+: public std::string
+{
+  public:
+				String( const char *other = NULL )
+				: std::string( (other == NULL)? "" : other )
+					{ /* nothing to do here */ }
+
+				String( const std::string &other )
+				: std::string( other )
+					{ /* nothing to do here */ }
+
+    bool
+      endsWith( const std::string &ending ) const
+      {
+        int idx = -1;
+        if (this->length() >= ending.length())
+          { idx = this->std::string::compare( (this->length() - ending.length()), ending.length(), ending ); }
+        return (idx == 0);
+      }
+};
+
+static String _libPrefix( LIB_PREFIX );
+static String _libSuffix( LIB_SUFFIX );
 
 class PluginBroker
 {
-    static std::string
-      getLibNameById( const char *libId, const char *path = "" )
+    static String
+      libFileToId( const char *libFile )
       {
-        std::string libName(path);
-        if (!libName.empty())
-          { libName.append( PATH_DELIM ); }
-        return libName.append( LIB_PREFIX ).append( libId ).append( LIB_SUFFIX );
+        size_t id_beg, id_end;
+        String libIdent( libFile );
+
+        id_beg = libIdent.find( _libPrefix );
+        id_beg = (id_beg == String::npos)? 0 : id_beg + _libPrefix.length();
+        id_end = libIdent.find( '.', id_beg );
+        id_end = (id_end == String::npos)? libIdent.length() : id_end;
+        return libIdent.substr( id_beg, id_end - id_beg );
       }
       
 
-    class PluginMap
-    : public std::map<std::string, SharedLib::Handle>
+    class Predicate
     {
       public:
-        typedef std::map<std::string, SharedLib::Handle>  MapType;
-        typedef MapType::iterator                         Iterator;
+          Predicate( const char *sym = "" ) : _sym(sym) { /* empty*/ }
 
         bool
-          hasPlugin( const char *id ) const
-           { return (this->find(id) != this->end()); }
+          operator () ( SharedLib *lib ) const
+            { return (lib && *lib && (_sym.empty() || lib->getSymbol(_sym.c_str()))); }
+
+      private:
+        String _sym;
+    };
+
+
+    typedef String                                Key;
+    typedef std::pair<String, SharedLib::Handle>  Value;
+
+    class Map
+    : public std::map<Key, Value>
+    {
+      public:
+        typedef std::pair<Key, Value>                      Item;
+        typedef std::map<Key, Value>::iterator             Iterator;
+        typedef SharedLib::Function                        Initializer;
+
+        bool
+          hasPlugin( const String &id ) const
+            { return (this->find(id) != this->end()); }
 
         SharedLib *
-          getPlugin( const char *id )
+          getPlugin( const String &id )
           {
             SharedLib *lib = NULL;
             Iterator   itr = this->find( id );
 
             if (itr != this->end())
             {
-              if ((lib = itr->second.get()) == NULL)
+              String            &filePath = itr->second.first;
+              SharedLib::Handle &libHdl   = itr->second.second;
+              if ((lib = libHdl.get()) == NULL)
               {
-                lib = this->tryLoad( id );
-                (*this)[id] = SharedLib::Handle(lib);
+                lib = this->tryLoad( filePath ); //< default Predicate is sufficient here!
+                libHdl.reset( lib );
+                if (lib)
+                {
+                  Initializer init = static_cast<Initializer>(lib->getSymbol("initialize_c_"));
+                  if (init)
+                    { init(); }
+                }
               }
             }
             return lib;
           }
 
         static SharedLib *
-          tryLoad( const char *id )
+          tryLoad( const String &id, const Predicate &pred = Predicate() )
           {
             SharedLib        *ptr = NULL;
-            SharedLib::Handle lib( new SharedLib( id ) );
+            SharedLib::Handle lib( new SharedLib( id.c_str() ) );
 
-            if (*lib)// && lib->getSymbol("cookie"))
+            if (pred( lib.get() ))
               { ptr = lib.release(); }
             return ptr;
+          }
+
+        void
+          declarePlugin( const String &id )
+          {
+            Iterator itr = this->find( id );
+            if (itr == this->end())
+              this->insert( Item( id, Value() ) );
           }
     };
 
@@ -124,16 +235,18 @@ class PluginBroker
       {
         if (path != NULL)
         {
-          _pluginDir = path->str();
+          _pluginDir = _str(path);
+          if (!_pluginDir.empty())
+            { _pluginDir.append("/"); }
         }
       }
 
     void
-      registerPlugin( const char *id, SharedLib::Handle lib = SharedLib::Handle() )
-        { _pluginMap[id] = lib; }
+      registerPlugin( const StringRef *id )
+        { _pluginMap.declarePlugin( _str(id) ); }
 
     void
-      scanPlugins( void )
+      scanPlugins( const StringRef *predSym )
       {
         struct dirent *entry;
         DIR           *dir = opendir( _pluginDir.c_str() );
@@ -142,26 +255,41 @@ class PluginBroker
         {
           while ((entry = readdir( dir )) != NULL)
           {
-            SharedLib::Handle lib( PluginMap::tryLoad( entry->d_name ) );
-            if (lib.get())
+            String filePath( _pluginDir + entry->d_name );
+
+            if (filePath.endsWith( LIB_SUFFIX ))
             {
-              // make id from fileName ...
-              std::string id( entry->d_name );
-              this->registerPlugin( id.c_str() ); // << provide parameter lib for preloaded plugins
+              SharedLib::Handle lib( Map::tryLoad( filePath, Predicate(_cstr(predSym)) ) );
+              if (lib.get())
+              {
+                // make id from fileName ...
+                String id( libFileToId(entry->d_name) );
+                _pluginMap[id] = Value( filePath, SharedLib::Handle() );
+              }
             }
           }
           closedir( dir );
         }
       }
-  
+
+    void *
+      getSymbolOf( const StringRef *pluginId, const StringRef *symId )
+      {
+        SharedLib *lib = _pluginMap.getPlugin( _str(pluginId) );
+        void      *sym = NULL;
+
+        if (lib)
+          { sym = lib->getSymbol( _cstr(symId) ); }
+        return sym;
+      }
     
     SharedLib *
-      operator [] ( const char *id )
-       { return _pluginMap.getPlugin( id ); }
+      operator [] ( const StringRef *id )
+        { return _pluginMap.getPlugin( _str(id) ); }
 
   private:
-    PluginMap   _pluginMap;
-    std::string _pluginDir;
+    Map    _pluginMap;
+    String _pluginDir;
 };
 
 
@@ -176,11 +304,10 @@ getBroker( const StringRef *pluginDir = NULL )
 
 _dllExport_C
 void
-f_set_plugin_path( StringRef *path, int scan )
+f_set_plugin_path( StringRef *path, StringRef *chkSym )
 {
   PluginBroker &broker = getBroker( path );
-  if (scan)
-    { broker.scanPlugins(); }
+  broker.scanPlugins( chkSym );
 }
 
 
@@ -188,6 +315,43 @@ _dllExport_C
 void
 f_register_plugin( StringRef *pluginId )
 {
-  getBroker().registerPlugin( pluginId->str().c_str() );
+  getBroker().registerPlugin( pluginId );
+}
+
+
+_dllExport_C
+void *
+f_get_symbol_of( StringRef *pluginId, StringRef *symId )
+{
+  return getBroker().getSymbolOf( pluginId, symId );
+}
+
+_dllExport_C
+void *
+f_get_procedure_of( StringRef *pluginId, StringRef *symId )
+{
+  return getBroker().getSymbolOf( pluginId, symId );
+}
+
+_dllExport_C
+int
+f_try_call_of( StringRef *pluginId, StringRef *symId )
+{
+  void *func = getBroker().getSymbolOf( pluginId, symId );
+  if (func != NULL)
+    { static_cast<SharedLib::Function>(func)(); }
+  return (func != NULL);
+}
+
+_dllExport_C
+void
+f_call_plugin( StringRef *pluginId, StringRef *symId )
+{
+  void f_throw( int code, const StringRef *what );
+  void *func = getBroker().getSymbolOf( pluginId, symId );
+
+  if (func == NULL)
+    { f_throw( 42, symId ); }
+  static_cast<SharedLib::Function>(func)();
 }
 

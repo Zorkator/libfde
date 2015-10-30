@@ -1,0 +1,55 @@
+#ifndef __FORTRES_SHAREDLIB_FMOD
+#define __FORTRES_SHAREDLIB_FMOD
+
+#include "fortres/itfUtil.fpp"
+
+      module sharedlib
+        use stringref
+        use, intrinsic :: iso_c_binding
+        implicit none
+      
+        interface
+          subroutine set_plugin_path( p, chk ) _cID(f_set_plugin_path)
+            import StringRef_t, c_int
+            type(StringRef_t), intent(in) :: p   !< plugin path
+            type(StringRef_t), intent(in) :: chk !< check symbol
+          end subroutine
+
+          subroutine register_plugin( id ) _cID(f_register_plugin)
+            import StringRef_t
+            type(StringRef_t), intent(in) :: id
+          end subroutine
+
+          function get_sym_of( pId, sId ) _cID(f_get_symbol_of)
+            import StringRef_t, c_ptr
+            type(StringRef_t), intent(in) :: pId !< pluginId
+            type(StringRef_t), intent(in) :: sId !< symbolId
+            type(c_ptr)                   :: get_symbol_of
+          end function
+
+          function get_proc_of( pId, sId ) _cID(f_get_procedure_of)
+            import StringRef_t, c_funptr
+            type(StringRef_t), intent(in) :: pId !< pluginId
+            type(StringRef_t), intent(in) :: sId !< symbolId
+            type(c_funptr)                :: get_proc_of
+          end function
+
+          function try_call_of( pId, sId ) _cID(f_try_call_of)
+            import StringRef_t, c_int
+            type(StringRef_t), intent(in) :: pId !< pluginId
+            type(StringRef_t), intent(in) :: sId !< symbolId
+            integer(kind=c_int)           :: try_call_of
+          end function
+
+          subroutine call_plugin( pId, sId ) _cID(f_call_plugin)
+            import StringRef_t, c_int
+            type(StringRef_t), intent(in) :: pId !< pluginId
+            type(StringRef_t), intent(in) :: sId !< symbolId
+          end subroutine
+        end interface
+
+        public :: str
+      end module
+
+#endif
+

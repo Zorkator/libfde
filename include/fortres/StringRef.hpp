@@ -3,7 +3,7 @@
 
 #include <string>
 #include <string.h>
-#include "fortres/portdef.h"
+#include <stdint.h>
 
 #pragma pack(push, 4)
 class StringRef
@@ -48,8 +48,8 @@ class StringRef
       }
 
   private:
-    char     *_ref;
-    uint32_t  _len;
+    char   *_ref;
+    size_t  _len;
 };
 #pragma pack(pop)
 
