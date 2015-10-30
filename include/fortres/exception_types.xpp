@@ -1,0 +1,53 @@
+#ifndef __FORTRES_EXCEPTION_TYPES__HXX
+#define __FORTRES_EXCEPTION_TYPES__HXX
+
+#include "fortres/ppUtil.xpp"
+
+#ifdef _PP_FORTRAN
+# define _hex(pattern)    _same(x)_str(pattern)
+# define _baseType        integer*4, parameter ::
+#else
+# define _hex(pattern)    _same(0x)pattern
+# define _baseType        int
+#endif
+
+#define _exception_type(_ident,_num) \
+    _baseType _ident = _hex(_num);
+
+#if 0
+    Predefinition of hierarchical exception types.
+    Hierarchical means that catching a certain type of Error
+      also catches it's subtypes.
+    The indentation indicates the relation of different errors,
+      which is encoded by the assigned parameter value.
+#endif
+
+#define Xtable_ExceptionType \
+    _exception_type( StopExecution           ,01000000) \
+    _exception_type(   JobDone               ,01010000) \
+    \
+    _exception_type( StandardError           ,02000000) \
+    \
+    _exception_type(   ArithmeticError       ,02010000) \
+    _exception_type(     ZeroDivisionError   ,02010100) \
+    _exception_type(     OverflowError       ,02010200) \
+    _exception_type(     FloatingPointError  ,02010400) \
+    \
+    _exception_type(   AssertionError        ,02020000) \
+    \
+    _exception_type(   EnvironmentError      ,02040000) \
+    _exception_type(     IOError             ,02040100) \
+    \
+    _exception_type(   EOFError              ,02080000) \
+    \
+    _exception_type(   MemoryError           ,02100000) \
+    \
+    _exception_type(   RuntimeError          ,02200000) \
+    _exception_type(     NotImplementedError ,02200100) \
+    \
+    _exception_type(   TypeError             ,02400000) \
+    \
+    _exception_type(   ValueError            ,02800000) \
+
+#endif /* __FORTRES_EXCEPTION_TYPES__HXX */
+
