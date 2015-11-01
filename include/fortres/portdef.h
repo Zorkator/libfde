@@ -5,22 +5,19 @@
 
 # if defined _MSC_VER
     /* sorry, it's M$ ... */
-
 #		if defined _DLL_EXPORT_IMPLEMENTATION_
-#			define _dllExport       __declspec(dllexport)
+#			define _dllExport     __declspec(dllexport)
 #		else
-#			define _dllExport       __declspec(dllimport)
+#			define _dllExport     __declspec(dllimport)
 #		endif
-
-#   define _dllExport_C       _extern_C _dllExport
 
 # else
     /* assume POSIX compatible compiler */
-
 #   define _dllExport
-#   define _dllExport_C
 
 #endif
+
+# define _dllExport_C       _extern_C _dllExport
 
 #endif /* __FORTRES_PORTDEF_H */
 
