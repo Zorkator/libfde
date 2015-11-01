@@ -1,10 +1,5 @@
 
 #include <map>
-#include <memory>
-#include <iostream>
-#include <algorithm>
-#include <functional>
-#include <cctype>
 
 #define  _DLL_EXPORT_IMPLEMENTATION_
 #include "fortres/sharedlib.hpp"
@@ -34,62 +29,55 @@
 # define _str(strRef)       strRef->str()
 # define _cstr(strRef)      strRef->str().c_str()
 
-//template<typename T>
-//class auto_ptr
-//{
-//  public:
-//      typedef auto_ptr<T>   Type;
-//
-//      auto_ptr( T *ptr = NULL ): _ptr(ptr) { /* empty */ }
-//
-//     ~auto_ptr( void )
-//       { if (_ptr) delete(_ptr); }
-//
-//    T *
-//      release( void )
-//      {
-//        T *res = _ptr;
-//        _ptr = NULL;
-//        return res;
-//      }
-//    
-//    
-//
-//    T &
-//      operator -> ( void )
-//        { return *_ptr; }
-//
-//    T &
-//      operator * ( void )
-//        { return *_ptr; }
-//
-//    T &
-//      operator = ( Type &other )
-//      {
-//        if (this->_ptr != other._ptr)
-//        {
-//          if (_ptr) delete(_ptr);
-//          _ptr = other._ptr;
-//          other._ptr = NULL;
-//        }
-//      }
-//
-//  private:
-//    T *_ptr;
-//};
+
+template<typename T>
+class auto_ptr
+{
+  public:
+      typedef auto_ptr<T>   Type;
+
+      auto_ptr( T *ptr = NULL )    : _ptr(ptr)        { /* empty */ }
+      auto_ptr( const Type &other ): _ptr(other._ptr) { /* empty */ }
+
+     ~auto_ptr( void )
+      	{ if (_ptr) delete(_ptr); }
+
+    T *
+      release( void )
+      {
+        T *res = _ptr;
+        _ptr = NULL;
+        return res;
+      }
+
+		T *
+			get( void )
+				{ return _ptr; }
+
+		void
+			reset( T *ptr )
+			{
+				if (_ptr != ptr)
+				{
+					if (_ptr) delete(_ptr);
+					_ptr = ptr;
+				}
+			}
+
+  private:
+    T *_ptr;
+};
 
 
 class SharedLib
 {
   public:
-      typedef std::auto_ptr<SharedLib>  Handle;
+      typedef auto_ptr<SharedLib>  Handle;
       typedef void (*Function)( void );
 
       SharedLib( const char *libFile )
       {
-        SetLastError(0);
         _hdl = dlOpen( libFile );
-        std::cerr << GetLastError() << std::endl;
       }
 
     virtual
@@ -170,16 +158,15 @@ class PluginBroker
     };
 
 
-    typedef String                                Key;
     typedef std::pair<String, SharedLib::Handle>  Value;
 
     class Map
-    : public std::map<Key, Value>
+    : public std::map<String, Value>
     {
       public:
-        typedef std::pair<Key, Value>                      Item;
-        typedef std::map<Key, Value>::iterator             Iterator;
-        typedef SharedLib::Function                        Initializer;
+        typedef std::pair<String, Value>              Item;
+        typedef std::map<String, Value>::iterator     Iterator;
+        typedef SharedLib::Function                   Initializer;
 
         bool
           hasPlugin( const String &id ) const
@@ -201,7 +188,7 @@ class PluginBroker
                 libHdl.reset( lib );
                 if (lib)
                 {
-                  Initializer init = static_cast<Initializer>(lib->getSymbol("initialize_c_"));
+                  Initializer init = (Initializer)lib->getSymbol("initialize_c_");
                   if (init)
                     { init(); }
                 }
@@ -228,6 +215,10 @@ class PluginBroker
             if (itr == this->end())
               this->insert( Item( id, Value() ) );
           }
+
+				void
+					insertPlugin( const String &id, const String &filePath, const SharedLib::Handle &lib = SharedLib::Handle() )
+						{ this->insert( Item( id, Value( filePath, lib ) ) ); }
     };
 
   public:
@@ -264,7 +255,7 @@ class PluginBroker
               {
                 // make id from fileName ...
                 String id( libFileToId(entry->d_name) );
-                _pluginMap[id] = Value( filePath, SharedLib::Handle() );
+								_pluginMap.insertPlugin( id, filePath );
               }
             }
           }
@@ -339,7 +330,7 @@ f_try_call_of( StringRef *pluginId, StringRef *symId )
 {
   void *func = getBroker().getSymbolOf( pluginId, symId );
   if (func != NULL)
-    { static_cast<SharedLib::Function>(func)(); }
+    { reinterpret_cast<SharedLib::Function>(func)(); }
   return (func != NULL);
 }
 
@@ -352,6 +343,6 @@ f_call_plugin( StringRef *pluginId, StringRef *symId )
 
   if (func == NULL)
     { f_throw( 42, symId ); }
-  static_cast<SharedLib::Function>(func)();
+  reinterpret_cast<SharedLib::Function>(func)();
 }
 

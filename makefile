@@ -13,12 +13,13 @@
 #
 
 TARGET_doc      := building libfortres
-SOURCE_FILES    := fort_exception.cpp fort_sharedlib.cpp
+SOURCE_FILES    := fort_exception.cpp fort_sharedlib.cpp fort_dirent.cpp 
 OUT_TYPE        := shared
 OUT_NAME         = fortres.x$(mk_ARCH)
 OUT_DIR          = release
 MAYOR           := 2
 CC_INCLUDE_DIRS := ./include
+CC_LIBRARIES     = dl
 
 ifneq ($(MAKEIT_DIR),)
 include $(MAKEIT_DIR)/mk.c++
