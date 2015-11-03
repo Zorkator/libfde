@@ -69,6 +69,11 @@
             type (c_ptr),  intent(inout) :: context
             integer*4, value, intent(in) :: id
           end subroutine
+
+          subroutine set_traceproc( tracer ) _cID(f_set_traceproc)
+            use, intrinsic :: iso_c_binding
+            type (c_funptr), value, intent(in) :: tracer
+          end subroutine
         end interface
 
         contains

@@ -186,6 +186,18 @@ getContext( void )
 
 
 /**
+ * Allow user specified trace-function, which gets called by throw
+ *  for all StandardError exception types.
+ */
+Procedure _traceproc = NULL;
+
+_dllExport_C
+void
+f_set_traceproc( Procedure proc )
+  { _traceproc = proc; }
+
+
+/**
  * The remaining routines care for marking catch points (f_try), throwing exceptions (f_throw)
  *   and registering code that needs to be executed exception-safe (e.g. cleanup-code).
  */
@@ -282,6 +294,9 @@ _dllExport_C
 void
 f_throw( int code, const StringRef *what )
 {
+  if (_traceproc && (code & StandardError))
+    { _traceproc(); }
+
   getContext()->handle( code, what );
   /**
    * If we arrive here there's no matching catch point!

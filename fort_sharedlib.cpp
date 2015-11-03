@@ -132,16 +132,15 @@ static String _libSuffix( LIB_SUFFIX );
 class PluginBroker
 {
     static String
-      libFileToId( const char *libFile )
+      libFileToId( const String &libFile )
       {
         size_t id_beg, id_end;
-        String libIdent( libFile );
 
-        id_beg = libIdent.find( _libPrefix );
+        id_beg = libFile.find( _libPrefix );
         id_beg = (id_beg == String::npos)? 0 : id_beg + _libPrefix.length();
-        id_end = libIdent.find( '.', id_beg );
-        id_end = (id_end == String::npos)? libIdent.length() : id_end;
-        return libIdent.substr( id_beg, id_end - id_beg );
+        id_end = libFile.find( '.', id_beg );
+        id_end = (id_end == String::npos)? libFile.length() : id_end;
+        return libFile.substr( id_beg, id_end - id_beg );
       }
       
 
@@ -210,16 +209,13 @@ class PluginBroker
           }
 
         void
-          declarePlugin( const String &id )
+          insertPlugin( const String &filePath, const String &id = String(), const SharedLib::Handle &lib = SharedLib::Handle() )
           {
-            Iterator itr = this->find( id );
-            if (itr == this->end())
-              this->insert( Item( id, Value() ) );
+            Item item( id, Value( filePath, lib ) );
+            if (id.empty())
+              { item.first = libFileToId( filePath ); }
+            this->insert( item );
           }
-
-        void
-          insertPlugin( const String &id, const String &filePath, const SharedLib::Handle &lib = SharedLib::Handle() )
-            { this->insert( Item( id, Value( filePath, lib ) ) ); }
     };
 
   public:
@@ -234,8 +230,8 @@ class PluginBroker
       }
 
     void
-      registerPlugin( const StringRef *id )
-        { _pluginMap.declarePlugin( _ref_str(id) ); }
+      registerPlugin( const StringRef *filePath )
+        { _pluginMap.insertPlugin( _ref_str(filePath ) ); }
 
     void
       scanPlugins( const StringRef *predSym )
@@ -253,11 +249,7 @@ class PluginBroker
             {
               SharedLib::Handle lib( Map::tryLoad( filePath, Predicate(_ref_cstr(predSym)) ) );
               if (lib.get())
-              {
-                // make id from fileName ...
-                String id( libFileToId(entry->d_name) );
-                _pluginMap.insertPlugin( id, filePath );
-              }
+                { _pluginMap.insertPlugin( filePath ); }
             }
           }
           closedir( dir );
@@ -305,9 +297,9 @@ f_set_plugin_path( StringRef *path, StringRef *chkSym )
 
 _dllExport_C
 void
-f_register_plugin( StringRef *pluginId )
+f_register_plugin( StringRef *filePath )
 {
-  getBroker().registerPlugin( pluginId );
+  getBroker().registerPlugin( filePath );
 }
 
 

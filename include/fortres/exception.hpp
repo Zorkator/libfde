@@ -25,6 +25,9 @@ _dllExport_C
 void f_set_synchronizer( Synchronizer proc );
 
 _dllExport_C
+void f_set_traceproc( Procedure proc );
+
+_dllExport_C
 int f_try( int *catchList, StringRef *what, Procedure proc, ... );
 
 _dllExport_C
