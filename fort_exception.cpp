@@ -9,6 +9,35 @@
 #define  _DLL_EXPORT_IMPLEMENTATION_
 #include "fortres/exception.hpp"
 
+class ExceptionMap
+: public std::map<int, std::string>
+{
+  public:
+      typedef std::map<int, std::string>  Type;
+      typedef Type::iterator              Iterator;
+
+      ExceptionMap( void )
+      {
+#       define _fortres_exception_type(_ident, _num) \
+          (*this)[_same(0x)_num] = _str(_ident);
+        _fortres_ExceptionTable
+        (*this)[0] = "_invalid_Exception";
+#       undef  _fortres_exception_type
+      }
+
+    const std::string &
+      get( int code )
+      {
+        Iterator itr = this->find( code );
+        if (itr != this->end())
+          { return itr->second; }
+        else
+          { return (*this)[0]; }
+      }
+};
+
+static ExceptionMap exceptionMap;
+
 class Context
 {
   private:
@@ -29,7 +58,8 @@ class Context
       void
         check( int code, const StringRef *what ) //< NOTE: might not return!
         {
-          CodeSet::iterator it = _codes.begin();
+          CodeSet::iterator  it            = _codes.begin();
+          const std::string &exceptionName = exceptionMap.get( code );
 
           // iterate over codes (sorted by descending order!)
           // This means we get the exception codes from most to least specific.
@@ -48,7 +78,8 @@ class Context
             for (size_t i = _procs.size(); i > 0; --i)
               { _procs[i-1](); }
 
-            what->assignTo( _msg );
+            _msg = exceptionName + ": ";
+            _msg.append( what->str() );
             std::longjmp( _env, code );
           }
         }

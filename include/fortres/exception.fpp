@@ -1,7 +1,7 @@
 #ifndef __FORTRES_EXCEPTION_FPP
 #define __FORTRES_EXCEPTION_FPP
 
-#include "fortres/ppUtil.xpp"
+#include "fortres/itfUtil.fpp"
 
 #define _args_0()
 #define _args_1()     arg1,
@@ -28,8 +28,8 @@
 
 
 #define _tryProcedure( id, args ) \
-   function id( catchList, what, sub, args() argEnd ) bind(C,name="f_try") result(res) ;\
-     use, intrinsic :: iso_c_binding                                                   ;\
+   function id( catchList, what, sub, args() argEnd ) _cID(f_try) result(res) ;\
+     use, intrinsic :: iso_c_binding                                          ;\
      use stringref
 
 
@@ -42,7 +42,7 @@
    end function
 
 #define _throw( exc, msg ) \
-  throw( exc, _str(exc)//": "//msg )
+  throw( exc, msg )
 
 #define _catch_1(a)                [a, 0]
 #define _catch_2(a,b)              [a,b, 0]

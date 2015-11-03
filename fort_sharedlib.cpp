@@ -4,6 +4,7 @@
 #define  _DLL_EXPORT_IMPLEMENTATION_
 #include "fortres/sharedlib.hpp"
 #include "fortres/dirent.hpp"
+#include "fortres/exception.hpp"
 
 #if defined _MSC_VER
 # include <windows.h>
@@ -26,8 +27,8 @@
 # define dlError()          dlerror()
 #endif
 
-# define _str(strRef)       strRef->str()
-# define _cstr(strRef)      strRef->str().c_str()
+# define _ref_str(strRef)       strRef->str()
+# define _ref_cstr(strRef)      strRef->str().c_str()
 
 
 template<typename T>
@@ -40,7 +41,7 @@ class auto_ptr
       auto_ptr( const Type &other ): _ptr(other._ptr) { /* empty */ }
 
      ~auto_ptr( void )
-      	{ if (_ptr) delete(_ptr); }
+        { if (_ptr) delete(_ptr); }
 
     T *
       release( void )
@@ -50,19 +51,19 @@ class auto_ptr
         return res;
       }
 
-		T *
-			get( void )
-				{ return _ptr; }
+    T *
+      get( void )
+        { return _ptr; }
 
-		void
-			reset( T *ptr )
-			{
-				if (_ptr != ptr)
-				{
-					if (_ptr) delete(_ptr);
-					_ptr = ptr;
-				}
-			}
+    void
+      reset( T *ptr )
+      {
+        if (_ptr != ptr)
+        {
+          if (_ptr) delete(_ptr);
+          _ptr = ptr;
+        }
+      }
 
   private:
     T *_ptr;
@@ -107,13 +108,13 @@ class String
 : public std::string
 {
   public:
-				String( const char *other = NULL )
-				: std::string( (other == NULL)? "" : other )
-					{ /* nothing to do here */ }
+        String( const char *other = NULL )
+        : std::string( (other == NULL)? "" : other )
+          { /* nothing to do here */ }
 
-				String( const std::string &other )
-				: std::string( other )
-					{ /* nothing to do here */ }
+        String( const std::string &other )
+        : std::string( other )
+          { /* nothing to do here */ }
 
     bool
       endsWith( const std::string &ending ) const
@@ -216,9 +217,9 @@ class PluginBroker
               this->insert( Item( id, Value() ) );
           }
 
-				void
-					insertPlugin( const String &id, const String &filePath, const SharedLib::Handle &lib = SharedLib::Handle() )
-						{ this->insert( Item( id, Value( filePath, lib ) ) ); }
+        void
+          insertPlugin( const String &id, const String &filePath, const SharedLib::Handle &lib = SharedLib::Handle() )
+            { this->insert( Item( id, Value( filePath, lib ) ) ); }
     };
 
   public:
@@ -226,7 +227,7 @@ class PluginBroker
       {
         if (path != NULL)
         {
-          _pluginDir = _str(path);
+          _pluginDir = _ref_str(path);
           if (!_pluginDir.empty())
             { _pluginDir.append("/"); }
         }
@@ -234,7 +235,7 @@ class PluginBroker
 
     void
       registerPlugin( const StringRef *id )
-        { _pluginMap.declarePlugin( _str(id) ); }
+        { _pluginMap.declarePlugin( _ref_str(id) ); }
 
     void
       scanPlugins( const StringRef *predSym )
@@ -250,12 +251,12 @@ class PluginBroker
 
             if (filePath.endsWith( LIB_SUFFIX ))
             {
-              SharedLib::Handle lib( Map::tryLoad( filePath, Predicate(_cstr(predSym)) ) );
+              SharedLib::Handle lib( Map::tryLoad( filePath, Predicate(_ref_cstr(predSym)) ) );
               if (lib.get())
               {
                 // make id from fileName ...
                 String id( libFileToId(entry->d_name) );
-								_pluginMap.insertPlugin( id, filePath );
+                _pluginMap.insertPlugin( id, filePath );
               }
             }
           }
@@ -266,17 +267,17 @@ class PluginBroker
     void *
       getSymbolOf( const StringRef *pluginId, const StringRef *symId )
       {
-        SharedLib *lib = _pluginMap.getPlugin( _str(pluginId) );
+        SharedLib *lib = _pluginMap.getPlugin( _ref_str(pluginId) );
         void      *sym = NULL;
 
         if (lib)
-          { sym = lib->getSymbol( _cstr(symId) ); }
+          { sym = lib->getSymbol( _ref_cstr(symId) ); }
         return sym;
       }
     
     SharedLib *
       operator [] ( const StringRef *id )
-        { return _pluginMap.getPlugin( _str(id) ); }
+        { return _pluginMap.getPlugin( _ref_str(id) ); }
 
   private:
     Map    _pluginMap;
@@ -338,11 +339,9 @@ _dllExport_C
 void
 f_call_plugin( StringRef *pluginId, StringRef *symId )
 {
-  void f_throw( int code, const StringRef *what );
   void *func = getBroker().getSymbolOf( pluginId, symId );
-
   if (func == NULL)
-    { f_throw( 42, symId ); }
+    { f_throw( NotImplementedError, symId ); }
   reinterpret_cast<SharedLib::Function>(func)();
 }
 

@@ -3,6 +3,15 @@
 
 #include "fortres/StringRef.hpp"
 #include "fortres/portdef.h"
+#include "fortres/exception_types.xpp"
+#include "fortres/ppUtil.xpp"
+
+typedef enum {
+#   define _fortres_exception_type(_ident, _num) /* => */ _ident = _same(0x)_num,
+      _fortres_ExceptionTable
+      _invalid_Exception = 0
+#   undef  _fortres_exception_type
+} ExceptionType;
 
 class Context;
 
