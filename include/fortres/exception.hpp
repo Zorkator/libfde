@@ -7,7 +7,7 @@
 #include "fortres/ppUtil.xpp"
 
 typedef enum {
-#   define _fortres_exception_type(_ident, _num) /* => */ _ident = _same(0x)_num,
+#   define _fortres_exception_type(_ident, _num) /* => */ _ident = _paste(0x,_num),
       _fortres_ExceptionTable
       _invalid_Exception = 0
 #   undef  _fortres_exception_type

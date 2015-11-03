@@ -19,7 +19,7 @@ class ExceptionMap
       ExceptionMap( void )
       {
 #       define _fortres_exception_type(_ident, _num) \
-          (*this)[_same(0x)_num] = _str(_ident);
+          (*this)[_paste(0x,_num)] = _str(_ident);
         _fortres_ExceptionTable
         (*this)[0] = "_invalid_Exception";
 #       undef  _fortres_exception_type
@@ -72,12 +72,12 @@ class Context
             }
           }
 
+          // call cleanup procedures in reverse order ...
+          for (size_t i = _procs.size(); i > 0; --i)
+            { _procs[i-1](); }
+
           if (_codes.empty() || it != _codes.end())
           {
-            // call cleanup procedures in reverse order ...
-            for (size_t i = _procs.size(); i > 0; --i)
-              { _procs[i-1](); }
-
             _msg = exceptionName + ": ";
             _msg.append( what->str() );
             std::longjmp( _env, code );
