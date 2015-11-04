@@ -211,10 +211,8 @@ class PluginBroker
         void
           insertPlugin( const String &filePath, const String &id = String(), const SharedLib::Handle &lib = SharedLib::Handle() )
           {
-            Item item( id, Value( filePath, lib ) );
-            if (id.empty())
-              { item.first = libFileToId( filePath ); }
-            this->insert( item );
+            const String &pluginId = (id.empty())? libFileToId( filePath ) : id;
+            (*this)[pluginId] = Value( filePath, lib );
           }
     };
 
