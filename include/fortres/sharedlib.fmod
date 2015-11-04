@@ -7,48 +7,87 @@
         use stringref
         use, intrinsic :: iso_c_binding
         implicit none
+        private
+
+        public :: set_plugin_path, register_plugin
+        public :: get_sym_of, get_proc_of
+        public :: try_call_of, call_plugin, call_plugin_throw
       
         interface
-          subroutine set_plugin_path( p, chk ) _cID(f_set_plugin_path)
+          subroutine set_plugin_path_( p, chk ) _cID(f_set_plugin_path)
             import StringRef_t, c_int
             type(StringRef_t), intent(in) :: p   !< plugin path
             type(StringRef_t), intent(in) :: chk !< check symbol
           end subroutine
 
-          subroutine register_plugin( id ) _cID(f_register_plugin)
+          subroutine register_plugin_( id ) _cID(f_register_plugin)
             import StringRef_t
             type(StringRef_t), intent(in) :: id
           end subroutine
 
-          function get_sym_of( pId, sId ) _cID(f_get_symbol_of)
+          function get_sym_of_( pId, sId ) _cID(f_get_symbol_of)
             import StringRef_t, c_ptr
             type(StringRef_t), intent(in) :: pId !< pluginId
             type(StringRef_t), intent(in) :: sId !< symbolId
-            type(c_ptr)                   :: get_symbol_of
+            type(c_ptr)                   :: get_sym_of_
           end function
 
-          function get_proc_of( pId, sId ) _cID(f_get_procedure_of)
+          function get_proc_of_( pId, sId ) _cID(f_get_procedure_of)
             import StringRef_t, c_funptr
             type(StringRef_t), intent(in) :: pId !< pluginId
             type(StringRef_t), intent(in) :: sId !< symbolId
-            type(c_funptr)                :: get_proc_of
+            type(c_funptr)                :: get_proc_of_
           end function
 
-          function try_call_of( pId, sId ) _cID(f_try_call_of)
+          function try_call_of_( pId, sId ) _cID(f_try_call_of)
             import StringRef_t, c_int
             type(StringRef_t), intent(in) :: pId !< pluginId
             type(StringRef_t), intent(in) :: sId !< symbolId
-            integer(kind=c_int)           :: try_call_of
+            integer(kind=c_int)           :: try_call_of_
           end function
 
-          subroutine call_plugin( pId, sId ) _cID(f_call_plugin)
+          subroutine call_plugin_throw( pId, sId ) _cID(f_call_plugin)
             import StringRef_t, c_int
             type(StringRef_t), intent(in) :: pId !< pluginId
             type(StringRef_t), intent(in) :: sId !< symbolId
           end subroutine
         end interface
 
-        public :: str
+      contains
+
+          subroutine set_plugin_path( path, chkSym )
+            character(len=*) :: path, chkSym
+            call set_plugin_path_( str(path), str(chkSym) )
+          end subroutine
+
+          subroutine register_plugin( pluginFilePath )
+            character(len=*) :: pluginFilePath
+            call register_plugin_( str(pluginFilePath) )
+          end subroutine
+
+          function get_sym_of( pluginId, symId ) result(res)
+            character(len=*) :: pluginId, symId
+            type(c_ptr)      :: res
+            res = get_sym_of_( str(pluginId), str(symId) )
+          end function
+
+          function get_proc_of( pluginId, symId ) result(res)
+            character(len=*) :: pluginId, symId
+            type(c_funptr)   :: res
+            res = get_proc_of_( str(pluginId), str(symId) )
+          end function
+
+          function try_call_of( pluginId, symId ) result(res)
+            character(len=*)    :: pluginId, symId
+            integer(kind=c_int) :: res
+            res = try_call_of_( str(pluginId), str(symId) )
+          end function
+
+          subroutine call_plugin( pluginId, symId )
+            character(len=*) :: pluginId, symId
+            call call_plugin_throw( str(pluginId), str(symId) )
+          end subroutine
+
       end module
 
 #endif
