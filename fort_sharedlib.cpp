@@ -136,7 +136,7 @@ class PluginBroker
       {
         size_t id_beg, id_end;
 
-        id_beg = libFile.find( _libPrefix );
+        id_beg = libFile.rfind( _libPrefix );
         id_beg = (id_beg == String::npos)? 0 : id_beg + _libPrefix.length();
         id_end = libFile.find( '.', id_beg );
         id_end = (id_end == String::npos)? libFile.length() : id_end;
