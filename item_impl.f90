@@ -551,28 +551,78 @@ end module
   _implement_typecheck_(ref,        type(Ref_t))
 
 
+! implement dynamic_cast routines
+# define _EXPORT_DYNAMIC_CAST(typeId) _PROC_EXPORT(_paste(item_dynamic_cast_,typeId)_c)
+# define _implement_dynamic_cast_(typeId, baseType) \
+  logical function _paste(item_dynamic_cast_,typeId)_c( ptr, self ) result(res) ;\
+    use impl_item__; implicit none                                              ;\
+    baseType,    pointer :: ptr                                                 ;\
+    type(Item_t), target :: self                                                ;\
+    baseType             :: var                                                 ;\
+    res = associated( static_type(var), self%typeInfo )                         ;\
+    if (res) then; call c_f_pointer( c_loc(self%data(1)), ptr )                 ;\
+             else; ptr => null()                                                ;\
+    end if                                                                      ;\
+  end function
+
+!_EXPORT_DYNAMIC_CAST(bool1)
+  _implement_dynamic_cast_(bool1,      logical*1)
+!_EXPORT_DYNAMIC_CAST(bool2)
+  _implement_dynamic_cast_(bool2,      logical*2)
+!_EXPORT_DYNAMIC_CAST(bool4)
+  _implement_dynamic_cast_(bool4,      logical*4)
+!_EXPORT_DYNAMIC_CAST(bool8)
+  _implement_dynamic_cast_(bool8,      logical*8)
+!_EXPORT_DYNAMIC_CAST(int1)
+  _implement_dynamic_cast_(int1,       integer*1)
+!_EXPORT_DYNAMIC_CAST(int2)
+  _implement_dynamic_cast_(int2,       integer*2)
+!_EXPORT_DYNAMIC_CAST(int4)
+  _implement_dynamic_cast_(int4,       integer*4)
+!_EXPORT_DYNAMIC_CAST(int8)
+  _implement_dynamic_cast_(int8,       integer*8)
+!_EXPORT_DYNAMIC_CAST(real4)
+  _implement_dynamic_cast_(real4,      real*4)
+!_EXPORT_DYNAMIC_CAST(real8)
+  _implement_dynamic_cast_(real8,      real*8)
+!_EXPORT_DYNAMIC_CAST(complex8)
+  _implement_dynamic_cast_(complex8,   complex*8)
+!_EXPORT_DYNAMIC_CAST(complex16)
+  _implement_dynamic_cast_(complex16,  complex*16)
+!_EXPORT_DYNAMIC_CAST(c_void_ptr)
+  _implement_dynamic_cast_(c_void_ptr, type(c_ptr))
+!_EXPORT_DYNAMIC_CAST(string)
+  _implement_dynamic_cast_(string,     type(String_t))
+!_EXPORT_DYNAMIC_CAST(ref)
+  _implement_dynamic_cast_(ref,        type(Ref_t))
+
+
 # if defined ITEM_REAL16
 !_EXPORT_CONSTRUCTOR(real16)
-  _implement_constructor_(real16,    real*16)
+  _implement_constructor_(real16,     real*16)
 !_EXPORT_GETTER(real16)
-  _implement_getter_(real16,         real*16)
+  _implement_getter_(real16,          real*16)
 !_EXPORT_ASSIGN(real16)
-  _implement_assign_(real16,         real*16)
+  _implement_assign_(real16,          real*16)
 !_EXPORT_ASSIGN_TO(real16)
-  _implement_assign_to_(real16,      real*16)
+  _implement_assign_to_(real16,       real*16)
 !_EXPORT_TYPECHECK(real16)
-  _implement_typecheck_(real16,      real*16)
+  _implement_typecheck_(real16,       real*16)
+!_EXPORT_DYNAMIC_CAST(real16)
+  _implement_dynamic_cast_(real16,    real*16)
 
 !_EXPORT_CONSTRUCTOR(complex32)
-  _implement_constructor_(complex32, complex*32)
+  _implement_constructor_(complex32,  complex*32)
 !_EXPORT_GETTER(complex32)
-  _implement_getter_(complex32,      complex*32)
+  _implement_getter_(complex32,       complex*32)
 !_EXPORT_ASSIGN(complex32)
-  _implement_assign_(complex32,      complex*32)
+  _implement_assign_(complex32,       complex*32)
 !_EXPORT_ASSIGN_TO(complex32)
-  _implement_assign_to_(complex32,   complex*32)
+  _implement_assign_to_(complex32,    complex*32)
 !_EXPORT_TYPECHECK(complex32)
-  _implement_typecheck_(complex32,   complex*32)
+  _implement_typecheck_(complex32,    complex*32)
+!_EXPORT_DYNAMIC_CAST(complex32)
+  _implement_dynamic_cast_(complex32, complex*32)
 # endif
 
 

@@ -198,6 +198,39 @@ module adt_item
   end interface
 # endif
 
+  ! declare dynamic_cast interfaces ...
+  interface dynamic_cast
+#   define _interface_dynamic_cast(typeId, baseType, bt_import)        \
+    logical function _paste(item_dynamic_cast_,typeId)_c( ptr, self ) ;\
+      import Item_t; bt_import                                        ;\
+      baseType,    pointer :: ptr                                     ;\
+      type(Item_t), target :: self                                    ;\
+    end function
+
+    _interface_dynamic_cast(bool1,       logical*1,)
+    _interface_dynamic_cast(bool2,       logical*2,)
+    _interface_dynamic_cast(bool4,       logical*4,)
+    _interface_dynamic_cast(bool8,       logical*8,)
+    _interface_dynamic_cast(int1,        integer*1,)
+    _interface_dynamic_cast(int2,        integer*2,)
+    _interface_dynamic_cast(int4,        integer*4,)
+    _interface_dynamic_cast(int8,        integer*8,)
+    _interface_dynamic_cast(real4,       real*4,)
+    _interface_dynamic_cast(real8,       real*8,)
+    _interface_dynamic_cast(complex8,    complex*8,)
+    _interface_dynamic_cast(complex16,   complex*16,)
+    _interface_dynamic_cast(c_void_ptr,  type(c_ptr),    import c_ptr)
+    _interface_dynamic_cast(string,      type(String_t), import String_t)
+    _interface_dynamic_cast(ref,         type(Ref_t),    import Ref_t)
+    _interface_dynamic_cast(charstring,  character(len=*),)
+    _interface_dynamic_cast(item,        type(Item_t),)
+#   if defined ITEM_REAL16
+    _interface_dynamic_cast(real16,      real*16,)
+    _interface_dynamic_cast(complex32,   complex*32,)
+#   endif
+  end interface
+
+
   ! declare assignment interfaces ...
   public :: assignment(=), assign
   interface assignment(=)
