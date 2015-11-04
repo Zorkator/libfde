@@ -101,7 +101,7 @@
             end subroutine
           end interface
 
-          call f_throw( code, str(trim(what)) )
+          call f_throw( code, str(what) )
         end subroutine
       end module
 

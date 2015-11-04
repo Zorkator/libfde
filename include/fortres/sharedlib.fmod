@@ -78,9 +78,9 @@
           end function
 
           function try_call_of( pluginId, symId ) result(res)
-            character(len=*)    :: pluginId, symId
-            integer(kind=c_int) :: res
-            res = try_call_of_( str(pluginId), str(symId) )
+            character(len=*) :: pluginId, symId
+            logical          :: res
+            res = (try_call_of_( str(pluginId), str(symId) ) /= 0)
           end function
 
           subroutine call_plugin( pluginId, symId )
