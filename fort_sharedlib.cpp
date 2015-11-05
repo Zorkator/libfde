@@ -331,7 +331,10 @@ f_call_plugin( StringRef *pluginId, StringRef *symId )
 {
   void *func = getBroker().getSymbolOf( pluginId, symId );
   if (func == NULL)
-    { f_throw( NotImplementedError, symId ); }
+  {
+    std::string *msg = new std::string( _ref_str(pluginId) + "::" + _ref_str(symId) );
+    f_throw_str( NotImplementedError, &msg );
+  }
   reinterpret_cast<SharedLib::Function>(func)();
 }
 

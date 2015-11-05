@@ -33,6 +33,9 @@ int f_try( int *catchList, StringRef *what, Procedure proc, ... );
 _dllExport_C
 void f_throw( int code, const StringRef *what );
 
+extern
+void f_throw_str( int code, std::string **msg );
+
 _dllExport_C
 void f_push_cleanup( Procedure proc );
 

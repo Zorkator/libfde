@@ -9,6 +9,33 @@
 #define  _DLL_EXPORT_IMPLEMENTATION_
 #include "fortres/exception.hpp"
 
+/**
+ * Allow user specified trace-function, which gets called
+ *  for all StandardError exception types.
+ */
+struct TraceBack
+{
+  TraceBack() : _proc(NULL) { /* empty */ }
+
+  void
+    operator () ( int code )
+    {
+      if (_proc && (code & StandardError))
+        { _proc(); }
+    }
+
+  Procedure _proc;
+};
+
+static TraceBack _traceback;
+
+_dllExport_C
+void
+f_set_traceproc( Procedure proc )
+  { _traceback._proc = proc; }
+
+
+
 class ExceptionMap
 : public std::map<int, std::string>
 {
@@ -19,7 +46,7 @@ class ExceptionMap
       ExceptionMap( void )
       {
 #       define _fortres_exception_type(_ident, _num) \
-          (*this)[_paste(0x,_num)] = _str(_ident);
+          (*this)[_paste(0x,_num)] = _str(_ident) ": ";
         _fortres_ExceptionTable
         (*this)[0] = "_invalid_Exception";
 #       undef  _fortres_exception_type
@@ -48,40 +75,31 @@ class Context
 
       
         CheckPoint( int *codeList, size_t len )
-        : _codes( codeList, codeList + len )
+        : _codes( codeList, codeList + len ), _code(0)
         {
           memset( &_env, 0, sizeof(std::jmp_buf) );
           std::sort( _codes.begin(), _codes.end(), std::greater<int>() );
         }
 
-
-      void
-        check( int code, const StringRef *what ) //< NOTE: might not return!
+      int
+        check( int code )
         {
-          CodeSet::iterator  it            = _codes.begin();
-          const std::string &exceptionName = exceptionMap.get( code );
-
-          // iterate over codes (sorted by descending order!)
-          // This means we get the exception codes from most to least specific.
-          for (; it != _codes.end(); ++it)
-          {
-            if ((*it & code) == *it)
-            {
-              code = *it; //< use most specific exception code found
-              break;
-            }
-          }
-
-          // call cleanup procedures in reverse order ...
+          // in any case, call cleanup procedures in reverse order ...
           for (size_t i = _procs.size(); i > 0; --i)
             { _procs[i-1](); }
 
-          if (_codes.empty() || it != _codes.end())
+          if (_codes.size())
           {
-            _msg = exceptionName + ": ";
-            _msg.append( what->str() );
-            std::longjmp( _env, code );
+            // iterate over codes (sorted by descending order!)
+            // This means we get the exception codes from most to least specific.
+            for (CodeSet::iterator itr = _codes.begin(); itr != _codes.end(); ++itr)
+            {
+              if ((*itr & code) == *itr)
+                { return *itr; } //< CheckPoint handles matching exception code ...
+            }
+            return 0;            //< CheckPoint can't handle given exception code
           }
+          return code;           //< CheckPoint handles ANY exception code
         }
 
       void
@@ -100,6 +118,7 @@ class Context
       std::jmp_buf  _env;
       CodeSet       _codes;
       ProcList      _procs;
+      int           _code;
       std::string   _msg;
     };
 
@@ -119,14 +138,33 @@ class Context
       closeFrame( void )
         { _checkPoints.pop_back(); }
 
-    void
-      handle( int code, const StringRef *what )
+    std::string &
+      prepare_exception( int code )
       {
+        _traceback( code );
         while (_checkPoints.size())
         {
-          _checkPoints.back().check( code, what );
+          CheckPoint &chk = _checkPoints.back();
+          if (chk.check( code ))
+          {
+            chk._code = code;
+            chk._msg  = exceptionMap.get( code );
+            return chk._msg;
+          }
           _checkPoints.pop_back();
         }
+        /**
+         * If we arrive here there's no matching catch point!
+         * This means, we just can't catch this exception ... sorry and bye!
+         */
+        throw;
+      }
+
+    void
+      fire_exception( void ) //< no RETURN!
+      {
+        CheckPoint &chk = _checkPoints.back();
+        std::longjmp( chk._env, chk._code );
       }
 
     void
@@ -183,18 +221,6 @@ getContext( void )
   _synchronizer( &context, 0 );
   return context;
 }
-
-
-/**
- * Allow user specified trace-function, which gets called by throw
- *  for all StandardError exception types.
- */
-Procedure _traceproc = NULL;
-
-_dllExport_C
-void
-f_set_traceproc( Procedure proc )
-  { _traceproc = proc; }
 
 
 /**
@@ -294,15 +320,19 @@ _dllExport_C
 void
 f_throw( int code, const StringRef *what )
 {
-  if (_traceproc && (code & StandardError))
-    { _traceproc(); }
+  Context *context = getContext();
+  context->prepare_exception( code ).append( what->str() );
+  context->fire_exception(); //< no RETURN!
+}
 
-  getContext()->handle( code, what );
-  /**
-   * If we arrive here there's no matching catch point!
-   * This means, we just can't catch this exception ... sorry and bye!
-   */
-  throw;
+
+void
+f_throw_str( int code, std::string **msg )
+{
+  Context *context = getContext();
+  context->prepare_exception( code ).append( **msg );
+  delete *msg; *msg = NULL;
+  context->fire_exception(); //< no RETURN!
 }
 
 
