@@ -5,65 +5,90 @@
 #define  _DLL_EXPORT_IMPLEMENTATION_
 #include "fortres/dirent.hpp"
 
-/* TODO:
- *  - specify and implement FORTRAN compatible interface functions
- *  - allow access by providing FORTRAN interfaces
- *
- 
-  type, bind(C) :: DIR_t
-    private
-    type(c_ptr) :: ptr
-  end type
- 
-  interface 
-    logical
-    function opendir( dir, dirPath )
-      type(DIR_t),      intent(out) :: dir
-      type(StringRef_t), intent(in) :: dirPath
-    end function
+#if !defined _MSC_VER
+  /* assume POSIX compatible compiler */
+# include <unistd.h>
+#	ifndef MAX_PATH
+#		define MAX_PATH		4096
+#	endif
 
-    logical
-    function readdir( dir, dirEntry )
-      type(DIR_t),       intent(inout) :: dir
-      type(StringRef_t), intent(inout) :: dirEntry
-    end function
+#else
+  /* sorry, it's M$ ... */
+# include <windows.h>
+# define getcwd( buf, size )    				GetCurrentDirectoryA( (DWORD)size, buf )
+#	define strtok_r( str, delim, ctxt )		strtok_s( str, delim, ctxt )
+#endif
 
-    subroutine closedir( dir, stat )
-    type(DIR_t), intent(inout) :: dir
-    logical*4,        optional :: stat
-    end subroutine
+static const char _pathDelim[] = PATH_DELIM;
+static const char _pathSep[]   = PATH_DELIM other_PATH_DELIM;
 
-    subroutine rewinddir( dir, stat )
-      type(DIR_t), intent(inout) :: dir
-      logical,          optional :: stat
-    end subroutine
-
-    ! some more here ? ...
-    logical
-    function is_directory( dirEntry )
-      type(StringRef_t), intent(in) :: dirEntry
-    end function
-
-  end interface
+void
+make_cwd( std::string *cwd )
+{
+  cwd->resize( MAX_PATH );
+  getcwd( &(*cwd)[0], cwd->capacity() );
+}
 
 
-! usage
+void
+make_relPath_from_to( std::string *res, char *src, char *tgt )
+{
+  if (*src && *tgt)
+  {
+    char *t1, *t1n;
+    char *t2, *t2n;
 
-  type(DIR_t)       :: dir
-  type(StringRef_t) :: dirEntry
-  logical           :: stat
+    t1  = strtok_r( src, _pathSep, &t1n );
+    t2  = strtok_r( tgt, _pathSep, &t2n );
+    res->assign(".");
 
-  if (opendir( dir, str("./some_directory/path") )) then
-    do while (readdir( dir, dirEntry ))
-      write(6,*) str(dirEntry)
-    end do
-    call rewinddir( dir )
-    call closedir( dir )
+    // skip identical parts ...
+    while (t1 != NULL && t2 != NULL)
+    {
+      if (strcmp( t1, t2 ))
+        { break; }
+      t1 = strtok_r( NULL, _pathSep, &t1n );
+      t2 = strtok_r( NULL, _pathSep, &t2n );
+    }
+    
+    // make way up starting from src ...
+    while (t1 != NULL)
+    {
+      res->append( _pathDelim ).append( ".." );
+      t1 = strtok_r( NULL, _pathSep, &t1n );
+    }
+
+    // make way down to tgt ...
+    while (t2 != NULL)
+    {
+      res->append( _pathDelim ).append( t2 );
+      t2 = strtok_r( NULL, _pathSep, &t2n );
+    }
+  }
   else
-    write(0,*) "unknown directory"
-  endif 
-*/
+    { res->assign( tgt ); }
+}
 
+
+_dllExport_C
+void
+f_make_relPath_from_to( StringRef *res, StringRef *src, StringRef *tgt )
+{
+  std::string _res;
+  make_relPath_from_to( &_res, const_cast<char *>(src->str().c_str()), const_cast<char *>(tgt->str().c_str()) );
+  *res = _res;
+}
+
+
+_dllExport_C
+void
+f_make_relPath_to( StringRef *res, StringRef *tgt )
+{
+  std::string _res, _src;
+  make_cwd( &_src );
+  make_relPath_from_to( &_res, const_cast<char *>(_src.c_str()), const_cast<char *>(tgt->str().c_str()) );
+  *res = _res;
+}
 
 
 _dllExport_C
@@ -91,9 +116,10 @@ f_readdir( DIR *dir, StringRef *dirEntry )
 
 _dllExport_C
 void
-f_closedir( DIR *dir, uint32_t *stat )
+f_closedir( DIR **dir, uint32_t *stat )
 {
-  uint32_t result = closedir( dir );
+  uint32_t result = closedir( *dir );
+  *dir = NULL;
   if (stat != NULL)
     { *stat = result; }
 }

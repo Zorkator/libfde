@@ -9,30 +9,18 @@
 #define  _DLL_EXPORT_IMPLEMENTATION_
 #include "fortres/exception.hpp"
 
+extern void printStack( void );
+
 /**
  * Allow user specified trace-function, which gets called
  *  for all StandardError exception types.
  */
-struct TraceBack
-{
-  TraceBack() : _proc(NULL) { /* empty */ }
-
-  void
-    operator () ( int code )
-    {
-      if (_proc && (code & StandardError))
-        { _proc(); }
-    }
-
-  Procedure _proc;
-};
-
-static TraceBack _traceback;
+static Procedure _traceproc = (Procedure)printStack;
 
 _dllExport_C
 void
 f_set_traceproc( Procedure proc )
-  { _traceback._proc = proc; }
+  { _traceproc = proc; }
 
 
 
@@ -75,7 +63,7 @@ class Context
 
       
         CheckPoint( int *codeList, size_t len )
-        : _codes( codeList, codeList + len ), _code(0)
+        : _codes( codeList, codeList + len ), _code(0), _doTrace(false)
         {
           memset( &_env, 0, sizeof(std::jmp_buf) );
           std::sort( _codes.begin(), _codes.end(), std::greater<int>() );
@@ -113,13 +101,14 @@ class Context
             { _procs.back()(); }
           _procs.pop_back();
         }
-        
+
       // members ...
       std::jmp_buf  _env;
       CodeSet       _codes;
       ProcList      _procs;
       int           _code;
       std::string   _msg;
+      bool          _doTrace;
     };
 
     std::vector<CheckPoint> _checkPoints;
@@ -141,18 +130,35 @@ class Context
     std::string &
       prepare_exception( int code )
       {
-        _traceback( code );
+        CheckPoint *match = NULL;
+
         while (_checkPoints.size())
         {
           CheckPoint &chk = _checkPoints.back();
           if (chk.check( code ))
           {
-            chk._code = code;
-            chk._msg  = exceptionMap.get( code );
-            return chk._msg;
+            chk._code    = code;
+            chk._msg     = exceptionMap.get( code );
+            chk._doTrace = (code & StandardError);
+            match        = &chk;
+            break;
           }
           _checkPoints.pop_back();
         }
+  
+        /**
+         * call traceback if there's either 
+         *   no matching CheckPoint or it's requested to do so ..
+         */
+        if (!match || match->_doTrace)
+        {
+          if (_traceproc)
+            { _traceproc(); }
+        }
+
+        if (match)
+          { return match->_msg; }
+
         /**
          * If we arrive here there's no matching catch point!
          * This means, we just can't catch this exception ... sorry and bye!

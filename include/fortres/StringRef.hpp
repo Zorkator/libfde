@@ -9,18 +9,23 @@
 class StringRef
 {
   public:
+      StringRef( void ): _ref(NULL), _len(0) { /* empty */ }
+      StringRef( const char *cstr )          { referTo( cstr ); }
+      StringRef( std::string &str )          { referTo( str ); }
+
     const StringRef &
       operator = ( const std::string &str )
       {
         if (_ref != NULL)
         {
-          size_t l = str.length();
+          char  *ref = this->buffer();
+          size_t l   = str.length();
           if (l < _len)
           {
-            memset( _ref + l, ' ', _len - l );
+            memset( ref + l, ' ', _len - l );
             _len = l;
           }
-          memcpy( _ref, str.c_str(), _len );
+          memcpy( ref, str.c_str(), _len );
         }
         return *this;
       }
@@ -29,11 +34,20 @@ class StringRef
       assignTo( std::string &str ) const
         { str.assign( _ref, _len ); }
 
-    void
-      referTo( char *ref )
+    StringRef &
+      referTo( const std::string &str )
+      {
+        _ref = str.c_str();
+        _len = str.length();
+        return *this;
+      }
+
+    StringRef &
+      referTo( const char *ref )
       {
         _ref = ref;
         _len = strlen( ref );
+        return *this;
       }
 
     std::string
@@ -47,9 +61,17 @@ class StringRef
         _len = 0;
       }
 
+    char *
+      buffer( void )
+        { return const_cast<char *>(_ref); }
+
+    size_t
+      length( void )
+        { return _len; }
+
   private:
-    char   *_ref;
-    size_t  _len;
+    const char *_ref;
+    size_t      _len;
 };
 #pragma pack(pop)
 
