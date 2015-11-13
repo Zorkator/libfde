@@ -97,7 +97,7 @@ f_opendir( DIR **dir, StringRef *name )
 {
   std::string dirName = name->str();
   *dir = opendir( dirName.c_str() );
-  return (dir != NULL);
+  return (*dir != NULL);
 }
 
 

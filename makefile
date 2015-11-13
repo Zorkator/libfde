@@ -13,7 +13,7 @@
 #
 
 TARGET_doc      := building libfortres
-SOURCE_FILES    := fort_exception.cpp fort_sharedlib.cpp fort_dirent.cpp 
+SOURCE_FILES    := fort_exception.cpp fort_sharedlib.cpp fort_dirent.cpp fort_traceback.cpp
 OUT_TYPE        := shared
 OUT_NAME         = fortres.x$(mk_ARCH)
 OUT_DIR          = release

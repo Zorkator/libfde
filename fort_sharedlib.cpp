@@ -1,6 +1,8 @@
 
 #include <map>
+#include <cstdlib>
 #include <errno.h>
+#include <stdio.h>
 
 #define  _DLL_EXPORT_IMPLEMENTATION_
 #include "fortres/sharedlib.hpp"
@@ -39,7 +41,7 @@ using namespace fortres;
 
 static String _libPrefix( LIB_PREFIX );
 static String _libSuffix( LIB_SUFFIX );
-
+static bool   _dbg_info = (std::getenv("FORTRES_DEBUG") != NULL);
 
 class SharedLib
 {
@@ -50,6 +52,10 @@ class SharedLib
       SharedLib( const char *libFile )
       {
         _hdl = dlOpen( libFile );
+				if (!_hdl)
+				{
+					fprintf( stderr, "ERROR loading SharedLib %s\n >> [Code %d] %s\n", libFile, dlErrorCode(), dlError() );
+				}
       }
 
     virtual
@@ -101,7 +107,19 @@ class PluginBroker
 
         bool
           operator () ( SharedLib *lib ) const
-            { return (lib && *lib && (_sym.empty() || lib->getSymbol(_sym.c_str()))); }
+					{
+						const char *sym    = _sym.c_str();
+						bool        st_lib = (lib && *lib);
+						bool        st_sym = (st_lib && (_sym.empty() || lib->getSymbol(sym)));
+
+						if (_dbg_info)
+						{
+							fprintf( stderr, "%s, ", (st_lib)? "loaded" : "load failed" );
+							fprintf( stderr, "try symbol %s: %s\n", sym, (st_sym)? "ok" : "not found" );
+						}
+						return st_sym;
+					}
+
 
       private:
         String _sym;
@@ -153,6 +171,8 @@ class PluginBroker
             SharedLib        *ptr = NULL;
             SharedLib::Handle lib( new SharedLib( id.c_str() ) );
 
+						if (_dbg_info)
+							{ fprintf( stderr, "FORTRES: check plugin '%s' ... ", id.c_str() ); }
             if (pred( lib.get() ))
               { ptr = lib.release(); }
             return ptr;
