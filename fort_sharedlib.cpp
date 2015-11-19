@@ -3,14 +3,13 @@
 #include <errno.h>
 #include <stdio.h>
 
+#define  _DLL_EXPORT_IMPLEMENTATION_
+#include "fortres/sharedlib.hpp"
 #include "fortres/dirent.hpp"
 #include "fortres/exception.hpp"
 #include "fortres/auto_ptr.hpp"
 #include "fortres/String.hpp"
 #include "fortres/stdlib.h"
-
-#define  _DLL_EXPORT_IMPLEMENTATION_
-#include "fortres/sharedlib.hpp"
 
 #if defined _MSC_VER
 # include <windows.h>
