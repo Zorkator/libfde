@@ -21,10 +21,11 @@
             type(StringRef_t) :: id, fp
           end subroutine
       
-          subroutine plugin_set_path_( p, chk ) _cID(f_plugin_set_path)
-            import StringRef_t, c_int
-            type(StringRef_t), intent(in) :: p   !< plugin path
-            type(StringRef_t), intent(in) :: chk !< check symbol
+          subroutine plugin_set_path_( p, l, c ) _cID(f_plugin_set_path)
+            import StringRef_t
+            type(StringRef_t), intent(in) :: p !< plugin path
+            type(StringRef_t), intent(in) :: l !< library path
+            type(StringRef_t), intent(in) :: c !< check symbol
           end subroutine
 
           subroutine plugin_register_( id ) _cID(f_plugin_register)
@@ -94,9 +95,13 @@
 
       contains
 
-          subroutine plugin_set_path( path, chkSym )
-            character(len=*) :: path, chkSym
-            call plugin_set_path_( str(path), str(chkSym) )
+          subroutine plugin_set_path( path, lPath, chkSym )
+            character(len=*)           :: path
+            character(len=*), optional :: lPath,  chkSym
+            type(StringRef_t)          :: lPath_, chkSym_
+            if (present(lPath))  lPath_  = str(lPath)
+            if (present(chkSym)) chkSym_ = str(chkSym)
+            call plugin_set_path_( str(path), lPath_, chkSym_ )
           end subroutine
 
           subroutine plugin_register( pluginFilePath )

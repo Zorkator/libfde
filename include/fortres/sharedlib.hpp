@@ -7,25 +7,25 @@
 typedef void (*PluginInfoHandler)( StringRef *id, StringRef *filePath );
 
 _dllExport_C
-void f_set_plugin_path( StringRef *path, StringRef *chkSym );
+void f_plugin_set_path( StringRef *path, StringRef *libPath, StringRef *chkSym );
 
 _dllExport_C
-void f_register_plugin( StringRef *pluginId );
+void f_plugin_register( StringRef *pluginId );
 
 _dllExport_C
 void f_plugin_iterate( PluginInfoHandler handler );
 
 _dllExport_C
-void * f_get_symbol_of( StringRef *pluginId, StringRef *symId );
+void * f_plugin_sym( StringRef *pluginId, StringRef *symId );
 
 _dllExport_C
-void * f_get_procedure_of( StringRef *pluginId, StringRef *symId );
+void f_plugin_call( StringRef *pluginId, StringRef *symId );
 
 _dllExport_C
-int f_try_call_of( StringRef *pluginId, StringRef *symId );
+void * f_plugin_try_sym( StringRef *pluginId, StringRef *symId );
 
 _dllExport_C
-void f_call_plugin( StringRef *pluginId, StringRef *symId );
+int f_plugin_try_call( StringRef *pluginId, StringRef *symId );
 
 extern
 size_t so_filepath_of( const void *addr, char buff[], size_t len );

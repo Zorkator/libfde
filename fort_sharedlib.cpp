@@ -1,20 +1,23 @@
 
 #include <map>
-#include <cstdlib>
 #include <errno.h>
 #include <stdio.h>
 
-#define  _DLL_EXPORT_IMPLEMENTATION_
-#include "fortres/sharedlib.hpp"
 #include "fortres/dirent.hpp"
 #include "fortres/exception.hpp"
 #include "fortres/auto_ptr.hpp"
 #include "fortres/String.hpp"
+#include "fortres/stdlib.h"
+
+#define  _DLL_EXPORT_IMPLEMENTATION_
+#include "fortres/sharedlib.hpp"
 
 #if defined _MSC_VER
 # include <windows.h>
 # define LIB_PREFIX         "lib"
 # define LIB_SUFFIX         ".dll"
+# define LIB_PATH_VAR       "PATH"
+# define LIB_PATH_SEP       ";"
 
 # define dlOpen(lib)        LoadLibrary( (LPCSTR)lib )
 # define dlClose(hdl)       FreeLibrary( (HMODULE)hdl )
@@ -26,6 +29,8 @@
 # include <dlfcn.h>
 # define LIB_PREFIX         "lib"
 # define LIB_SUFFIX         ".so"
+# define LIB_PATH_VAR       "LD_LIBRARY_PATH"
+# define LIB_PATH_SEP       ":"
 
 # define dlOpen(lib)        dlopen( lib, RTLD_NOW | RTLD_GLOBAL )
 # define dlClose(hdl)       dlclose( hdl )
@@ -41,7 +46,7 @@ using namespace fortres;
 
 static String _libPrefix( LIB_PREFIX );
 static String _libSuffix( LIB_SUFFIX );
-static bool   _dbg_info = (std::getenv("FORTRES_DEBUG") != NULL);
+static bool   _dbg_info = (getenv("FORTRES_DEBUG") != NULL);
 
 class SharedLib
 {
@@ -52,10 +57,8 @@ class SharedLib
       SharedLib( const char *libFile )
       {
         _hdl = dlOpen( libFile );
-				if (!_hdl)
-				{
-					fprintf( stderr, "ERROR loading SharedLib %s\n >> [Code %d] %s\n", libFile, dlErrorCode(), dlError() );
-				}
+        if (!_hdl)
+          { fprintf( stderr, "ERROR loading SharedLib %s\n >> [Code %d] %s\n", libFile, dlErrorCode(), dlError() ); }
       }
 
     virtual
@@ -107,19 +110,18 @@ class PluginBroker
 
         bool
           operator () ( SharedLib *lib ) const
-					{
-						const char *sym    = _sym.c_str();
-						bool        st_lib = (lib && *lib);
-						bool        st_sym = (st_lib && (_sym.empty() || lib->getSymbol(sym)));
+          {
+            const char *sym    = _sym.c_str();
+            bool        st_lib = (lib && *lib);
+            bool        st_sym = (st_lib && (_sym.empty() || lib->getSymbol(sym)));
 
-						if (_dbg_info)
-						{
-							fprintf( stderr, "%s, ", (st_lib)? "loaded" : "load failed" );
-							fprintf( stderr, "try symbol %s: %s\n", sym, (st_sym)? "ok" : "not found" );
-						}
-						return st_sym;
-					}
-
+            if (_dbg_info)
+            {
+              fprintf( stdout, "%s, ", (st_lib)? "loaded" : "load failed" );
+              fprintf( stdout, "try symbol %s: %s\n", sym, (st_sym)? "ok" : "not found" );
+            }
+            return st_sym;
+          }
 
       private:
         String _sym;
@@ -171,8 +173,8 @@ class PluginBroker
             SharedLib        *ptr = NULL;
             SharedLib::Handle lib( new SharedLib( id.c_str() ) );
 
-						if (_dbg_info)
-							{ fprintf( stderr, "FORTRES: check plugin '%s' ... ", id.c_str() ); }
+            if (_dbg_info)
+              { fprintf( stdout, "FORTRES: check plugin '%s' ... ", id.c_str() ); }
             if (pred( lib.get() ))
               { ptr = lib.release(); }
             return ptr;
@@ -200,7 +202,7 @@ class PluginBroker
 
     void
       registerPlugin( const StringRef *filePath )
-        { _pluginMap.insertPlugin( _ref_str(filePath ) ); }
+        { _pluginMap.insertPlugin( _ref_str(filePath) ); }
 
     void
       scanPlugins( const StringRef *predSym )
@@ -267,8 +269,22 @@ getBroker( const StringRef *pluginDir = NULL )
 
 _dllExport_C
 void
-f_plugin_set_path( StringRef *path, StringRef *chkSym )
+f_plugin_set_path( StringRef *path, StringRef *libPath, StringRef *chkSym )
 {
+  if (_dbg_info)
+    { fprintf( stdout, "FORTRES: setting plugin path\n >> %s\n", _ref_cstr(path) ); }
+  if (libPath->length())
+  {
+    String libPathStr( libPath->str() );
+    String envStr( getenv(LIB_PATH_VAR) );
+    if (!envStr.startsWith( libPathStr ))
+    {
+      libPathStr.append( LIB_PATH_SEP ).append( envStr );
+      setenv( LIB_PATH_VAR, libPathStr.c_str(), 1 /*<< override */);
+      if (_dbg_info)
+        { fprintf( stdout, "FORTRES: setting environment variable\n >> %s = %s\n", LIB_PATH_VAR, libPathStr.c_str() ); }
+    }
+  }
   getBroker( path )->scanPlugins( chkSym );
 }
 
