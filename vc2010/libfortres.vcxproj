@@ -23,7 +23,7 @@
     <ClCompile Include="..\fort_exception.cpp" />
     <ClCompile Include="..\fort_sharedlib.cpp" />
     <ClCompile Include="..\fort_dirent.cpp" />
-    <ClCompile Include="..\fort_traceback.cpp" />
+    <ClCompile Include="..\fort_tracestack.cpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{2B1BBCBB-611C-4F97-9FDF-B78643AE3349}</ProjectGuid>

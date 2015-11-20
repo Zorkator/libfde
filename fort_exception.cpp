@@ -8,19 +8,30 @@
 
 #define  _DLL_EXPORT_IMPLEMENTATION_
 #include "fortres/exception.hpp"
+#include "fortres/tracestack.hpp"
 
-extern void printStack( void );
+
+void
+printFrameLine( StringRef *frameInfo )
+  { fprintf( stderr, "%s\n", frameInfo->trim().c_str() ); }
+
+void
+traceStack( int *skippedFrames )
+{
+  f_tracestack( printFrameLine, *skippedFrames + 1 );
+}
+
 
 /**
  * Allow user specified trace-function, which gets called
  *  for all StandardError exception types.
  */
-static Procedure _traceproc = (Procedure)printStack;
+static TraceProcedure _traceproc = traceStack;
 
 _dllExport_C
 void
-f_set_traceproc( Procedure proc )
-  { _traceproc = proc; }
+f_set_traceproc( TraceProcedure traceProc )
+  { _traceproc = traceProc; }
 
 
 
@@ -153,7 +164,10 @@ class Context
         if (!match || match->_doTrace)
         {
           if (_traceproc)
-            { _traceproc(); }
+          {
+            int skipped = 2; /*< skip frames prepare_exception + f_throw */
+            _traceproc( &skipped );
+          }
         }
 
         if (match)

@@ -16,6 +16,7 @@ typedef enum {
 class Context;
 
 typedef void (*Procedure)( ... );
+typedef void (*TraceProcedure)( int *skippedFrames );
 typedef void (*Synchronizer)( Context **, int );
 
 _dllExport_C
@@ -25,7 +26,7 @@ _dllExport_C
 void f_set_synchronizer( Synchronizer proc );
 
 _dllExport_C
-void f_set_traceproc( Procedure proc );
+void f_set_traceproc( TraceProcedure traceProc );
 
 _dllExport_C
 int f_try( int *catchList, StringRef *what, Procedure proc, ... );

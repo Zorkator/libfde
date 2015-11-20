@@ -10,14 +10,16 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+
+#define  _DLL_EXPORT_IMPLEMENTATION_
+#include "fortres/tracestack.hpp"
 #include "fortres/sharedlib.hpp"
 #include "fortres/dirent.hpp"
 
 
-typedef void (*FrameOperator)( const char * );
-
+_dllExport_C
 void
-stack_walk( FrameOperator frameOp, unsigned int skippedFrames = 0 )
+f_tracestack( FrameOperator frameOp, int skippedFrames )
 {
   void *frames[100];
   int   stackSize;
@@ -39,8 +41,8 @@ stack_walk( FrameOperator frameOp, unsigned int skippedFrames = 0 )
   {
     SymFromAddr( process, (DWORD64)(frames[i]), 0, symbol );
     so_filepath_of( (void *)symbol->Address, frameBuffer, 256 );
-    sprintf( frameBuffer, "%s(%s) [0x%0X]", relPath_to(frameBuffer).c_str(), symbol->Name, symbol->Address );
-    frameOp( frameBuffer );
+    sprintf( frameBuffer, "%s(%s) [0x%0X]", frameBuffer, symbol->Name, symbol->Address );
+    frameOp( &StringRef(frameBuffer) );
   }
   free( symbol );
 #else
@@ -52,22 +54,9 @@ stack_walk( FrameOperator frameOp, unsigned int skippedFrames = 0 )
 	if (strings)
 	{
     for (int i = stackSize - 1; i > skippedFrames; --i)
-			{ frameOp( strings[i] ); }
+			{ frameOp( &StringRef(strings[i]) ); }
 		free( strings );
 	}
 #endif
 }
-
-
-void
-printFrameLine( const char *frameLine )
-  { printf( "%s\n", frameLine ); }
-
-
-void
-printStack( void )
-{
-  stack_walk( printFrameLine, 1 );
-}
-
 
