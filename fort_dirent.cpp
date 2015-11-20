@@ -17,6 +17,7 @@
 # include <windows.h>
 # define getcwd( buf, size )    				GetCurrentDirectoryA( (DWORD)size, buf )
 #	define strtok_r( str, delim, ctxt )		strtok_s( str, delim, ctxt )
+# define stat                           _stat
 #endif
 
 static const char _pathDelim[] = PATH_DELIM;
@@ -132,5 +133,14 @@ f_rewinddir( DIR *dir, uint32_t *stat )
   rewinddir( dir );
   if (stat != NULL)
     { *stat = errno; }
+}
+
+
+_dllExport_C
+int
+f_isdir( StringRef *pathStr )
+{
+  struct stat s;
+  return (!stat( pathStr->trim().c_str(), &s ) && (s.st_mode & S_IFDIR));
 }
 

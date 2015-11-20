@@ -71,25 +71,25 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>false</LinkIncremental>
-    <TargetName>$(ProjectName).1.$(PlatformName)</TargetName>
+    <TargetName>$(ProjectName).2.0.$(PlatformName)</TargetName>
     <OutDir>..\bin\</OutDir>
     <IntDir>.work\$(TargetName)\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>false</LinkIncremental>
-    <TargetName>$(ProjectName).1.$(PlatformName)</TargetName>
+    <TargetName>$(ProjectName).2.0.$(PlatformName)</TargetName>
     <OutDir>..\bin\</OutDir>
     <IntDir>.work\$(TargetName)\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
-    <TargetName>$(ProjectName).1.$(PlatformName)</TargetName>
+    <TargetName>$(ProjectName).2.0.$(PlatformName)</TargetName>
     <OutDir>..\bin\</OutDir>
     <IntDir>.work\$(TargetName)\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
-    <TargetName>$(ProjectName).1.$(PlatformName)</TargetName>
+    <TargetName>$(ProjectName).2.0.$(PlatformName)</TargetName>
     <OutDir>..\bin\</OutDir>
     <IntDir>.work\$(TargetName)\</IntDir>
   </PropertyGroup>

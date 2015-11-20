@@ -54,6 +54,17 @@ class StringRef
       str( void ) const
         { return std::string( _ref, _len ); }
 
+    std::string
+      trim( void ) const
+      {
+        std::string res( _ref, _len );
+        size_t      beg = res.find_first_not_of(" ");
+        size_t      end = res.find_last_not_of(" ");
+        beg = (beg != std::string::npos)? beg : 0;
+        end = (end != std::string::npos)? end : _len;
+        return res.substr( beg, end+1 );
+      }
+
     void
       erase( void )
       {

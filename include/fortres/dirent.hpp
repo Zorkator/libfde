@@ -62,5 +62,8 @@ void f_closedir( DIR **dir, uint32_t *stat );
 _dllExport_C
 void f_rewinddir( DIR *dir, uint32_t *stat );
 
+_dllExport_C
+int f_isdir( StringRef *pathStr );
+
 #endif /*__FORTRES_DIRENT__HPP */
 

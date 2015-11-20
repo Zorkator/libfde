@@ -16,7 +16,7 @@
 
         public :: DIR_t
         public :: relPath_from_to, relPath_to
-        public :: opendir, readdir, closedir, rewinddir
+        public :: opendir, readdir, closedir, rewinddir, isdir
 
         interface relPath
           module procedure relPath_from_to, relPath_to
@@ -60,6 +60,12 @@
             type(DIR_t),  value :: dir
             integer(kind=c_int) :: stat
           end subroutine
+
+          function isdir_( pathStr ) _cID(f_isdir)
+            import StringRef_t, c_int
+            type(StringRef_t)   :: pathStr
+            integer(kind=c_int) :: isdir_
+          end function
         end interface
 
       contains
@@ -105,6 +111,12 @@
             call rewinddir_( dir, stat_ )
             if (present(stat)) stat = stat_
           end subroutine
+
+          function isdir( pathStr )
+            character(len=*), intent(in) :: pathStr
+            logical                      :: isdir
+            isdir = (isdir_( str(pathStr) ) /= 0)
+          end function
       end module
 #endif
 
