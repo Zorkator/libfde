@@ -56,7 +56,7 @@ class SharedLib
       SharedLib( const char *libFile )
       {
         _hdl = dlOpen( libFile );
-        if (!_hdl)
+        if (!_hdl && _dbg_info)
           { fprintf( stderr, "ERROR loading SharedLib %s\n >> [Code %d] %s\n", libFile, dlErrorCode(), dlError() ); }
       }
 

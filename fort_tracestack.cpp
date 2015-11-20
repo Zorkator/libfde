@@ -21,8 +21,9 @@ _dllExport_C
 void
 f_tracestack( FrameOperator frameOp, int skippedFrames )
 {
-  void *frames[100];
-  int   stackSize;
+  void     *frames[100];
+  int       stackSize;
+	StringRef infoRef;
 
 #if defined _MSC_VER
   HANDLE       process;
@@ -42,7 +43,7 @@ f_tracestack( FrameOperator frameOp, int skippedFrames )
     SymFromAddr( process, (DWORD64)(frames[i]), 0, symbol );
     so_filepath_of( (void *)symbol->Address, frameBuffer, 256 );
     sprintf( frameBuffer, "%s(%s) [0x%0X]", frameBuffer, symbol->Name, symbol->Address );
-    frameOp( &StringRef(frameBuffer) );
+    frameOp( &infoRef.referTo(frameBuffer) );
   }
   free( symbol );
 #else
@@ -54,7 +55,7 @@ f_tracestack( FrameOperator frameOp, int skippedFrames )
 	if (strings)
 	{
     for (int i = stackSize - 1; i > skippedFrames; --i)
-			{ frameOp( &StringRef(strings[i]) ); }
+			{ frameOp( &infoRef.referTo(strings[i]) ); }
 		free( strings );
 	}
 #endif
