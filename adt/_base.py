@@ -2,30 +2,14 @@
 from ctypes import CDLL, Union, sizeof, Structure, c_int8
 from os     import environ as _env, pathsep as _pathDelim, path as _path
 
-import sys, platform
+import sys, platform, glob
 from distutils.sysconfig import get_python_lib
 
 _archBit     = (32, 64)[sys.maxsize > 2**32]
 _archWin     = ('Win32', 'x64')[sys.maxsize > 2**32]
 _isWin       = platform.system() == "Windows"
 _envBinVar   = ('LD_LIBRARY_PATH', 'PATH')[_isWin]
-_libNames    = (
-  """
-  libadt.debug.{arch}.gfortran.so
-  libadt.release.{arch}.gfortran.so
-  libadt.debug.{arch}.ifort.so
-  libadt.release.{arch}.ifort.so
-  libadt.1.gfortran.debug.{arch}.so
-  libadt.1.gfortran.release.{arch}.so
-  libadt.1.ifort.debug.{arch}.so
-  libadt.1.ifort.release.{arch}.so
-  """.format( arch = _archBit ),
-  """
-  libadt.1.Debug.{arch}.dll
-  libadt.1.Release.{arch}.dll
-  """.format( arch = _archWin )
-)[_isWin].split()
-
+_libPatern   = ('libadt.*.so', 'libadt.*.dll')[_isWin]
 
 
 class LibLoader(object):
@@ -51,13 +35,16 @@ class LibLoader(object):
     paths.append( _env[_envBinVar] )
 
     _env[_envBinVar] = _pathDelim.join( paths )
-    self.hdl = CDLL( fileName )
+    try   : self.hdl = CDLL( fileName )
+    except: self.hdl = None
     _env[_envBinVar] = envPaths
-    self.filePath = fileName
-    raise self.Success
+    
+    if self.hdl:
+      self.filePath = fileName
+      raise self.Success
 
 
-  def __init__( self, *libNames, **kwArgs ):
+  def __init__( self, libPattern, **kwArgs ):
     try:
       # try to get absolute dll-filePath by either kwArgument "filePath" or by given environment variable ...
       fp = kwArgs.get('filePath') or _env.get( kwArgs.get('fileEnv', '') )
@@ -67,10 +54,8 @@ class LibLoader(object):
       else:
         # scan search paths for dll to load ...
         for path in self._iter_searchPaths():
-          for lib in libNames:
-            fp = path + _path.sep + lib
-            if _path.isfile( fp ):
-              self.loadDLL( fp, **kwArgs )
+          for fp in glob.glob( path + _path.sep + libPattern ):
+            self.loadDLL( fp, **kwArgs )
         else:
           raise OSError( "unable to locate shared library {0}".format(fp) )
 
@@ -78,7 +63,7 @@ class LibLoader(object):
       sys.stdout.write( "loaded shared library {0}\n".format(fp) )
 
 
-_libLoader = LibLoader( *_libNames, fileEnv = 'LIBADT', prioPathEnv = 'ADTPATH' )
+_libLoader = LibLoader( _libPatern, fileEnv = 'LIBADT', prioPathEnv = 'ADTPATH' )
 
 
 class _Meta(type(Union)):
