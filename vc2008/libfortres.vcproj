@@ -2,7 +2,7 @@
 <VisualStudioProject
 	ProjectType="Visual C++"
 	Version="9,00"
-	Name="libfortres.1"
+	Name="libfortres.2.0_cr90"
 	ProjectGUID="{B79564EC-8EC8-4655-9460-E7CF3227D877}"
 	RootNamespace="libfortres"
 	Keyword="Win32Proj"
@@ -18,7 +18,7 @@
 	<Configurations>
 		<Configuration
 			Name="Debug|Win32"
-			OutputDirectory="$(SolutionDir)$(ConfigurationName)"
+			OutputDirectory="..\bin\"
 			IntermediateDirectory="$(ConfigurationName).$(PlatformName)"
 			ConfigurationType="2"
 			CharacterSet="1"
@@ -41,6 +41,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
+				AdditionalIncludeDirectories="../include"
 				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_USRDLL;LIBFORTRES_EXPORTS"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -60,6 +61,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
+				AdditionalDependencies="dbghelp.lib"
 				OutputFile="$(OutDir)\$(ProjectName).$(PlatformName).dll"
 				LinkIncremental="2"
 				GenerateDebugInformation="true"
@@ -90,7 +92,7 @@
 		</Configuration>
 		<Configuration
 			Name="Release|Win32"
-			OutputDirectory="$(SolutionDir)$(ConfigurationName)"
+			OutputDirectory="..\bin\"
 			IntermediateDirectory="$(ConfigurationName).$(PlatformName)"
 			ConfigurationType="2"
 			CharacterSet="1"
@@ -115,6 +117,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="2"
 				EnableIntrinsicFunctions="true"
+				AdditionalIncludeDirectories="../include"
 				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_USRDLL;LIBFORTRES_EXPORTS"
 				RuntimeLibrary="2"
 				EnableFunctionLevelLinking="true"
@@ -133,6 +136,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
+				AdditionalDependencies="dbghelp.lib"
 				OutputFile="$(OutDir)\$(ProjectName).$(PlatformName).dll"
 				LinkIncremental="1"
 				GenerateDebugInformation="true"
@@ -168,7 +172,23 @@
 	</References>
 	<Files>
 		<File
-			RelativePath="..\exception.cpp"
+			RelativePath="..\dirent.c"
+			>
+		</File>
+		<File
+			RelativePath="..\fort_dirent.cpp"
+			>
+		</File>
+		<File
+			RelativePath="..\fort_exception.cpp"
+			>
+		</File>
+		<File
+			RelativePath="..\fort_sharedlib.cpp"
+			>
+		</File>
+		<File
+			RelativePath="..\fort_tracestack.cpp"
 			>
 		</File>
 	</Files>

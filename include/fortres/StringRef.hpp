@@ -3,7 +3,12 @@
 
 #include <string>
 #include <string.h>
-#include <stdint.h>
+
+#if defined _MSC_VER && _MSC_VER >= 1600
+#	include <stdint.h>
+#else
+	typedef unsigned __int32 uint32_t;
+#endif
 
 #pragma pack(push, 4)
 class StringRef

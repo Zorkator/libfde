@@ -18,7 +18,7 @@
 # define LIB_PATH_VAR       "PATH"
 # define LIB_PATH_SEP       ";"
 
-# define dlOpen(lib)        LoadLibrary( (LPCSTR)lib )
+# define dlOpen(lib)        LoadLibraryA( (LPCSTR)lib )
 # define dlClose(hdl)       FreeLibrary( (HMODULE)hdl )
 # define dlSym(hdl,sym)     GetProcAddress( (HMODULE)hdl, sym )
 # define dlError()          "not yet implemented!"
