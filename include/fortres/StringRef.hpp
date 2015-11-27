@@ -4,10 +4,11 @@
 #include <string>
 #include <string.h>
 
-#if defined _MSC_VER && _MSC_VER >= 1600
-#	include <stdint.h>
+#if defined _MSC_VER && _MSC_VER < 1600
+  /* workaround for VC2008 */
+  typedef unsigned __int32 uint32_t;
 #else
-	typedef unsigned __int32 uint32_t;
+# include <stdint.h>
 #endif
 
 #pragma pack(push, 4)
