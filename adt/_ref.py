@@ -7,7 +7,7 @@ from operator  import mul as _mul
 
 @mappedType( 'ref', 'type(Ref_t)' )
 class Ref(TypedObject):
-  
+
   @TypedObject.value.getter
   def value( self ):
     return self
@@ -30,16 +30,16 @@ class Ref(TypedObject):
     return buf[:rnk.value]
 
   @property
-  def contentsType( self ):
+  def _type_( self ):
     ft = self.ftype
     if ft:
       if ft.rank: return reduce( _mul, self.shape, ft.ctype )
       else      : return ft.ctype
     return c_void_p
 
-  @property 
+  @property
   def contents( self ):
-    return cast( self.ptr, POINTER(self.contentsType) ).contents
+    return cast( self.ptr, POINTER(self._type_) ).contents
 
   def castTo( self, tgtType ):
     return cast( self.ptr, POINTER(tgtType) ).contents
@@ -48,4 +48,3 @@ class Ref(TypedObject):
     other = Ref()
     self.clone_( byref(other), byref(self) )
     return other
-
