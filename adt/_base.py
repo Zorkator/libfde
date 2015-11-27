@@ -1,21 +1,32 @@
 
 from ctypes import CDLL, Union, sizeof, Structure, c_int8
 from os     import environ as _env, pathsep as _pathDelim, path as _path
+from glob   import glob
 
-import sys, platform, glob
+import sys, platform
 from distutils.sysconfig import get_python_lib
 
 _archBit     = (32, 64)[sys.maxsize > 2**32]
 _archWin     = ('Win32', 'x64')[sys.maxsize > 2**32]
 _isWin       = platform.system() == "Windows"
 _envBinVar   = ('LD_LIBRARY_PATH', 'PATH')[_isWin]
-_libPatern   = ('libadt.*.so', 'libadt.*.dll')[_isWin]
+_libPattern  = ('libadt.*.so', 'libadt.*.dll')[_isWin]
 
 
 class LibLoader(object):
 
   class Success(Exception):
     pass
+
+  @property
+  def filePath( self ):
+    return getattr( self._hdl, '_name', '' )
+
+
+  @property
+  def handle( self ):
+    return self._hdl
+
 
   def splitEnvPaths( self, envVarId ):
     return _env.get( envVarId, '' ).split( _pathDelim )
@@ -29,41 +40,46 @@ class LibLoader(object):
     return iter(pathList)
 
 
-  def loadDLL( self, fileName, **kwArgs ):
+  def _loadLib( self, libPattern, pathEnvVar ):
     envPaths = _env[_envBinVar]
-    paths    = [_path.dirname(fileName)] + self.splitEnvPaths( kwArgs.get('prioPathEnv', '') )
+    paths    = filter( _path.isdir, glob( _path.dirname(libPattern) ) ) \
+             + self.splitEnvPaths( pathEnvVar )
     paths.append( _env[_envBinVar] )
 
     _env[_envBinVar] = _pathDelim.join( paths )
-    try   : self.hdl = CDLL( fileName )
-    except: self.hdl = None
+    self._hdl        = None
+    for f in glob( libPattern ):
+      try   : self._hdl = CDLL( f ); break #< break if load succeeded
+      except: pass
     _env[_envBinVar] = envPaths
     
-    if self.hdl:
-      self.filePath = fileName
+    if self._hdl:
       raise self.Success
+    
 
+  def __init__( self, **kwArgs ):
+    self._hdl  = None
+    fileEnvVar = kwArgs.get('fileEnv', '')
+    pathEnvVar = kwArgs.get('prioPathEnv', '')
 
-  def __init__( self, libPattern, **kwArgs ):
     try:
-      # try to get absolute dll-filePath by either kwArgument "filePath" or by given environment variable ...
-      fp = kwArgs.get('filePath') or _env.get( kwArgs.get('fileEnv', '') )
+      # try using given filePath or environment variable
+      fp = kwArgs.get('filePath') or _env.get( fileEnvVar )
       if fp:
-        # dll to load was set either directly or via environment variable ...
-        self.loadDLL( fp, **kwArgs )
-      else:
-        # scan search paths for dll to load ...
-        for path in self._iter_searchPaths():
-          for fp in glob.glob( path + _path.sep + libPattern ):
-            self.loadDLL( fp, **kwArgs )
-        else:
-          raise OSError( "unable to locate shared library {0}".format(fp) )
+        self._loadLib( fp, pathEnvVar )
+
+      # not found until here ... so try via libPattern and search paths
+      fp = kwArgs['libPattern'] #< argument libPattern is NOT optional here!
+      for path in self._iter_searchPaths():
+        self._loadLib( path + _path.sep + fp, pathEnvVar )
+
+      raise OSError( "unable to locate shared library {0}".format(fp) )
 
     except self.Success:
-      sys.stdout.write( "loaded shared library {0}\n".format(fp) )
+      sys.stdout.write( "loaded shared library {0}\n".format(self.filePath) )
 
 
-_libLoader = LibLoader( _libPatern, fileEnv = 'LIBADT', prioPathEnv = 'ADTPATH' )
+_libLoader = LibLoader( fileEnv = 'LIBADT', prioPathEnv = 'ADTPATH', libPattern = _libPattern )
 
 
 class _Meta(type(Union)):
@@ -88,7 +104,7 @@ class _Meta(type(Union)):
     fields = list( members.pop('_fields_', []) ) \
            + list( ('_data.' + b.__name__, b._data.size * c_int8) for b in bases if hasattr(b, '_data') )
     anonym = list( members.pop('_anonymous_', []) )
-    size   = getattr( _libLoader.hdl, method.format('object_size_'), lambda: 0 )()
+    size   = getattr( _libLoader.handle, method.format('object_size_'), lambda: 0 )()
 
     if fields:
       _Struct = type( '_Struct', (Structure,), dict(_fields_=fields, _anonymous_=anonym) )
@@ -114,7 +130,7 @@ class Compound(Union):
       return {}
 
     for fmt in _class.__typeprocs__:
-      try   : attr = getattr(_libLoader.hdl, fmt.format(name)); break
+      try   : attr = getattr(_libLoader.handle, fmt.format(name)); break
       except: pass
     else:
       raise AttributeError("'%s' object has no attribute '%s'" % (_class.__name__, name))
