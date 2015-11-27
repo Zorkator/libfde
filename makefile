@@ -19,7 +19,7 @@ SOURCE_FILES    := $(filter-out test_%.f90 $(TPP_SOURCE),$(wildcard *.f90)) $(TP
 CLEARED_FILES   := $(TPP_SOURCE)
 OUT_TYPE        := shared
 OUT_NAME         = adt.$(mk_TAG)
-MAYOR           := 1
+MAYOR           := 2
 OUT_DIR          = lib/$(mk_TAG)
 FC_INCLUDE_DIRS := ./include
 
