@@ -67,11 +67,11 @@ class LibLoader(object):
       fp = kwArgs.get('filePath') or _env.get( fileEnvVar )
       if fp:
         self._loadLib( fp, pathEnvVar )
-
-      # not found until here ... so try via libPattern and search paths
-      fp = kwArgs['libPattern'] #< argument libPattern is NOT optional here!
-      for path in self._iter_searchPaths():
-        self._loadLib( path + _path.sep + fp, pathEnvVar )
+      else:
+        # not found or filePath not given ... so try via libPattern and search paths
+        fp = kwArgs['libPattern'] #< argument libPattern is NOT optional here!
+        for path in self._iter_searchPaths():
+          self._loadLib( path + _path.sep + fp, pathEnvVar )
 
       raise OSError( "unable to locate shared library {0}".format(fp) )
 
