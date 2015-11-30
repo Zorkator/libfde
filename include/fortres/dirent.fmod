@@ -73,13 +73,13 @@
           subroutine relPath_from_to( res, from, to )
             character(len=*), intent(inout) :: res
             character(len=*), intent(in)    :: from, to
-            call mkrp_ft_( str(res), str(from), str(to) )
+            call mkrp_ft_( strBuf(res), str(from), str(to) )
           end subroutine
       
           subroutine relPath_to( res, to )
             character(len=*), intent(inout) :: res
             character(len=*), intent(in)    :: to
-            call mkrp_t_( str(res), str(to) )
+            call mkrp_t_( strBuf(res), str(to) )
           end subroutine
       
           function opendir( dir, path )

@@ -1,28 +1,31 @@
 #ifndef __FORTRES_STRINGREF_FMOD
 #define __FORTRES_STRINGREF_FMOD
 
-#include "fortres/itfUtil.fpp"
-
       module stringref
         use, intrinsic :: iso_c_binding
         implicit none
+        private
       
-        type, public, bind(C) :: StringRef_t
+        type, bind(C) :: StringRef_t
           type (c_ptr)           :: loc = c_null_ptr
           integer(kind=c_size_t) :: len = 0
         end type
       
         interface str
-          module procedure stringref_create, stringref_of_str
+          module procedure stringref_create
+          module procedure stringref_of_str_trim, stringref_of_str
           module procedure stringref_to_str
+        end interface
+
+        interface strBuf
+          module procedure stringref_of_buf
         end interface
       
         interface len
           module procedure stringref_len
         end interface
       
-        private :: stringref_create, stringref_of_str
-        private :: stringref_to_str, stringref_len
+        public :: StringRef_t, str, strBuf, len
 
         character(len=0), private, target :: empty_string_ = ""
       
@@ -30,33 +33,49 @@
         contains
       !-------------------
 
-!_PROC_EXPORT(stringref_create)
         function stringref_create() result(strRef)
           type (StringRef_t) :: strRef
           strRef%loc = c_null_ptr
           strRef%len = 0
         end function
-      
-!_PROC_EXPORT(stringref_of_str)
-        function stringref_of_str( fstr ) result(strRef)
+
+
+        function stringref_of_str_trim( fstr, trimLen ) result(strRef)
           character(len=*), target, intent(in) :: fstr
+          logical                              :: trimLen
           type (StringRef_t)                   :: strRef
+
           ! NOTE: gfortran doesn't allow to use c_loc on character strings.
           !       We fix this by a little wrapper function that usually gets inlined.
           !       BTW: this should work on empty strings, too!
-          strRef%loc = get_string_loc(fstr)
-          strRef%len = len(fstr)
-      
+          strRef%loc = get_string_loc_(fstr)
+          if (trimLen) then; strRef%len = len_trim(fstr)
+                       else; strRef%len = len(fstr)
+          end if
+
           contains
-      
-          function get_string_loc( fstr ) result(loc)
-            character(len=1), target, intent(in) :: fstr
-            type (c_ptr)                         :: loc
-            loc = c_loc(fstr)
-          end function
+            function get_string_loc_( fstr ) result(loc)
+              character(len=1), target, intent(in) :: fstr
+              type (c_ptr)                         :: loc
+              loc = c_loc(fstr)
+            end function
         end function
-      
-!_PROC_EXPORT(stringref_to_str)
+
+
+        function stringref_of_str( fstr ) result(strRef)
+          character(len=*), target, intent(in) :: fstr
+          type (StringRef_t)                   :: strRef
+          strRef = stringref_of_str_trim( fstr, .true. )
+        end function
+
+
+        function stringref_of_buf( fstrBuf ) result(strRef)
+          character(len=*), target, intent(out) :: fstrBuf
+          type (StringRef_t)                    :: strRef
+          strRef = stringref_of_str_trim( fstrBuf, .false. )
+        end function
+
+
         function stringref_to_str( strRef ) result(fptr)
           type (StringRef_t),     intent(in) :: strRef
           character(len=strRef%len), pointer :: fptr
@@ -66,15 +85,15 @@
             fptr => empty_string_
           end if
         end function
-      
-!_PROC_EXPORT(stringRef_to_char)
+
+
         function stringRef_to_char( strRef ) result(cstr)
           type (StringRef_t), intent(in) :: strRef
           character(len=strRef%len)      :: cstr
           cstr = str(strRef)
         end function
-      
-!_PROC_EXPORT(stringref_len)
+
+
         pure function stringref_len( strRef ) result(l)
           type (StringRef_t), intent(in) :: strRef
           integer*4                      :: l

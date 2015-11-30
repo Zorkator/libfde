@@ -11,9 +11,10 @@
         use stringref
         use iso_c_binding
         implicit none
+        private
 
 #       define _fortres_exception_type(_ident, _num) \
-          integer*4, parameter :: _ident = _same(x)_str(_num);
+          integer*4, public, parameter :: _ident = _same(x)_str(_num);
           _fortres_ExceptionTable
 #       undef  _fortres_exception_type
       
@@ -76,16 +77,22 @@
           end subroutine
         end interface
 
-        contains
+        public :: try, throw, proc, c_null_ptr
+        public :: push_cleanup, pop_cleanup, set_traceproc
+        public :: set_synchronizer, get_context
 
-!_PROC_EXPORT(proc)
+        public :: StringRef_t, str, strBuf, len
+
+      !-------------------
+        contains
+      !-------------------
+
         function proc( sub ) result(res)
           procedure()     :: sub
           type (c_funptr) :: res
           res = c_funloc( sub )
         end function
 
-!_PROC_EXPORT(throw)
         subroutine throw( code, what )
           ! explicit procedure forces compiler to keep what-string alive!
           implicit none
