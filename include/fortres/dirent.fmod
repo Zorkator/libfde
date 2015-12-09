@@ -101,7 +101,7 @@
             logical,          optional :: stat
             integer(kind=c_int)        :: stat_
             call closedir_( dir, stat_ )
-            if (present(stat)) stat = stat_
+            if (present(stat)) stat = (stat_ == 0)
           end subroutine
   
           subroutine rewinddir( dir, stat )
@@ -109,7 +109,7 @@
             logical,   optional :: stat
             integer(kind=c_int) :: stat_
             call rewinddir_( dir, stat_ )
-            if (present(stat)) stat = stat_
+            if (present(stat)) stat = (stat_ == 0)
           end subroutine
 
           function isdir( pathStr )
