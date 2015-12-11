@@ -35,6 +35,8 @@
                                                                   \
       _fortres_exception_type(   RuntimeError          ,02200000) \
       _fortres_exception_type(     NotImplementedError ,02200100) \
+      _fortres_exception_type(     LookupError         ,02200200) \
+      _fortres_exception_type(       KeyError          ,02200210) \
                                                                   \
       _fortres_exception_type(   TypeError             ,02400000) \
                                                                   \

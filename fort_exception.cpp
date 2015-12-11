@@ -48,7 +48,7 @@ class ExceptionMap
 #       define _fortres_exception_type(_ident, _num) \
           (*this)[_paste(0x,_num)] = _str(_ident) ": ";
         _fortres_ExceptionTable
-        (*this)[0] = "_invalid_Exception";
+        (*this)[0] = "_invalid_Exception: ";
 #       undef  _fortres_exception_type
       }
 
