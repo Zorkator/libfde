@@ -239,6 +239,20 @@ class RefType(TypeSpec):
       character(len=max(255, bufLen)) :: buffer
       {baseType}{dimSpec}, target     :: obj
       type({typeId}_wrap_t)           :: self
+      self%ptr => obj
+      write(buffer, {writeFmt}, iostat=status) {writeExpr},'#'{formatSpec}
+      if (status == 0) then
+        bufLen = len_trim( buffer ) - 1
+      end if
+    end subroutine
+    """,
+
+    ref_try_streaming_zero = """
+    subroutine {typeId}_stream_try_( bufLen, status )
+      integer                         :: bufLen, status
+      character(len=max(255, bufLen)) :: buffer
+      {baseType}{dimSpec}, target     :: obj
+      type({typeId}_wrap_t)           :: self
       integer*1, parameter            :: zero(storage_size(obj)/8) = 0
       obj = transfer( zero, obj )
       self%ptr => obj
@@ -588,7 +602,7 @@ class RefType(TypeSpec):
       self.visitorGroup_end = ''
 
     if (streamType == 'buffered' and not (self._isArray or self._isProc)):
-      self._tryStreamer  = 'ref_try_streaming'
+      self._tryStreamer  = ('ref_try_streaming_zero', 'ref_try_streaming')[self._isDerived]
       self.tryStreamProc = ', tryStreamProc = {0}_stream_try_'.format( typeId )
     else:
       self._tryStreamer  = ''
