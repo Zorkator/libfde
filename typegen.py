@@ -239,6 +239,8 @@ class RefType(TypeSpec):
       character(len=max(255, bufLen)) :: buffer
       {baseType}{dimSpec}, target     :: obj
       type({typeId}_wrap_t)           :: self
+      integer*1, parameter            :: zero(storage_size(obj)/8) = 0
+      obj = transfer( zero, obj )
       self%ptr => obj
       write(buffer, {writeFmt}, iostat=status) {writeExpr},'#'{formatSpec}
       if (status == 0) then
