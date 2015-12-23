@@ -1,0 +1,59 @@
+
+!                . o O (needed for generated procedure exports)
+#include "adt/itfUtil.fpp"
+
+module adt_containertypes
+  use iso_c_binding
+  use adt_ref
+  use adt_list
+  use adt_item
+  use adt_string
+  use adt_hashmap
+  use adt_convert
+  use adt_ostream
+  implicit none
+  private
+
+  !_TypeGen_declare_RefType(  public, HashMapPtr,    type(HashMapPtr_t), scalar )
+  !_TypeGen_declare_RefType(  public, ItemPtr,       type(ItemPtr_t),    scalar )
+  !_TypeGen_declare_RefType(  public, ListPtr,       type(ListPtr_t),    scalar )
+  !_TypeGen_declare_RefType(  public, RefPtr,        type(RefPtr_t),     scalar )
+
+  !_TypeGen_declare_RefType(  public, HashMapPtr_1d, type(HashMapPtr_t), dimension(:) )
+  !_TypeGen_declare_RefType(  public, ItemPtr_1d,    type(ItemPtr_t),    dimension(:) )
+  !_TypeGen_declare_RefType(  public, ListPtr_1d,    type(ListPtr_t),    dimension(:) )
+  !_TypeGen_declare_RefType(  public, RefPtr_1d,     type(RefPtr_t),     dimension(:) )
+
+
+  !_TypeGen_declare_ListNode( public, bool1,      logical*1,   scalar )
+  !_TypeGen_declare_ListNode( public, bool2,      logical*2,   scalar )
+  !_TypeGen_declare_ListNode( public, bool4,      logical*4,   scalar )
+  !_TypeGen_declare_ListNode( public, bool8,      logical*8,   scalar )
+  !_TypeGen_declare_ListNode( public, int1,       integer*1,   scalar )
+  !_TypeGen_declare_ListNode( public, int2,       integer*2,   scalar )
+  !_TypeGen_declare_ListNode( public, int4,       integer*4,   scalar )
+  !_TypeGen_declare_ListNode( public, int8,       integer*8,   scalar )
+  !_TypeGen_declare_ListNode( public, real4,      real*4,      scalar )
+  !_TypeGen_declare_ListNode( public, real8,      real*8,      scalar )
+  !_TypeGen_declare_ListNode( public, real16,     real*16,     scalar )
+  !_TypeGen_declare_ListNode( public, complex8,   complex*8,   scalar )
+  !_TypeGen_declare_ListNode( public, complex16,  complex*16,  scalar )
+  !_TypeGen_declare_ListNode( public, complex32,  complex*32,  scalar )
+  !_TypeGen_declare_ListNode( public, c_void_ptr, type(c_ptr), scalar )
+
+  !_TypeGen_declare_ListNode( public, String,     type(String_t),      scalar )
+  !_TypeGen_declare_ListNode( alias,  String,     character(len=*),    scalar )
+  !_TypeGen_declare_ListNode( alias,  String,     character(len=1),    dimension(:) )
+
+  !_TypeGen_declare_ListNode( public, HashMap,    type(HashMap_t),     scalar )
+  !_TypeGen_declare_ListNode( public, Item,       type(Item_t),        scalar )
+  !_TypeGen_declare_ListNode( public, List,       type(List_t),        scalar )
+  !_TypeGen_declare_ListNode( public, Ref,        type(Ref_t),         scalar )
+  !_TypeGen_declare_ListNode( alias,  Ref,        type(RefEncoding_t), dimension(:) )
+
+  contains
+
+  !_TypeGen_implementAll()
+
+end module
+
