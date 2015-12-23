@@ -38,8 +38,6 @@ module adt_list
   !     cloneMode  = _type,               \
   !     acceptProc = list_accept_wrap_ )
 
-  !_TypeGen_declare_ListNode( public, List, type(List_t), scalar )
-
 
   integer(kind=4), parameter, public :: first = 1, last = -1, tail = 0
 

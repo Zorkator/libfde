@@ -43,8 +43,6 @@ module adt_hashmap
   !     cloneMode  = _type,                     \
   !     acceptProc = hashmap_accept_wrap_ )
 
-  !_TypeGen_declare_ListNode( public, HashMap, type(HashMap_t), scalar )
-
   public :: initialize
   public :: len
   public :: is_valid

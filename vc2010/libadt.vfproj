@@ -56,6 +56,15 @@
 				<Tool Name="VFCustomBuildTool" CommandLine="python &quot;$(ProjectDir)..\typegen.py&quot; &quot;$(InputPath)&quot; -o ../$(InputName).f90" Outputs="../$(InputName).f90"/></FileConfiguration>
 			<FileConfiguration Name="Release|Win32">
 				<Tool Name="VFCustomBuildTool" CommandLine="python &quot;$(ProjectDir)..\typegen.py&quot; &quot;$(InputPath)&quot; -o ../$(InputName).f90" Outputs="../$(InputName).f90"/></FileConfiguration></File>
+		<File RelativePath="..\containertypes.f90_tpp">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFCustomBuildTool" CommandLine="python &quot;$(ProjectDir)..\typegen.py&quot; &quot;$(InputPath)&quot; -o ../$(InputName).f90" Outputs="../$(InputName).f90"/></FileConfiguration>
+			<FileConfiguration Name="Release|x64">
+				<Tool Name="VFCustomBuildTool" CommandLine="python &quot;$(ProjectDir)..\typegen.py&quot; &quot;$(InputPath)&quot; -o ../$(InputName).f90" Outputs="../$(InputName).f90"/></FileConfiguration>
+			<FileConfiguration Name="Debug|x64">
+				<Tool Name="VFCustomBuildTool" CommandLine="python &quot;$(ProjectDir)..\typegen.py&quot; &quot;$(InputPath)&quot; -o ../$(InputName).f90" Outputs="../$(InputName).f90"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFCustomBuildTool" CommandLine="python &quot;$(ProjectDir)..\typegen.py&quot; &quot;$(InputPath)&quot; -o ../$(InputName).f90" Outputs="../$(InputName).f90"/></FileConfiguration></File>
 		<File RelativePath="..\hashmap.f90_tpp">
 			<FileConfiguration Name="Debug|Win32">
 				<Tool Name="VFCustomBuildTool" CommandLine="python &quot;$(ProjectDir)..\typegen.py&quot; &quot;$(InputPath)&quot; -o ../$(InputName).f90" Outputs="../$(InputName).f90"/></FileConfiguration>
@@ -114,6 +123,7 @@
 		<File RelativePath="..\basestring.f90"/>
 		<File RelativePath="..\basestring_impl.f90"/>
 		<File RelativePath="..\basetypes.f90"/>
+		<File RelativePath="..\containertypes.f90"/>
 		<File RelativePath="..\convert.f90"/>
 		<File RelativePath="..\crc.f90"/>
 		<File RelativePath="..\crc_impl.f90"/>

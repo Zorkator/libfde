@@ -123,13 +123,13 @@ class RefType(TypeSpec):
     #   dimSpec:   ('', ', dimension(:,...)')[has_dimension]
     #
     type = """
-    type, private :: {typeId}_wrap_t
+    type, public :: {typeId}Ptr_t
        {baseType}{baseExtra}{dimSpec}, pointer :: ptr
     end type
 
     type, private :: {typeId}_encoder_t
-      type(TypeInfo_ptr_t)  :: typeInfo(2)
-      type({typeId}_wrap_t) :: ref_wrap
+      type(TypeInfo_ptr_t) :: typeInfo(2)
+      type({typeId}Ptr_t)  :: ref_wrap
     end type
 
     type(TypeInfo_t), target :: type_{typeId}
@@ -188,7 +188,7 @@ class RefType(TypeSpec):
       {baseType}{dimSpec}{valAttrib} :: self
       type(ostream_t)                :: outs
       type(TypeInfo_t),      pointer :: ti
-      type({typeId}_wrap_t)          :: wrap
+      type({typeId}Ptr_t)            :: wrap
       ti => static_type(self)
       wrap%ptr => self
       call ti%streamProc( wrap, ti, outs )
@@ -227,7 +227,7 @@ class RefType(TypeSpec):
     ref_streamer = """
     recursive &
     subroutine {typeId}_stream_wrap( self, ti, outs )
-      type({typeId}_wrap_t)             :: self
+      type({typeId}Ptr_t)               :: self
       type(TypeInfo_t)                  :: ti
       type(ostream_t)                   :: outs{streamWriting}{formatSpec}
     end subroutine
@@ -238,7 +238,7 @@ class RefType(TypeSpec):
       integer                         :: bufLen, status
       character(len=max(255, bufLen)) :: buffer
       {baseType}{dimSpec}, target     :: obj
-      type({typeId}_wrap_t)           :: self
+      type({typeId}Ptr_t)             :: self
       self%ptr => obj
       write(buffer, {writeFmt}, iostat=status) {writeExpr},'#'{formatSpec}
       if (status == 0) then
@@ -252,7 +252,7 @@ class RefType(TypeSpec):
       integer                         :: bufLen, status
       character(len=max(255, bufLen)) :: buffer
       {baseType}{dimSpec}, target     :: obj
-      type({typeId}_wrap_t)           :: self
+      type({typeId}Ptr_t)             :: self
       integer*1, parameter            :: zero(storage_size(obj)/8) = 0
       obj = transfer( zero, obj )
       self%ptr => obj
@@ -269,8 +269,8 @@ class RefType(TypeSpec):
     interface
       recursive &
       subroutine {streamProcId}( wrap, ti, outs )
-        import {typeId}_wrap_t, TypeInfo_t, ostream_t
-        type({typeId}_wrap_t) :: wrap
+        import {typeId}Ptr_t, TypeInfo_t, ostream_t
+        type({typeId}Ptr_t)   :: wrap
         type(TypeInfo_t)      :: ti
         type(ostream_t)       :: outs
       end subroutine
@@ -291,7 +291,7 @@ class RefType(TypeSpec):
       {baseType}{dimSpec}{valAttrib} :: self
       type(Visitor_t)                :: vstr
       type(TypeInfo_t),      pointer :: ti
-      type({typeId}_wrap_t)          :: wrap
+      type({typeId}Ptr_t)            :: wrap
       ti       => static_type(self)
       wrap%ptr => self
       call ti%acceptProc( wrap, ti, vstr )
@@ -304,7 +304,7 @@ class RefType(TypeSpec):
     recursive &
     subroutine {typeId}_accept_wrap( wrap, ti, vstr )
       use adt_visitor
-      type({typeId}_wrap_t)     :: wrap
+      type({typeId}Ptr_t)       :: wrap
       type(TypeInfo_t)          :: ti
       type(Visitor_t)           :: vstr{visitorGroup_beg}
       call vstr%visit( vstr, wrap, ti ){visitorGroup_end}
@@ -315,8 +315,8 @@ class RefType(TypeSpec):
     interface
       recursive &
       subroutine {acceptProcId}( wrap, ti, vstr )
-        import {typeId}_wrap_t, TypeInfo_t, Visitor_t
-        type({typeId}_wrap_t)     :: wrap
+        import {typeId}Ptr_t, TypeInfo_t, Visitor_t
+        type({typeId}Ptr_t)       :: wrap
         type(TypeInfo_t)          :: ti
         type(Visitor_t)           :: vstr
       end subroutine
@@ -362,7 +362,7 @@ class RefType(TypeSpec):
       use iso_c_binding
       type(Ref_t),        intent(in) :: val
       {baseType}{dimSpec},   pointer :: res
-      type({typeId}_wrap_t), pointer :: wrap
+      type({typeId}Ptr_t),   pointer :: wrap
       
       call c_f_pointer( ref_get_typereference(val), wrap )
       if (associated(wrap)) then; res => wrap%ptr
@@ -461,7 +461,7 @@ class RefType(TypeSpec):
       use iso_c_binding
       {baseType}{dimSpec}, pointer, intent(out) :: ptr
       type(Ref_t),                  intent(in)  :: self
-      type({typeId}_wrap_t),            pointer :: wrap
+      type({typeId}Ptr_t),              pointer :: wrap
       
       res = associated( dynamic_type(self), type_{typeId} )
       if (res) then

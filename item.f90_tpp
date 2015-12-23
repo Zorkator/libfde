@@ -60,8 +60,6 @@ module adt_item
   !     streamProc = item_stream_wrap_,   \
   !     acceptProc = item_accept_wrap_ )
 
-  !_TypeGen_declare_ListNode( public, Item, type(Item_t), scalar )
-
   
   ! declare Item_of(<type>) interface ...
   ! NOTE: It's named Item_of to avoid ambiguity with Item-interface for type deref.
