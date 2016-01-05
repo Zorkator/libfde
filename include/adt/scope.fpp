@@ -49,6 +49,12 @@
 # define _set_scopeSymbol( parent, sym ) \
     _set_scopeSymbol_as( parent, sym, _str(sym) )
 
+# define _bind_scopeSymbol_as( parent, sym, id ) \
+    call set( parent, id, Item_of(ref_of(sym, bind=.true.)) )
+
+# define _bind_scopeSymbol( parent, sym ) \
+    _bind_scopeSymbol_as( parent, sym, _str(sym) )
+
 # define _set_scopeValue_as( parent, sym, id ) \
     call set( parent, id, Item_of(sym) )
 
