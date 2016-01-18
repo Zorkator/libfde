@@ -45,6 +45,12 @@ module impl_hashmap__
 
 
   interface
+    subroutine hashmap_change_item_cnt_( self, shift )
+      import HashMap_t
+      type(HashMap_t)     :: self
+      integer, intent(in) :: shift
+    end subroutine
+
     function hashmap_get_bucketIndex_( self, key ) result(res)
       import HashMap_t, ListIndex_t
       type(HashMap_t),  intent(in) :: self
@@ -419,9 +425,20 @@ end module
   end function
 
 
+  subroutine hashmap_change_item_cnt_( self, shift )
+    use impl_hashmap__, only: HashMap_t, hashmap_reindex_
+    type(HashMap_t)     :: self
+    integer, intent(in) :: shift
+
+    self%items = self%items + shift
+    if (self%indexLimits(1) < self%indexLimits(2)) &
+      call hashmap_reindex_( self ) !< range in indexLimits enables index-auto-resizing
+  end subroutine
+
+
   logical &
   function hashmap_locate_item_( self, key, idx ) result(res)
-    use impl_hashmap__, only: HashMap_t, HashNode_t, ListIndex_t, hashmap_reindex_, &
+    use impl_hashmap__, only: HashMap_t, HashNode_t, ListIndex_t, &
                              hashmap_get_bucketIndex_, HashNode, next, is_valid
     use adt_string
     implicit none
@@ -429,9 +446,6 @@ end module
     character(len=*),   intent(in) :: key
     type(ListIndex_t), intent(out) :: idx
     type(HashNode_t),      pointer :: node
-    
-    if (self%indexLimits(1) < self%indexLimits(2)) &
-      call hashmap_reindex_( self ) !< range in indexLimits enables index-auto-resizing
     
     idx = hashmap_get_bucketIndex_( self, key )
     do while (is_valid(idx))
@@ -510,7 +524,7 @@ end module
         call insert( bucket, new_ListNode( mapItem ) )
       end if
       call assign( mapItem%key, key )
-      self%items = self%items + 1
+      call hashmap_change_item_cnt_( self, +1 )
     else
       ! hash node exists ...
       mapItem => HashNode(bucket)
@@ -757,11 +771,11 @@ end module
     res = hashmap_locate_item_( self, key, bucket )
     if (res) then
       call append( hashmap_nodeCache, index( bucket, 0 ) )
-      self%items = self%items - 1
       if (present(valTgt)) then
         mapItem => HashNode(bucket)
         valTgt  => mapItem%value
       end if
+      call hashmap_change_item_cnt_( self, -1 )
     end if
   end function
 
