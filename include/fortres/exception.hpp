@@ -16,7 +16,7 @@ typedef enum {
 class Context;
 
 typedef void (*Procedure)( ... );
-typedef void (*TraceProcedure)( int *skippedFrames );
+typedef void (*TraceProcedure)( int *skippedFrames, const char *msg, unsigned int len );
 typedef void (*Synchronizer)( Context **, int );
 
 _dllExport_C

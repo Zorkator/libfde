@@ -17,8 +17,9 @@ printFrameLine( StringRef *frameInfo )
   { fprintf( stderr, "%s\n", frameInfo->trim().c_str() ); }
 
 void
-traceStack( int *skippedFrames )
+traceStack( int *skippedFrames, const char *msg, unsigned int len )
 {
+  fprintf( stderr, "%.*s\n", len, msg );
   f_tracestack( printFrameLine, *skippedFrames + 1 );
 }
 
@@ -139,10 +140,12 @@ class Context
       closeFrame( void )
         { _checkPoints.pop_back(); }
 
-    std::string &
-      prepare_exception( int code )
+    void
+      prepare_exception( int code, const std::string &msg )
       {
-        CheckPoint *match = NULL;
+        CheckPoint *match   = NULL;
+        std::string excMsg  = exceptionMap.get( code ) + msg;
+        bool        doTrace = true;
 
         while (_checkPoints.size())
         {
@@ -150,35 +153,30 @@ class Context
           if (chk.check( code ))
           {
             chk._code    = code;
-            chk._msg     = exceptionMap.get( code );
-            chk._doTrace = (code & StandardError);
+            chk._msg     = excMsg;
+            chk._doTrace = (code & StandardError) != 0; //< for now: do trace if it's a StandardError
             match        = &chk;
+
+            doTrace     &= chk._doTrace; //< future: CheckPoint might disable trace ...
             break;
           }
           _checkPoints.pop_back();
         }
-  
-        /**
-         * call traceback if there's either 
-         *   no matching CheckPoint or it's requested to do so ..
-         */
-        if (!match || match->_doTrace)
+
+        if (doTrace && _traceproc)
         {
-          if (_traceproc)
-          {
-            int skipped = 2; /*< skip frames prepare_exception + f_throw */
-            _traceproc( &skipped );
-          }
+          int skipped = 2; /*< skip frames prepare_exception + f_throw */
+          _traceproc( &skipped, excMsg.c_str(), excMsg.length() );
         }
 
-        if (match)
-          { return match->_msg; }
-
-        /**
-         * If we arrive here there's no matching catch point!
-         * This means, we just can't catch this exception ... sorry and bye!
-         */
-        throw;
+        if (!match)
+        {
+          /**
+           * If we arrive here there's no matching catch point!
+           * This means, we just can't catch this exception ... sorry and bye!
+           */
+          throw;
+        }
       }
 
     void
@@ -342,7 +340,7 @@ void
 f_throw( int code, const StringRef *what )
 {
   Context *context = getContext();
-  context->prepare_exception( code ).append( what->str() );
+  context->prepare_exception( code, what->str() );
   context->fire_exception(); //< no RETURN!
 }
 
@@ -351,7 +349,7 @@ void
 f_throw_str( int code, std::string **msg )
 {
   Context *context = getContext();
-  context->prepare_exception( code ).append( **msg );
+  context->prepare_exception( code, **msg );
   delete *msg; *msg = NULL;
   context->fire_exception(); //< no RETURN!
 }
