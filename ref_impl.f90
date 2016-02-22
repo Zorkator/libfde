@@ -89,6 +89,23 @@ module impl_ref__
       integer(kind=1), intent(in) :: attrib
     end subroutine
   end interface
+
+  contains
+
+  function deref_void( cptr ) result(res)
+    type(c_ptr), intent(in) :: cptr
+    type(c_ptr)             :: res
+    type(void_t),   pointer :: void_wrap
+
+    res = C_NULL_PTR
+    if (c_associated( cptr )) then
+      call c_f_pointer( cptr, void_wrap )
+      if (associated( void_wrap%ptr )) then
+        res = c_loc(void_wrap%ptr)
+      end if
+    end if
+  end function
+
 end module
 
 
@@ -295,17 +312,14 @@ end module
 
 
   function ref_peek_cptr( self ) result(res)
-    use impl_ref__, only: Ref_t, c_ptr, void_t, C_NULL_PTR, c_f_pointer, c_loc
+    use impl_ref__, only: Ref_t, c_ptr, c_loc, C_NULL_PTR, deref_void
     implicit none
     type(Ref_t), intent(in) :: self
     type(c_ptr)             :: res
-    type(void_t),   pointer :: wrap
 
+    res = C_NULL_PTR
     if (associated( self%ref_str%ptr )) then
-      call c_f_pointer( c_loc( self%ref_str%ptr(1) ), wrap )
-      res = c_loc(wrap%ptr)
-    else
-      res = C_NULL_PTR
+      res = deref_void( c_loc( self%ref_str%ptr(1) ) )
     end if
   end function
 
@@ -313,18 +327,13 @@ end module
 !_PROC_EXPORT(ref_cptr)
 !_ARG_REFERENCE1(self)
   function ref_cptr( self ) result(res)
-    use impl_ref__, only: Ref_t, void_t, ref_get_typereference
-		use iso_c_binding
+    use impl_ref__, only: Ref_t, c_ptr, ref_get_typereference, deref_void
+    use iso_c_binding
     implicit none
     type(Ref_t), intent(in) :: self
     type(c_ptr)             :: res
-    type(void_t),   pointer :: wrap
 
-    res = ref_get_typereference(self)
-    if (c_associated(res)) then
-      call c_f_pointer( res, wrap )
-      res = c_loc(wrap%ptr)
-    end if
+    res = deref_void( ref_get_typereference(self) )
   end function
 
 
@@ -335,13 +344,8 @@ end module
     implicit none
     type(c_ptr), intent(inout) :: res
     type(Ref_t), intent(in)    :: self
-    type(void_t),      pointer :: wrap
 
-    res = ref_get_typereference(self)
-    if (c_associated(res)) then
-      call c_f_pointer( res, wrap )
-      res = c_loc(wrap%ptr)
-    end if
+    res = deref_void( ref_get_typereference(self) )
   end subroutine
 
 
