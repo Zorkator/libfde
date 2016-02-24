@@ -4,6 +4,7 @@
 
 module test_basedata
   use adt_basetypes
+  use adt_containertypes
   use adt_string
   use adt_ref
   use adt_item
@@ -813,6 +814,8 @@ subroutine test_hashmap_cloning()!{{{
   type(Ref_t)                   :: r
   real*8, dimension(:), pointer :: r_array, r_ptr
 
+
+  r = clone( r )
   r = ref_of( newScope(), bind = .true. )
   allocate( r_array(10) ); r_array = 1
   call set( HashMap(r), "array", Item_of( ref_of( r_array, bind = .true. ) ) )

@@ -269,7 +269,7 @@ end module
 !_PROC_EXPORT(ref_clone)
 !_ARG_REFERENCE1(self)
   function ref_clone( self ) result(res)
-    use impl_ref__, only: Ref_t, basestring_set_attribute, attribute_volatile
+    use impl_ref__, only: Ref_t, basestring_set_attribute, attribute_volatile, ref_peek_cptr, c_associated
     implicit none
     type(Ref_t), intent(in) :: self
     type(Ref_t)             :: res
@@ -277,8 +277,10 @@ end module
     call basestring_set_attribute( res%ref_str, attribute_volatile )
     if (associated( self%typeInfo )) then
       if (associated( self%typeInfo%cloneRefProc )) then
-        call self%typeInfo%cloneRefProc( res, self )
-        res%refstat = _ref_WeakMine
+        if (c_associated( ref_peek_cptr(self) )) then
+          call self%typeInfo%cloneRefProc( res, self )
+          res%refstat = _ref_WeakMine
+        end if
         return
       end if
     end if
