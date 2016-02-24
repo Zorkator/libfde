@@ -27,7 +27,10 @@ class Scope(HashMap):
   def __setitem__( self, ident, val ):
     item   = self._getptr( self.get_, ident ).contents
     valRef = item.typed #< valRef := c_###() | Ref() | None [for NEW Items]
-    valRef = getattr( valRef, 'contents', valRef ) or item
+
+    if valRef is None: valRef = item                                  #< use Item for None-Type
+    else             : valRef = getattr( valRef, 'contents', valRef ) #< use c_### or deref'ed Ref
+
     # valRef := c_###() [for Ref() | c_###()] | Item()
     try             : valRef[:]    = val[:]
     except TypeError: valRef.value = getattr( val, 'value', val )
