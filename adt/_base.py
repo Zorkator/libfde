@@ -32,10 +32,10 @@ class LibLoader(object):
     return _env.get( envVarId, '' ).split( _pathDelim )
 
 
-  def _iter_searchPaths( self ):
-    pathList = ['.',
-                get_python_lib()
-               ]
+  def _iter_searchPaths( self, pathEnvVar ):
+    pathList = ['.']
+    pathList.extend( self.splitEnvPaths( pathEnvVar ) )
+    pathList.append( get_python_lib() )
     pathList.extend( self.splitEnvPaths(_envBinVar) )
     return iter(pathList)
 
@@ -70,7 +70,7 @@ class LibLoader(object):
       else:
         # not found or filePath not given ... so try via libPattern and search paths
         fp = kwArgs['libPattern'] #< argument libPattern is NOT optional here!
-        for path in self._iter_searchPaths():
+        for path in self._iter_searchPaths( pathEnvVar ):
           self._loadLib( path + _path.sep + fp, pathEnvVar )
 
       raise OSError( "unable to locate shared library {0}".format(fp) )
