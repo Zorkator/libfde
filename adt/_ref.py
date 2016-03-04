@@ -1,7 +1,7 @@
 
 from ctypes    import *
 from _typeinfo import TypedObject
-from _ftypes   import mappedType
+from _ftypes   import mappedType, _mapType
 from operator  import mul as _mul
 
 
@@ -48,3 +48,7 @@ class Ref(TypedObject):
     other = Ref()
     self.clone_( byref(other), byref(self) )
     return other
+
+
+_mapType( 'RefPtr', 'type(RefPtr_t)', POINTER(Ref) )
+

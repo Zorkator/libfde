@@ -2,7 +2,7 @@
 from ctypes  import *
 from _object import Object, Compound
 from _item   import Item
-from _ftypes import MemoryRef, mappedType
+from _ftypes import MemoryRef, mappedType, _mapType
 
 
 @mappedType( 'hashmap', 'type(HashMap_t)' )
@@ -114,5 +114,5 @@ class HashMap(Object):
         return default
 
 
-
+_mapType( 'HashMapPtr', 'type(HashMapPtr_t)', POINTER(HashMap) )
 

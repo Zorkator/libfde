@@ -1,7 +1,7 @@
 
 from _hashmap import HashMap
 from _ref     import Ref
-from _ftypes  import mappedType, CALLBACK
+from _ftypes  import mappedType, _mapType, CALLBACK
 from ctypes   import byref, c_char_p, c_int, POINTER
 
 
@@ -20,8 +20,9 @@ class Scope(HashMap):
 
   def __getitem__( self, ident ):
     valRef = super(Scope, self).__getitem__( ident ).typed
-    try   : return valRef.contents
-    except: return valRef
+    try              : return valRef.contents
+    except ValueError: return POINTER(c_int)()
+    except           : return valRef
 
 
   def __setitem__( self, ident, val ):
@@ -47,3 +48,7 @@ class Scope(HashMap):
     ptr = POINTER(_class)()
     _class.__getattr__('get_processscope_')( byref(ptr) )
     return ptr.contents
+
+
+_mapType( 'HashMapPtr', 'type(HashMapPtr_t)', POINTER(Scope) )
+

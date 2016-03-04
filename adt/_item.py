@@ -1,7 +1,7 @@
 
 from ctypes    import *
 from _typeinfo import TypedObject, TypeSpecs
-from _ftypes   import mappedType, MemoryRef, Complex8, Complex16, Complex32
+from _ftypes   import mappedType, _mapType, MemoryRef, Complex8, Complex16, Complex32
 from _string   import String
 from _ref      import Ref
 
@@ -40,4 +40,7 @@ class Item(TypedObject):
     super(Item, self).__init__()
     if val is not None:
       self.value = val
+
+
+_mapType( 'ItemPtr', 'type(ItemPtr_t)', POINTER(Item) )
 
