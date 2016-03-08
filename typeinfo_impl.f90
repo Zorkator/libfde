@@ -104,7 +104,7 @@ end module
 
     ! try to find length of stream buffer ...
     if (present(tryStreamProc)) then
-      call try_streaming( self%typeSpecs, tryStreamProc )
+      call dim_streamBuffer()
     else if (associated( self%subtype )) then
       self%typeSpecs%streamLen = self%subtype%typeSpecs%streamLen
     end if
@@ -121,23 +121,27 @@ end module
       memref%len = len_trim(what)
     end subroutine
 
-
-    subroutine try_streaming( self, testStream )
-      type(TypeSpecs_t) :: self
-      procedure()       :: testStream
-      integer           :: bufLen, status
+    subroutine dim_streamBuffer()
+      integer :: bufLen, status
 
       bufLen = 32; status = 1
       do while (.true.)
         bufLen = bufLen * 2
-        call testStream( bufLen, status )
-        if (status == 0) then
-          self%streamLen = bufLen
-          exit
-        end if
+        call try_streaming( bufLen, status )
+        if (status == 0) exit
       end do
     end subroutine
+      
+    subroutine try_streaming( bufLen, status )
+      integer               :: bufLen, status
+      character(len=bufLen) :: buffer
 
+      !buffer = "" !< memory inspector wants us to initialize buffer ... ???
+      call tryStreamProc( buffer, status )
+      if (status == 0) then
+        self%typeSpecs%streamLen = len_trim( buffer ) - 1
+      end if
+    end subroutine
   end subroutine
 
 

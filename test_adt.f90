@@ -12,6 +12,7 @@ module test_basedata
   use adt_hashmap
   use adt_streamvisitor
   use adt_ostream
+  use adt_scope
   use iso_c_binding
   implicit none
 
@@ -305,6 +306,9 @@ module test_basedata
     implicit none
     integer :: i, j, k
 
+    call delete( v_string )
+    call delete( v_ref )
+    call delete( v_item )
     call delete( v_list )
     call delete( v_hashmap )
 
@@ -394,6 +398,8 @@ module test_basedata
     deallocate( v_bool4_3d )
     deallocate( v_bool2_3d )
     deallocate( v_bool1_3d )
+
+
   end subroutine!}}}
 
 end module
@@ -749,8 +755,6 @@ end subroutine!}}}
 
 subroutine test_hashmap_nesting()!{{{
   use test_basedata
-  !use adt_alloc
-  use adt_scope
   implicit none
 
   type(HashMap_t), pointer :: scope => null()
@@ -759,7 +763,7 @@ subroutine test_hashmap_nesting()!{{{
   character(len=10)        :: buff
   real*8, dimension(:), pointer :: r_array
 
-  ref1 = ref_of( getScope('test_hashmap_nesting'), bind = .true. )
+  ref1 = ref_of( getScope('test_hashmap_nesting') )
 
   r_array => null()
   print *, dynamic_cast( r_array, ref1 ) !< should fail
@@ -1031,6 +1035,7 @@ program test_adt
   !call stream( fout, "testinger" )
   !call stream( fout, "testinger" )
 
+  type(HashMap_t), pointer :: scope => null()
   character(len=20) :: text = "TestInGEr -- TäxT"
   character(len=20) :: txtout
   v_string = "BlUbbINGER bla uND texT"
@@ -1063,9 +1068,13 @@ program test_adt
   call test_hashmap_cloning()
   call test_file_string()
 
+  ! delete process scope to make inspector happy
+  scope => getScope()
+  call delete( scope )
+  deallocate( scope )
+
   call cleanup_basedata()
   call hashmap_clear_cache()
 
-  contains
-
 end
+
