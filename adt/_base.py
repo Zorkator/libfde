@@ -13,6 +13,16 @@ _envBinVar   = ('LD_LIBRARY_PATH', 'PATH')[_isWin]
 _libPattern  = ('libadt.*.so', 'libadt.*.dll')[_isWin]
 
 
+class NullHandle(object):
+  def __null_method( self, *args, **kwArgs ):
+    pass
+
+  def __getattr__( self, name ):
+    setattr( self, name, type(self).__null_method )
+    return self.__null_method
+
+
+
 class LibLoader(object):
 
   class Success(Exception):
@@ -62,6 +72,9 @@ class LibLoader(object):
     fileEnvVar = kwArgs.get('fileEnv', '')
     pathEnvVar = kwArgs.get('prioPathEnv', '')
 
+    if kwArgs.get('debug'):
+      import pdb; pdb.set_trace()
+
     try:
       # try using given filePath or environment variable
       fp = kwArgs.get('filePath') or _env.get( fileEnvVar )
@@ -73,10 +86,11 @@ class LibLoader(object):
         for path in self._iter_searchPaths( pathEnvVar ):
           self._loadLib( path + _path.sep + fp, pathEnvVar )
 
-      raise OSError( "unable to locate shared library {0}".format(fp) )
+      raise OSError( "unable to load shared library {0}".format(fp) )
 
     except self.Success:
-      sys.stdout.write( "loaded shared library {0}\n".format(self.filePath) )
+      if kwArgs.get('verbose'):
+        sys.stdout.write( "loaded shared library {0}\n".format(self.filePath) )
 
 
 _libLoader = LibLoader( fileEnv = 'LIBADT', prioPathEnv = 'ADTPATH', libPattern = _libPattern )

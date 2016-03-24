@@ -44,10 +44,14 @@ class Scope(HashMap):
 
 
   @classmethod
-  def getProcessScope( _class ):
+  def getProcessScope( _class, *path ):
     ptr = POINTER(_class)()
     _class.__getattr__('get_processscope_')( byref(ptr) )
-    return ptr.contents
+    scope = ptr.contents
+    # resolve scope nesting of given path ...
+    for p in path:
+      scope = scope[p]
+    return scope
 
 
 _mapType( 'HashMapPtr', 'type(HashMapPtr_t)', POINTER(Scope) )

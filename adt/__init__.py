@@ -11,15 +11,16 @@ def _import( modId, what ):
   __all__.extend( what )
 
 
-_import( 'adt._base',     ['LibLoader'] )
-_import( 'adt._ftypes',   ['Complex8', 'Complex16', 'Complex32', 'MemoryRef', 'CALLBACK'] )
-_import( 'adt._typeinfo', ['TypeInfo'] )
-_import( 'adt._string',   ['String'] )
-_import( 'adt._item',     ['Item'] )
-_import( 'adt._ref',      ['Ref'] )
-_import( 'adt._list',     ['List'] )
-_import( 'adt._hashmap',  ['HashMap'] )
-_import( 'adt._scope',    ['Scope'] )
+_import( 'adt._base',      ['LibLoader', 'NullHandle'] )
+_import( 'adt._ftypes',    ['Complex8', 'Complex16', 'Complex32', 'MemoryRef', 'CALLBACK'] )
+_import( 'adt._typeinfo',  ['TypeInfo'] )
+_import( 'adt._string',    ['String'] )
+_import( 'adt._item',      ['Item'] )
+_import( 'adt._ref',       ['Ref'] )
+_import( 'adt._list',      ['List'] )
+_import( 'adt._hashmap',   ['HashMap'] )
+_import( 'adt._scope',     ['Scope'] )
+_import( 'adt._simulator', ['Simulator', 'RemoteSimulator'] )
 
 del _import
 

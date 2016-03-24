@@ -3,6 +3,9 @@
 
 module adt_ostream
   use adt_typeinfo
+  use, intrinsic :: iso_fortran_env, only : stdin  => input_unit,  &
+                                            stdout => output_unit, &
+                                            stderr => error_unit
   implicit none
   private
 
@@ -28,6 +31,7 @@ module adt_ostream
   interface error     ; module procedure ostream_error     ; end interface
 
   public :: ostream, width, newline, indent, fuselines, set, stream, error
+  public :: stdin, stdout, stderr
 
   contains
 
