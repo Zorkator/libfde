@@ -14,6 +14,7 @@ class Simulator(object):
 ######################################
   _statePath = '{classId}'
   _hooksPath = '{classId}/hooks'
+  _childId   = 0
 
   @classmethod
   def _getPathOf( _class, pathId ):
@@ -74,6 +75,7 @@ class Simulator(object):
 
 
   def __getstate__( self ):
+    self._childId += 1
     clone = self.__dict__.copy()
     clone['_hidden'] = HandleWallet()
     return clone
@@ -86,7 +88,7 @@ class Simulator(object):
   def __init__( self, libName, **kwArgs ):
     kwArgs.setdefault( 'logFileName', "%s.{pid}.log" % type(self).__name__ )
     kwArgs.setdefault( 'logBuffering', -1 )
-    kwArgs.setdefault( 'workdir', '{pid}' )
+    kwArgs.setdefault( 'workdir', '{id:03d}_{pid}' )
 
     self.__dict__.update( kwArgs )
     self.libName = os.path.abspath( libName )
@@ -122,7 +124,7 @@ class Simulator(object):
 
     # create and change to working directory of simulation ...
     prevdir = os.getcwd()
-    workdir = self.workdir.format( pid=os.getpid() )
+    workdir = self.workdir.format( pid=os.getpid(), id=self._childId )
     self._makedirs( workdir )
     os.chdir( workdir )
 
@@ -133,6 +135,7 @@ class Simulator(object):
       try   : hooks.setCallback( h, getattr( self, h ) )
       except: pass
 
+    self._childId = 0
     self.run( **kwArgs )      #< and start it by calling run
     self.finalize( **kwArgs ) #< call finalize for possible cleanup
     os.chdir( prevdir )       #< restore previous directory
