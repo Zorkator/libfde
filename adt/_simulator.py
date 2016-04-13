@@ -88,7 +88,7 @@ class Simulator(object):
   def __init__( self, libName, **kwArgs ):
     kwArgs.setdefault( 'logFileName', "%s.{pid}.log" % type(self).__name__ )
     kwArgs.setdefault( 'logBuffering', -1 )
-    kwArgs.setdefault( 'workdir', '{id:03d}_{pid}' )
+    kwArgs.setdefault( 'workdir', '' )
 
     self.__dict__.update( kwArgs )
     self.libName = os.path.abspath( libName )
@@ -117,16 +117,18 @@ class Simulator(object):
     return True
 
 
-  def start( self, kwArgs=dict() ):
+  def start( self, **kwArgs ):
+    #import pdb; pdb.set_trace()
     # update object members ...
     for k in set(self.__dict__).intersection( set(kwArgs) ):
       setattr( self, k, kwArgs.pop(k) )
 
     # create and change to working directory of simulation ...
-    prevdir = os.getcwd()
     workdir = self.workdir.format( pid=os.getpid(), id=self._childId )
-    self._makedirs( workdir )
-    os.chdir( workdir )
+    prevdir = os.getcwd()
+    if workdir:
+      self._makedirs( workdir )
+      os.chdir( workdir )
 
     # initialize simulator ...
     self.initialize( **kwArgs )
@@ -139,6 +141,17 @@ class Simulator(object):
     self.run( **kwArgs )      #< and start it by calling run
     self.finalize( **kwArgs ) #< call finalize for possible cleanup
     os.chdir( prevdir )       #< restore previous directory
+
+
+  def _start( self, kwArgs=dict() ):
+    self.start( **kwArgs )
+
+
+  def fork( self, **kwArgs ):
+    from multiprocessing import Process
+    childProc = Process( target=self._start, args=(kwArgs,) )
+    childProc.start()
+    return childProc 
 
   
   # override the following methods to adjust calls to simulator routines
@@ -190,11 +203,4 @@ class RemoteSimulator(Simulator):
 
   def send( self, what ):
     raise NotImplementedError
-
-
-  def fork( self, **kwArgs ):
-    from multiprocessing import Process
-    childProc = Process( target=self.start, args=(kwArgs,) )
-    childProc.start()
-    return childProc 
 

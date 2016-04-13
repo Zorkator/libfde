@@ -84,3 +84,6 @@ _complexType( 'complex32', 'complex*32', c_longdouble )
 CALLBACK = CFUNCTYPE(None)
 _mapType( 'Callback', 'procedure(Callback_itf)', CALLBACK )
 
+# define type for gfortran workaround
+_mapType( 'char10', 'character(len=10)', c_char * 10 )
+
