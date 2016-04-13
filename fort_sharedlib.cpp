@@ -376,6 +376,9 @@ _dllExport_C
 size_t
 f_so_filepath_of( const void *addr, StringRef *filePath )
 {
-  return so_filepath_of( addr, filePath->buffer(), filePath->length() );
+  size_t len = so_filepath_of( addr, filePath->buffer(), filePath->length() );
+  if (len < filePath->length())
+    { memset( filePath->buffer() + len, ' ', filePath->length() - len ); }
+  return len;
 }
 
