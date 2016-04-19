@@ -82,12 +82,20 @@
             type(StringRef_t), intent(in) :: sId !< symbolId
             integer(kind=c_int)           :: plugin_try_call_
           end function
+        end interface
 
-          ! get shared object filePath of given procedure
-
-          function so_filepath( proc, strRef ) _cID(f_so_filepath_of)
+        ! get shared object filePath of given procedure or data
+        interface so_filepath
+          function so_filepath_proc( p, strRef ) _cID(f_so_filepath_of)
             import StringRef_t, c_funptr, c_size_t
-            type(c_funptr), value, intent(in) :: proc
+            type(c_funptr), value, intent(in) :: p !< proc pointer
+            type(StringRef_t)                 :: strRef
+            integer(kind=c_size_t)            :: so_filepath
+          end function
+
+          function so_filepath_data( d, strRef ) _cID(f_so_filepath_of)
+            import StringRef_t, c_ptr, c_size_t
+            type(c_ptr), value, intent(in)    :: d !< data pointer
             type(StringRef_t)                 :: strRef
             integer(kind=c_size_t)            :: so_filepath
           end function
