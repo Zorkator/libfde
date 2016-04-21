@@ -1,11 +1,22 @@
 
 import os, sys, errno
-from traceback import format_exception
-from _base     import LibLoader, NullHandle
-from _scope    import Scope
+from . import LibLoader, adt_loader
 
 
+######################################
+class NullHandle(object):
+######################################
+  def __null_method( self, *args, **kwArgs ):
+    pass
+
+  def __getattr__( self, name ):
+    setattr( self, name, type(self).__null_method )
+    return self.__null_method
+
+
+######################################
 class HandleWallet(object):
+######################################
   pass
 
 
@@ -56,6 +67,7 @@ class Simulator(object):
   def state( self ):
     try   : return self._hidden._state
     except:
+      from adt.core import Scope
       self._hidden._state = Scope.getProcessScope( *self._getPathOf('state') )
       return self._hidden._state
 
@@ -63,6 +75,7 @@ class Simulator(object):
   def hooks( self ):
     try   : return self._hidden._hooks
     except:
+      from adt.core import Scope
       self._hidden._hooks = Scope.getProcessScope( *self._getPathOf('hooks') )
       return self._hidden._hooks
 
@@ -159,7 +172,10 @@ class Simulator(object):
   #
 
   def initialize( self, **kwArgs ):
-    self.handle.initialize_c_()
+    from ctypes import c_char, c_size_t, byref
+    adtFilePath = (c_char * 1024)()
+    self.handle.initialize_c_( byref(adtFilePath), c_size_t(len(adtFilePath)) )
+    adt_loader.set( filePath=adtFilePath.value.strip() )
 
 
   def run( self, **kwArgs ):
@@ -170,37 +186,4 @@ class Simulator(object):
     try  : self.handle.finalize_c_()
     except AttributeError: pass
 
-
-
-######################################
-class RemoteSimulator(Simulator):
-######################################
-
-  def processCommands( self ):
-    while True:
-      try:
-        cmd, res = self.receive(), None
-        if   isinstance( cmd, basestring ): res = getattr( self, "cmd_%s" % cmd )()
-        elif hasattr( cmd, 'keys' )       : res = self.setContext( cmd )
-        elif hasattr( cmd, '__iter__' )   : res = self.getContext( cmd )
-        else                              : res = "unknown command"
-
-      except StopIteration:
-        res = 'ok'
-        break
-
-      except Exception:
-        res = ''.join( format_exception( *sys.exc_info() ) )
-
-      finally:
-        self.send( res )
-
-
-  # methods to be [re-]implemented by subclasses
-
-  def receive( self ):
-    raise NotImplementedError
-
-  def send( self, what ):
-    raise NotImplementedError
 
