@@ -90,14 +90,14 @@
             import StringRef_t, c_funptr, c_size_t
             type(c_funptr), value, intent(in) :: p !< proc pointer
             type(StringRef_t)                 :: strRef
-            integer(kind=c_size_t)            :: so_filepath
+            integer(kind=c_size_t)            :: so_filepath_proc
           end function
 
           function so_filepath_data( d, strRef ) _cID(f_so_filepath_of)
             import StringRef_t, c_ptr, c_size_t
             type(c_ptr), value, intent(in)    :: d !< data pointer
             type(StringRef_t)                 :: strRef
-            integer(kind=c_size_t)            :: so_filepath
+            integer(kind=c_size_t)            :: so_filepath_data
           end function
         end interface
 
