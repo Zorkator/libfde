@@ -60,7 +60,7 @@ class Simulator(object):
   def handle( self ):
     try   : return self._hidden._handle
     except:
-      self._hidden._handle = LibLoader( filePath=self.libName ).handle
+      self._hidden._handle = LibLoader( filePath=self.libName, prioPathEnv=self.libPathVar ).handle
       return self._hidden._handle
 
   @property
@@ -102,6 +102,7 @@ class Simulator(object):
     kwArgs.setdefault( 'logFileName', "%s.{pid}.log" % type(self).__name__ )
     kwArgs.setdefault( 'logBuffering', -1 )
     kwArgs.setdefault( 'workdir', '' )
+    kwArgs.setdefault( 'libPathVar', 'ADTPATH' )
 
     self.__dict__.update( kwArgs )
     self.libName = os.path.abspath( libName )
