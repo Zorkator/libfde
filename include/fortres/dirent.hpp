@@ -2,6 +2,7 @@
 #define __FORTRES_DIRENT__HPP
 
 #include "fortres/StringRef.hpp"
+#include "fortres/String.hpp"
 #include "fortres/portdef.h"
 
 #if !defined _MSC_VER
@@ -64,6 +65,30 @@ void f_rewinddir( DIR *dir, uint32_t *stat );
 
 _dllExport_C
 int f_isdir( StringRef *pathStr );
+
+extern
+size_t so_filepath_of( const void *addr, char buff[], size_t len );
+
+_dllExport_C
+size_t f_so_filepath_of( const void *addr, StringRef *filePath );
+
+extern
+size_t make_realpath( const char *filePath, char *buff, size_t len );
+
+extern
+size_t make_realpath( const char *filePath, std::string *resolvedName );
+
+_dllExport_C
+size_t f_realpath( StringRef *filePath, StringRef *resolvedName );
+
+inline
+std::string
+realpath_of( const char *filePath )
+{
+  std::string resolvedName;
+  make_realpath( filePath, &resolvedName );
+  return resolvedName;
+}
 
 #endif /*__FORTRES_DIRENT__HPP */
 

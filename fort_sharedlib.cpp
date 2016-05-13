@@ -184,7 +184,7 @@ class PluginBroker
                       , const SharedLib::Handle &lib = SharedLib::Handle() )
           {
             const String &pluginId = (id.empty())? libFileToId( filePath ) : id;
-            (*this)[pluginId] = Value( filePath, lib );
+            (*this)[pluginId] = Value( realpath_of(filePath.c_str()), lib );
           }
     };
 
@@ -348,37 +348,5 @@ f_plugin_try_call( StringRef *pluginId, StringRef *symId )
   if (func != NULL)
     { reinterpret_cast<SharedLib::Function>(func)(); }
   return (func != NULL);
-}
-
-
-size_t
-so_filepath_of( const void *addr, char buff[], size_t len )
-{
-  size_t res = 0;
-
-#if defined _MSC_VER
-  HMODULE hdl = NULL;
-  if (GetModuleHandleExA( GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS | GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT, (LPCSTR)addr, &hdl ))
-    { res = GetModuleFileNameA( hdl, buff, (DWORD)len ); }
-#else
-  Dl_info info;
-  if (dladdr( const_cast<void *>(addr), &info ))
-  {
-    res = std::min( len-1, strlen( info.dli_fname ) );
-    memcpy( buff, info.dli_fname, res );
-    buff[res+1] = '\0';
-  }
-#endif
-  return res;
-}
-
-_dllExport_C
-size_t
-f_so_filepath_of( const void *addr, StringRef *filePath )
-{
-  size_t len = so_filepath_of( addr, filePath->buffer(), filePath->length() );
-  if (len < filePath->length())
-    { memset( filePath->buffer() + len, ' ', filePath->length() - len ); }
-  return len;
 }
 

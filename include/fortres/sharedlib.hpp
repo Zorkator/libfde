@@ -27,11 +27,5 @@ void * f_plugin_try_sym( StringRef *pluginId, StringRef *symId );
 _dllExport_C
 int f_plugin_try_call( StringRef *pluginId, StringRef *symId );
 
-extern
-size_t so_filepath_of( const void *addr, char buff[], size_t len );
-
-_dllExport_C
-size_t f_so_filepath_of( const void *addr, StringRef *filePath );
-
 #endif /* __FORTRES_SHAREDLIB__HPP */
 

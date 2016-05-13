@@ -17,6 +17,7 @@
         public :: DIR_t
         public :: relPath_from_to, relPath_to
         public :: opendir, readdir, closedir, rewinddir, isdir
+        public :: so_filepath
 
         interface relPath
           module procedure relPath_from_to, relPath_to
@@ -65,6 +66,29 @@
             import StringRef_t, c_int
             type(StringRef_t)   :: pathStr
             integer(kind=c_int) :: isdir_
+          end function
+
+          function realpath_( filePath, resolvedPath ) _cID(f_realpath)
+            import StringRef_t, c_size_t
+            type(StringRef_t)      :: filePath, resolvedPath
+            integer(kind=c_size_t) :: realpath_
+          end function
+        end interface
+
+        ! get shared object filePath of given procedure or data
+        interface so_filepath
+          function so_filepath_proc( p, strRef ) _cID(f_so_filepath_of)
+            import StringRef_t, c_funptr, c_size_t
+            type(c_funptr), value, intent(in) :: p !< proc pointer
+            type(StringRef_t)                 :: strRef
+            integer(kind=c_size_t)            :: so_filepath_proc
+          end function
+
+          function so_filepath_data( d, strRef ) _cID(f_so_filepath_of)
+            import StringRef_t, c_ptr, c_size_t
+            type(c_ptr), value, intent(in)    :: d !< data pointer
+            type(StringRef_t)                 :: strRef
+            integer(kind=c_size_t)            :: so_filepath_data
           end function
         end interface
 
@@ -116,6 +140,13 @@
             character(len=*), intent(in) :: pathStr
             logical                      :: isdir
             isdir = (isdir_( str(pathStr) ) /= 0)
+          end function
+
+          function realpath( filePath, strRef )
+            character(len=*), intent(in) :: filePath
+            type(StringRef_t)            :: strRef
+            integer(kind=c_size_t)       :: realpath
+            realpath = realpath_( str(filePath), strRef )
           end function
       end module
 #endif

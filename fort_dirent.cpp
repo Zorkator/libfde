@@ -7,6 +7,7 @@
 
 #if !defined _MSC_VER
   /* assume POSIX compatible compiler */
+# include <stdlib.h>
 # include <unistd.h>
 #	ifndef MAX_PATH
 #		define MAX_PATH		4096
@@ -22,6 +23,7 @@
 
 static const char _pathDelim[] = PATH_DELIM;
 static const char _pathSep[]   = PATH_DELIM other_PATH_DELIM;
+
 
 void
 make_cwd( std::string *cwd )
@@ -143,4 +145,82 @@ f_isdir( StringRef *pathStr )
   struct stat s;
   return (!stat( pathStr->trim().c_str(), &s ) && (s.st_mode & S_IFDIR));
 }
+
+
+
+size_t
+so_filepath_of( const void *addr, char buff[], size_t len )
+{
+  size_t res = 0;
+
+#if defined _MSC_VER
+  HMODULE hdl = NULL;
+  if (GetModuleHandleExA( GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS | GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT, (LPCSTR)addr, &hdl ))
+    { res = GetModuleFileNameA( hdl, buff, (DWORD)len ); }
+#else
+  Dl_info info;
+  if (dladdr( const_cast<void *>(addr), &info ))
+  {
+    res = std::min( len-1, strlen( info.dli_fname ) );
+    memcpy( buff, info.dli_fname, res );
+    buff[res+1] = '\0';
+  }
+#endif
+  return res;
+}
+
+
+_dllExport_C
+size_t
+f_so_filepath_of( const void *addr, StringRef *filePath )
+{
+  size_t len = so_filepath_of( addr, filePath->buffer(), filePath->length() );
+  if (len < filePath->length())
+    { memset( filePath->buffer() + len, ' ', filePath->length() - len ); }
+  return len;
+}
+
+
+size_t
+make_realpath( const char *filePath, char *buff, size_t len )
+{
+  size_t tgtLen = 0;
+
+#if defined _MSC_VER
+  tgtLen = GetFullPathName( filePath, len, buff, NULL );
+#else
+  const char *ptr;
+
+  if ((ptr = realpath( filePath, NULL )) != NULL)
+  {
+    tgtLen = std::min( len-1, strlen(ptr) );
+    memcpy( buff, ptr, tgtLen );
+    free( ptr );
+  }
+#endif
+  return tgtLen;
+}
+
+size_t
+make_realpath( const char *filePath, std::string *resolvedName )
+{
+  size_t len;
+  resolvedName->resize( MAX_PATH );
+  len = make_realpath( filePath, &(*resolvedName)[0], resolvedName->capacity() );
+  resolvedName->resize( len );
+  return len;
+}
+
+
+_dllExport_C
+size_t
+f_realpath( StringRef *filePath, StringRef *resolvedName )
+{
+  size_t len = make_realpath( filePath->buffer(), resolvedName->buffer(), resolvedName->length() );
+  if (len < resolvedName->length())
+    { memset( resolvedName->buffer() + len, ' ', resolvedName->length() - len ); }
+  return len;
+}
+
+
 

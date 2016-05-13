@@ -13,7 +13,6 @@
 
 #define  _DLL_EXPORT_IMPLEMENTATION_
 #include "fortres/tracestack.hpp"
-#include "fortres/sharedlib.hpp"
 #include "fortres/dirent.hpp"
 
 
