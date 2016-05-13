@@ -129,3 +129,55 @@
     crc_ = crc32_bytebuffer_c( 0, buf, size )
   end function
 
+
+!_PROC_EXPORT(crc32_file_channel)
+  function crc32_file_channel( chnl, len, seed, iostat ) result(crc_)
+    use iso_c_binding
+    integer(kind=c_int32_t), intent(in) :: chnl
+    integer(kind=c_size_t)              :: len
+    integer(kind=c_int32_t),   optional :: seed, iostat
+    integer(kind=c_int32_t)             :: crc_, crc32_bytebuffer_c
+    integer(kind=c_int8_t)              :: buf(1024)
+    integer(kind=c_int32_t)             :: iostat_, cnt
+    integer(kind=c_size_t)              :: block
+
+    if (present(seed)) then; crc_ = seed
+                       else; crc_ = 0
+    end if
+
+    block = size(buf)
+    do cnt = 1, len/block
+      read(chnl, iostat=iostat_) buf(1:block)
+      if (iostat_ == 0) then; crc_ = crc32_bytebuffer_c( crc_, buf, block )
+                        else; exit
+      end if
+    end do
+
+    block = mod(len, size(buf))
+    if (block > 0 .and. iostat_ == 0) then
+      read(chnl, iostat=iostat_) buf(1:block)
+      if (iostat_ == 0) then; crc_ = crc32_bytebuffer_c( crc_, buf, block )
+      end if
+    end if
+    if (present(iostat)) iostat = iostat_
+  end function
+
+
+!_PROC_EXPORT(crc32_file_name)
+  function crc32_file_name( fileName, iostat, seed ) result(crc_)
+    use iso_c_binding
+    character(len=*),      intent(in) :: fileName
+    integer(kind=c_int32_t), optional :: seed, iostat
+    integer(kind=c_int32_t)           :: crc_, crc32_file_channel
+    integer(kind=c_int32_t)           :: chnl, iostat_
+    integer(kind=c_size_t)            :: len
+
+    open( newunit=chnl, file=fileName, form="unformatted", access="stream", status='old', iostat=iostat_ )
+    if (iostat_ == 0) then
+      inquire( unit=chnl, size=len )
+      crc_ = crc32_file_channel( chnl, len, seed, iostat_ )
+      close( chnl )
+    end if
+    if (present(iostat)) iostat = iostat_
+  end function
+

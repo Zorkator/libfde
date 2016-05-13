@@ -209,10 +209,11 @@ end module
     type(HashNode_wrap_t) :: wrap
     type(TypeInfo_t)      :: nodeType
     type(Visitor_t)       :: vstr
-    call group( vstr, 2 )
+    call group( vstr, 3 )
       call accept( wrap%ptr%key, vstr )
+      call accept( "          ", vstr )
       call accept( wrap%ptr%value, vstr )
-    call group( vstr, -2 )
+    call group( vstr, -3 )
   end subroutine
 
 

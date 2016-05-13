@@ -21,8 +21,10 @@ module adt_ostream
     integer                      :: fuseCnt   =  0
   end type
 
+  interface newunit   ; module procedure ostream_newunit   ; end interface
   interface ostream   ; module procedure ostream_create    ; end interface
   interface width     ; module procedure ostream_width     ; end interface
+  interface minwidth  ; module procedure ostream_minwidth  ; end interface
   interface newline   ; module procedure ostream_newline   ; end interface
   interface indent    ; module procedure ostream_indent    ; end interface
   interface fuselines ; module procedure ostream_fuselines ; end interface
@@ -30,10 +32,33 @@ module adt_ostream
   interface stream    ; module procedure ostream_stream    ; end interface
   interface error     ; module procedure ostream_error     ; end interface
 
-  public :: ostream, width, newline, indent, fuselines, set, stream, error
+  public :: newunit, ostream, width, minwidth, newline, indent, fuselines, set, stream, error
   public :: stdin, stdout, stderr
 
   contains
+
+!_PROC_EXPORT(ostream_newunit)
+  function ostream_newunit( unit, min, max ) result(unit_)
+    integer, optional, intent(out) :: unit
+    integer, optional, intent(in)  :: min, max
+    integer                        :: unit_, min_, max_, ios
+    logical                        :: is_open
+
+    if (present(min)) then; min_ = min
+                      else; min_ = 7
+    end if
+    if (present(max)) then; max_ = max
+                      else; max_ = 99
+    end if
+
+    do unit_ = min_, max_
+      inquire( unit=unit_, opened=is_open, iostat=ios )
+      if (ios /= 0)      cycle
+      if (.not. is_open) exit
+    end do
+    if (present(unit)) unit = unit_
+  end function
+
 
 !_PROC_EXPORT(ostream_create)
   pure &
@@ -54,6 +79,15 @@ module adt_ostream
     if (num > 0) then; write(self%fmt(3:7), '(I5)') num
                  else;       self%fmt(3:7) = ' '
     endif
+  end subroutine
+
+
+!_PROC_EXPORT(ostream_minwidth)
+  subroutine ostream_minwidth( self, num )
+    type(ostream_t) :: self
+    integer         :: num
+
+    self%width = num
   end subroutine
 
 
@@ -92,11 +126,12 @@ module adt_ostream
 
 
 !_PROC_EXPORT(ostream_set)
-  subroutine ostream_set( self, width, indent, fuselines, newline )
+  subroutine ostream_set( self, width, minwidth, indent, fuselines, newline )
     type(ostream_t)   :: self
-    integer, optional :: width, indent, fuselines, newline
+    integer, optional :: width, minwidth, indent, fuselines, newline
 
     if (present(width))     call ostream_width( self, width )
+    if (present(minwidth))  call ostream_minwidth( self, minwidth )
     if (present(indent))    call ostream_indent( self, indent )
     if (present(fuselines)) call ostream_fuselines( self, fuselines )
     if (present(newline))   call ostream_newline( self, newline )
