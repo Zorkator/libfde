@@ -168,9 +168,19 @@
     use iso_c_binding
     character(len=*),      intent(in) :: fileName
     integer(kind=c_int32_t), optional :: seed, iostat
-    integer(kind=c_int32_t)           :: crc_, crc32_file_channel
+    integer(kind=c_int32_t)           :: crc_
     integer(kind=c_int32_t)           :: chnl, iostat_
     integer(kind=c_size_t)            :: len
+
+    interface
+      integer(kind=c_int32_t) &
+      function crc32_file_channel( chnl, len, seed, iostat )
+        use iso_c_binding
+        integer(kind=c_int32_t), intent(in) :: chnl
+        integer(kind=c_size_t)              :: len
+        integer(kind=c_int32_t),   optional :: seed, iostat
+      end function
+    end interface
 
     open( newunit=chnl, file=fileName, form="unformatted", access="stream", status='old', iostat=iostat_ )
     if (iostat_ == 0) then
