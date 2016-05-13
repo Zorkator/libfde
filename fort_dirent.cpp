@@ -9,6 +9,7 @@
   /* assume POSIX compatible compiler */
 # include <stdlib.h>
 # include <unistd.h>
+# include <dlfcn.h>
 #	ifndef MAX_PATH
 #		define MAX_PATH		4096
 #	endif
@@ -189,7 +190,7 @@ make_realpath( const char *filePath, char *buff, size_t len )
 #if defined _MSC_VER
   tgtLen = GetFullPathName( filePath, len, buff, NULL );
 #else
-  const char *ptr;
+  char *ptr;
 
   if ((ptr = realpath( filePath, NULL )) != NULL)
   {
