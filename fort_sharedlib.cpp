@@ -17,6 +17,8 @@
 # define LIB_SUFFIX         ".dll"
 # define LIB_PATH_VAR       "PATH"
 # define LIB_PATH_SEP       ";"
+# define LIB_DIR_SEP        "\\"
+# define LIB_DIR_SEP_other  "/"
 
 # define dlOpen(lib)        LoadLibraryA( (LPCSTR)lib )
 # define dlClose(hdl)       FreeLibrary( (HMODULE)hdl )
@@ -30,6 +32,8 @@
 # define LIB_SUFFIX         ".so"
 # define LIB_PATH_VAR       "LD_LIBRARY_PATH"
 # define LIB_PATH_SEP       ":"
+# define LIB_DIR_SEP        "/"
+# define LIB_DIR_SEP_other  "\\"
 
 # define dlOpen(lib)        dlopen( lib, RTLD_NOW | RTLD_GLOBAL )
 # define dlClose(hdl)       dlclose( hdl )
@@ -94,8 +98,11 @@ class PluginBroker
       {
         size_t id_beg, id_end;
 
-        id_beg = libFile.rfind( _libPrefix );
-        id_beg = (id_beg == String::npos)? 0 : id_beg + _libPrefix.length();
+        id_beg = libFile.find_last_of( LIB_DIR_SEP LIB_DIR_SEP_other );
+        id_beg = (id_beg == String::npos)? 0 : id_beg + 1; //< skip DIR_SEP
+        if (libFile.find( _libPrefix, id_beg ) == id_beg)  //< skip optional LIB_PREFIX 'lib'
+          { id_beg += _libPrefix.length(); }
+
         id_end = libFile.find( '.', id_beg );
         id_end = (id_end == String::npos)? libFile.length() : id_end;
         return libFile.substr( id_beg, id_end - id_beg );
