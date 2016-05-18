@@ -10,6 +10,7 @@
         private
 
         public :: plugin_set_path, plugin_register, plugin_iterate
+        public :: plugin_filePath_to_id
         public :: plugin_sym, plugin_proc, plugin_call
         public :: plugin_try_sym, plugin_try_proc, plugin_try_call
         public :: plugin_call_exc
@@ -35,6 +36,12 @@
           subroutine plugin_iterate_( op ) _cID(f_plugin_iterate)
             import c_funptr
             type(c_funptr), value, intent(in) :: op
+          end subroutine
+
+          subroutine plugin_p2i_( fp, id ) _cID(f_plugin_filePath_to_id)
+            import StringRef_t
+            type(StringRef_t), intent(in) :: fp !< plugin filePath
+            type(StringRef_t)             :: id !< plugin id
           end subroutine
 
           ! routines throwing exceptions ...
@@ -102,6 +109,12 @@
           subroutine plugin_iterate( op )
             procedure(PluginInfoHandler) :: op
             call plugin_iterate_( c_funloc(op) )
+          end subroutine
+
+          subroutine plugin_filePath_to_id( filePath, id )
+            character(len=*), intent(in)  :: filePath
+            character(len=*)              :: id
+            call plugin_p2i_( str(filePath), str(id, .false.) )
           end subroutine
 
           ! accessing plugin procedures and symbols by pointer

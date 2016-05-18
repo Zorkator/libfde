@@ -16,6 +16,9 @@ _dllExport_C
 void f_plugin_iterate( PluginInfoHandler handler );
 
 _dllExport_C
+void f_plugin_filePath_to_id( StringRef *filePath, StringRef *id );
+
+_dllExport_C
 void * f_plugin_sym( StringRef *pluginId, StringRef *symId );
 
 _dllExport_C

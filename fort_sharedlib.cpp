@@ -93,22 +93,6 @@ class SharedLib
 
 class PluginBroker
 {
-    static String
-      libFileToId( const String &libFile )
-      {
-        size_t id_beg, id_end;
-
-        id_beg = libFile.find_last_of( LIB_DIR_SEP LIB_DIR_SEP_other );
-        id_beg = (id_beg == String::npos)? 0 : id_beg + 1; //< skip DIR_SEP
-        if (libFile.find( _libPrefix, id_beg ) == id_beg)  //< skip optional LIB_PREFIX 'lib'
-          { id_beg += _libPrefix.length(); }
-
-        id_end = libFile.find( '.', id_beg );
-        id_end = (id_end == String::npos)? libFile.length() : id_end;
-        return libFile.substr( id_beg, id_end - id_beg );
-      }
-      
-
     class Predicate
     {
       public:
@@ -256,6 +240,21 @@ class PluginBroker
           { handler( &id.referTo( itr->first ), &filePath.referTo( itr->second.first ) ); }
       }
 
+    static String
+      libFileToId( const String &libFile )
+      {
+        size_t id_beg, id_end;
+
+        id_beg = libFile.find_last_of( LIB_DIR_SEP LIB_DIR_SEP_other );
+        id_beg = (id_beg == String::npos)? 0 : id_beg + 1; //< skip DIR_SEP
+        if (libFile.find( _libPrefix, id_beg ) == id_beg)  //< skip optional LIB_PREFIX 'lib'
+          { id_beg += _libPrefix.length(); }
+
+        id_end = libFile.find( '.', id_beg );
+        id_end = (id_end == String::npos)? libFile.length() : id_end;
+        return libFile.substr( id_beg, id_end - id_beg );
+      }
+      
   private:
     Map    _pluginMap;
     String _pluginDir;
@@ -308,6 +307,14 @@ void
 f_plugin_iterate( PluginInfoHandler handler )
 {
   getBroker()->iterPlugins( handler );
+}
+
+
+_dllExport_C
+void
+f_plugin_filePath_to_id( StringRef *filePath, StringRef *id )
+{
+  *id = PluginBroker::libFileToId( filePath->str() );
 }
 
 
