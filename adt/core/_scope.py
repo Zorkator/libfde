@@ -19,10 +19,7 @@ class Scope(HashMap):
 
 
   def __getitem__( self, ident ):
-    valRef = super(Scope, self).__getitem__( ident ).typed
-    try              : return valRef.contents
-    except ValueError: return POINTER(c_int)()
-    except           : return valRef
+    return super(Scope, self).__getitem__( ident ).resolved
 
 
   def __setitem__( self, ident, val ):
@@ -37,6 +34,19 @@ class Scope(HashMap):
     except TypeError: valRef.value = getattr( val, 'value', val )
 
 
+  def get( self, ident, default = None ):
+    ptr = self._getptr( self.get_ptr_, ident )
+    if ptr: return ptr.contents.resolved
+    else  : return default
+
+
+  def resolve( self, path, default = None ):
+    try:
+      return reduce( lambda s,k: s[k], path, self )
+    except (TypeError, KeyError):
+      return default
+
+
   def setCallback( self, ident, cbFunc ):
     if type(type(cbFunc)) is not type(CALLBACK):
       _cbITF_buffer['{0}.{1}'.format(id(self), ident)] = func = CALLBACK(cbFunc or 0)
@@ -47,11 +57,8 @@ class Scope(HashMap):
   def getProcessScope( _class, *path ):
     ptr = POINTER(_class)()
     _class.__getattr__('get_processscope_')( byref(ptr) )
-    scope = ptr.contents
     # resolve scope nesting of given path ...
-    for p in path:
-      scope = scope[p]
-    return scope
+    return reduce( _class.__getitem__, path, ptr.contents )
 
 
 _mapType( 'HashMapPtr', 'type(HashMapPtr_t)', POINTER(Scope) )

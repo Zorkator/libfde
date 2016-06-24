@@ -23,6 +23,7 @@ class Item(TypedObject):
     ref = self.typed
     return getattr( ref, 'value', ref )
 
+
   @property
   def typed( self ):
     ct = self.ctype
@@ -30,6 +31,15 @@ class Item(TypedObject):
       mr = MemoryRef()
       self.memoryref_( byref(mr), byref(self) )
       return cast( mr.ptr, POINTER(ct) ).contents
+
+
+  @property
+  def resolved( self ):
+    tgt = self.typed
+    try              : return tgt.contents
+    except ValueError: return POINTER(c_int)()
+    except           : return tgt
+
 
   @classmethod
   def assign_void_( _class, *args ):

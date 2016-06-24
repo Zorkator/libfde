@@ -28,15 +28,10 @@ class Simulator(object):
   _childId   = 0
 
   @classmethod
-  def _getPathOf( _class, pathId ):
-    path = getattr( _class, "_%sPath" % pathId ).format( classId = _class.__name__ )
-    return filter( bool, map( str.strip, path.split('/') ) )
-
-  @classmethod
   def _openFile( _class, ident = None, *args ):
     if ident is None: return NullHandle()
     try             : return (NullHandle(), sys.stdout, sys.stderr)[ident]
-    except TypeError: return open( ident.format( pid=os.getpid() ), *args )
+    except TypeError: return open( ident, *args )
     
   @classmethod
   def _makedirs( _class, path ):
@@ -57,56 +52,77 @@ class Simulator(object):
 
 
   @property
-  def handle( self ):
-    try   : return self._hidden._handle
+  def about( self ):
+    try   : return self._stock._about
     except:
-      self._hidden._handle = LibLoader( filePath=self.libName, prioPathEnv=self.libPathVar ).handle
-      return self._hidden._handle
+      self._stock._about = dict( pid     = os.getpid()
+                                , id      = self._childId
+                                , classId = type(self).__name__ )
+      return self._stock._about
+
+  @property
+  def handle( self ):
+    try   : return self._stock._handle
+    except:
+      self._stock._handle = LibLoader( filePath=self.libFile, prioPathEnv=self.libPathVar ).handle
+      return self._stock._handle
 
   @property
   def state( self ):
-    try   : return self._hidden._state
+    try   : return self._stock._state
     except:
       from adt.core import Scope
-      self._hidden._state = Scope.getProcessScope( *self._getPathOf('state') )
-      return self._hidden._state
+      path = self._statePath.format( **self.about ).split('/')
+      self._stock._state = Scope.getProcessScope( *path )
+      return self._stock._state
 
   @property
   def hooks( self ):
-    try   : return self._hidden._hooks
+    try   : return self._stock._hooks
     except:
       from adt.core import Scope
-      self._hidden._hooks = Scope.getProcessScope( *self._getPathOf('hooks') )
-      return self._hidden._hooks
+      path = self._hooksPath.format( **self.about ).split('/')
+      self._stock._hooks = Scope.getProcessScope( *path )
+      return self._stock._hooks
 
   @property
   def logger( self ):
-    try   : return self._hidden._logger
+    try   : return self._stock._logger
     except:
-      self._hidden._logger = self._openFile( self.logFileName, 'w+', self.logBuffering )
-      return self._hidden._logger
+      self._stock._logger = self._openFile( self.logFileName.format( **self.about ), 'w+', self.logBuffering )
+      return self._stock._logger
+
+
+  @classmethod
+  def extractOpts( _class, opts ):
+    return dict( logFileName  = opts.pop('--logFile', "{classId}.{pid}.log")
+               , workdir      = opts.pop('--workdir', '')
+               , libPathVar   = opts.pop('--libEnv', 'ADTPATH')
+               , logBuffering = int(opts.pop('--logBuff', -1))
+               , libFile      = os.path.abspath( opts.pop('--lib') )
+               )
+    
+
+  def __opts__( self, opts ):
+    opts.update( self.extractOpts( opts ) )
+
+
+  def __init__( self, libName = None, **kwArgs ):
+    kwArgs.setdefault( '--lib', libName )
+    self.__opts__( kwArgs )
+    self.__dict__.update( kwArgs )
+    self._stock = HandleWallet()
 
 
   def __getstate__( self ):
     self._childId += 1
     clone = self.__dict__.copy()
-    clone['_hidden'] = HandleWallet()
+    clone['_stock'] = HandleWallet()
     return clone
 
 
   def __setstate__( self, d ):
     self.__dict__.update( d )
-
-
-  def __init__( self, libName, **kwArgs ):
-    kwArgs.setdefault( 'logFileName', "%s.{pid}.log" % type(self).__name__ )
-    kwArgs.setdefault( 'logBuffering', -1 )
-    kwArgs.setdefault( 'workdir', '' )
-    kwArgs.setdefault( 'libPathVar', 'ADTPATH' )
-
-    self.__dict__.update( kwArgs )
-    self.libName = os.path.abspath( libName )
-    self._hidden = HandleWallet()
 
 
   def log( self, msg ):
@@ -132,13 +148,12 @@ class Simulator(object):
 
 
   def start( self, **kwArgs ):
-    #import pdb; pdb.set_trace()
     # update object members ...
     for k in set(self.__dict__).intersection( set(kwArgs) ):
       setattr( self, k, kwArgs.pop(k) )
 
     # create and change to working directory of simulation ...
-    workdir = self.workdir.format( pid=os.getpid(), id=self._childId )
+    workdir = self.workdir.format( **self.about )
     prevdir = os.getcwd()
     if workdir:
       self._makedirs( workdir )
@@ -176,7 +191,13 @@ class Simulator(object):
     from ctypes import c_char, c_size_t, byref
     adtFilePath = (c_char * 1024)()
     self.handle.initialize_c_( byref(adtFilePath), c_size_t(len(adtFilePath)) )
-    adt_loader.set( filePath=adtFilePath.value.strip() )
+    adtFilePath = adtFilePath.value.strip()
+    if not adtFilePath:
+      sys.stderr.write( """
+        WARNING: loaded simulator doesn't report it's libadt, what might lead to inconsistent data scopes!
+                 Make sure there is only one libadt to load!
+                        """ )
+    adt_loader.set( filePath=adtFilePath )
 
 
   def run( self, **kwArgs ):
