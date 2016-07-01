@@ -4,10 +4,6 @@
 #include "adt/ppUtil.xpp"
 #include "adt/string.fpp"
 
-# define _this_scopeId() \
-    file_basename( __FILE__ )
-
-
 # define _get_scope( parent, scopeId ) \
     getScope( parent, _strip(scopeId) )
 
@@ -35,12 +31,41 @@
 # define _get_scope9( parent, a, b, c, d, e, f, g, h, i ) \
     getScope( parent, _strip(a), _strip(b), _strip(c), _strip(d), _strip(e), _strip(f), _strip(g), _strip(h), _strip(i) )
 
+!
+! The following definitions might be changed by the native code using libadt.
+!  __rootScope__ : a string, variable or pointer identifying the code's root scope.
+!  __hookScope__ : a string, variable or pointer identifying the code's hook scope.
+!  __sym2str__   : a macro converting a symbol to a string.
+!  __istat__     : the integer status variable used by the [DE]ALLOCATE macros below.
+!
+! It should be ok to use the default configuration.
+! For customizing these, remember to predefine the macros BEFORE including this file!
+!
+# if !defined __rootScope__
+#   define __rootScope__        "__adt_process__"
+# endif
 
-# define _this_scope_in( parent ) \
-    _get_scope( parent, _this_scopeId() )
+# if !defined __hookScope__
+#   define __hookScope__        _get_scope( __rootScope__, "hooks" )
+# endif
 
-# define _this_scope() \
-    _this_scope_in( _rootScope_ )
+# if !defined __sym2str__  
+#   define __sym2str__(sym)     _strip(_str(sym))
+# endif
+
+# if !defined __istat__
+#   define __istat__            istat
+# endif
+
+
+# define _file_scopeId() \
+    file_basename( __FILE__ )
+
+# define _file_scope_in( parent ) \
+    _get_scope( parent, _file_scopeId() )
+
+# define _file_scope() \
+    _file_scope_in( __rootScope__ )
 
 
 # define _set_scopeSymbol_as( parent, sym, id ) \
@@ -64,6 +89,125 @@
 
 # define _remove_scopeSymbol( parent, id ) \
     call remove( parent, id )
+
+
+!
+! The following definitions simplify the use of adt scopes
+! In case of name clashes define _ADT_SCOPE_NO_SIMPLIFIED to avoid them.
+!
+
+# if !defined _ADT_SCOPE_NO_SIMPLIFIED
+
+#   define _stateScope( id ) \
+      _get_scope( __rootScope__, id )
+
+#   define _moduleScope() \
+      _this_scope_in( __rootScope__ )
+
+
+#   define _linkSymbol_as( scope, sym, id ) \
+      _set_scopeSymbol_as( scope, sym, id )
+
+#   define _linkSymbol( scope, sym ) \
+      _linkSymbol_as( scope, sym, __sym2str__(sym) )
+
+#   define _bindSymbol_as( scope, sym, id ) \
+      _bind_scopeSymbol_as( scope, sym, id )
+
+#   define _bindSymbol( scope, sym ) \
+      _bindSymbol_as( scope, sym, __sym2str__(sym) )
+
+#   define _setSymbol_as( scope, sym, id ) \
+      _set_scopeValue_as( scope, sym, id )
+
+#   define _setSymbol( scope, sym ) \
+      _setSymbol_as( scope, sym, __sym2str__(sym) )
+
+
+#   define _callHook( hookId ) \
+      call invokeCallback( _hookScope_, hookId )
+
+#   define _callArgHook( hookId, argScope ) \
+      call invokeCallback( _hookScope_, hookId, argScope )
+      
+
+#   define _removeSymbol( scope, sym ) \
+      _remove_scopeSymbol( scope, __sym2str__(sym) )
+
+
+!
+! definine allocation macros these are needed to update
+!   a scope symbol everytime it get [re-]allocated
+!
+# define __codefrag_ALLOCATE_hidden( sym, shape, _st ) \
+      allocate( sym shape, stat=_st )
+
+# define __codefrag_DEALLOCATE_hidden( sym, _st )      \
+      deallocate( sym, stat=_st )
+
+# define __codefrag_ALLOCATE_visible_as( scope, sym, shape, id, _st ) \
+      allocate( sym shape, stat=_st )                                ;\
+      _linkSymbol_as( scope, sym, id )
+
+# define __codefrag_ALLOCATE_visible( scope, sym, shape, _st )        \
+      __codefrag_ALLOCATE_visible_as( scope, sym, shape, __sym2str__(sym), _st )
+
+# define __codefrag_DEALLOCATE_visible( scope, sym, _st ) \
+      deallocate( sym, stat=_st )                        ;\
+      _removeSymbol( scope, sym )
+
+
+
+!###########################################
+! variant using status variable __istat__
+!###########################################
+
+# define _ALLOCATE( sym, shape ) \
+      __codefrag_ALLOCATE_hidden( sym, shape, __istat__ )
+    
+# define _assert_ALLOCATE( sym, shape )                      \
+      if (.not. allocated(sym)) then                        ;\
+        __codefrag_ALLOCATE_hidden( sym, shape, __istat__ ) ;\
+      end if
+
+# define _REALLOCATE( sym, shape )                           \
+      select case (0); case default                         ;\
+        if (allocated(sym)) deallocate(sym)                 ;\
+        __codefrag_ALLOCATE_hidden( sym, shape, __istat__ ) ;\
+      end select
+      
+# define _DEALLOCATE( sym )             \
+      __codefrag_DEALLOCATE_hidden( sym, __istat__ )
+
+
+# define _ALLOCATE_visible_as( scope, sym, shape, id )                      \
+      select case (0); case default                                        ;\
+        __codefrag_ALLOCATE_visible_as( scope, sym, shape, id, __istat__ ) ;\
+      end select
+    
+# define _ALLOCATE_visible( scope, sym, shape ) \
+      _ALLOCATE_visible_as( scope, sym, shape, __sym2str__(sym) )
+
+# define _assert_ALLOCATE_visible( scope, sym, shape )               \
+      if (.not. allocated(sym)) then                                ;\
+        __codefrag_ALLOCATE_visible( scope, sym, shape, __istat__ ) ;\
+      end if
+
+# define _REALLOCATE_visible_as( scope, sym, shape, id )                    \
+      select case (0); case default                                        ;\
+        if (allocated(sym)) deallocate(sym)                                ;\
+        __codefrag_ALLOCATE_visible_as( scope, sym, shape, id, __istat__ ) ;\
+      end select
+      
+# define _REALLOCATE_visible( scope, sym, shape )    \
+      _REALLOCATE_visible_as( scope, sym, shape, __sym2str__(sym) )
+
+# define _DEALLOCATE_visible( scope, sym )                      \
+      select case (0); case default                            ;\
+        __codefrag_DEALLOCATE_visible( scope, sym, __istat__ ) ;\
+      end select
+
+# endif
 
 #endif
 
