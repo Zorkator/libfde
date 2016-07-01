@@ -98,13 +98,6 @@
 
 # if !defined _ADT_SCOPE_NO_SIMPLIFIED
 
-#   define _stateScope( id ) \
-      _get_scope( __rootScope__, id )
-
-#   define _moduleScope() \
-      _this_scope_in( __rootScope__ )
-
-
 #   define _linkSymbol_as( scope, sym, id ) \
       _set_scopeSymbol_as( scope, sym, id )
 
@@ -125,10 +118,10 @@
 
 
 #   define _callHook( hookId ) \
-      call invokeCallback( _hookScope_, hookId )
+      call invokeCallback( __hookScope__, hookId )
 
 #   define _callArgHook( hookId, argScope ) \
-      call invokeCallback( _hookScope_, hookId, argScope )
+      call invokeCallback( __hookScope__, hookId, argScope )
       
 
 #   define _removeSymbol( scope, sym ) \
