@@ -17,6 +17,8 @@ class Scope(HashMap):
       try   : return (key, valRef.typed.contents)
       except: return (key, valRef.typed)
 
+  ######################
+
 
   def __getitem__( self, ident ):
     return super(Scope, self).__getitem__( ident ).resolved
@@ -44,7 +46,8 @@ class Scope(HashMap):
     try:
       return reduce( lambda s,k: s[k], path, self )
     except (TypeError, KeyError):
-      return default
+      if isinstance( default, Exception ): raise  default
+      else                               : return default
 
 
   def setCallback( self, ident, cbFunc ):

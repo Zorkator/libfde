@@ -1,5 +1,5 @@
 
-import os, sys, errno
+import os, sys, errno, traceback
 from . import LibLoader, adt_loader
 
 
@@ -97,6 +97,7 @@ class Simulator(object):
   def extractOpts( _class, opts ):
     return dict( logFileName  = opts.pop('--logFile', "{classId}.{pid}.log")
                , workdir      = opts.pop('--workdir', '')
+               , args         = opts.pop('--args', '')
                , libPathVar   = opts.pop('--libEnv', 'ADTPATH')
                , logBuffering = int(opts.pop('--logBuff', -1))
                , libFile      = os.path.abspath( opts.pop('--lib') )
@@ -129,24 +130,6 @@ class Simulator(object):
     self.logger.write( str(msg) + '\n' )
 
 
-  def extractContext( self, keys ):
-    st = self.state
-    for k in keys:
-      try            : yield (k, st[k])
-      except KeyError: pass
-
-
-  def getContext( self, keyList ):
-    return dict(self.extractContext( keyList ))
-
-
-  def setContext( self, valDict ):
-    st = self.state
-    for k, v in valDict.items():
-      st[k] = v
-    return True
-
-
   def start( self, **kwArgs ):
     # update object members ...
     for k in set(self.__dict__).intersection( set(kwArgs) ):
@@ -167,9 +150,9 @@ class Simulator(object):
       except: pass
 
     self._childId = 0
-    self.run( **kwArgs )      #< and start it by calling run
-    self.finalize( **kwArgs ) #< call finalize for possible cleanup
-    os.chdir( prevdir )       #< restore previous directory
+    returnCode = self.run( **kwArgs )                   #< and start it by calling run
+    self.finalize( **dict( kwArgs, code=returnCode ) )  #< call finalize for possible cleanup
+    os.chdir( prevdir )                                 #< restore previous directory
 
 
   def _start( self, kwArgs=dict() ):
@@ -199,9 +182,22 @@ class Simulator(object):
                         """ )
     adt_loader.set( filePath=adtFilePath )
 
+    # install exception hook if simulator core suports it ...
+    if hasattr( self.handle, 'throw_c_' ):
+      sys.excepthook = self.__except__
+
+
+  def __except__( self, *args ):
+    from ctypes import c_int32, c_char_p, c_size_t, byref
+    code = c_int32(int('0x02200000', 16))
+    what = ''.join( traceback.format_exception( *args ) )
+    self.handle.throw_c_( byref(code), c_char_p(what), c_size_t(len(what)) )
+
 
   def run( self, **kwArgs ):
-    self.handle.run_c_()
+    try  : self.handle.run_c_()
+    except AttributeError:
+      raise NotImplementedError('missing implementation of run method!')
 
 
   def finalize( self, **kwArgs ):

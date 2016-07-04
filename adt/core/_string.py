@@ -33,6 +33,10 @@ class String(BaseString):
       other = str(other)
       self.init_by_charstring_( byref(self), byref(self._attribute_permanent), c_char_p(other), c_int32(len(other)) )
 
+  @property
+  def contents( self ):
+    return self.value
+
   def __str__( self ):
     return self.value
 

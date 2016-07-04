@@ -8,6 +8,27 @@ import sys
 class RemoteSimulator(Simulator):
 ######################################
 
+  def extractContext( self, keys, keySep=str ):
+    if keySep is str: op = lambda k: [k]
+    else            : op = lambda k: k.split(keySep)
+
+    st = self.state
+    for k in keys:
+      try            : yield (k, st.resolve( op(k) ))
+      except KeyError: pass
+
+
+  def getContext( self, keyList, keySep = str ):
+    return dict(self.extractContext( keyList, keySep ))
+
+
+  def setContext( self, valDict ):
+    st = self.state
+    for k, v in valDict.items():
+      st[k] = v
+    return True
+
+
   def processCommands( self ):
     while True:
       try:
