@@ -14,5 +14,6 @@ class List(Object):
   pass
 
 
-_mapType( 'ListPtr', 'type(ListPtr_t)', POINTER(List) )
+ListPtr = POINTER(List)
+_mapType( 'ListPtr', 'type(ListPtr_t)', ListPtr )
 

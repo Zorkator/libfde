@@ -34,6 +34,9 @@ class _Meta(type(Union)):
       fields  = [('_struct', _Struct)]
       anonym  = ['_struct']
 
+    # extend bases by abstract interface classes to allow isinstance-checks
+    bases += tuple( members.get('__abstract__', []) )
+
     size and fields.append( ('_data', size * c_int8) )
     members.update( _fields_=fields, _anonymous_=anonym )
     return super(_Meta, _class).__new__( _class, name, bases, members )
@@ -43,6 +46,7 @@ class _Meta(type(Union)):
 class Compound(Union):
   __metaclass__ = _Meta
   __typeprocs__ = [] #< no procedures for Compound
+  __abstract__  = [] #< no abstract bases
 
   @classmethod
   def __getattr__( _class, name ):

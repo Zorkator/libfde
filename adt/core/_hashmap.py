@@ -1,10 +1,9 @@
 
 from ctypes  import *
 from _object import Object, Compound
-from _item   import Item
+from _item   import Item, ItemPtr
 from _ftypes import MemoryRef, mappedType, _mapType
 
-ItemPtr = POINTER(Item)
 
 @mappedType( 'hashmap', 'type(HashMap_t)' )
 class HashMap(Object):
@@ -18,10 +17,10 @@ class HashMap(Object):
 
 
     def get( self ):
-      keyRef, valPtr = MemoryRef(), ItemPtr(); bool(valPtr)
-      #dummy = "{0}".format(valPtr) # de-optimize Python (????), so next line works
-      self.item_( byref(keyRef), byref(valPtr), byref(self) )
-      return (str(keyRef), valPtr.contents)
+      keyRef = MemoryRef()
+      ptr    = ItemPtr(); bool(ptr) #< de-optimize Python (????), so next line works
+      self.item_( byref(keyRef), byref(ptr), byref(self) )
+      return (str(keyRef), ptr.contents)
 
 
     def next( self ):
@@ -38,8 +37,7 @@ class HashMap(Object):
 
 
   def _getptr( self, getter, ident ):
-    ptr   = ItemPtr(); bool(ptr)
-    #dummy = "{0}".format(ptr) # de-optimize Python (????), so next line works
+    ptr = ItemPtr(); bool(ptr) #< de-optimize Python (????), so next line works
     getter( byref(ptr), byref(self), c_char_p(ident), c_int(len(ident)) )
     return ptr
 
@@ -54,19 +52,18 @@ class HashMap(Object):
 
   def get( self, ident, default = None ):
     ptr = self._getptr( self.get_ptr_, ident )
-    if ptr: return ptr.contents
+    if ptr: return ptr.contents.resolved
     else  : return default
 
 
   def __getitem__( self, ident ):
     ptr = self._getptr( self.get_ptr_, ident )
-    if ptr: return ptr.contents
+    if ptr: return ptr.contents.resolved
     else  : raise KeyError(ident)
 
 
   def __setitem__( self, ident, val ):
-    ptr = self._getptr( self.get_, ident )
-    ptr.contents.value = val
+    self._getptr( self.get_, ident ).contents.resolved = val
 
 
   def __delitem__( self, ident ):
@@ -113,9 +110,9 @@ class HashMap(Object):
 
 
   def setdefault( self, ident, default = None ):
-    valPtr = POINTER(Item)()
-    self.set_default_( byref(valPtr), byref(self), c_char_p(ident), byref(Item(default)), c_int(len(ident)) )
-    return valPtr.contents
+    ptr = ItemPtr()
+    self.set_default_( byref(ptr), byref(self), c_char_p(ident), byref(Item(default)), c_int(len(ident)) )
+    return ptr.contents
 
 
   def update( self, other = {}, **kwArgs ):
@@ -128,9 +125,9 @@ class HashMap(Object):
 
 
   def pop( self, key, default = Object.__metaclass__ ):
-    valPtr = POINTER(Item)()
-    self.pop_key_( byref(valPtr), byref(self), c_char_p(key), c_int(len(key)) )
-    try   : return valPtr.contents
+    ptr = ItemPtr()
+    self.pop_key_( byref(ptr), byref(self), c_char_p(key), c_int(len(key)) )
+    try   : return ptr.contents
     except:
       if default is Object.__metaclass__:
         raise KeyError(key)
@@ -138,5 +135,6 @@ class HashMap(Object):
         return default
 
 
-_mapType( 'HashMapPtr', 'type(HashMapPtr_t)', POINTER(HashMap) )
+HashMapPtr = POINTER(HashMap)
+_mapType( 'HashMapPtr', 'type(HashMapPtr_t)', HashMapPtr )
 

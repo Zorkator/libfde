@@ -50,5 +50,6 @@ class Ref(TypedObject):
     return other
 
 
-_mapType( 'RefPtr', 'type(RefPtr_t)', POINTER(Ref) )
+RefPtr = POINTER(Ref)
+_mapType( 'RefPtr', 'type(RefPtr_t)', RefPtr )
 

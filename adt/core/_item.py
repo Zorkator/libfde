@@ -40,6 +40,17 @@ class Item(TypedObject):
     except ValueError: return POINTER(c_int)()
     except           : return tgt
 
+  
+  @resolved.setter
+  def resolved( self, val ):
+    tgt = self.typed
+    if tgt is None: tgt = self                            #< use Item for None-Type
+    else          : tgt = getattr( tgt, 'contents', tgt ) #< use c_### or deref'ed Ref
+
+    # tgt := c_###() [for Ref() | c_###()] | Item()
+    try             : tgt[:]    = val[:]
+    except TypeError: tgt.value = getattr( val, 'value', val )
+
 
   @classmethod
   def assign_void_( _class, *args ):
@@ -52,5 +63,6 @@ class Item(TypedObject):
       self.value = val
 
 
-_mapType( 'ItemPtr', 'type(ItemPtr_t)', POINTER(Item) )
+ItemPtr = POINTER(Item)
+_mapType( 'ItemPtr', 'type(ItemPtr_t)', ItemPtr )
 

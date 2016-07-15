@@ -20,40 +20,30 @@ class Scope(HashMap):
   ######################
 
 
-  def __getitem__( self, ident ):
-    return super(Scope, self).__getitem__( ident ).resolved
-
-
-  def __setitem__( self, ident, val ):
-    item   = self._getptr( self.get_, ident ).contents
-    valRef = item.typed #< valRef := c_###() | Ref() | None [for NEW Items]
-
-    if valRef is None: valRef = item                                  #< use Item for None-Type
-    else             : valRef = getattr( valRef, 'contents', valRef ) #< use c_### or deref'ed Ref
-
-    # valRef := c_###() [for Ref() | c_###()] | Item()
-    try             : valRef[:]    = val[:]
-    except TypeError: valRef.value = getattr( val, 'value', val )
-
-
-  def get( self, ident, default = None ):
-    ptr = self._getptr( self.get_ptr_, ident )
-    if ptr: return ptr.contents.resolved
-    else  : return default
-
-
   def resolve( self, path, default = None ):
-    try:
-      return reduce( lambda s,k: s[k], path, self )
+    try  : return reduce( lambda s,k: s[k], path, self )
     except (TypeError, KeyError):
-      if isinstance( default, Exception ): raise  default
-      else                               : return default
+      if default is Exception: raise
+      else                   : return default
 
 
   def setCallback( self, ident, cbFunc ):
     if type(type(cbFunc)) is not type(CALLBACK):
       _cbITF_buffer['{0}.{1}'.format(id(self), ident)] = func = CALLBACK(cbFunc or 0)
     return self.set_callback_( byref(self), c_char_p(ident), func, c_int(len(ident)) )
+
+
+  def extract( self, paths, keySep=str ):
+    if keySep is str: op = lambda k: [k]
+    else            : op = lambda k: k.split(keySep)
+
+    def _put( d, k ): return d.setdefault( k, dict() )
+    def _get( d, k ): return d[k]
+
+    ctxt = dict()
+    for p in filter( bool, map( op, paths )):
+      reduce( _put, p[:-1], ctxt )[p[-1]] = reduce( _get, p, self )
+    return ctxt
 
 
   @classmethod
@@ -64,5 +54,6 @@ class Scope(HashMap):
     return reduce( _class.__getitem__, path, ptr.contents )
 
 
-_mapType( 'HashMapPtr', 'type(HashMapPtr_t)', POINTER(Scope) )
+ScopePtr = POINTER(Scope)
+_mapType( 'HashMapPtr', 'type(HashMapPtr_t)', ScopePtr )
 

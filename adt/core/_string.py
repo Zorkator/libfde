@@ -5,6 +5,8 @@ from _ftypes import MemoryRef, mappedType
 
 
 class BaseString(Object):
+  __abstract__ = [basestring] #< use basestring as abstract base class
+
   _attribute_volatile  = c_int8(0)
   _attribute_permanent = c_int8(1)
 
@@ -17,6 +19,7 @@ class String(BaseString):
     m = MemoryRef()
     self.memoryref_( byref(m), byref(self) )
     return string_at( m.ptr, m.len )
+
 
   @value.setter
   def value( self, val ):
@@ -33,13 +36,18 @@ class String(BaseString):
       other = str(other)
       self.init_by_charstring_( byref(self), byref(self._attribute_permanent), c_char_p(other), c_int32(len(other)) )
 
-  @property
-  def contents( self ):
-    return self.value
+  def __repr__( self ):
+    return "'%s'" % self.value
 
   def __str__( self ):
     return self.value
 
   def __len__( self ):
     return self.len_( byref(self) )
+
+  def encode( self, *args ):
+    return self.value.encode( *args )
+
+  def decode( self, *args ):
+    return self.value.decode( *args )
 
