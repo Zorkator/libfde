@@ -1,8 +1,7 @@
 
 from ctypes    import *
 from _typeinfo import TypedObject
-from _ftypes   import mappedType, _mapType
-from operator  import mul as _mul
+from _ftypes   import mappedType, _mapType, ARRAY
 
 
 @mappedType( 'ref', 'type(Ref_t)' )
@@ -33,7 +32,7 @@ class Ref(TypedObject):
   def _type_( self ):
     ft = self.ftype
     if ft:
-      if ft.rank: return reduce( _mul, self.shape, ft.ctype )
+      if ft.rank: return ARRAY( ft.ctypes, self.shape )
       else      : return ft.ctype
     return c_void_p
 

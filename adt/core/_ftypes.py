@@ -1,5 +1,6 @@
 
-from ctypes import *
+from ctypes   import *
+from operator import mul as _mul
 
 
 class MemoryRef(Structure):
@@ -86,4 +87,22 @@ _mapType( 'Callback', 'procedure(Callback_itf)', CALLBACK )
 
 # define type for gfortran workaround
 _mapType( 'char10', 'character(len=10)', c_char * 10 )
+
+
+
+def _array_raw( self ):
+	return cast( byref(self), self._rawtype_ ).contents
+
+def _array_repr( self ):
+	return '%s-array shape=%s: %s' % (self._basetype_.__name__, self._shape_, self.raw[:])
+
+def ARRAY( base, shape ):
+	shp = tuple(shape)
+	cls = reduce( _mul, shp, base )
+	cls._shape_    = shp
+	cls._basetype_ = base
+	cls._rawtype_  = POINTER(base * (sizeof(cls) / sizeof(base)))
+	cls.__repr__   = _array_repr
+	cls.raw        = property(_array_raw)
+	return cls
 
