@@ -1,7 +1,7 @@
 
 from ctypes    import *
-from _typeinfo import TypedObject, TypeSpecs
-from _ftypes   import mappedType, _mapType, MemoryRef, Complex8, Complex16, Complex32
+from _typeinfo import TypedObject, TypeSpecsPtr
+from _ftypes   import mappedType, _mapType, MemoryRef, Complex8, Complex16, Complex32, VOID_Ptr, POINTER_t
 from _string   import String
 from _ref      import Ref
 
@@ -9,7 +9,7 @@ from _ref      import Ref
 @mappedType( 'item', 'type(Item_t)' )
 class Item(TypedObject):
 
-  UserAssignment = CFUNCTYPE( None, POINTER(c_void_p), POINTER(TypeSpecs), POINTER(c_void_p), POINTER(TypeSpecs) )
+  UserAssignment = CFUNCTYPE( None, VOID_Ptr, TypeSpecsPtr, VOID_Ptr, TypeSpecsPtr )
 
   @classmethod
   def onTypeMismatch( _class, func ):
@@ -37,7 +37,7 @@ class Item(TypedObject):
   def resolved( self ):
     tgt = self.typed
     try              : return tgt.contents
-    except ValueError: return POINTER(c_int)()
+    except ValueError: return VOID_Ptr()
     except           : return tgt
 
   
@@ -63,6 +63,6 @@ class Item(TypedObject):
       self.value = val
 
 
-ItemPtr = POINTER(Item)
+ItemPtr = POINTER_t(Item)
 _mapType( 'ItemPtr', 'type(ItemPtr_t)', ItemPtr )
 

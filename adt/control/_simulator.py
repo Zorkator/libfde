@@ -1,23 +1,7 @@
 
 import os, sys, errno, traceback
-from . import LibLoader, adt_loader
-
-
-######################################
-class NullHandle(object):
-######################################
-  def __null_method( self, *args, **kwArgs ):
-    pass
-
-  def __getattr__( self, name ):
-    setattr( self, name, type(self).__null_method )
-    return self.__null_method
-
-
-######################################
-class HandleWallet(object):
-######################################
-  pass
+from ctypes  import c_int32, c_char, c_char_p, c_size_t, byref
+from ..tools import LibLoader, core_loader, NullHandle, Wallet
 
 
 ######################################
@@ -26,11 +10,12 @@ class Simulator(object):
   _statePath = '{classId}'
   _hooksPath = '{classId}/hooks'
   _childId   = 0
+  _channels  = (NullHandle(), sys.stdout, sys.stderr)
 
   @classmethod
   def _openFile( _class, ident = None, *args ):
     if ident is None: return NullHandle()
-    try             : return (NullHandle(), sys.stdout, sys.stderr)[ident]
+    try             : return _class._channels[ident]
     except TypeError: return open( ident, *args )
     
   @classmethod
@@ -42,13 +27,14 @@ class Simulator(object):
         raise
 
   @classmethod
-  def write( _class, msg ):
-    sys.stdout.write( "%s %d: %s" % (_class.__name__, os.getpid(), msg) )
+  def write( _class, msg, channel=1 ):
+    chnl = _class._channels[channel]
+    chnl.write( "%s %d: %s" % (_class.__name__, os.getpid(), msg) )
+    return chnl
 
   @classmethod
-  def say( _class, msg ):
-    _class.write( msg + '\n' )
-    sys.stdout.flush()
+  def say( _class, msg, channel=1 ):
+    return _class.write( msg + '\n', channel )
 
 
   @property
@@ -56,8 +42,8 @@ class Simulator(object):
     try   : return self._stock._about
     except:
       self._stock._about = dict( pid     = os.getpid()
-                                , id      = self._childId
-                                , classId = type(self).__name__ )
+                               , id      = self._childId
+                               , classId = type(self).__name__ )
       return self._stock._about
 
   @property
@@ -112,13 +98,13 @@ class Simulator(object):
     kwArgs.setdefault( '--lib', libName )
     self.__opts__( kwArgs )
     self.__dict__.update( kwArgs )
-    self._stock = HandleWallet()
+    self._stock = Wallet()
 
 
   def __getstate__( self ):
     self._childId += 1
     clone = self.__dict__.copy()
-    clone['_stock'] = HandleWallet()
+    clone['_stock'] = Wallet()
     return clone
 
 
@@ -144,10 +130,6 @@ class Simulator(object):
 
     # initialize simulator ...
     self.initialize( **kwArgs )
-    hooks = self.hooks
-    for h in hooks.keys():
-      try   : hooks.setCallback( h, getattr( self, h ) )
-      except: pass
 
     self._childId = 0
     returnCode = self.run( **kwArgs )                   #< and start it by calling run
@@ -171,16 +153,22 @@ class Simulator(object):
   #
 
   def initialize( self, **kwArgs ):
-    from ctypes import c_char, c_size_t, byref
+    # ask loaded simulator for it's libadt ... initialize_c_ should report it!
     adtFilePath = (c_char * 1024)()
     self.handle.initialize_c_( byref(adtFilePath), c_size_t(len(adtFilePath)) )
     adtFilePath = adtFilePath.value.strip()
     if not adtFilePath:
-      sys.stderr.write( """
+      self.say( """
         WARNING: loaded simulator doesn't report it's libadt, what might lead to inconsistent data scopes!
                  Make sure there is only one libadt to load!
-                        """ )
-    adt_loader.set( filePath=adtFilePath )
+                """ )
+    core_loader.set( filePath=adtFilePath )
+
+    # set implemented callback hooks ...
+    hooks = self.hooks
+    for h in hooks.keys():
+      try   : hooks.setCallback( h, getattr( self, h ) )
+      except: pass
 
     # install exception hook if simulator core suports it ...
     if hasattr( self.handle, 'throw_c_' ):
@@ -188,7 +176,6 @@ class Simulator(object):
 
 
   def __except__( self, *args ):
-    from ctypes import c_int32, c_char_p, c_size_t, byref
     code = c_int32(int('0x02200000', 16))
     what = ''.join( traceback.format_exception( *args ) )
     self.handle.throw_c_( byref(code), c_char_p(what), c_size_t(len(what)) )

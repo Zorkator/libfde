@@ -39,7 +39,7 @@ class LibLoader(object):
   def handle( self ):
     try   : return self._hdl
     except:
-      if self.opt('debug'):
+      if self.opt('--debug'):
         import pdb; pdb.set_trace()
 
       try:
@@ -56,7 +56,7 @@ class LibLoader(object):
         raise OSError( "unable to load shared library {0}".format(filePath) )
 
       except self.Success:
-        if self.opt('verbose'):
+        if self.opt('--verbose'):
           stdout.write( "loaded shared library {0}\n".format(self._hdl._name) )
       return self._hdl
 
@@ -87,6 +87,6 @@ class LibLoader(object):
 
 
 
-_libPattern  = ('libadt.*.so', 'libadt.*.dll')[_isWin]
-adt_loader = LibLoader( fileEnv='LIBADT', prioPathEnv='ADTPATH', libPattern=_libPattern )
+_libPattern = ('libadt.*.so', 'libadt.*.dll')[_isWin]
+core_loader = LibLoader( fileEnv='LIBADT', prioPathEnv='ADTPATH', libPattern=_libPattern )
 

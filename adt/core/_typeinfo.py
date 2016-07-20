@@ -8,11 +8,13 @@ from _ftypes import MemoryRef, _typeMap_ft2ct
 class TypeSpecs(Structure):
   pass
 
+TypeSpecsPtr = POINTER(TypeSpecs)
+
 TypeSpecs._fields_ = [('typeId',   MemoryRef),
                       ('baseType', MemoryRef),
                       ('byteSize', c_size_t),
                       ('rank',     c_size_t),
-                      ('subtype',  POINTER(TypeSpecs))]
+                      ('subtype',  TypeSpecsPtr)]
 
 
 class TypeInfo(Compound):
@@ -31,11 +33,12 @@ class TypeInfo(Compound):
     fmt = ('{0} <{1}>, scalar of {2} bytes', '{0} <{1}>, {3}-dimensional array, each of {2} bytes')[bool(self.rank)]
     return fmt.format( self.typeId, self.baseType, self.byteSize, self.rank )
 
+TypeInfoPtr = POINTER(TypeInfo)
 
 
 class TypedObject(Object):
   __typeprocs__ = [] #< no native methods for TypedObject
-  _fields_      = [('_typeInfo', POINTER(TypeInfo))]
+  _fields_      = [('_typeInfo', TypeInfoPtr)]
 
   @property
   def ftype( self ):

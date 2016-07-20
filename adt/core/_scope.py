@@ -1,7 +1,8 @@
 
 from _hashmap import HashMap
 from _ref     import Ref
-from _ftypes  import mappedType, _mapType, CALLBACK
+from _ftypes  import mappedType, _mapType, CALLBACK, POINTER_t
+from ..tools  import dict2obj
 from ctypes   import byref, c_char_p, c_int, POINTER
 
 
@@ -46,6 +47,14 @@ class Scope(HashMap):
     return ctxt
 
 
+  def extractContext( self, paths, keySep=str ):
+    return dict2obj( self.extract( paths, keySep ) )
+
+  
+  def asContext( self ):
+    return dict2obj( self )
+
+
   @classmethod
   def getProcessScope( _class, *path ):
     ptr = POINTER(_class)()
@@ -54,6 +63,34 @@ class Scope(HashMap):
     return reduce( _class.__getitem__, path, ptr.contents )
 
 
-ScopePtr = POINTER(Scope)
+  @classmethod
+  def _walk( _class, scope, level = 1 ):
+    keys  = sorted( scope.keys() )
+    width = max( map( len, keys ) or [0] )
+    for k in keys:
+      v = scope[k]
+      yield (level, width, k, v)
+      try:
+        for _ in _class._walk( v, level + 1 ):
+          yield _
+      except: pass
+
+
+  def _format( self, level = 1, indent = '\t' ):
+    for lvl, keyWdth, key, val in self._walk( self, level ):
+      yield '%s%-*s : %s' % (indent * lvl, keyWdth, key, repr(val))
+
+
+  def __repr__( self ):
+    return "%s %s [%d]" % (type(self).__name__, hex(id(self)), len(self))
+
+
+  def __str__( self ):
+    return '\n'.join( self._format() )
+
+
+
+
+ScopePtr = POINTER_t(Scope)
 _mapType( 'HashMapPtr', 'type(HashMapPtr_t)', ScopePtr )
 

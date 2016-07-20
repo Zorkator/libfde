@@ -23,11 +23,13 @@ class String(BaseString):
 
   @value.setter
   def value( self, val ):
-    if isinstance( val, String ):
+    if   isinstance( val, String ):
       self.assign_basestring_( byref(self), byref(other) )
-    else:
-      val = str(val)
+    elif isinstance( val, basestring ):
       self.assign_charstring_( byref(self), c_char_p(val), c_int32(len(val)) )
+    else:
+      raise TypeError('a string type is required')
+
 
   def __init__( self, other = '' ):
     if isinstance( other, String ):
@@ -35,6 +37,7 @@ class String(BaseString):
     else:
       other = str(other)
       self.init_by_charstring_( byref(self), byref(self._attribute_permanent), c_char_p(other), c_int32(len(other)) )
+
 
   def __repr__( self ):
     return "'%s'" % self.value

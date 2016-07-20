@@ -1,7 +1,7 @@
 
 import platform
-from ctypes      import Union, sizeof, Structure, c_int8
-from adt.control import adt_loader
+from ctypes  import Union, sizeof, Structure, c_int8
+from ..tools import core_loader
 
 
 class _Meta(type(Union)):
@@ -26,7 +26,7 @@ class _Meta(type(Union)):
     fields = list( members.pop('_fields_', []) ) \
            + list( ('_data.' + b.__name__, b._data.size * c_int8) for b in bases if hasattr(b, '_data') )
     anonym = list( members.pop('_anonymous_', []) )
-    size   = getattr( adt_loader.handle, method.format('object_size_'), lambda: 0 )()
+    size   = getattr( core_loader.handle, method.format('object_size_'), lambda: 0 )()
 
     if fields:
       _Struct = type( '_Struct', (Structure,), dict(_fields_=fields, _anonymous_=anonym) )
@@ -56,7 +56,7 @@ class Compound(Union):
       return {}
 
     for fmt in _class.__typeprocs__:
-      try   : attr = getattr(adt_loader.handle, fmt.format(name)); break
+      try   : attr = getattr(core_loader.handle, fmt.format(name)); break
       except: pass
     else:
       raise AttributeError("'%s' object has no attribute '%s'" % (_class.__name__, name))

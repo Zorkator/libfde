@@ -2,7 +2,7 @@
 from ctypes  import *
 from _object import Object, Compound
 from _item   import Item, ItemPtr
-from _ftypes import MemoryRef, mappedType, _mapType
+from _ftypes import MemoryRef, mappedType, _mapType, POINTER_t
 
 
 @mappedType( 'hashmap', 'type(HashMap_t)' )
@@ -48,6 +48,12 @@ class HashMap(Object):
 
   def clear( self ):
     self.clear_( byref(self) )
+
+
+  def getItem( self, ident, default = None ):
+    ptr = self._getptr( self.get_ptr_, ident )
+    if ptr: return ptr.contents
+    else  : return default
 
 
   def get( self, ident, default = None ):
@@ -112,7 +118,7 @@ class HashMap(Object):
   def setdefault( self, ident, default = None ):
     ptr = ItemPtr()
     self.set_default_( byref(ptr), byref(self), c_char_p(ident), byref(Item(default)), c_int(len(ident)) )
-    return ptr.contents
+    return ptr.contents.resolved
 
 
   def update( self, other = {}, **kwArgs ):
@@ -127,7 +133,7 @@ class HashMap(Object):
   def pop( self, key, default = Object.__metaclass__ ):
     ptr = ItemPtr()
     self.pop_key_( byref(ptr), byref(self), c_char_p(key), c_int(len(key)) )
-    try   : return ptr.contents
+    try   : return ptr.contents.resolved
     except:
       if default is Object.__metaclass__:
         raise KeyError(key)
@@ -135,6 +141,7 @@ class HashMap(Object):
         return default
 
 
-HashMapPtr = POINTER(HashMap)
+
+HashMapPtr = POINTER_t(HashMap)
 _mapType( 'HashMapPtr', 'type(HashMapPtr_t)', HashMapPtr )
 

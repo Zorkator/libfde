@@ -1,7 +1,7 @@
 
 from ctypes    import *
 from _typeinfo import TypedObject
-from _ftypes   import mappedType, _mapType, ARRAY
+from _ftypes   import mappedType, _mapType, ARRAY_t, VOID_Ptr, POINTER_t
 
 
 @mappedType( 'ref', 'type(Ref_t)' )
@@ -13,7 +13,7 @@ class Ref(TypedObject):
 
   @property
   def ptr( self ):
-    p = POINTER(c_void_p)()
+    p = VOID_Ptr()
     self.cptr_( byref(p), byref(self) )
     return p
 
@@ -32,7 +32,7 @@ class Ref(TypedObject):
   def _type_( self ):
     ft = self.ftype
     if ft:
-      if ft.rank: return ARRAY( ft.ctypes, self.shape )
+      if ft.rank: return ARRAY_t( ft.ctype, self.shape )
       else      : return ft.ctype
     return c_void_p
 
@@ -48,7 +48,11 @@ class Ref(TypedObject):
     self.clone_( byref(other), byref(self) )
     return other
 
+  def __repr__( self ):
+    tgt = getattr( self, 'contents', None )
+    return "=> " + repr(tgt)
 
-RefPtr = POINTER(Ref)
+
+RefPtr = POINTER_t(Ref)
 _mapType( 'RefPtr', 'type(RefPtr_t)', RefPtr )
 

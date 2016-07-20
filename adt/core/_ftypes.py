@@ -76,33 +76,57 @@ _mapType( 'real4',  'real*4',  c_float )
 _mapType( 'real8',  'real*8',  c_double, float )
 _mapType( 'real16', 'real*16', c_longdouble )
 
-_mapType( 'c_void_ptr', 'type(c_ptr)', POINTER(c_void_p), type(POINTER(c_void_p)) )
-
 _complexType( 'complex8',  'complex*8',  c_float )
 _complexType( 'complex16', 'complex*16', c_double, complex )
 _complexType( 'complex32', 'complex*32', c_longdouble )
 
-CALLBACK = CFUNCTYPE(None)
-_mapType( 'Callback', 'procedure(Callback_itf)', CALLBACK )
 
-# define type for gfortran workaround
-_mapType( 'char10', 'character(len=10)', c_char * 10 )
+##
+# some helper functions for array and pointer types
+#
 
+def _ptr_repr( self ):
+  if self: return 'ptr(%s)' % self._type_.__name__
+  else   : return 'None'
 
+def _func_repr( self ):
+  if self: return 'ptr(%s)' % type(self).__name__
+  else   : return 'None'
 
 def _array_raw( self ):
-	return cast( byref(self), self._rawtype_ ).contents
+  return cast( byref(self), self._rawtype_ ).contents
 
 def _array_repr( self ):
-	return '%s-array shape=%s: %s' % (self._basetype_.__name__, self._shape_, self.raw[:])
+  return 'Array(%s, %s): %s' % (self._basetype_.__name__, self._shape_, self.raw[:])
 
-def ARRAY( base, shape ):
-	shp = tuple(shape)
-	cls = reduce( _mul, shp, base )
-	cls._shape_    = shp
-	cls._basetype_ = base
-	cls._rawtype_  = POINTER(base * (sizeof(cls) / sizeof(base)))
-	cls.__repr__   = _array_repr
-	cls.raw        = property(_array_raw)
-	return cls
+
+def ARRAY_t( base, shape ):
+  shp = map( int, shape )
+  cls = reduce( _mul, shp, base )
+  cls._shape_    = shp
+  cls._basetype_ = base
+  cls._rawtype_  = POINTER(base * (sizeof(cls) / sizeof(base)))
+  cls.__repr__   = _array_repr
+  cls.raw        = property(_array_raw)
+  return cls
+
+def POINTER_t( tgtType ):
+  T = POINTER( tgtType )
+  T.__repr__ = _ptr_repr
+  return T
+
+
+VOID_Ptr = POINTER_t(c_void_p)
+CALLBACK = CFUNCTYPE(None)
+SHORT_ID = c_char * 10      #< define this type for gfortran workaround
+
+# Override representation of pointer types
+# ctypes doesn't like deriving those classes.
+CALLBACK.__repr__ = _func_repr
+SHORT_ID.__repr__ = lambda self: "'%s'" % self[:]
+
+
+_mapType( 'c_void_ptr', 'type(c_ptr)', VOID_Ptr,   type(VOID_Ptr) )
+_mapType( 'Callback',   'procedure(Callback_itf)', CALLBACK )
+_mapType( 'char10',     'character(len=10)',       SHORT_ID )
 
