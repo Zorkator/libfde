@@ -1,14 +1,15 @@
 
 import os, sys, errno, traceback
-from ctypes  import c_int32, c_char, c_char_p, c_size_t, byref
-from ..tools import LibLoader, core_loader, NullHandle, Wallet
+from ctypes    import c_int32, create_string_buffer, c_char_p, c_size_t, byref
+from ..tools   import LibLoader, core_loader, NullHandle, Wallet
 
 
 ######################################
 class Simulator(object):
 ######################################
-  _statePath = '{classId}'
-  _hooksPath = '{classId}/hooks'
+  _rootId    = '{classId}'
+  _statePath = '{rootId}'
+  _hooksPath = '{rootId}/hooks'
   _childId   = 0
   _channels  = (NullHandle(), sys.stdout, sys.stderr)
 
@@ -27,6 +28,18 @@ class Simulator(object):
         raise
 
   @classmethod
+  def extractOpts( _class, opts ):
+    return dict( logFileName  = opts.pop('--logFile', "{rootId}.{pid}.log")
+               , workdir      = opts.pop('--workdir', '')
+               , args         = opts.pop('--args', '')
+               , libPathVar   = opts.pop('--libEnv', 'ADTPATH')
+               , logBuffering = int(opts.pop('--logBuff', -1))
+               , libFile      = os.path.abspath( opts.pop('--lib') )
+               , rootId       = opts.pop('--rootId', None) or _class._rootId.format( classId=_class.__name__ )
+               )
+    
+
+  @classmethod
   def write( _class, msg, channel=1 ):
     chnl = _class._channels[channel]
     chnl.write( "%s %d: %s" % (_class.__name__, os.getpid(), msg) )
@@ -43,6 +56,7 @@ class Simulator(object):
     except:
       self._stock._about = dict( pid     = os.getpid()
                                , id      = self._childId
+                               , rootId  = self.rootId
                                , classId = type(self).__name__ )
       return self._stock._about
 
@@ -78,17 +92,6 @@ class Simulator(object):
       self._stock._logger = self._openFile( self.logFileName.format( **self.about ), 'w+', self.logBuffering )
       return self._stock._logger
 
-
-  @classmethod
-  def extractOpts( _class, opts ):
-    return dict( logFileName  = opts.pop('--logFile', "{classId}.{pid}.log")
-               , workdir      = opts.pop('--workdir', '')
-               , args         = opts.pop('--args', '')
-               , libPathVar   = opts.pop('--libEnv', 'ADTPATH')
-               , logBuffering = int(opts.pop('--logBuff', -1))
-               , libFile      = os.path.abspath( opts.pop('--lib') )
-               )
-    
 
   def __opts__( self, opts ):
     opts.update( self.extractOpts( opts ) )
@@ -153,16 +156,21 @@ class Simulator(object):
   #
 
   def initialize( self, **kwArgs ):
-    # ask loaded simulator for it's libadt ... initialize_c_ should report it!
-    adtFilePath = (c_char * 1024)()
-    self.handle.initialize_c_( byref(adtFilePath), c_size_t(len(adtFilePath)) )
-    adtFilePath = adtFilePath.value.strip()
-    if not adtFilePath:
+    # prepare call to initialize_c_:
+    #   it expects a string buffer containing the id of the created root scope.
+    #   This buffer is used to return the filePath of the loaded libadt.
+    #
+    infoBuff = create_string_buffer( self.rootId + ' ' * (1024 - len(self.rootId)) )
+
+    self.handle.initialize_c_( byref(infoBuff), c_size_t(len(infoBuff)-1) )
+
+    infoBuff = infoBuff.value.strip()
+    if infoBuff == self.rootId:
       self.say( """
         WARNING: loaded simulator doesn't report it's libadt, what might lead to inconsistent data scopes!
                  Make sure there is only one libadt to load!
                 """ )
-    core_loader.set( filePath=adtFilePath )
+    core_loader.set( filePath=infoBuff )
 
     # set implemented callback hooks ...
     hooks = self.hooks
