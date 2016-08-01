@@ -11,7 +11,16 @@ def _import( modId, what ):
   __all__.extend( what )
 
 
-_import( '_simulator',       ['Simulator'] )
-_import( '_remoteSimulator', ['RemoteSimulator'] )
+_import( '_nativeController', ['NativeController'] )
+_import( '_adtController',    ['ADTController'] )
+_import( '_exceptionRouter',  ['ExceptionRouter'] )
+_import( '_stateful',         ['Stateful'] )
+_import( '_hookable',         ['Hookable'] )
+_import( '_startable',        ['Startable'] )
+_import( '_verbose',          ['Verbose'] )
+_import( '_commandProcessor', ['CommandProcessor'] )
+
+_import( '_simulator',        ['Simulator'] )
+
 
 del _import

@@ -48,9 +48,13 @@ def _complexType( typeId, ftype, compType, *pyTypes ):
   def _getVal( self ):
     return complex( self.real, self.imag )
 
+  def _repr( self ):
+    return str(self.value)
+
   members = dict( _fields_    = [('real', compType), ('imag', compType)],
                   __init__    = _setVal,
                   __complex__ = _getVal,
+                  __repr__    = _repr,
                   value       = property( _getVal, _setVal )
                 )
   classId = typeId.capitalize()

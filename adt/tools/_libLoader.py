@@ -1,5 +1,5 @@
 
-from ctypes import CDLL
+from ctypes import CDLL as _CDLL
 from os     import environ as _env, pathsep as _pathDelim, path as _path
 from glob   import glob
 from sys    import stdout
@@ -7,6 +7,21 @@ import platform
 
 _isWin = platform.system() == "Windows"
 _PATH  = ('LD_LIBRARY_PATH', 'PATH')[_isWin]
+
+
+######################################
+class CDLL_t(_CDLL):
+######################################
+  def __getitem__( self, ident ):
+    """if given more than one argument, try one after another before giving up and returning the last as default."""
+    if isinstance( ident, tuple ):
+      for i in ident[:-1]:
+        try                  : return super(CDLL_t, self).__getitem__( i )
+        except AttributeError: pass
+      return ident[-1]
+    else:
+      return super(CDLL_t, self).__getitem__( ident )
+  
 
 
 ######################################
@@ -36,6 +51,18 @@ class LibLoader(object):
 
 
   @property
+  def explicitFilePath( self ):
+    """return explicit filePath setting, either by argument or environment variable."""
+    return self.opt('filePath') or _env.get( self.opt('fileEnv') )
+
+
+  @property
+  def relativeFilePath( self ):
+    """return relative filePath setting, applicable to search paths."""
+    return self.opt('libPattern')
+
+
+  @property
   def handle( self ):
     try   : return self._hdl
     except:
@@ -44,12 +71,13 @@ class LibLoader(object):
 
       try:
         searchPaths = self.splitEnvPaths( self.opt('prioPathEnv') )
-        filePath    = self.opt('filePath') or _env.get( self.opt('fileEnv') ) #< try filePath or environment variable
+        filePath    = self.explicitFilePath
         if filePath:
+          # try loading for explicit setting
           self._tryLoad( filePath, searchPaths )
         else:
-          # not found or filePath not given ... so try via libPattern and search paths
-          filePath = self.opt('libPattern')
+          # no explicit filePath given ... so try via libPattern and search paths
+          filePath = self.relativeFilePath
           for path in self.searchpathIter():
             self._tryLoad( path + _path.sep + filePath, searchPaths )
 
@@ -68,9 +96,9 @@ class LibLoader(object):
     paths.append( _env[_PATH] )
 
     _env[_PATH] = _pathDelim.join( paths )
-    self._hdl        = None
+    self._hdl   = None
     for f in glob( libPattern ):
-      try   : self._hdl = CDLL( f ); break #< break if load succeeded
+      try   : self._hdl = CDLL_t( f ); break #< break if load succeeded
       except: pass
     _env[_PATH] = envPaths
     
@@ -80,6 +108,11 @@ class LibLoader(object):
 
   def __init__( self, **kwArgs ):
     self._opt = kwArgs
+
+
+  def __str__( self ):
+    try   : return self._hdl._name
+    except: return self.explicitFilePath or self.relativeFilePath
 
 
   def set( self, **kwArgs ):

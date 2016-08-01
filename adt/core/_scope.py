@@ -34,21 +34,29 @@ class Scope(HashMap):
     return self.set_callback_( byref(self), c_char_p(ident), func, c_int(len(ident)) )
 
 
-  def extract( self, paths, keySep=str ):
-    if keySep is str: op = lambda k: [k]
-    else            : op = lambda k: k.split(keySep)
-
-    def _put( d, k ): return d.setdefault( k, dict() )
+  def iterDomain( self, paths, keyOp=str.split ):
     def _get( d, k ): return d[k]
 
-    ctxt = dict()
-    for p in filter( bool, map( op, paths )):
-      reduce( _put, p[:-1], ctxt )[p[-1]] = reduce( _get, p, self )
-    return ctxt
+    keyOp = keyOp or (lambda k: [k])
+    for p in map( keyOp, paths ):
+      yield p, p and reduce( _get, p, self ) or None
+    
+
+  #def updateDomain( 
 
 
-  def extractContext( self, paths, keySep=str ):
-    return dict2obj( self.extract( paths, keySep ) )
+
+  def extractDomain( self, paths, keyOp=str.split ):
+    def _put( d, k ): return d.setdefault( k, dict() )
+
+    domain = dict()
+    for p, v in self.iterDomain( paths, keyOp ):
+      if p: reduce( _put, p[:-1], domain )[p[-1]] = v
+    return domain
+
+
+  def extractContext( self, paths, keyOp=str.split ):
+    return dict2obj( self.extractDomain( paths, keyOp ) )
 
   
   def asContext( self ):

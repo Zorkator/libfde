@@ -11,7 +11,9 @@ def _import( modId, what ):
   __all__.extend( what )
 
 
-_import( '_helper',    ['NullHandle', 'Wallet'] )
-_import( '_libLoader', ['LibLoader', 'core_loader'] )
-_import( '_convert',   ['dict2obj'] )
+_import( '_helper',          ['NullHandle', 'Wallet', 'NullGuard'] )
+_import( '_libLoader',       ['LibLoader', 'core_loader'] )
+_import( '_convert',         ['dict2obj'] )
+_import( '_files',           ['sys_channel', 'openFile', 'makedirs'] )
+_import( '_optionProcessor', ['OptionProcessor'] )
 

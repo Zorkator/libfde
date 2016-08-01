@@ -18,3 +18,16 @@ class Wallet(object):
     if members is not None:
       self.__dict__.update( members )
 
+
+######################################
+class NullGuard(object):
+######################################
+  def __init__( self, *args, **kwArgs ):
+    self.__dict__.update( kwArgs, args = args )
+
+  def __enter__( self ):
+    return self
+
+  def __exit__( self, *args ):
+    return 
+

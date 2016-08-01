@@ -128,6 +128,8 @@ class HashMap(Object):
     else:
       for k, v in other:
         self[k] = v
+    for k, v in kwArgs.items():
+      self[k] = v
 
 
   def pop( self, key, default = Object.__metaclass__ ):
