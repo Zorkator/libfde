@@ -81,12 +81,12 @@ class HashMap(Object):
 
 
   def __iter__( self ):
-    for item in self.iteritems():
+    for item in self.iteritems( HashMap.Index ):
       yield item[0]
 
 
-  def iteritems( self ):
-    idx = self.Index()
+  def iteritems( self, indexBy=None ):
+    idx = (indexBy or self.Index)()
     self.index_( byref(idx), byref(self) )
     while idx:
       yield idx.get()
@@ -94,7 +94,7 @@ class HashMap(Object):
 
 
   def iterkeys( self ):
-    for item in self.iteritems():
+    for item in self.iteritems( HashMap.Index ):
       yield item[0]
 
 
@@ -103,8 +103,8 @@ class HashMap(Object):
       yield item[1]
 
 
-  def items( self ):
-    return list(self.iteritems())
+  def items( self, indexBy=None ):
+    return list(self.iteritems( indexBy ))
 
 
   def keys( self ):

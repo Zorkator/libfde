@@ -31,7 +31,8 @@ class ADTController(NativeController):
 
   _adtLibPathError = \
   """WARNING:
-     loaded library {lib} doesn't report it's libadt, what might lead to inconsistent data scopes!
+     loaded library {lib} doesn't report it's libadt.
+     This might lead to inconsistent data scopes!
      Make sure there is only one libadt to load!
   """
 
@@ -52,7 +53,7 @@ class ADTController(NativeController):
     rootId     = self._rootId.format( **self.about )
     adtlibPath = self.__initialize__( rootId )
     if adtlibPath != rootId: core_loader.set( filePath=adtlibPath )
-    else                   : sys.stderr.write( self._adtLibPathError.format(self.handle._name) )
+    else                   : sys.stderr.write( self._adtLibPathError.format( lib=self.handle._name ) )
 
   
   def __initialize__( self, rootId ):

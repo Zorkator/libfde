@@ -15,17 +15,9 @@ class Scope(HashMap):
 
     def get( self ):
       key, valRef = super(type(self), self).get()
-      try   : return (key, valRef.typed.contents)
-      except: return (key, valRef.typed)
+      return key, valRef.resolved
 
   ######################
-
-
-  def resolve( self, path, default = None ):
-    try  : return reduce( lambda s,k: s[k], path, self )
-    except (TypeError, KeyError):
-      if default is Exception: raise
-      else                   : return default
 
 
   def setCallback( self, ident, cbFunc ):
@@ -34,17 +26,33 @@ class Scope(HashMap):
     return self.set_callback_( byref(self), c_char_p(ident), func, c_int(len(ident)) )
 
 
-  def iterDomain( self, paths, keyOp=str.split ):
-    def _get( d, k ): return d[k]
+  def _assign_tree( self, other, keyOp=None ):
+    keyOp = keyOp or (lambda k: k)
 
+    def _tree_walk( itemItr, stack ):
+      for key, v in itemItr:
+        if not isinstance( v, CALLBACK ):
+          k = keyOp( key )
+          try                  : _tree_walk( v.iteritems(), stack + [stack[-1][k]] )
+          except AttributeError: stack[-1][k] = v
+
+    _tree_walk( other.iteritems(), [self] )
+
+
+  def update( self, other = {}, **kwArgs ):
+    self._assign_tree( other )
+    self._assign_tree( kwArgs )
+
+
+  def updateDomain( self, path_dict, keyOp=str.split ):
+    self._assign_tree( path_dict, keyOp )
+
+
+  def iterDomain( self, paths, keyOp=str.split ):
     keyOp = keyOp or (lambda k: [k])
     for p in map( keyOp, paths ):
-      yield p, p and reduce( _get, p, self ) or None
+      yield p, self[p] if p else None
     
-
-  #def updateDomain( 
-
-
 
   def extractDomain( self, paths, keyOp=str.split ):
     def _put( d, k ): return d.setdefault( k, dict() )
@@ -61,6 +69,20 @@ class Scope(HashMap):
   
   def asContext( self ):
     return dict2obj( self )
+
+
+  def __getitem__( self, ident ):
+    if isinstance( ident, (tuple, list) ):
+      return reduce( lambda d,k: d[k], ident, self )
+    else:
+      return super(Scope, self).__getitem__( ident )
+
+
+  def __setitem__( self, ident, val ):
+    if isinstance( ident, (tuple, list) ):
+      reduce( lambda d,k: d[k], ident[:-1], self )[ident[-1]] = val
+    else:
+      return super(Scope, self).__setitem__( ident, val )
 
 
   @classmethod

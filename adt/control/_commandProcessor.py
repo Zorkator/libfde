@@ -10,7 +10,6 @@ class CommandProcessor(object):
   
   CommandProcessor provides a simple interface for executing the main loop of Startable codes
     controlled by commands.
-  
 
   """
 
@@ -18,7 +17,7 @@ class CommandProcessor(object):
     while True:
       try:
         cmd, res = self.receive(), None
-        if   isinstance( cmd, basestring ): res = self._dispatchCommand( cmd.split() )
+        if   isinstance( cmd, basestring ): res = self._dispatchCommand( cmd )
         elif hasattr( cmd, 'keys' )       : res = self.setStateData( cmd )
         elif hasattr( cmd, '__iter__' )   : res = self.getStateData( cmd )
         else                              : res = "unknown command"
@@ -35,6 +34,7 @@ class CommandProcessor(object):
 
 
   def _dispatchCommand( self, cmd ):
+    cmd = cmd.split(' ')
     return getattr( self, "cmd_" + cmd[0] )( *cmd[1:] )
 
 
@@ -50,12 +50,16 @@ class CommandProcessor(object):
   # Subclasses might need to reimplement these.
 
   def cmd_idle( self )     : return True
-  def cmd_state( self )    : return self.context
+  def cmd_state( self )    : return self.state
   def cmd_fork( self )     : return self.fork()
   def cmd_tick( self )     : raise StopIteration
   def cmd_terminate( self ): raise StopIteration
   def cmd_getcwd( self )   : return os.getcwd()
 
+  def cmd_debug( self, stat ):
+    self._debug = (stat == 'on')
+    return True
+    
 
   # methods to be [re-]implemented by subclasses
 

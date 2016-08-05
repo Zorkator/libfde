@@ -9,7 +9,6 @@ class Stateful(object):
 
   """
   __opts__   = dict( statePath = '{rootId}' )
-  __keysep__ = staticmethod(str.split)
 
   @property
   def state( self ):
@@ -27,8 +26,7 @@ class Stateful(object):
 
 
   def setStateData( self, dataDict ):
-    for ref, val in zip( self.getStateData( dataDict.keys() ), dataDict.values() ):
-      ref.value = val
+    self.state.updateDomain( dataDict, self.__keysep__ )
     return True
 
 
@@ -38,6 +36,12 @@ class Stateful(object):
 
 
   def setScopeKeySeparator( self, sep = None ):
-    if sep: self.__keysep__ = lambda s: filter( bool, map( str.strip, s.split(sep) ) )
-    else  : self.__dict__.pop( '__keysep__', None )
+    if   sep is None: self.__keysep__ = None
+    elif sep != ''  : self.__keysep__ = lambda s: filter( bool, map( type(s).strip, s.split(sep) ) )
+    else            : self.__keysep__ = lambda s: s.split()
+
+
+  def __init__( self, **kwArgs ):
+    super(Stateful, self).__init__( **kwArgs )
+    self.setScopeKeySeparator()
 

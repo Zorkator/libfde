@@ -36,8 +36,8 @@ class Item(TypedObject):
   @property
   def resolved( self ):
     tgt = self.typed
-    try              : return tgt.contents
-    except ValueError: return VOID_Ptr()
+    try              : return tgt.contents #< referenced
+    except ValueError: return tgt._type_() #< null-pointer access
     except           : return tgt
 
   

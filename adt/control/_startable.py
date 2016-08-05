@@ -61,7 +61,7 @@ class Startable(object):
 
     with getattr( self, 'routedExceptions', NullGuard )(): #< mixin-method might not be available.
       code = self.__start__( *args, **kwArgs )
-      code = self.__finalize__( code, **kwArgs )
+      code = self.finalize( code, **kwArgs )
     os.chdir( prevdir )
     return code
     
@@ -71,6 +71,10 @@ class Startable(object):
     cmdStr  = ' '.join( map( str, args ) )
     self.handle[ self._startFunc ]( byref(retCode), c_char_p(cmdStr), c_size_t(len(cmdStr)) )
     return retCode.value
+
+
+  def finalize( self, code, **kwArgs ):
+    return self.__finalize__( code, **kwArgs )
 
 
   def __finalize__( self, code, **kwArgs ):

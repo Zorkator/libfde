@@ -5,35 +5,44 @@ class OptionProcessor(object):
 ####################################
 
   __opts__ = dict()
+  __conv__ = dict()
 
   @classmethod
-  def knownOptions( _class, optionMapAttrib = '__opts__' ):
+  def _merge_class_attrib( _class, attrId ):
+    """merge option dictionaries of class hierarchy."""
+    attr = dict()
+    for _c in reversed(_class.mro()):
+      attr.update( getattr( _c, attrId, {} ) )
+    return attr
+
+
+  @classmethod
+  def knownOptions( _class, optsMap = '__opts__' ):
     """return dictionary of options and default values known by this class.
-    Use the class attribute set by optionMapAttrib to build up the option dictionary.
+    Use the class attribute set by optsMap to build up the option dictionary.
     
     """
     try   : return _class._knownOpts
     except:
-      # collect known class options ...
-      opts = _class._knownOpts = dict()
-      for _c in reversed(_class.mro()):
-        opts.update( getattr( _c, optionMapAttrib, {} ) )
-      return opts
+      _class._knownOpts = _class._merge_class_attrib( optsMap )
+      return _class._knownOpts
 
 
   @classmethod
-  def extractOpts( _class, opts, optionMapAttrib = '__opts__' ):
+  def extractOpts( _class, opts, optsMap = '__opts__', convMap = '__conv__' ):
     """extract known options from given dictionary opts.
-    Use the class attribute set by optionMapAttrib to build up the option dictionary.
+    Use the class attribute set by optsMap to build up the option dictionary.
 
     """
-    for optId, valDefault in _class.knownOptions( optionMapAttrib ).items():
+    conv, nop = _class._merge_class_attrib( convMap ), lambda x: x
+
+    for optId, valDefault in _class.knownOptions( optsMap ).items():
       # pick value by priority: 1) dashed, 2) explicit, 3) default
       optVal = opts.pop(        optId, valDefault )
-      optVal = opts.pop( '--' + optId,  optVal )
+      optVal = opts.pop( '--' + optId, optVal )
 
       if isinstance( optVal, Exception ): raise optVal
-      else                              : yield optId, optVal
+      else                              : yield optId, conv.get( optId, nop )( optVal )
 
 
   def __init__( self, **kwArgs ):

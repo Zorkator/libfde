@@ -91,7 +91,7 @@ _complexType( 'complex32', 'complex*32', c_longdouble )
 
 def _ptr_repr( self ):
   if self: return 'ptr(%s)' % self._type_.__name__
-  else   : return 'None'
+  else   : return 'null'
 
 def _func_repr( self ):
   if self: return 'ptr(%s)' % type(self).__name__

@@ -49,8 +49,9 @@ class Ref(TypedObject):
     return other
 
   def __repr__( self ):
-    tgt = getattr( self, 'contents', None )
-    return "=> " + repr(tgt)
+    try              : tgt = self.contents
+    except ValueError: tgt = None
+    return "ref(%s)" % repr(tgt)
 
 
 RefPtr = POINTER_t(Ref)

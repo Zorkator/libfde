@@ -14,6 +14,7 @@ class NativeController(OptionProcessor):
 
   """
   _cloneCnt = 0
+  __conv__  = dict( lib    = os.path.abspath )
   __opts__  = dict( lib    = LookupError('missing library specification!')
                   , libEnv = 'ADTPATH'
                   )
@@ -44,7 +45,6 @@ class NativeController(OptionProcessor):
 
   def __init__( self, **kwArgs ):
     super(NativeController, self).__init__( **kwArgs )
-    self._lib      = os.path.abspath( self._lib )
     self._stock    = Wallet()
     self._cloneCnt = 0
     self.initialize()
