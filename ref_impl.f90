@@ -147,7 +147,7 @@ end module
     implicit none
     type(Ref_t), intent(inout) :: lhs, rhs
 
-    res = c_associated( ref_peek_cptr(lhs), ref_peek_cptr(rhs) )
+    res = basestring_ptr( lhs%ref_str ) == basestring_ptr( rhs%ref_str )
     call basestring_release_weak( lhs%ref_str )
     call basestring_release_weak( rhs%ref_str )
   end function
@@ -156,14 +156,19 @@ end module
 !_PROC_EXPORT(ref_assign_ref_c)
 !_ARG_REFERENCE2(lhs, rhs)
   subroutine ref_assign_ref_c( lhs, rhs )
-    use impl_ref__, only: Ref_t, ref_free_c, basestring_assign_basestring_c, &
+    use impl_ref__, only: Ref_t, ref_free_c, basestring_ptr, basestring_assign_basestring_c, &
                           basestring_release_weak, ref_peek_cptr, c_associated
     implicit none
     type(Ref_t), intent(inout) :: lhs
     type(Ref_t),    intent(in) :: rhs
 
-    if (.not. c_associated( ref_peek_cptr(lhs), ref_peek_cptr(rhs) )) then
-      call ref_free_c( lhs )
+    ! assign rhs for any difference in target address _OR_ shape info ...
+    if (basestring_ptr( lhs%ref_str ) /= basestring_ptr( rhs%ref_str )) then
+      ! check if target addresses differ before freeing lhs!
+      if (.not. c_associated( ref_peek_cptr(lhs), ref_peek_cptr(rhs) )) then
+        call ref_free_c( lhs )
+      end if
+      ! assign pointer data ...
       call basestring_assign_basestring_c( lhs%ref_str, rhs%ref_str )
       lhs%typeInfo => rhs%typeInfo
 

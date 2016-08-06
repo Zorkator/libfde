@@ -769,7 +769,7 @@ subroutine test_hashmap_nesting()!{{{
   print *, dynamic_cast( r_array, ref1 ) !< should fail
   print *, dynamic_cast( scope, ref1 )   !< should succeed
 
-  scope => _this_scope_in( scope )
+  scope => _file_scope_in( scope )
   do i = 1,3
     write(buff,'(A7,I1)'), 'submap_', i
     call set( scope, trim(buff), Item_of( ref_of( newScope(), bind = .true. ) ) )
@@ -780,17 +780,17 @@ subroutine test_hashmap_nesting()!{{{
   scope => getScope( scope, 'gcsm' )
   call set( scope, 'text', Item_of( ref_of(r_array, bind=.true.) ) )
   call set( scope, 'text', Item_of( ref_of(buff) ) )
-  call set( getScope( scope, 'signal'), 'value', Item_of( ref_of(i) ) )
+  call set( getScope( scope, 'signal'), 'value', Item_of( ref_of(v_int4) ) )
 
   allocate( r_array(5) )
   r_array = [1,2,3,4,5]
   scope => getScope( hashmap(ref1), 'gcsm' )
-  call set( scope, 'counter', Item_of( ref_of(i) ) )
+  call set( scope, 'counter', Item_of( ref_of(v_real8) ) )
   call set( getScope( scope, 'signal'), 'value', Item_of( ref_of(r_array, bind = .true.) ) )
 
   scope => getScope( getScope( getScope( hashmap(ref1), _this_file_basename() ), 'gcsm' ), 'signal' )
   scope => getScope( hashmap(ref1), _this_file_basename(), 'gcsm', 'signal' )
-  scope => _this_scope_in( scope )
+  scope => _file_scope_in( scope )
 
   call set( scope, 'myfunc', Item_of( ref_from_Callback(init_basedata) ) )
   
@@ -998,47 +998,240 @@ module visitor_testmod!{{{
 end module!}}}
 
 
+module adt_binstreamvisitor
+  use adt_visitor
+  use adt_ostream
+  use adt_typeinfo
+  implicit none
+  private
+
+  type, public :: BinStreamVisitor_t
+    type(Visitor_t) :: super
+    type(ostream_t) :: stream
+  end type
+
+  public :: BinStreamVisitor
+  public :: is_valid, enter, leave, group
+
+  interface BinStreamVisitor ; module procedure streamvisitor_create ; end interface
+
+  contains
+
+!_PROC_EXPORT(streamvisitor_create)
+  function streamvisitor_create( channel ) result(res)
+    integer               :: channel
+    type(BinStreamVisitor_t) :: res
+
+    res%super  = Visitor( streamvisitor_visit_ &
+                        , enter = streamvisitor_enter_ &
+                        , leave = streamvisitor_leave_ &
+                        , group = streamvisitor_group_ )
+    res%stream = ostream( channel )
+  end function
+
+
+  subroutine streamvisitor_visit_( vstr, obj, ti )
+    type(BinStreamVisitor_t) :: vstr
+    type(void_t)          :: obj
+    type(TypeInfo_t)      :: ti
+    call ti%streamProc( obj, ti, vstr%stream )
+  end subroutine
+ 
+  subroutine streamvisitor_enter_( self )
+    type(BinStreamVisitor_t) :: self
+    call indent( self%stream, self%super%level )
+    call fuselines( self%stream, 0 )
+  end subroutine
+
+  subroutine streamvisitor_leave_( self )
+    type(BinStreamVisitor_t) :: self
+    call indent( self%stream, self%super%level )
+    call fuselines( self%stream, 0 )
+  end subroutine
+
+  subroutine streamvisitor_group_( self, num )
+    type(BinStreamVisitor_t) :: self
+    integer*4             :: num
+    if (num > 0) &
+      call fuselines( self%stream, num - 1 )
+  end subroutine
+
+end module
+
+
+subroutine test_write_read()
+  use test_basedata
+  use adt_binstreamvisitor
+  type(BinStreamVisitor_t) :: fstream
+  character(len=32)        :: keyBuff, valBuff
+  integer                  :: stat
+  type(HashMap_t), pointer :: scope
+
+  open( 10, file="test_adt.out" )
+  fstream = BinStreamVisitor( 10 )
+  call accept( getScope(), fstream%super )
+  flush( 10 )
+  rewind( 10 )
+
+  scope => getScope()
+  do
+    read( 10, '(A , A)', iostat=stat, end=9, advance="no" ) keyBuff, valBuff
+    if (stat /= 0) then
+      scope => getScope( scope, trim(adjustl(keyBuff)) )
+    else
+      !backspace(10)
+      read( 10, * ) valBuff
+    end if
+  end do
+9 continue
+
+  close( 10 )
+end subroutine
+
+
+module pointer_remapping
+
+  real*4, dimension(:,:,:), allocatable :: matrix
+
+  contains
+
+  function merge_lu( shp, lb, ub ) result(res)
+    integer, dimension(:)           :: shp
+    integer, dimension(:), optional :: lb, ub
+    integer                         :: res(2,size(shp))
+
+    if     (present(lb)) then; res(1,:) = lb
+    elseif (present(ub)) then; res(1,:) = ub - shp + 1
+                         else; res(1,:) = 1
+    end if
+
+    if     (present(ub)) then; res(2,:) = ub
+                         else; res(2,:) = res(1,:) + shp - 1
+    end if
+  end function
+
+  function alias( a, lb, ub ) result(ptr)
+    real*4, dimension(:,:,:),            pointer :: ptr
+    real*4, dimension(:,:,:), target, intent(in) :: a
+    integer, dimension(:),              optional :: lb, ub
+
+    ptr => mk_ptr( a, merge_lu( shape(a), lb, ub ) )
+
+    contains
+    function mk_ptr( a, lu ) result(p)
+      integer, dimension(:,:)                                                                 :: lu
+      real*4,  dimension(lu(1,1):lu(2,1),lu(1,2):lu(2,2),lu(1,3):lu(2,3)), target, intent(in) :: a
+      real*4,  dimension(:,:,:),                                                      pointer :: p
+      p => a
+    end function
+  end function
+
+
+  subroutine test_pointer_bounds()
+    real*4, dimension(:,:,:), pointer :: ptr
+
+    allocate( matrix(-5:-2,8:10,3:4) )
+
+    matrix = 0
+    matrix(-5:,8,:) = 1
+    matrix(-3:,9,:) = 1
+    matrix(-2:,8,:) = 1
+
+    print *, matrix
+    print *, shape(matrix)
+    print *, lbound(matrix)
+    print *, ubound(matrix)
+    print *, size(matrix)
+
+    ptr => alias( matrix )
+    print *, ptr
+    print *, shape(ptr)
+    print *, lbound(ptr)
+    print *, ubound(ptr)
+    print *, size(ptr)
+
+    ptr => alias( matrix, lb=lbound(matrix) )
+    print *, ptr
+    print *, shape(ptr)
+    print *, lbound(ptr)
+    print *, ubound(ptr)
+    print *, size(ptr)
+
+    ptr => alias( matrix, ub=ubound(matrix) )
+    print *, ptr
+    print *, shape(ptr)
+    print *, lbound(ptr)
+    print *, ubound(ptr)
+    print *, size(ptr)
+
+    ptr => alias( matrix, lb=lbound(matrix), ub=[-2,9,3] )
+    print *, ptr
+    print *, shape(ptr)
+    print *, lbound(ptr)
+    print *, ubound(ptr)
+    print *, size(ptr)
+
+    deallocate( matrix )
+
+  end subroutine
+
+end module
+
+
+module debug
+  use adt_basestring
+  use adt_ref
+  use adt_item
+  use adt_basetypes
+
+  type(Item_t)       :: it
+  integer, dimension(:), allocatable, target :: buffer
+  integer, dimension(:), pointer             :: buf_ptr, other_ptr
+
+
+  contains
+
+  subroutine test_ref_change()
+    allocate( buffer(10) )
+
+    buf_ptr(1:15) => buffer
+
+    it = Item_of(ref_of(buf_ptr))
+    print *, shape(ref(it))
+    it = Item_of(ref_of(buffer))
+    print *, shape(ref(it))
+
+    deallocate( buffer )
+
+    allocate( buf_ptr(20) )
+    it = Item_of(ref_of(buf_ptr, bind=.true.))
+    print *, shape(ref(it))
+    print *, dynamic_cast( other_ptr, ref(it) )
+    other_ptr(-3:3) => buf_ptr
+    it = Item_of(ref_of(other_ptr))
+    print *, shape(ref(it))
+
+    call delete(it)
+
+  end subroutine
+
+
+end module
+
+
 program test_adt
   use test_basedata
   use adt_convert
-
-  !call width( fout, 5 )
-  !call indent( fout, 2 )
-  !call stream( fout, "testinger" )
-  !call width( fout, 15 )
-  !call stream( fout, "test" )
-  !call stream( fout, "testing" )
-  !call stream( fout, "testinger" )
-  !call width( fout, 0 )
-  !call fuselines( fout, 2 )
-  !call stream( fout, "testinger" )
-  !call stream( fout, "testinger" )
-  !call stream( fout, "testinger" )
-  !call stream( fout, "testinger" )
-  !call stream( fout, "testinger" )
-  !call newline( fout, 0 )
-  !call stream( fout, "testinger" )
-  !call newline( fout, 2 )
-  !call stream( fout, "testinger" )
-  !call newline( fout, 1 )
-  !call stream( fout, "testinger" )
-  !call newline( fout, 5 )
-  !call stream( fout, "testinger" )
-  !call newline( fout, 5 )
-  !call stream( fout, "testinger" )
-  !call set( fout, width=32 )
-  !call stream( fout, "testinger" )
-  !call set( fout, width=-32 )
-  !call stream( fout, "testinger" )
-  !call stream( fout, "testinger" )
-  !call stream( fout, "testinger" )
-  !call stream( fout, "testinger" )
-  !call stream( fout, "testinger" )
+  use pointer_remapping
+  use debug
 
   type(HashMap_t), pointer :: scope => null()
   character(len=20) :: text = "TestInGEr -- TäxT"
   character(len=20) :: txtout
   v_string = "BlUbbINGER bla uND texT"
+
+  call test_ref_change()
+  call test_pointer_bounds()
 
   txtout = lower( text )
   call to_lower( text )
@@ -1067,6 +1260,7 @@ program test_adt
   call test_hashmap_nesting()
   call test_hashmap_cloning()
   call test_file_string()
+  call test_write_read()
 
   ! delete process scope to make inspector happy
   scope => getScope()
