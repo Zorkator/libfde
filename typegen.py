@@ -41,7 +41,9 @@ class TypeSpec(object):
 
     access_decl = """
     {access} :: {ident}
-    """
+    """,
+
+    empty = ""
   )
 
   @staticmethod
@@ -75,8 +77,9 @@ class TypeSpec(object):
     self.subType_decl = ('', '\n      %s :: sub' % baseType)[self._isArray]
     self.baseSizeExpr = ('storage_size(self)', '0')[self._varBase]
     self.dimType      = dimType
+    self.dimCount     = dimType.count(',')+1
     self.dimSize      = ('', ', %s' % dimType)[self._isArray]
-    self.dimSpec      = ('', ', dimension(%s)' % ','.join( [':'] * (dimType.count(',')+1) ))[self._isArray]
+    self.dimSpec      = ('', ', dimension(%s)' % ','.join( [':'] * self.dimCount ))[self._isArray]
     self.baseExtra    = ('', ', nopass')[self._isProc]
     self.valAttrib    = (', target, intent(in)', '')[self._isProc]
     self.shapeArg     = ('', ', shape(src)')[self._isArray]
@@ -317,30 +320,43 @@ class RefType(TypeSpec):
     end interface
     """,
 
+    ref_encoder_mk_ptr = """
+      contains
+      function mk_ptr( a, b ) result(ptr)
+        integer, dimension(:,:)                                    :: b
+        {baseType_arg}, dimension({dimBounds}), target, intent(in) :: a
+        {baseType_arg}{dimSpec},                           pointer :: ptr
+        ptr => a
+      end function
+    """,
 
     # parameters:
-    #   typeId:       type identifier
-    #   baseType_arg: fortran base type | type(...) | procedure(...)
-    #   dimSpec:      ('', ', dimension(:,...)')[has_dimension]
+    #   typeId:           type identifier
+    #   baseType_arg:     fortran base type | type(...) | procedure(...)
+    #   dimSpec:          ('', ', dimension(:,...)')[has_dimension]
+    #   encoder_ptr_tgt:  ('val', 'mk_ptr(val)')[is_array)]
+    #   encoder_ptr_func: ('', $ref_encoder_mk_ptr)[is_array]
     #
     ref_encoder = """
 !_PROC_EXPORT({typeId}_encode_ref_)
 !_ARG_REFERENCE1(val)
-    function {typeId}_encode_ref_( val, bind ) result(res)
+    function {typeId}_encode_ref_( val, bind, lb, ub ) result(res)
       use iso_c_binding
       {baseType_arg}{dimSpec}{valAttrib} :: val
-      logical, optional                  :: bind
+      logical,               optional    :: bind
+      integer, dimension(:), optional    :: lb, ub
       type({typeId}_encoder_t),   target :: encoder
       type(RefEncoding_t)                :: dummy
       type(RefEncoding_t)                :: res( ceiling( storage_size(encoder) / real(storage_size(dummy)) ) )
 
-      encoder%ref_wrap%ptr    => val
+      encoder%ref_wrap%ptr    => {encoder_ptr_tgt}
       encoder%typeInfo(1)%ptr => static_type(val)
       if (present(bind)) then
         if (bind) &
           encoder%typeInfo(2)%ptr => encoder%typeInfo(1)%ptr
       end if
       res = transfer( encoder, res )
+      {encoder_ptr_func}
     end function
     """,
     
@@ -379,7 +395,7 @@ class RefType(TypeSpec):
     
       src => {typeId}_decode_ref_( src_ref )
       {code_clonePtr}
-      tgt_ref =  {typeId}_encode_ref_( tgt )
+      tgt_ref =  {typeId}_encode_ref_( tgt, .true.{cloneSrcBounds} )
     end subroutine
     """,
 
@@ -606,6 +622,17 @@ class RefType(TypeSpec):
 
     self._kwArgs = dict( (k, self.peelString(v)) for k,v in keySpecs.items() )
     self.import_baseType = ('', 'import %s' % self.baseTypeId)[bool(self._isDerived)]
+
+    # prepare ref-encoding and cloning
+    if self._isArray:
+      self.cloneSrcBounds   = ', lbound(src), ubound(src)'
+      self.dimBounds        = ','.join( map( 'b(1,{0}):b(2,{0})'.format, range( 1, self.dimCount+1 ) ) )
+      self.encoder_ptr_tgt  = 'mk_ptr( val, mk_bounds( shape(val), lb, ub ) )'
+      self.encoder_ptr_func = self._template['ref_encoder_mk_ptr'].format( **self.__dict__ )
+    else:
+      self.cloneSrcBounds   = ''
+      self.encoder_ptr_tgt  = 'val'
+      self.encoder_ptr_func = ''
 
 
   def declare( self, out ):

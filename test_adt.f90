@@ -1090,38 +1090,25 @@ end subroutine
 
 
 module pointer_remapping
+  use adt_ref
+  use adt_basetypes
 
   real*4, dimension(:,:,:), allocatable :: matrix
 
   contains
-
-  function merge_lu( shp, lb, ub ) result(res)
-    integer, dimension(:)           :: shp
-    integer, dimension(:), optional :: lb, ub
-    integer                         :: res(2,size(shp))
-
-    if     (present(lb)) then; res(1,:) = lb
-    elseif (present(ub)) then; res(1,:) = ub - shp + 1
-                         else; res(1,:) = 1
-    end if
-
-    if     (present(ub)) then; res(2,:) = ub
-                         else; res(2,:) = res(1,:) + shp - 1
-    end if
-  end function
 
   function alias( a, lb, ub ) result(ptr)
     real*4, dimension(:,:,:),            pointer :: ptr
     real*4, dimension(:,:,:), target, intent(in) :: a
     integer, dimension(:),              optional :: lb, ub
 
-    ptr => mk_ptr( a, merge_lu( shape(a), lb, ub ) )
+    ptr => mk_ptr( a, mk_bounds( shape(a), lb, ub ) )
 
     contains
-    function mk_ptr( a, lu ) result(p)
-      integer, dimension(:,:)                                                                 :: lu
-      real*4,  dimension(lu(1,1):lu(2,1),lu(1,2):lu(2,2),lu(1,3):lu(2,3)), target, intent(in) :: a
-      real*4,  dimension(:,:,:),                                                      pointer :: p
+    function mk_ptr( a, b ) result(p)
+      integer, dimension(:,:)                                                           :: b
+      real*4,  dimension(b(1,1):b(2,1),b(1,2):b(2,2),b(1,3):b(2,3)), target, intent(in) :: a
+      real*4,  dimension(:,:,:),                                                pointer :: p
       p => a
     end function
   end function
@@ -1129,6 +1116,7 @@ module pointer_remapping
 
   subroutine test_pointer_bounds()
     real*4, dimension(:,:,:), pointer :: ptr
+    type(Ref_t)                       :: m_ref, m_ref2
 
     allocate( matrix(-5:-2,8:10,3:4) )
 
@@ -1136,6 +1124,33 @@ module pointer_remapping
     matrix(-5:,8,:) = 1
     matrix(-3:,9,:) = 1
     matrix(-2:,8,:) = 1
+
+    m_ref = ref_of( matrix )
+    m_ref = ref_of( matrix, lb=lbound(matrix) )
+    m_ref = ref_of( matrix,                    ub=ubound(matrix) )
+    m_ref = ref_of( matrix, lb=lbound(matrix), ub=ubound(matrix) )
+
+    if (dynamic_cast( ptr, m_ref )) then
+      print *, ptr
+      print *, shape(ptr)
+      print *, lbound(ptr)
+      print *, ubound(ptr)
+      print *, size(ptr)
+    end if
+
+    allocate( ptr(-4:2,2:3,4:5) )
+    m_ref = ref_of( ptr, bind=.true. )
+    m_ref = ref_of( ptr, bind=.true., lb=lbound(ptr) )
+
+    m_ref2 = clone( m_ref )
+    if (dynamic_cast( ptr, m_ref2 )) then
+      print *, ptr
+      print *, shape(ptr)
+      print *, lbound(ptr)
+      print *, ubound(ptr)
+      print *, size(ptr)
+    end if
+
 
     print *, matrix
     print *, shape(matrix)
@@ -1172,6 +1187,8 @@ module pointer_remapping
     print *, size(ptr)
 
     deallocate( matrix )
+    call delete( m_ref )
+    call delete( m_ref2 )
 
   end subroutine
 

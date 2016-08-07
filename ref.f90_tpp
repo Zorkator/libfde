@@ -200,6 +200,8 @@ module adt_ref
   public :: set_attribute, attribute_permanent, attribute_volatile
   public :: is_valid
 
+  public :: mk_bounds
+
   ! declare TypeInfo necessities public
 
   public :: TypeInfo_t, TypeInfo_ptr_t, void_type, void_t, typeInfo_init
@@ -248,6 +250,23 @@ module adt_ref
   function ref_ne_ref_private( lhs, rhs ) result(res)
     type(Ref_t), intent(in) :: lhs, rhs
     res = .not. equal( lhs, rhs )
+  end function
+
+!_PROC_EXPORT(mk_bounds)
+  pure &
+  function mk_bounds( shp, lb, ub ) result(res)
+    integer, dimension(:),           intent(in) :: shp
+    integer, dimension(:), optional, intent(in) :: lb, ub
+    integer                                     :: res(2,size(shp))
+
+    if     (present(lb)) then; res(1,:) = lb
+    elseif (present(ub)) then; res(1,:) = ub - shp + 1
+                         else; res(1,:) = 1
+    end if
+
+    if     (present(ub)) then; res(2,:) = ub
+                         else; res(2,:) = res(1,:) + shp - 1
+    end if
   end function
 
 end module

@@ -183,22 +183,29 @@ end module
 !_PROC_EXPORT(ref_assign_encoding)
 !_ARG_REFERENCE2(lhs, rhs)
   subroutine ref_assign_encoding( lhs, rhs )
-    use impl_ref__, only: Ref_t, RefEncoding_t, TypeInfo_ptr_t, basestring_assign_buf
+    use impl_ref__, only: Ref_t, RefEncoding_t, TypeInfo_ptr_t, basestring_assign_buf, deref_void, ref_peek_cptr
     use iso_c_binding
     implicit none
     type(Ref_t),              intent(inout) :: lhs
     type(RefEncoding_t), target, intent(in) :: rhs(:)
-    integer(kind=4),              parameter :: size_typeInfo = storage_size(TypeInfo_ptr_t(null())) / 8
-    integer(kind=4),              parameter :: size_encoding = storage_size(RefEncoding_t(null())) / 8
+    integer(kind=4),              parameter :: size_typeInfo  = storage_size(TypeInfo_ptr_t(null())) / 8
+    integer(kind=4),              parameter :: size_encoding  = storage_size(RefEncoding_t(null())) / 8
+    integer(kind=4),              parameter :: idx_streamData = 2 * size_typeInfo + 1
     character(len=1), dimension(:), pointer :: stream
     type(TypeInfo_ptr_t), dimension(:), pointer :: typeInfo
-    type(c_ptr)                             :: encoding
+    type(c_ptr)                             :: encoding, rhsPtr
     
-    call ref_free_c( lhs )
     encoding = c_loc(rhs(1))
     call c_f_pointer( encoding, typeInfo, (/2/) )
     call c_f_pointer( encoding, stream, (/ size(rhs) * size_encoding /) )
-    call basestring_assign_buf( lhs%ref_str, stream(2 * size_typeInfo + 1:) )
+
+    ! check if target addresses differ before freeing lhs!
+    rhsPtr = deref_void( c_loc( stream(idx_streamData) ) )
+    if (.not. c_associated( ref_peek_cptr(lhs), rhsPtr )) then
+      call ref_free_c( lhs )
+    end if
+    ! assign pointer data ...
+    call basestring_assign_buf( lhs%ref_str, stream(idx_streamData:) )
     lhs%typeInfo => typeInfo(1)%ptr
     if (associated( typeInfo(2)%ptr )) then
       _ref_setMine( lhs%refstat, 1 )
