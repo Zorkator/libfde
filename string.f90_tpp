@@ -39,6 +39,7 @@ module adt_string
 
   public :: lower, to_lower
   public :: upper, to_upper
+  public :: reserve
   public :: adjustl
   public :: adjustr
   public :: iachar
@@ -196,6 +197,15 @@ module adt_string
     subroutine string_to_upper( ds )
       import String_t
       type(String_t) :: ds
+    end subroutine
+  end interface
+
+
+  interface reserve
+    subroutine basestring_reserve( bs, length )
+      import BaseString_t,  c_size_t
+      type(BaseString_t)     :: bs
+      integer(kind=c_size_t) :: length
     end subroutine
   end interface
 

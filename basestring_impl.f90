@@ -198,6 +198,32 @@
                                      else; res = bs%len
     end if
   end function
+
+
+!_PROC_EXPORT(basestring_reserve)
+!_ARG_REFERENCE1(bs)
+  subroutine basestring_reserve( bs, length )
+    use adt_basestring, only: BaseString_t, basestring_ptr, basestring_assign_charstring_c
+    use iso_c_binding
+    implicit none
+    type(BaseString_t)     :: bs
+    integer(kind=c_size_t) :: length
+    
+    if (bs%len < length) then
+      call basestring_assign_charstring_c( bs, basestring_ptr(bs) // repeat( ' ', length - bs%len ) )
+    end if
+  end subroutine
+
+  
+!_PROC_EXPORT(basestring_trim)
+!_ARG_REFERENCE1(bs)
+  subroutine basestring_trim( bs )
+    use adt_basestring, only: BaseString_t, basestring_ptr
+    implicit none
+    type(BaseString_t) :: bs
+
+    bs%len = len_trim( basestring_ptr(bs) )
+  end subroutine
   
 
 !_PROC_EXPORT(basestring_assign_charstring_c)

@@ -24,6 +24,8 @@ module adt_basestring
   public :: basestring_cptr
   public :: basestring_cptr_c
   public :: basestring_len_ref
+  public :: basestring_reserve
+  public :: basestring_trim
   public :: basestring_assign_charstring_c
   public :: basestring_assign_buf
   public :: basestring_assign_basestring_c
@@ -103,6 +105,17 @@ module adt_basestring
       type(BaseString_t), intent(in) :: bs
       integer(kind=4)                :: res
     end function
+
+    subroutine basestring_reserve( bs, length )
+      import BaseString_t,  c_size_t
+      type(BaseString_t)     :: bs
+      integer(kind=c_size_t) :: length
+    end subroutine
+
+    subroutine basestring_trim( bs )
+      import BaseString_t
+      type(BaseString_t) :: bs
+    end subroutine
 
     subroutine basestring_assign_charstring_c( bs, cs )
       import BaseString_t
