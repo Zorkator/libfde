@@ -40,6 +40,8 @@ class Scope(HashMap):
 
 
   def update( self, other = {}, **kwArgs ):
+    if not hasattr( other, 'iteritems' ):
+      other = dict( other )
     self._assign_tree( other )
     self._assign_tree( kwArgs )
 
