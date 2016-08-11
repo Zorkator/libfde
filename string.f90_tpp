@@ -39,6 +39,7 @@ module adt_string
 
   public :: lower, to_lower
   public :: upper, to_upper
+  public ::        to_trimmed
   public :: reserve
   public :: adjustl
   public :: adjustr
@@ -200,13 +201,23 @@ module adt_string
     end subroutine
   end interface
 
+  
+  interface to_trimmed
+    subroutine basestring_trim( ds )
+      import String_t
+      implicit none
+      type(String_t) :: ds
+    end subroutine
+  end interface
+
 
   interface reserve
-    subroutine basestring_reserve( bs, length )
-      import BaseString_t,  c_size_t
-      type(BaseString_t)     :: bs
-      integer(kind=c_size_t) :: length
-    end subroutine
+    function basestring_reserve( bs, length ) result(res)
+      import String_t
+      type(String_t)                 :: bs
+      integer                        :: length
+      character(len=length), pointer :: res
+    end function
   end interface
 
 

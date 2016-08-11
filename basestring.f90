@@ -106,11 +106,12 @@ module adt_basestring
       integer(kind=4)                :: res
     end function
 
-    subroutine basestring_reserve( bs, length )
-      import BaseString_t,  c_size_t
-      type(BaseString_t)     :: bs
-      integer(kind=c_size_t) :: length
-    end subroutine
+    function basestring_reserve( bs, length ) result(res)
+      import BaseString_t
+      type(BaseString_t)             :: bs
+      integer                        :: length
+      character(len=length), pointer :: res
+    end function
 
     subroutine basestring_trim( bs )
       import BaseString_t
