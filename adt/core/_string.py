@@ -1,7 +1,7 @@
 
-from ctypes  import *
 from _object import Object
-from _ftypes import MemoryRef, mappedType
+from _ftypes import MemoryRef, mappedType, _mapType, POINTER_t
+from ctypes  import c_int8, string_at, byref, c_char_p, c_int32
 
 
 class BaseString(Object):
@@ -53,4 +53,8 @@ class String(BaseString):
 
   def decode( self, *args ):
     return self.value.decode( *args )
+
+
+StringPtr = POINTER_t(String)
+_mapType( 'StringPtr', 'type(StringPtr_t)', StringPtr )
 

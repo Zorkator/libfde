@@ -18,11 +18,13 @@ module adt_containertypes
   !_TypeGen_declare_RefType(  public, ItemPtr,       type(ItemPtr_t),    scalar )
   !_TypeGen_declare_RefType(  public, ListPtr,       type(ListPtr_t),    scalar )
   !_TypeGen_declare_RefType(  public, RefPtr,        type(RefPtr_t),     scalar )
+  !_TypeGen_declare_RefType(  public, StringPtr,     type(StringPtr_t),  scalar )
 
   !_TypeGen_declare_RefType(  public, HashMapPtr_1d, type(HashMapPtr_t), dimension(:) )
   !_TypeGen_declare_RefType(  public, ItemPtr_1d,    type(ItemPtr_t),    dimension(:) )
   !_TypeGen_declare_RefType(  public, ListPtr_1d,    type(ListPtr_t),    dimension(:) )
   !_TypeGen_declare_RefType(  public, RefPtr_1d,     type(RefPtr_t),     dimension(:) )
+  !_TypeGen_declare_RefType(  public, StringPtr_1d   type(StringPtr_t),  dimension(:) )
 
 
   !_TypeGen_declare_ListNode( public, bool1,      logical*1,   scalar )

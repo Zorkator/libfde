@@ -38,8 +38,8 @@ class OptionProcessor(object):
 
     for optId, valDefault in _class.knownOptions( optsMap ).items():
       # pick value by priority: 1) dashed, 2) explicit, 3) default
-      optVal = opts.pop(        optId, valDefault )
-      optVal = opts.pop( '--' + optId, optVal )
+      optVal = opts.pop(        optId, None ) or valDefault
+      optVal = opts.pop( '--' + optId, None ) or optVal
 
       if isinstance( optVal, Exception ): raise optVal
       else                              : yield optId, conv.get( optId, nop )( optVal )

@@ -13,12 +13,12 @@ def _import( modId, what ):
 
 _import( '_ftypes',    ['Complex8', 'Complex16', 'Complex32', 'MemoryRef', 'CALLBACK'] )
 _import( '_typeinfo',  ['TypeInfo'] )
-_import( '_string',    ['String'] )
-_import( '_item',      ['Item'] )
-_import( '_ref',       ['Ref'] )
-_import( '_list',      ['List'] )
-_import( '_hashmap',   ['HashMap'] )
-_import( '_scope',     ['Scope'] )
+_import( '_string',    ['String',  'StringPtr'] )
+_import( '_item',      ['Item',    'ItemPtr'] )
+_import( '_ref',       ['Ref',     'RefPtr'] )
+_import( '_list',      ['List',    'ListPtr'] )
+_import( '_hashmap',   ['HashMap', 'HashMapPtr'] )
+_import( '_scope',     ['Scope',   'ScopePtr'] )
 
 del _import
 
