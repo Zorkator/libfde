@@ -86,6 +86,21 @@
 # define _set_scopeValue( parent, sym ) \
     _set_scopeValue_as( parent, sym, _str(sym) )
 
+!
+! set and bind macros specialized for arrays ...
+!
+# define _set_scopeArray_as( parent, sym, id ) \
+    call set( parent, id, Item_of(ref_of(sym, lb=lbound(sym), ub=ubound(sym))) )
+
+# define _set_scopeArray( parent, sym ) \
+    _set_scopeArray_as( parent, sym, _str(sym) )
+
+# define _bind_scopeArray_as( parent, sym, id ) \
+    call set( parent, id, Item_of(ref_of(sym, bind=.true., lb=lbound(sym), ub=ubound(sym))) )
+
+# define _bind_scopeArray( parent, sym ) \
+    _bind_scopeArray_as( parent, sym, _str(sym) )
+
 
 # define _remove_scopeSymbol( parent, id ) \
     call remove( parent, id )
@@ -116,6 +131,23 @@
 #   define _setSymbol( scope, sym ) \
       _setSymbol_as( scope, sym, __sym2str__(sym) )
 
+!
+! set and bind macros specialized for arrays ...
+!
+
+#   define _linkArray_as( scope, sym, id ) \
+      _set_scopeArray_as( scope, sym, id )
+
+#   define _linkArray( scope, sym ) \
+      _linkArray_as( scope, sym, __sym2str__(sym) )
+
+#   define _bindArray_as( scope, sym, id ) \
+      _bind_scopeArray_as( scope, sym, id )
+
+#   define _bindArray( scope, sym ) \
+      _bindArray_as( scope, sym, __sym2str__(sym) )
+
+
 
 #   define _callHook( hookId ) \
       call invokeCallback( __hookScope__, hookId )
@@ -140,7 +172,7 @@
 
 # define __codefrag_ALLOCATE_visible_as( scope, sym, shape, id, _st ) \
       allocate( sym shape, stat=_st )                                ;\
-      _linkSymbol_as( scope, sym, id )
+      _linkArray_as( scope, sym, id )
 
 # define __codefrag_ALLOCATE_visible( scope, sym, shape, _st )        \
       __codefrag_ALLOCATE_visible_as( scope, sym, shape, __sym2str__(sym), _st )

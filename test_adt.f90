@@ -1090,8 +1090,7 @@ end subroutine
 
 
 module pointer_remapping
-  use adt_ref
-  use adt_basetypes
+  use test_basedata
 
   real*4, dimension(:,:,:), allocatable :: matrix
 
@@ -1118,12 +1117,20 @@ module pointer_remapping
     real*4, dimension(:,:,:), pointer :: ptr
     type(Ref_t)                       :: m_ref, m_ref2
 
-    allocate( matrix(-5:-2,8:10,3:4) )
+    _REALLOCATE_visible( v_hashmap, matrix, (-5:-2,8:10,3:4) )
 
     matrix = 0
     matrix(-5:,8,:) = 1
     matrix(-3:,9,:) = 1
     matrix(-2:,8,:) = 1
+
+    if (dynamic_cast( ptr, ref( get( v_hashmap, 'matrix' ) ) )) then
+      print *, ptr
+      print *, shape(ptr)
+      print *, lbound(ptr)
+      print *, ubound(ptr)
+      print *, size(ptr)
+    end if
 
     m_ref = ref_of( matrix )
     m_ref = ref_of( matrix, lb=lbound(matrix) )
@@ -1247,9 +1254,6 @@ program test_adt
   character(len=20) :: txtout
   v_string = "BlUbbINGER bla uND texT"
 
-  call test_ref_change()
-  call test_pointer_bounds()
-
   txtout = lower( text )
   call to_lower( text )
   txtout = upper( text )
@@ -1278,6 +1282,9 @@ program test_adt
   call test_hashmap_cloning()
   call test_file_string()
   call test_write_read()
+  call test_ref_change()
+  call test_pointer_bounds()
+
 
   ! delete process scope to make inspector happy
   scope => getScope()
