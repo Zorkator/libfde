@@ -17,6 +17,10 @@ class CommandProcessor(object):
     while True:
       try:
         cmd, res = self.receive(), None
+
+        if getattr( self, '_debug', False ):
+          import pdb; pdb.set_trace()
+
         if   isinstance( cmd, basestring ): res = self._dispatchCommand( cmd )
         elif hasattr( cmd, 'keys' )       : res = self.setStateData( cmd )
         elif hasattr( cmd, '__iter__' )   : res = self.getStateData( cmd )
@@ -26,8 +30,8 @@ class CommandProcessor(object):
         res = 'ok'
         break
 
-      except Exception:
-        res = ''.join( format_exception( *sys.exc_info() ) )
+      except Exception as e:
+        res = e.__class__( ''.join( format_exception( *sys.exc_info() ) ) )
 
       finally:
         self.send( res )
