@@ -13,12 +13,17 @@ class CommandProcessor(object):
 
   """
 
-  def processCommands( self ):
-    while True:
-      try:
-        cmd, res = self.receive(), None
+  def __init__( self, *args, **kwArgs ):
+    super(CommandProcessor, self).__init__( *args, **kwArgs )
+    self._doProcess = True
 
-        if getattr( self, '_debug', False ):
+
+  def processCommands( self ):
+    while self._doProcess:
+      try:
+        res = None
+        cmd = self.receive()
+        if self._debug > 0:
           import pdb; pdb.set_trace()
 
         if   isinstance( cmd, basestring ): res = self._dispatchCommand( cmd )
@@ -39,7 +44,9 @@ class CommandProcessor(object):
 
   def _dispatchCommand( self, cmd ):
     cmd = cmd.split(' ')
-    return getattr( self, "cmd_" + cmd[0] )( *cmd[1:] )
+    res = getattr( self, "cmd_" + cmd[0] )( *cmd[1:] )
+    if res is None: raise StopIteration
+    else          : return res
 
 
   ####
@@ -56,9 +63,11 @@ class CommandProcessor(object):
   def cmd_idle( self )     : return True
   def cmd_state( self )    : return self.state
   def cmd_fork( self )     : return self.fork()
-  def cmd_tick( self )     : raise StopIteration
-  def cmd_terminate( self ): raise StopIteration
   def cmd_getcwd( self )   : return os.getcwd()
+
+  def cmd_tick( self )     : pass
+  def cmd_finalize( self ) : self._doProcess = False
+  def cmd_terminate( self ): self._doProcess = False
 
   def cmd_debug( self, stat ):
     self._debug = int( stat.lower() in 'on true 1 yes enabled'.split() )
