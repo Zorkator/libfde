@@ -47,7 +47,7 @@ class Startable(object):
   
 
   def start( self, **kwArgs ):
-    if getattr( self, '_debug', False ):
+    if self._debug > 0:
       import pdb; pdb.set_trace()
 
     # create and change to working directory of simulation ...

@@ -4,8 +4,12 @@
 class OptionProcessor(object):
 ####################################
 
-  __opts__ = dict()
-  __conv__ = dict()
+  __conv__ = dict( debug     = int
+                 , verbosity = int
+                 )
+  __opts__ = dict( debug     = 0
+                 , verbosity = 1
+                 )
 
   @classmethod
   def _merge_class_attrib( _class, attrId ):

@@ -39,7 +39,8 @@ class NativeController(OptionProcessor):
     """lazy-load property returning handle of loaded library."""
     try   : return self._stock._handle
     except:
-      self._stock._handle = LibLoader( filePath=self._lib, prioPathEnv=self._libEnv ).handle
+      opts = { '--debug': self._debug > 2, '--verbose': self._verbosity > 2 }
+      self._stock._handle = LibLoader( filePath=self._lib, prioPathEnv=self._libEnv, **opts ).handle
       return self._stock._handle
 
 

@@ -61,7 +61,7 @@ class CommandProcessor(object):
   def cmd_getcwd( self )   : return os.getcwd()
 
   def cmd_debug( self, stat ):
-    self._debug = (stat == 'on')
+    self._debug = int( stat.lower() in 'on true 1 yes enabled'.split() )
     return True
     
 
