@@ -80,6 +80,7 @@
         public :: try, throw, proc, c_null_ptr
         public :: push_cleanup, pop_cleanup, set_traceproc
         public :: set_synchronizer, get_context
+        public :: setup_standardExceptions
 
         public :: StringRef_t, str, strBuf, len
 
@@ -110,6 +111,73 @@
 
           call f_throw( code, str(what) )
         end subroutine
+
+
+        subroutine setup_standardExceptions()
+          _use_if_INTEL(ifport)
+          integer :: code
+
+# if defined __INTEL_COMPILER
+#         define _signal     signalqq
+#         define _SIGABRT    SIG$ABORT
+#         define _SIGTERM    SIG$TERM
+#         define _SIGILL     SIG$ILL
+#         define _SIGSEGV    SIG$SEGV
+#         define _SIGINT     SIG$INT
+#         define _SIGFPE     SIG$FPE
+
+# else
+#         define _signal     signal
+#         define _SIGABRT     6
+#         define _SIGTERM    15
+#         define _SIGILL      4
+#         define _SIGSEGV    11
+#         define _SIGINT      2
+#         define _SIGFPE      8
+# endif
+          code = _signal( _SIGABRT, handle_abort )
+          code = _signal( _SIGTERM, handle_term )
+          code = _signal( _SIGILL,  handle_ill )
+          code = _signal( _SIGSEGV, handle_segv )
+          code = _signal( _SIGINT,  handle_int )
+          code = _signal( _SIGFPE,  handle_fpe )
+        end subroutine
+
+        integer*4 function handle_abort( signum )
+          integer*2 :: signum
+          handle_abort = 1
+          call throw( AbortExecution, 'handle_abort' )
+        end function
+      
+        integer*4 function handle_term( signum )
+          integer*2 :: signum
+          handle_term = 1
+          call throw( TerminateExecution, 'handle_term' )
+        end function
+      
+        integer*4 function handle_ill( signum )
+          integer*2 :: signum
+          handle_ill = 1
+          call throw( IllegalInstruction, 'handle_ill' )
+        end function
+      
+        integer*4 function handle_segv( signum )
+          integer*2 :: signum
+          handle_segv = 1
+          call throw( SegmentationFault, 'handle_segv' )
+        end function
+      
+        integer*4 function handle_int( signum )
+          integer*2 :: signum
+          handle_int = 1
+          call throw( KeyboardInterrupt, 'handle_int' )
+        end function
+      
+        integer*4 function handle_fpe( signum )
+          integer*2 :: signum
+          handle_fpe = 1
+          call throw( FloatingPointError, 'handle_fpe' )
+        end function
       end module
 
 #endif

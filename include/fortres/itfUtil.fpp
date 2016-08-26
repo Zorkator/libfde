@@ -81,6 +81,17 @@
 #   define _ARG_REFERENCE5( a, b, c, d, e )
 # endif
 
+
+# if defined __INTEL_COMPILER
+#   define _CPROC( id )              DEC$ ATTRIBUTES C::id
+#   define _use_if_INTEL(mod)        use mod
+# else
+!     not using ifort ...
+#   define _CPROC( id )
+#   define _use_if_INTEL(mod)
+# endif
+
+
 !   Little helper macro for defining C-name binding.
 !   This can be VERY useful when fighting portably with fixed format limits!
 #   define _cID(id)   bind(C,name=_str(id))
