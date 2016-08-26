@@ -16,6 +16,8 @@
 # define _fortres_ExceptionTable                                  \
       _fortres_exception_type( StopExecution           ,01000000) \
       _fortres_exception_type(   JobDone               ,01010000) \
+      _fortres_exception_type(   AbortExecution        ,01020000) \
+      _fortres_exception_type(   TerminateExecution    ,01040000) \
                                                                   \
       _fortres_exception_type( StandardError           ,02000000) \
                                                                   \
@@ -40,7 +42,13 @@
                                                                   \
       _fortres_exception_type(   TypeError             ,02400000) \
                                                                   \
-      _fortres_exception_type(   ValueError            ,02800000)
+      _fortres_exception_type(   ValueError            ,02800000) \
+                                                                  \
+      _fortres_exception_type( ExecutionError          ,04000000) \
+      _fortres_exception_type(   IllegalInstruction    ,04010000) \
+      _fortres_exception_type(   SegmentationFault     ,04020000) \
+                                                                  \
+      _fortres_exception_type( KeyboardInterrupt       ,08000000) \
 
 #endif /* __FORTRES_EXCEPTION_TYPES__HXX */
 
