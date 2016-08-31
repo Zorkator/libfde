@@ -11,6 +11,19 @@ class Stateful(object):
   __opts__   = dict( statePath = '{rootId}' )
 
   @property
+  def scopeKeySeparator( self ):
+    return getattr( self._stock, '__keysep__', None )
+
+
+  @scopeKeySeparator.setter
+  def scopeKeySeparator( self, sep ):
+    if   sep is None: op = None
+    elif sep != ''  : op = lambda s: filter( bool, map( type(s).strip, s.split(sep) ) )
+    else            : op = lambda s: s.split()
+    self._stock.__keysep__ = op
+
+
+  @property
   def state( self ):
     """return state scope, specified by option statePath."""
     try   : return self._stock._state
@@ -26,22 +39,11 @@ class Stateful(object):
 
 
   def setStateData( self, dataDict ):
-    self.state.updateDomain( dataDict, self.__keysep__ )
+    self.state.updateDomain( dataDict, self.scopeKeySeparator )
     return True
 
 
   def getStateData( self, keyList ):
-    pairs = zip( *self.state.iterDomain( keyList, self.__keysep__ ) )
+    pairs = zip( *self.state.iterDomain( keyList, self.scopeKeySeparator ) )
     return pairs and pairs[1] or []
-
-
-  def setScopeKeySeparator( self, sep = None ):
-    if   sep is None: self.__keysep__ = None
-    elif sep != ''  : self.__keysep__ = lambda s: filter( bool, map( type(s).strip, s.split(sep) ) )
-    else            : self.__keysep__ = lambda s: s.split()
-
-
-  def __init__( self, **kwArgs ):
-    super(Stateful, self).__init__( **kwArgs )
-    self.setScopeKeySeparator()
 

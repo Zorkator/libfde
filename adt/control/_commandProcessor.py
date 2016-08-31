@@ -24,7 +24,7 @@ class CommandProcessor(object):
         res = None
         cmd = self.receive()
         if self._debug > 0:
-          import pdb; pdb.set_trace()
+          from ..tools import debug; debug()
 
         if   isinstance( cmd, basestring ): res = self._dispatchCommand( cmd )
         elif hasattr( cmd, 'keys' )       : res = self.setStateData( cmd )
@@ -54,7 +54,7 @@ class CommandProcessor(object):
   #
 
   def cmd_setKeySep( self, sep = None ):
-    self.setScopeKeySeparator( sep )
+    self.scopeKeySeparator = sep
     return True
 
   # Some default commands for Simulators.

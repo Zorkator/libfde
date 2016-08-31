@@ -1,6 +1,6 @@
 
 import os
-from ..tools import OptionProcessor, LibLoader, Wallet
+from ..tools import OptionProcessor, LibLoader, Wallet, debug
 
 
 ##############################################
@@ -56,11 +56,13 @@ class NativeController(OptionProcessor):
     clone = self.__dict__.copy()
     clone['_stock']    = Wallet()
     clone['_cloneCnt'] = 0
+    if self._debug > 0: debug()
     return clone
 
 
   def __setstate__( self, d ):
     self.__dict__.update( d )
+    if self._debug > 0: debug()
     self.initialize()
 
 

@@ -1,7 +1,7 @@
 
 import os
 from ctypes  import c_int32, c_char_p, c_size_t, byref
-from ..tools import makedirs, NullGuard
+from ..tools import makedirs, NullGuard, debug
 
 
 ########################################
@@ -37,6 +37,7 @@ class Startable(object):
   def fork( self, **kwArgs ):
     """fork the current Python process and run start() method of instance."""
     from multiprocessing import Process
+    if self._debug > 0: debug()
     childProc = Process( target=self._start, args=(kwArgs,) )
     childProc.start()
     return childProc 
@@ -47,8 +48,7 @@ class Startable(object):
   
 
   def start( self, **kwArgs ):
-    if self._debug > 0:
-      import pdb; pdb.set_trace()
+    if self._debug > 0: debug()
 
     # create and change to working directory of simulation ...
     workdir = self._workdir.format( **self.about )
@@ -58,7 +58,7 @@ class Startable(object):
       os.chdir( workdir )
     
     # determine argument list ... if not given explicitly use predefined
-    args = kwArgs.get( 'args' ) or self._args.format( **self.about )
+    args = kwArgs.get('args') or self._args
     try   : args = args.strip and [args] #< if args is string wrap it by list
     except: pass
 
@@ -71,7 +71,8 @@ class Startable(object):
 
   def __start__( self, *args, **kwArgs ):
     retCode = c_int32()
-    cmdStr  = ' '.join( map( str, args ) )
+    self._args = ' '.join( map( str, args ) )
+    cmdStr     = self._args.format( **self.about )
     self.handle[ self._startFunc ]( byref(retCode), c_char_p(cmdStr), c_size_t(len(cmdStr)) )
     return retCode.value
 

@@ -67,7 +67,7 @@ class LibLoader(object):
     try   : return self._hdl
     except:
       if self.opt('--debug'):
-        import pdb; pdb.set_trace()
+        from . import debug; debug()
 
       try:
         searchPaths = self.splitEnvPaths( self.opt('prioPathEnv') )

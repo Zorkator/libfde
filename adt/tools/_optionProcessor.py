@@ -62,10 +62,8 @@ class OptionProcessor(object):
        Note that on name collision 'dashed' arguments are treated with priority!
 
     """
-    def _decorate( s ): return s if s.startswith('--') else '_' + s
+    def _decorate( opt ): return '_' + opt[0], opt[1]
 
-    # extract accepted 'dashed' arguments ...
-    kwArgs.update( self.extractOpts( kwArgs ) )
-    # rename remaining keyArgs and store them as attributes ...
-    self.__dict__.update( zip( map( _decorate, kwArgs.keys() ), kwArgs.values() ) )
+    # extract known options from kwArgs, and make them attributes ...
+    self.__dict__.update( map( _decorate, self.extractOpts( kwArgs ) ) )
 
