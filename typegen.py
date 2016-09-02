@@ -322,11 +322,17 @@ class RefType(TypeSpec):
 
     ref_encoder_mk_ptr = """
       contains
-      function mk_ptr( a, b ) result(ptr)
+      function mk_ptr( b, tgt ) result(ptr)
         integer, dimension(:,:)                                    :: b
-        {baseType_arg}, dimension({dimBounds}), target, intent(in) :: a
+        {baseType_arg}, dimension({dimBounds}), target, intent(in) :: tgt
         {baseType_arg}{dimSpec},                           pointer :: ptr
-        ptr => a
+        ! CAUTION: here Fortran might have transformed tgt into a temporary copy of val!!
+        !          e.g. if val is part of multi-dimensional array ...
+        ptr => tgt
+        if (.not. associated( ptr, val )) then
+          ! ... in that case we'd better take a pointer without bounds.
+          ptr => val
+        end if
       end function
     """,
 
@@ -627,7 +633,7 @@ class RefType(TypeSpec):
     if self._isArray:
       self.cloneSrcBounds   = ', lbound(src), ubound(src)'
       self.dimBounds        = ','.join( map( 'b(1,{0}):b(2,{0})'.format, range( 1, self.dimCount+1 ) ) )
-      self.encoder_ptr_tgt  = 'mk_ptr( val, mk_bounds( shape(val), lb, ub ) )'
+      self.encoder_ptr_tgt  = 'mk_ptr( mk_bounds( shape(val), lb, ub ), val )'
       self.encoder_ptr_func = self._template['ref_encoder_mk_ptr'].format( **self.__dict__ )
     else:
       self.cloneSrcBounds   = ''

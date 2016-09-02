@@ -9,7 +9,7 @@
 				<Tool Name="VFLinkerTool" AdditionalOptions="/LIBPATH:../lib/Debug.$(PlatformName)&#xA;libadt.2.0.Debug.$(PlatformName).lib" LinkIncremental="linkIncrementalNo" SuppressStartupBanner="true" GenerateDebugInformation="true" SubSystem="subSystemConsole"/>
 				<Tool Name="VFResourceCompilerTool"/>
 				<Tool Name="VFMidlTool" SuppressStartupBanner="true"/>
-				<Tool Name="VFCustomBuildTool" CommandLine="copy $(SolutionDir)..\athlet_trunk\external\libadt\lib\Debug.$(PlatformName)\libadt.* $(OutDir)" Outputs="$(OutDir)libadt.2.0.$(ConfigurationName).$(PlatformName).dll"/>
+				<Tool Name="VFCustomBuildTool" CommandLine="copy &quot;..\lib\$(ConfigurationName).$(PlatformName)\libadt.*&quot; &quot;$(OutDir)&quot;" Outputs="$(OutDir)libadt.2.0.$(ConfigurationName).$(PlatformName).dll"/>
 				<Tool Name="VFPreLinkEventTool"/>
 				<Tool Name="VFPreBuildEventTool"/>
 				<Tool Name="VFPostBuildEventTool"/>
@@ -19,7 +19,7 @@
 				<Tool Name="VFLinkerTool" AdditionalOptions="/LIBPATH:../lib/Debug.$(PlatformName)&#xA;libadt.2.0.Debug.$(PlatformName).lib" LinkIncremental="linkIncrementalNo" SuppressStartupBanner="true" SubSystem="subSystemConsole"/>
 				<Tool Name="VFResourceCompilerTool"/>
 				<Tool Name="VFMidlTool" SuppressStartupBanner="true"/>
-				<Tool Name="VFCustomBuildTool" CommandLine="copy $(SolutionDir)..\athlet_trunk\external\libadt\lib\Debug.$(PlatformName)\libadt.* $(OutDir)" Outputs="$(OutDir)libadt.2.0.$(ConfigurationName).$(PlatformName).dll"/>
+				<Tool Name="VFCustomBuildTool" CommandLine="copy &quot;..\lib\$(ConfigurationName).$(PlatformName)\libadt.*&quot; &quot;$(OutDir)&quot;" Outputs="$(OutDir)libadt.2.0.$(ConfigurationName).$(PlatformName).dll"/>
 				<Tool Name="VFPreLinkEventTool"/>
 				<Tool Name="VFPreBuildEventTool"/>
 				<Tool Name="VFPostBuildEventTool"/>
@@ -29,7 +29,7 @@
 				<Tool Name="VFLinkerTool" AdditionalOptions="/LIBPATH:../lib/Debug.$(PlatformName)&#xA;libadt.2.0.Debug.$(PlatformName).lib" LinkIncremental="linkIncrementalNo" SuppressStartupBanner="true" GenerateDebugInformation="true" SubSystem="subSystemConsole"/>
 				<Tool Name="VFResourceCompilerTool"/>
 				<Tool Name="VFMidlTool" SuppressStartupBanner="true" TargetEnvironment="midlTargetAMD64"/>
-				<Tool Name="VFCustomBuildTool" CommandLine="copy $(SolutionDir)..\athlet_trunk\external\libadt\lib\Debug.$(PlatformName)\libadt.* $(OutDir)" Outputs="$(OutDir)libadt.2.0.$(ConfigurationName).$(PlatformName).dll"/>
+				<Tool Name="VFCustomBuildTool" CommandLine="copy &quot;..\lib\$(ConfigurationName).$(PlatformName)\libadt.*&quot; &quot;$(OutDir)&quot;" Outputs="$(OutDir)libadt.2.0.$(ConfigurationName).$(PlatformName).dll"/>
 				<Tool Name="VFPreLinkEventTool"/>
 				<Tool Name="VFPreBuildEventTool"/>
 				<Tool Name="VFPostBuildEventTool"/>
@@ -39,7 +39,7 @@
 				<Tool Name="VFLinkerTool" AdditionalOptions="/LIBPATH:../lib/Debug.$(PlatformName)&#xA;libadt.2.0.Debug.$(PlatformName).lib" LinkIncremental="linkIncrementalNo" SuppressStartupBanner="true" SubSystem="subSystemConsole"/>
 				<Tool Name="VFResourceCompilerTool"/>
 				<Tool Name="VFMidlTool" SuppressStartupBanner="true" TargetEnvironment="midlTargetAMD64"/>
-				<Tool Name="VFCustomBuildTool" CommandLine="copy $(SolutionDir)..\athlet_trunk\external\libadt\lib\Debug.$(PlatformName)\libadt.* $(OutDir)" Outputs="$(OutDir)libadt.2.0.$(ConfigurationName).$(PlatformName).dll"/>
+				<Tool Name="VFCustomBuildTool" CommandLine="copy &quot;..\lib\$(ConfigurationName).$(PlatformName)\libadt.*&quot; &quot;$(OutDir)&quot;" Outputs="$(OutDir)libadt.2.0.$(ConfigurationName).$(PlatformName).dll"/>
 				<Tool Name="VFPreLinkEventTool"/>
 				<Tool Name="VFPreBuildEventTool"/>
 				<Tool Name="VFPostBuildEventTool"/>

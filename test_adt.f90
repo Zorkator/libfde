@@ -1115,6 +1115,7 @@ module pointer_remapping
 
   subroutine test_pointer_bounds()
     real*4, dimension(:,:,:), pointer :: ptr
+    real*4, dimension(:,:),   pointer :: ptr2
     type(Ref_t)                       :: m_ref, m_ref2
 
     _REALLOCATE_visible( v_hashmap, matrix, (-5:-2,8:10,3:4) )
@@ -1136,13 +1137,26 @@ module pointer_remapping
     m_ref = ref_of( matrix, lb=lbound(matrix) )
     m_ref = ref_of( matrix,                    ub=ubound(matrix) )
     m_ref = ref_of( matrix, lb=lbound(matrix), ub=ubound(matrix) )
-
+    m_ref = ref_of( matrix(-3:-3,:,3) )
+    m_ref = ref_of( matrix(:,:,3), lb=lbound(matrix) )
+    m_ref = ref_of( matrix(-4:-3,9,3:4) )
+    m_ref = ref_of( matrix(-4:-3,9,3:4), lb=lbound(matrix) )
+    m_ref = ref_of( matrix(:,:,3), lb=lbound(matrix) )
+    
     if (dynamic_cast( ptr, m_ref )) then
       print *, ptr
       print *, shape(ptr)
       print *, lbound(ptr)
       print *, ubound(ptr)
       print *, size(ptr)
+    end if
+
+    if (dynamic_cast( ptr2, m_ref )) then
+      print *, ptr2
+      print *, shape(ptr2)
+      print *, lbound(ptr2)
+      print *, ubound(ptr2)
+      print *, size(ptr2)
     end if
 
     allocate( ptr(-4:2,2:3,4:5) )
