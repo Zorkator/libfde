@@ -13,7 +13,6 @@ class NativeController(OptionProcessor):
     according to the native code capabilities.
 
   """
-  _cloneCnt = 0
   __conv__  = dict( lib    = os.path.abspath )
   __opts__  = dict( lib    = LookupError('missing library specification!')
                   , libEnv = 'ADTPATH'
@@ -30,7 +29,7 @@ class NativeController(OptionProcessor):
   
   def _get_about( self ):
     return dict( pid     = os.getpid()
-               , id      = self._cloneCnt
+               , id      = self._id
                , classId = type(self).__name__ )
 
 
@@ -48,6 +47,7 @@ class NativeController(OptionProcessor):
     super(NativeController, self).__init__( **kwArgs )
     self._stock    = Wallet()
     self._cloneCnt = 0
+    self._id       = 0
     self.initialize()
 
 
@@ -56,6 +56,7 @@ class NativeController(OptionProcessor):
     clone = self.__dict__.copy()
     clone['_stock']    = Wallet()
     clone['_cloneCnt'] = 0
+    clone['_id']       = self._cloneCnt
     if self._debug > 0: debug()
     return clone
 
