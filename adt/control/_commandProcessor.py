@@ -1,6 +1,6 @@
 
 from traceback import format_exception
-import sys, os
+import sys, os, shlex
 
 
 ######################################
@@ -43,7 +43,7 @@ class CommandProcessor(object):
 
 
   def _dispatchCommand( self, cmd ):
-    cmd = cmd.split(' ')
+    cmd = shlex.split(cmd)
     res = getattr( self, "cmd_" + cmd[0] )( *cmd[1:] )
     if res is None: raise StopIteration
     else          : return res
