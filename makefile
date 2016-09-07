@@ -25,6 +25,7 @@ FC_INCLUDE_DIRS := ./include
 
 FC_list = ifort gfortran
 
+FC_FLAGS.%        = $(fc_threads) $(fc_m)$(mk_ARCH)
 FC_CFLAGS.%       = $(fc_fpp) $(call fc_form,free,none) $(fc_backtrace)
 crc_impl.gfortran = $(call fc_cflags_of,.f90) -fno-range-check
 crc_impl.ifort    = $(call fc_cflags_of,.f90) -assume noold_boz
