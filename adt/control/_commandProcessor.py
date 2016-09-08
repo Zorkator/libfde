@@ -62,12 +62,14 @@ class CommandProcessor(object):
 
   def cmd_idle( self )     : return True
   def cmd_state( self )    : return self.state
-  def cmd_fork( self )     : return self.fork()
   def cmd_getcwd( self )   : return os.getcwd()
 
   def cmd_tick( self )     : pass
   def cmd_finalize( self ) : self._doProcess = False
   def cmd_terminate( self ): self._doProcess = False
+
+  def cmd_fork( self, **kwArgs ):
+    return self.fork( **kwArgs )
 
   def cmd_debug( self, stat ):
     self._debug = int( stat.lower() in 'on true 1 yes enabled'.split() )
