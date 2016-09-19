@@ -11,7 +11,7 @@ class MemoryRef(Structure):
     return string_at( self.ptr, self.len )
 
   def __nonzero__( self ):
-    return self.len and self.ptr
+    return self.len > 0 and bool(self.ptr)
 
 
 

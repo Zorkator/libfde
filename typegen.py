@@ -448,10 +448,13 @@ class RefType(TypeSpec):
     #
     ref_inspector = """
     subroutine {typeId}_inspect_( val, res, n )
-      type(Ref_t), intent(in) :: val
-      integer                 :: n
-      integer                 :: res(n)
-      res(:n) = shape( {typeId}_decode_ref_( val ) )
+      type(Ref_t),      intent(in) :: val
+      integer                      :: n
+      integer                      :: res(n)
+      {baseType}{dimSpec}, pointer :: ptr
+      ! . o O (ifort appears to need an auxiliary pointer on inspecting large arrays ... >:-( got stackoverflow otherwise!)
+      ptr => {typeId}_decode_ref_( val )
+      res = shape( ptr )
     end subroutine
     """,
 
