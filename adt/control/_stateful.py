@@ -11,16 +11,13 @@ class Stateful(object):
   __opts__   = dict( statePath = '{rootId}' )
 
   @property
-  def scopeKeySeparator( self ):
-    return getattr( self._stock, '__keysep__', None )
+  def scopeKeyOperator( self ):
+    return getattr( self._stock, '__keyop__', None )
 
 
-  @scopeKeySeparator.setter
-  def scopeKeySeparator( self, sep ):
-    if   sep is None: op = None
-    elif sep != ''  : op = lambda s: filter( bool, map( type(s).strip, s.split(sep) ) )
-    else            : op = lambda s: s.split()
-    self._stock.__keysep__ = op
+  @scopeKeyOperator.setter
+  def scopeKeyOperator( self, op ):
+    self._stock.__keyop__ = op
 
 
   @property
@@ -39,11 +36,11 @@ class Stateful(object):
 
 
   def setStateData( self, dataDict ):
-    self.state.updateDomain( dataDict, self.scopeKeySeparator )
+    self.state.updateDomain( dataDict, self.scopeKeyOperator )
     return True
 
 
   def getStateData( self, keyList ):
-    pairs = zip( *self.state.iterDomain( keyList, self.scopeKeySeparator ) )
+    pairs = zip( *self.state.iterDomain( keyList, self.scopeKeyOperator ) )
     return pairs and pairs[1] or []
 

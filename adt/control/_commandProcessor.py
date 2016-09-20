@@ -53,8 +53,14 @@ class CommandProcessor(object):
   # command implementations
   #
 
-  def cmd_setKeySep( self, sep = None ):
-    self.scopeKeySeparator = sep
+  def _keySeparator( self, sep ):
+    if   sep is None: return None
+    elif sep != ''  : return lambda k: filter( bool, map( type(k).strip, k.split(sep) ) )
+    else            : return lambda k: k.split()
+    
+
+  def cmd_setKeyOp( self, sep = None ):
+    self.scopeKeyOperator = self._keySeparator( sep )
     return True
 
   # Some default commands for Simulators.
