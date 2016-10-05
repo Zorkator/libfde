@@ -1,7 +1,6 @@
 #ifndef __ADT_SCOPE_FPP
 #define __ADT_SCOPE_FPP
 
-#include "adt/ppUtil.xpp"
 #include "adt/string.fpp"
 
 # define _get_scope( parent, scopeId ) \
