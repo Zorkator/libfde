@@ -1,12 +1,17 @@
 @echo off
-rem usage copylib.bat <srcDir> <tgtDir> <flagId>
 
-set srcDir=%1
-set tgtDir=%2
-set flagId=%3
+rem usage copylib.bat <tgtDir> <src> [...]
+set tgtDir=%1     && shift
+set srcPattern=%1 && shift
 
-for %%f in (%srcDir%\adt_*.mod %srcDir%\libadt*) do (
+:loop
+shift
+if not "%1"=="" (
+  set srcPattern=%srcPattern% %1
+  goto :loop
+)
+
+for %%f in (%srcPattern%) do (
   copy %%f %tgtDir%
 )
-type nul >> %tgtDir%\%flagId%
 
