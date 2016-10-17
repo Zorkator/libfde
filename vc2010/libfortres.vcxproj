@@ -26,7 +26,7 @@
     <ClCompile Include="..\fort_tracestack.cpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
-    <ProjectGuid>{2B1BBCBB-611C-4F97-9FDF-B78643AE3349}</ProjectGuid>
+    <ProjectGuid>{1AD3907E-4463-40B7-BDF5-9A883404336C}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
     <RootNamespace>libfortres</RootNamespace>
   </PropertyGroup>

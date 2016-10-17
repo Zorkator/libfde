@@ -1,10 +1,14 @@
-#ifndef __FORTRES_SHAREDLIB_FMOD
-#define __FORTRES_SHAREDLIB_FMOD
+#ifndef __FORTRES_PLUGIN_FMOD
+#define __FORTRES_PLUGIN_FMOD
+
+#if !defined _MODULENAME_plugin
+# define _MODULENAME_plugin  plugin
+#endif
 
 #include "fortres/itfUtil.fpp"
 
-      module sharedlib
-        use stringref
+      module _MODULENAME_plugin
+        use _MODULENAME_stringref
         use, intrinsic :: iso_c_binding
         implicit none
         private
@@ -92,6 +96,7 @@
 
       contains
 
+!_PROC_EXPORT(plugin_set_path)
           subroutine plugin_set_path( path, lPath, chkSym )
             character(len=*)           :: path
             character(len=*), optional :: lPath,  chkSym
@@ -101,16 +106,19 @@
             call plugin_set_path_( str(path), lPath_, chkSym_ )
           end subroutine
 
+!_PROC_EXPORT(plugin_register)
           subroutine plugin_register( pluginFilePath )
             character(len=*) :: pluginFilePath
             call plugin_register_( str(pluginFilePath) )
           end subroutine
 
+!_PROC_EXPORT(plugin_iterate)
           subroutine plugin_iterate( op )
             procedure(PluginInfoHandler) :: op
             call plugin_iterate_( c_funloc(op) )
           end subroutine
 
+!_PROC_EXPORT(plugin_filePath_to_id)
           subroutine plugin_filePath_to_id( filePath, id )
             character(len=*), intent(in)  :: filePath
             character(len=*)              :: id
@@ -121,18 +129,21 @@
           !  plugin_## routines throw exceptions on error!
           !  So it's save using a returned pointer immediately.
 
+!_PROC_EXPORT(plugin_sym)
           function plugin_sym( pluginId, symId ) result(res)
             character(len=*) :: pluginId, symId
             type(c_ptr)      :: res
             res = plugin_sym_( str(pluginId), str(symId) )
           end function
 
+!_PROC_EXPORT(plugin_proc)
           function plugin_proc( pluginId, symId ) result(res)
             character(len=*) :: pluginId, symId
             type(c_funptr)   :: res
             res = plugin_proc_( str(pluginId), str(symId) )
           end function
 
+!_PROC_EXPORT(plugin_call)
           subroutine plugin_call( pluginId, symId )
             character(len=*) :: pluginId, symId
             call plugin_call_exc( str(pluginId), str(symId) )
@@ -141,18 +152,21 @@
           ! accessing plugin procedures and symbols by pointer
           !  plugin_try_## routines return NULL pointer on error!
 
+!_PROC_EXPORT(plugin_try_sym)
           function plugin_try_sym( pluginId, symId ) result(res)
             character(len=*) :: pluginId, symId
             type(c_ptr)      :: res
             res = plugin_try_sym_( str(pluginId), str(symId) )
           end function
 
+!_PROC_EXPORT(plugin_try_proc)
           function plugin_try_proc( pluginId, symId ) result(res)
             character(len=*) :: pluginId, symId
             type(c_funptr)   :: res
             res = plugin_try_proc_( str(pluginId), str(symId) )
           end function
 
+!_PROC_EXPORT(plugin_try_call)
           function plugin_try_call( pluginId, symId ) result(res)
             character(len=*) :: pluginId, symId
             logical          :: res

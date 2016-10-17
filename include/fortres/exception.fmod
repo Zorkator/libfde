@@ -1,14 +1,18 @@
 #ifndef __FORTRES_EXCEPTION_FMOD
 #define __FORTRES_EXCEPTION_FMOD
 
+#if !defined _MODULENAME_exception
+# define _MODULENAME_exception  exception
+#endif
+
 #include "fortres/itfUtil.fpp"
 #include "fortres/exception.fpp"
 #include "fortres/exception_types.xpp"
 
 #include "fortres/stringref.fmod"
 
-      module exception
-        use stringref
+      module _MODULENAME_exception
+        use _MODULENAME_stringref
         use iso_c_binding
         implicit none
         private
@@ -88,12 +92,14 @@
         contains
       !-------------------
 
+!_PROC_EXPORT(proc)
         function proc( sub ) result(res)
           procedure()     :: sub
           type (c_funptr) :: res
           res = c_funloc( sub )
         end function
 
+!_PROC_EXPORT(throw)
         subroutine throw( code, what )
           ! explicit procedure forces compiler to keep what-string alive!
           implicit none
@@ -113,6 +119,7 @@
         end subroutine
 
 
+!_PROC_EXPORT(setup_standardExceptions)
         subroutine setup_standardExceptions()
           _use_if_INTEL(ifport)
           integer :: code

@@ -1,7 +1,13 @@
 #ifndef __FORTRES_STRINGREF_FMOD
 #define __FORTRES_STRINGREF_FMOD
 
-      module stringref
+#if !defined _MODULENAME_stringref
+# define _MODULENAME_stringref  stringref
+#endif
+
+#include "fortres/itfUtil.fpp"
+
+      module _MODULENAME_stringref
         use, intrinsic :: iso_c_binding
         implicit none
         private
@@ -33,6 +39,7 @@
         contains
       !-------------------
 
+!_PROC_EXPORT(stringref_create)
         function stringref_create() result(strRef)
           type (StringRef_t) :: strRef
           strRef%loc = c_null_ptr
@@ -40,6 +47,7 @@
         end function
 
 
+!_PROC_EXPORT(stringref_of_str_trim)
         function stringref_of_str_trim( fstr, trimLen ) result(strRef)
           character(len=*), target, intent(in) :: fstr
           logical                              :: trimLen
@@ -63,6 +71,7 @@
         end function
 
 
+!_PROC_EXPORT(stringref_of_str)
         function stringref_of_str( fstr ) result(strRef)
           character(len=*), target, intent(in) :: fstr
           type (StringRef_t)                   :: strRef
@@ -70,6 +79,7 @@
         end function
 
 
+!_PROC_EXPORT(stringref_of_buf)
         function stringref_of_buf( fstrBuf ) result(strRef)
           character(len=*), target, intent(out) :: fstrBuf
           type (StringRef_t)                    :: strRef
@@ -77,6 +87,7 @@
         end function
 
 
+!_PROC_EXPORT(stringref_to_str)
         function stringref_to_str( strRef ) result(fptr)
           type (StringRef_t),     intent(in) :: strRef
           character(len=strRef%len), pointer :: fptr
@@ -88,6 +99,7 @@
         end function
 
 
+!_PROC_EXPORT(stringRef_to_char)
         function stringRef_to_char( strRef ) result(cstr)
           type (StringRef_t), intent(in) :: strRef
           character(len=strRef%len)      :: cstr

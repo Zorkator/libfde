@@ -1,10 +1,14 @@
 #ifndef __FORTRES_DIRENT_FMOD
 #define __FORTRES_DIRENT_FMOD
 
+#if !defined _MODULENAME_dirent
+# define _MODULENAME_dirent  dirent
+#endif
+
 #include "fortres/itfUtil.fpp"
 
-      module dirent
-        use stringref
+      module _MODULENAME_dirent
+        use _MODULENAME_stringref
         use, intrinsic :: iso_c_binding
         implicit none
         private
@@ -94,18 +98,21 @@
 
       contains
 
+!_PROC_EXPORT(relPath_from_to)
           subroutine relPath_from_to( res, from, to )
             character(len=*), intent(inout) :: res
             character(len=*), intent(in)    :: from, to
             call mkrp_ft_( strBuf(res), str(from), str(to) )
           end subroutine
       
+!_PROC_EXPORT(relPath_to)
           subroutine relPath_to( res, to )
             character(len=*), intent(inout) :: res
             character(len=*), intent(in)    :: to
             call mkrp_t_( strBuf(res), str(to) )
           end subroutine
       
+!_PROC_EXPORT(opendir)
           function opendir( dir, path )
             type(DIR_t),     intent(out) :: dir
             character(len=*), intent(in) :: path
@@ -113,6 +120,7 @@
             opendir = (opendir_( dir, str(path) ) /= 0)
           end function
         
+!_PROC_EXPORT(readdir)
           function readdir( dir, dirEntry )
             type(DIR_t),               value :: dir
             type(StringRef_t), intent(inout) :: dirEntry
@@ -120,6 +128,7 @@
             readdir = (readdir_( dir, dirEntry ) /= 0)
           end function
 
+!_PROC_EXPORT(closedir)
           subroutine closedir( dir, stat )
             type(DIR_t), intent(inout) :: dir
             logical,          optional :: stat
@@ -128,6 +137,7 @@
             if (present(stat)) stat = (stat_ == 0)
           end subroutine
   
+!_PROC_EXPORT(rewinddir)
           subroutine rewinddir( dir, stat )
             type(DIR_t),  value :: dir
             logical,   optional :: stat
@@ -136,12 +146,14 @@
             if (present(stat)) stat = (stat_ == 0)
           end subroutine
 
+!_PROC_EXPORT(isdir)
           function isdir( pathStr )
             character(len=*), intent(in) :: pathStr
             logical                      :: isdir
             isdir = (isdir_( str(pathStr) ) /= 0)
           end function
 
+!_PROC_EXPORT(realpath)
           function realpath( filePath, strRef )
             character(len=*), intent(in) :: filePath
             type(StringRef_t)            :: strRef

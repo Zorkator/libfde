@@ -30,7 +30,7 @@
 #define _tryProcedure( id, args ) \
    function id( catchList, what, sub, args() argEnd ) _cID(f_try) result(res) ;\
      use, intrinsic :: iso_c_binding                                          ;\
-     use stringref
+     use _MODULENAME_stringref
 
 
 #define _end_tryProcedure \
