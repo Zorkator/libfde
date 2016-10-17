@@ -1,5 +1,5 @@
-#ifndef __ITFUTIL_FPP
-#define __ITFUTIL_FPP
+#ifndef __FORTRES_ITFUTIL_FPP
+#define __FORTRES_ITFUTIL_FPP
 
 #include "fortres/ppUtil.xpp"
 
