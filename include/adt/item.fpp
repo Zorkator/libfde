@@ -1,7 +1,7 @@
-#ifndef __ITEM_FPP
-#define __ITEM_FPP
+#ifndef __ADT_ITEM_FPP
+#define __ADT_ITEM_FPP
 
-#include "adt/ppUtil.xpp"
+#include "fortres/ppUtil.xpp"
 
 # define _TableOf_item_types_base_ \
     _item_type_(bool1,      logical*1)      \
