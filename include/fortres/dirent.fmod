@@ -19,12 +19,16 @@
         end type
 
         public :: DIR_t
-        public :: relPath_from_to, relPath_to
+        public :: relPath
         public :: opendir, readdir, closedir, rewinddir, isdir
         public :: so_filepath
 
         interface relPath
           module procedure relPath_from_to, relPath_to
+        end interface
+
+        interface so_filepath
+          module procedure so_filepath_proc, so_filepath_data
         end interface
 
         interface
@@ -77,22 +81,19 @@
             type(StringRef_t)      :: filePath, resolvedPath
             integer(kind=c_size_t) :: realpath_
           end function
-        end interface
 
-        ! get shared object filePath of given procedure or data
-        interface so_filepath
-          function so_filepath_proc( p, strRef ) _cID(f_so_filepath_of)
+          function so_filepath_proc_( p, strRef ) _cID(f_so_filepath_of)
             import StringRef_t, c_funptr, c_size_t
             type(c_funptr), value, intent(in) :: p !< proc pointer
             type(StringRef_t)                 :: strRef
-            integer(kind=c_size_t)            :: so_filepath_proc
+            integer(kind=c_size_t)            :: so_filepath_proc_
           end function
 
-          function so_filepath_data( d, strRef ) _cID(f_so_filepath_of)
+          function so_filepath_data_( d, strRef ) _cID(f_so_filepath_of)
             import StringRef_t, c_ptr, c_size_t
             type(c_ptr), value, intent(in)    :: d !< data pointer
             type(StringRef_t)                 :: strRef
-            integer(kind=c_size_t)            :: so_filepath_data
+            integer(kind=c_size_t)            :: so_filepath_data_
           end function
         end interface
 
@@ -154,11 +155,27 @@
           end function
 
 !_PROC_EXPORT(realpath)
-          function realpath( filePath, strRef )
+          function realpath( filePath, buf )
             character(len=*), intent(in) :: filePath
-            type(StringRef_t)            :: strRef
+            character(len=*)             :: buf
             integer(kind=c_size_t)       :: realpath
-            realpath = realpath_( str(filePath), strRef )
+            realpath = realpath_( str(filePath), strBuf(buf) )
+          end function
+
+!_PROC_EXPORT(so_filepath_proc)
+          function so_filepath_proc( p, buf ) result(res)
+            procedure()            :: p
+            character(len=*)       :: buf
+            integer(kind=c_size_t) :: res
+            res = so_filepath_proc_( c_funloc(p), strBuf(buf) )
+          end function
+
+!_PROC_EXPORT(so_filepath_data)
+          function so_filepath_data( d, buf ) result(res)
+            type(c_ptr), intent(in) :: d !< data pointer
+            character(len=*)        :: buf
+            integer(kind=c_size_t)  :: res
+            res = so_filepath_data_( d, strBuf(buf) )
           end function
       end module
 #endif

@@ -1,6 +1,10 @@
 #ifndef __FORTRES_EXCEPTION_FMOD
 #define __FORTRES_EXCEPTION_FMOD
 
+#if !defined _MODULENAME_try_interface
+# define _MODULENAME_exception  try_interface
+#endif
+
 #if !defined _MODULENAME_exception
 # define _MODULENAME_exception  exception
 #endif
@@ -10,10 +14,97 @@
 #include "fortres/exception_types.xpp"
 
 #include "fortres/stringref.fmod"
+#include "fortres/tracestack.fmod"
+
+      ! Generic wrapper routine around C-Funktion f_try
+      ! This routine is a bit tricky, since Fortran is too stupid to
+      !   * support variable argument lists
+      !   * control ByRef/ByVal-argument passing per call
+      !   * 
+
+      subroutine try__( res, catch, what, tgt, _args_20 )
+        use, intrinsic :: iso_c_binding
+        use _MODULENAME_stringref
+        integer(kind=c_int) :: res
+        integer             :: catch(*)
+        type(StringRef_t)   :: what
+        type(c_funptr)      :: tgt
+        type(c_ptr)         :: _args_20
+
+        interface
+          function c_try_( catch, what, tgt, _args_20, x_ ) _cID(f_try)
+            use, intrinsic :: iso_c_binding
+            use _MODULENAME_stringref
+            integer(kind=c_int),   intent(in) :: catch(*)
+            type(StringRef_t)                 :: what
+            type(c_funptr), value, intent(in) :: p
+            type(c_ptr),    value, intent(in) :: _args_20, x_
+            integer(kind=c_int)               :: c_try_
+          end function
+        end interface
+
+        res = c_try_( catch, what, tgt, _args_20, _argEnd )
+      end subroutine
+
+
+      module _MODULENAME_try_interface
+        use _MODULENAME_stringref
+        use iso_c_binding
+        
+        ! Using the try-catch mechanism requires an interface definition
+        !   matching the subroutine that should be called by try.
+        ! The following default interfaces are supported for trying ...
+        !   * any subroutine without arguments
+        !   * any subroutine accepting one character string
+        !   * any subroutine accepting a StringRef_t
+        ! To support other subroutines the matching interfaces have to
+        !   be provided by extending the try interface separately.
+        ! Note that the number of arguments is currently limited to 20!
+
+        interface try
+          module procedure try_void, try_chs, try_str
+        end interface
+
+        contains
+
+!_PROC_EXPORT(try_void)
+        function try_void( catch, what, tgt ) result(res)
+!                    . o O (define this to keep the 72 column limit!)
+#         define _tryBaseArgs   res, catch, strBuf(what), c_funloc(tgt)
+
+          integer          :: catch(*)
+          character(len=*) :: what
+          procedure()      :: tgt
+          integer          :: res
+          call try__( _tryBaseArgs, _argEnd_20 )
+        end function
+
+!_PROC_EXPORT(try_chs)
+        function try_chs( catch, what, tgt, arg ) result(res)
+          integer           :: catch(*)
+          character(len=*)  :: what
+          procedure()       :: tgt
+          character(len=*)  :: arg
+          integer           :: res
+          call try__( _tryBaseArgs, c_loc(str(arg)), _argEnd_19 )
+        end function
+
+!_PROC_EXPORT(try_str)
+        function try_str( catch, what, tgt, arg ) result(res)
+          integer           :: catch(*)
+          character(len=*)  :: what
+          procedure()       :: tgt
+          type(StringRef_t) :: arg
+          integer           :: res
+          call try__( _tryBaseArgs, c_loc(arg), _argEnd_19 )
+        end function
+      end module
+
 
       module _MODULENAME_exception
         use _MODULENAME_stringref
-        use iso_c_binding
+        use _MODULENAME_tracestack
+        use _MODULENAME_try_interface
         implicit none
         private
 
@@ -22,60 +113,36 @@
           _fortres_ExceptionTable
 #       undef  _fortres_exception_type
       
-        ! Using the try-catch mechanism requires an interface definition
-        !   matching the subroutine to call via try.
-        ! The following defines the default interface for trying any
-        !   subroutine without arguments.
-        ! For trying any other subroutine it's signature has to be defined
-        !   manually.
-        ! The preprocessor macros _tryProcedure and _end_tryProcedure
-        !   help to define them correctly.
-        ! Keep in mind that such interface is used to call a C-function.
-        ! For this reason it is important to use the type kinds provided by
-        !   fortran's iso_c_binding module for specifying the argument types.
-        ! As there's no standard for passing fortran strings to C the module stringref
-        !   defines a wrapper type StringRef_t that can handle strings portably.
-        !
-        ! Definding the interface for a subroutine taking three arguments,
-        !   e.g. an integer, a real, and a string, might look like this:
-        !
-        ! interface try
-        !   _tryProcedure( some_unique_name_, _args_3 ) !<< number of expected arguments
-        !     integer(kind=c_int) :: arg1   !<< define arguments by dummy names arg#
-        !     real(kind=c_double) :: arg2   !<< ... starting at arg1, up to arg20
-        !     type(StringRef_t)   :: arg3
-        !   _end_tryProcedure
-        ! end interface
-        !
-      
-        interface try
-          _tryProcedure( exception_try_0_args_, _args_0 )
-          _end_tryProcedure
-        end interface
-      
         interface
-          subroutine push_cleanup( proc ) _cID(f_push_cleanup)
+          subroutine throw_( code, what ) _cID(f_throw)
+            use, intrinsic :: iso_c_binding
+            import StringRef_t
+            integer(kind=c_int), value :: code
+            type (StringRef_t)         :: what
+          end subroutine
+
+          subroutine push_cleanup_( proc ) _cID(f_push_cleanup)
             use, intrinsic :: iso_c_binding
             type (c_funptr), value, intent(in) :: proc
           end subroutine
 
-          subroutine pop_cleanup( exec ) _cID(f_pop_cleanup)
+          subroutine pop_cleanup_( exec ) _cID(f_pop_cleanup)
             use, intrinsic :: iso_c_binding
             integer(kind=c_int), value :: exec
           end subroutine
 
-          subroutine set_synchronizer( sync ) _cID(f_set_synchronizer)
+          subroutine set_synchronizer_( sync ) _cID(f_set_synchronizer)
             use, intrinsic :: iso_c_binding
             type (c_funptr), value, intent(in) :: sync
           end subroutine
 
-          subroutine get_context( context, id ) _cID(f_get_context)
+          subroutine get_context_( context, id ) _cID(f_get_context)
             use, intrinsic :: iso_c_binding
             type (c_ptr),  intent(inout) :: context
             integer*4, value, intent(in) :: id
           end subroutine
 
-          subroutine set_traceproc( tracer ) _cID(f_set_traceproc)
+          subroutine set_traceproc_( tracer ) _cID(f_set_traceproc)
             use, intrinsic :: iso_c_binding
             type (c_funptr), value, intent(in) :: tracer
           end subroutine
@@ -101,21 +168,43 @@
 
 !_PROC_EXPORT(throw)
         subroutine throw( code, what )
-          ! explicit procedure forces compiler to keep what-string alive!
           implicit none
           integer,          intent(in) :: code
           character(len=*), intent(in) :: what
+          call throw_( code, str(what) )
+        end subroutine
 
-          interface
-            subroutine f_throw( code, what ) _cID(f_throw)
-              use, intrinsic :: iso_c_binding
-              import StringRef_t
-              integer(kind=c_int), value :: code
-              type (StringRef_t)         :: what
-            end subroutine
-          end interface
+!_PROC_EXPORT(push_cleanup)
+        subroutine push_cleanup( proc )
+          procedure() :: proc
+          call push_cleanup_( c_funloc(proc) )
+        end subroutine
 
-          call f_throw( code, str(what) )
+!_PROC_EXPORT(pop_cleanup)
+        subroutine pop_cleanup( callHandler )
+          logical, optional :: callHandler
+          logical           :: callHandler_ = .true.
+          if (present(callHandler)) callHandler_ = callHandler
+          call pop_cleanup_( merge(1,0,callHandler_) )
+        end subroutine
+
+!_PROC_EXPORT(set_synchronizer)
+        subroutine set_synchronizer( sync )
+          procedure() :: sync
+          call set_synchronizer_( c_funloc( sync ) )
+        end subroutine
+
+!_PROC_EXPORT(get_context)
+        subroutine get_context( context, id )
+          type (c_ptr), intent(inout) :: context
+          integer*4,    intent(in)    :: id
+          call get_context_( context, id )
+        end subroutine
+
+!_PROC_EXPORT(set_traceproc)
+        subroutine set_traceproc( tracer )
+          procedure() :: tracer
+          call set_traceproc_( c_funloc(tracer) )
         end subroutine
 
 

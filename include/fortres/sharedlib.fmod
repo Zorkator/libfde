@@ -17,7 +17,6 @@
         public :: plugin_filePath_to_id
         public :: plugin_sym, plugin_proc, plugin_call
         public :: plugin_try_sym, plugin_try_proc, plugin_try_call
-        public :: plugin_call_exc
 
         interface
           subroutine PluginInfoHandler( id, fp )
@@ -64,7 +63,7 @@
             type(c_funptr)                :: plugin_proc_
           end function
 
-          subroutine plugin_call_exc( pId, sId ) _cID(f_plugin_call)
+          subroutine plugin_call_( pId, sId ) _cID(f_plugin_call)
             import StringRef_t
             type(StringRef_t), intent(in) :: pId !< pluginId
             type(StringRef_t), intent(in) :: sId !< symbolId
@@ -146,7 +145,7 @@
 !_PROC_EXPORT(plugin_call)
           subroutine plugin_call( pluginId, symId )
             character(len=*) :: pluginId, symId
-            call plugin_call_exc( str(pluginId), str(symId) )
+            call plugin_call_( str(pluginId), str(symId) )
           end subroutine
 
           ! accessing plugin procedures and symbols by pointer
