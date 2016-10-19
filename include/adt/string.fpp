@@ -1,7 +1,7 @@
 #ifndef __ADT_STRING_FPP
 #define __ADT_STRING_FPP
 
-#include "adt/ppUtil.xpp"
+#include "fortres/ppUtil.xpp"
 
 # define _strip(st) \
     trim(adjustl(st))

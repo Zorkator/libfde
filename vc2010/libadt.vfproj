@@ -9,7 +9,7 @@
 				<Tool Name="VFLinkerTool" LinkIncremental="linkIncrementalNo" SuppressStartupBanner="true" AdditionalLibraryDirectories="..\libfortres\bin" GenerateManifest="false" GenerateDebugInformation="true" SubSystem="subSystemWindows" LinkDLL="true" AdditionalDependencies="libfortres.2.0.$(PlatformName).lib"/>
 				<Tool Name="VFResourceCompilerTool"/>
 				<Tool Name="VFMidlTool" SuppressStartupBanner="true"/>
-				<Tool Name="VFCustomBuildTool" CommandLine="&quot;$(ProjectDir)\..\copylib.bat&quot; &quot;$(OutDir)&quot; &quot;$(IntDir)\adt_*.mod&quot; &quot;$(IntDir)\libadt*&quot; &quot;..\libfortres\bin\libfortres*$(PlatformName).*&quot;" Description="copy library files from $(IntDir) to $(OutDir)" Outputs="$(OutDir)\$(TargetName)$(TargetExt)"/>
+				<Tool Name="VFCustomBuildTool" CommandLine="&quot;$(ProjectDir)\..\copylib.bat&quot; &quot;$(OutDir)&quot; &quot;$(IntDir)\adt_*.mod&quot; &quot;$(IntDir)\libadt*&quot; &quot;..\libfortres\bin\libfortres*$(PlatformName).*&quot;" Description="copy library files from $(IntDir) to $(OutDir)" Outputs="$(OutDir)\$(TargetName)$(TargetExt)" AdditionalDependencies="_copy_always_"/>
 				<Tool Name="VFPreLinkEventTool"/>
 				<Tool Name="VFPreBuildEventTool"/>
 				<Tool Name="VFPostBuildEventTool"/>
@@ -19,7 +19,7 @@
 				<Tool Name="VFLinkerTool" LinkIncremental="linkIncrementalNo" SuppressStartupBanner="true" AdditionalLibraryDirectories="..\libfortres\bin" GenerateManifest="false" GenerateDebugInformation="true" SubSystem="subSystemWindows" LinkDLL="true" AdditionalDependencies="libfortres.2.0.$(PlatformName).lib"/>
 				<Tool Name="VFResourceCompilerTool"/>
 				<Tool Name="VFMidlTool" SuppressStartupBanner="true"/>
-				<Tool Name="VFCustomBuildTool" CommandLine="&quot;$(ProjectDir)\..\copylib.bat&quot; &quot;$(OutDir)&quot; &quot;$(IntDir)\adt_*.mod&quot; &quot;$(IntDir)\libadt*&quot; &quot;..\libfortres\bin\libfortres*$(PlatformName).*&quot;" Description="copy library files from $(IntDir) to $(OutDir)" Outputs="$(OutDir)\$(TargetName)$(TargetExt)"/>
+				<Tool Name="VFCustomBuildTool" CommandLine="&quot;$(ProjectDir)\..\copylib.bat&quot; &quot;$(OutDir)&quot; &quot;$(IntDir)\adt_*.mod&quot; &quot;$(IntDir)\libadt*&quot; &quot;..\libfortres\bin\libfortres*$(PlatformName).*&quot;" Description="copy library files from $(IntDir) to $(OutDir)" Outputs="$(OutDir)\$(TargetName)$(TargetExt)" AdditionalDependencies="_copy_always_"/>
 				<Tool Name="VFPreLinkEventTool"/>
 				<Tool Name="VFPreBuildEventTool"/>
 				<Tool Name="VFPostBuildEventTool"/>
@@ -29,7 +29,7 @@
 				<Tool Name="VFLinkerTool" LinkIncremental="linkIncrementalNo" SuppressStartupBanner="true" AdditionalLibraryDirectories="..\libfortres\bin" GenerateManifest="false" GenerateDebugInformation="true" SubSystem="subSystemWindows" LinkDLL="true" AdditionalDependencies="libfortres.2.0.$(PlatformName).lib"/>
 				<Tool Name="VFResourceCompilerTool"/>
 				<Tool Name="VFMidlTool" SuppressStartupBanner="true" TargetEnvironment="midlTargetAMD64"/>
-				<Tool Name="VFCustomBuildTool" CommandLine="&quot;$(ProjectDir)\..\copylib.bat&quot; &quot;$(OutDir)&quot; &quot;$(IntDir)\adt_*.mod&quot; &quot;$(IntDir)\libadt*&quot; &quot;..\libfortres\bin\libfortres*$(PlatformName).*&quot;" Description="copy library files from $(IntDir) to $(OutDir)" Outputs="$(OutDir)\$(TargetName)$(TargetExt)"/>
+				<Tool Name="VFCustomBuildTool" CommandLine="&quot;$(ProjectDir)\..\copylib.bat&quot; &quot;$(OutDir)&quot; &quot;$(IntDir)\adt_*.mod&quot; &quot;$(IntDir)\libadt*&quot; &quot;..\libfortres\bin\libfortres*$(PlatformName).*&quot;" Description="copy library files from $(IntDir) to $(OutDir)" Outputs="$(OutDir)\$(TargetName)$(TargetExt)" AdditionalDependencies="_copy_always_"/>
 				<Tool Name="VFPreLinkEventTool"/>
 				<Tool Name="VFPreBuildEventTool"/>
 				<Tool Name="VFPostBuildEventTool"/>
@@ -39,7 +39,7 @@
 				<Tool Name="VFLinkerTool" LinkIncremental="linkIncrementalNo" SuppressStartupBanner="true" AdditionalLibraryDirectories="..\libfortres\bin" GenerateManifest="false" GenerateDebugInformation="true" SubSystem="subSystemWindows" LinkDLL="true" AdditionalDependencies="libfortres.2.0.$(PlatformName).lib"/>
 				<Tool Name="VFResourceCompilerTool"/>
 				<Tool Name="VFMidlTool" SuppressStartupBanner="true" TargetEnvironment="midlTargetAMD64"/>
-				<Tool Name="VFCustomBuildTool" CommandLine="&quot;$(ProjectDir)\..\copylib.bat&quot; &quot;$(OutDir)&quot; &quot;$(IntDir)\adt_*.mod&quot; &quot;$(IntDir)\libadt*&quot; &quot;..\libfortres\bin\libfortres*$(PlatformName).*&quot;" Description="copy library files from $(IntDir) to $(OutDir)" Outputs="$(OutDir)\$(TargetName)$(TargetExt)"/>
+				<Tool Name="VFCustomBuildTool" CommandLine="&quot;$(ProjectDir)\..\copylib.bat&quot; &quot;$(OutDir)&quot; &quot;$(IntDir)\adt_*.mod&quot; &quot;$(IntDir)\libadt*&quot; &quot;..\libfortres\bin\libfortres*$(PlatformName).*&quot;" Description="copy library files from $(IntDir) to $(OutDir)" Outputs="$(OutDir)\$(TargetName)$(TargetExt)" AdditionalDependencies="_copy_always_"/>
 				<Tool Name="VFPreLinkEventTool"/>
 				<Tool Name="VFPreBuildEventTool"/>
 				<Tool Name="VFPostBuildEventTool"/>
