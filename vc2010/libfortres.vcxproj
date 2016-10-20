@@ -21,7 +21,7 @@
   <ItemGroup>
     <ClCompile Include="..\dirent.c" />
     <ClCompile Include="..\fort_exception.cpp" />
-    <ClCompile Include="..\fort_sharedlib.cpp" />
+    <ClCompile Include="..\fort_plugin.cpp" />
     <ClCompile Include="..\fort_dirent.cpp" />
     <ClCompile Include="..\fort_tracestack.cpp" />
   </ItemGroup>

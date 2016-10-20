@@ -4,7 +4,7 @@
 #include <stdio.h>
 
 #define  _DLL_EXPORT_IMPLEMENTATION_
-#include "fortres/sharedlib.hpp"
+#include "fortres/plugin.hpp"
 #include "fortres/dirent.hpp"
 #include "fortres/exception.hpp"
 #include "fortres/auto_ptr.hpp"

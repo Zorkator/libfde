@@ -184,7 +184,7 @@
 			>
 		</File>
 		<File
-			RelativePath="..\fort_sharedlib.cpp"
+			RelativePath="..\fort_plugin.cpp"
 			>
 		</File>
 		<File

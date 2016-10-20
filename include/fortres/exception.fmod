@@ -17,11 +17,11 @@
 #include "fortres/tracestack.fmod"
 
       ! Generic wrapper routine around C-Funktion f_try
-      ! This routine is a bit tricky, since Fortran is too stupid to
+      ! This routine is a bit tricky, since Fortran still does NOT
       !   * support variable argument lists
       !   * control ByRef/ByVal-argument passing per call
-      !   * 
-
+      !   * allow easy void-pointer handling
+      !
       subroutine try__( res, catch, what, tgt, _args_20 )
         use, intrinsic :: iso_c_binding
         use _MODULENAME_stringref
@@ -37,7 +37,7 @@
             use _MODULENAME_stringref
             integer(kind=c_int),   intent(in) :: catch(*)
             type(StringRef_t)                 :: what
-            type(c_funptr), value, intent(in) :: p
+            type(c_funptr), value, intent(in) :: tgt
             type(c_ptr),    value, intent(in) :: _args_20, x_
             integer(kind=c_int)               :: c_try_
           end function
@@ -81,21 +81,23 @@
 
 !_PROC_EXPORT(try_chs)
         function try_chs( catch, what, tgt, arg ) result(res)
-          integer           :: catch(*)
-          character(len=*)  :: what
-          procedure()       :: tgt
-          character(len=*)  :: arg
-          integer           :: res
-          call try__( _tryBaseArgs, c_loc(str(arg)), _argEnd_19 )
+          integer                   :: catch(*)
+          character(len=*)          :: what
+          procedure()               :: tgt
+          character(len=*)          :: arg
+          integer                   :: res
+          type(StringRef_t), target :: argStr
+          argStr = str(arg)
+          call try__( _tryBaseArgs, c_loc(argStr), _argEnd_19 )
         end function
 
 !_PROC_EXPORT(try_str)
         function try_str( catch, what, tgt, arg ) result(res)
-          integer           :: catch(*)
-          character(len=*)  :: what
-          procedure()       :: tgt
-          type(StringRef_t) :: arg
-          integer           :: res
+          integer                   :: catch(*)
+          character(len=*)          :: what
+          procedure()               :: tgt
+          type(StringRef_t), target :: arg
+          integer                   :: res
           call try__( _tryBaseArgs, c_loc(arg), _argEnd_19 )
         end function
       end module
