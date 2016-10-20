@@ -21,7 +21,10 @@ OUT_TYPE        := shared
 OUT_NAME         = adt.$(mk_TAG)
 MAYOR           := 2
 OUT_DIR          = lib/$(mk_TAG)
-FC_INCLUDE_DIRS := ./include
+FC_INCLUDE_DIRS := ./include ./libfortres/include
+
+SUBPACKAGES.%    = libfortres
+FC_LIBRARIES.%   = fortres.x$(mk_ARCH)
 
 FC_list = ifort gfortran
 

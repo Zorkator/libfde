@@ -8,8 +8,8 @@
 #define _MODULENAME_tracestack      adt_tracestack
 
 # include "fortres/exception.fmod"
-  !# include "fortres/stringref.fmod"  !< dependency of exception.fmod!
-  !# include "fortres/tracestack.fmod" !< dependency of exception.fmod!
-# include "fortres/sharedlib.fmod" !< TODO: rename to plugin
+  ! include "fortres/stringref.fmod"  !< dependency of exception.fmod!
+  ! include "fortres/tracestack.fmod" !< dependency of exception.fmod!
+# include "fortres/plugin.fmod"
 # include "fortres/dirent.fmod"
 
