@@ -491,12 +491,6 @@ end module
   _implement_assign_to_(int8,       integer*8)
 !_EXPORT_ASSIGN_TO(real4)
   _implement_assign_to_(real4,      real*4)
-!_EXPORT_ASSIGN_TO(real8)
-  _implement_assign_to_(real8,      real*8)
-!_EXPORT_ASSIGN_TO(complex8)
-  _implement_assign_to_(complex8,   complex*8)
-!_EXPORT_ASSIGN_TO(complex16)
-  _implement_assign_to_(complex16,  complex*16)
 !_EXPORT_ASSIGN_TO(c_void_ptr)
   _implement_assign_to_(c_void_ptr, type(c_ptr))
 !_EXPORT_ASSIGN_TO(string)
@@ -659,4 +653,11 @@ end module
     call ti%streamProc( dataWrap, ti, outs )
   end subroutine
 
+! definitions/calls to macros moved to avoid non-understood crash of ifort!!!
+!_EXPORT_ASSIGN_TO(real8)
+  _implement_assign_to_(real8,      real*8)
+!_EXPORT_ASSIGN_TO(complex8)
+  _implement_assign_to_(complex8,   complex*8)
+!_EXPORT_ASSIGN_TO(complex16)
+  _implement_assign_to_(complex16,  complex*16)
 
