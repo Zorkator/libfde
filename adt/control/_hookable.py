@@ -25,6 +25,11 @@ class Hookable(object):
     return Scope.getProcessScope( *path )
 
 
+  @property
+  def activeHookCount( self ):
+    return sum( map( bool, self.hooks.values() ) )
+
+
   def initialize( self, **kwArgs ):
     super(Hookable, self).initialize( **kwArgs )
 
