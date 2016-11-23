@@ -32,20 +32,30 @@
 
 !
 ! The following definitions might be changed by the native code using libadt.
-!  __rootScope__ : a string, variable or pointer identifying the code's root scope.
-!  __hookScope__ : a string, variable or pointer identifying the code's hook scope.
-!  __sym2str__   : a macro converting a symbol to a string.
-!  __istat__     : the integer status variable used by the [DE]ALLOCATE macros below.
+!  __rootLocator__: comma-separated string list identifying the root scope
+!  __hookLocator__: comma-separated string list identifying the hook scope
+!  __rootScope__  : variable or pointer identifying the code's root scope.
+!  __hookScope__  : variable or pointer identifying the code's hook scope.
+!  __sym2str__    : a macro converting a symbol to a string.
+!  __istat__      : the integer status variable used by the [DE]ALLOCATE macros below.
 !
 ! It should be ok to use the default configuration.
 ! For customizing these, remember to predefine the macros BEFORE including this file!
 !
+# if !defined __rootLocator__
+#   define __rootLocator__      "__adt_process__"
+# endif
+
+# if !defined __hookLocator__
+#   define __hookLocator__      __rootLocator__, "hooks"
+# endif
+
 # if !defined __rootScope__
-#   define __rootScope__        "__adt_process__"
+#   define __rootScope__        getScope( __rootLocator__ )
 # endif
 
 # if !defined __hookScope__
-#   define __hookScope__        _get_scope( __rootScope__, "hooks" )
+#   define __hookScope__        getScope( __hookLocator__ )
 # endif
 
 # if !defined __sym2str__  
@@ -65,6 +75,12 @@
 
 # define _file_scope() \
     _file_scope_in( __rootScope__ )
+
+# define _root_scope() \
+    __rootScope__
+
+# define _hook_scope() \
+    __hookScope__
 
 
 # define _set_scopeSymbol_as( parent, sym, id ) \
@@ -147,6 +163,8 @@
       _bindArray_as( scope, sym, __sym2str__(sym) )
 
 
+#   define _declareHook( id ) \
+      call declareCallback( __hookScope__, id )
 
 #   define _callHook( hookId ) \
       call invokeCallback( __hookScope__, hookId )
