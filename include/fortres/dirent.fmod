@@ -21,7 +21,7 @@
         public :: DIR_t
         public :: relPath
         public :: opendir, readdir, closedir, rewinddir, isdir
-        public :: so_filepath
+        public :: realpath, so_filepath
 
         interface relPath
           module procedure relPath_from_to, relPath_to
