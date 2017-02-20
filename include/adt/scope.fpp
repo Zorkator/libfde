@@ -58,7 +58,7 @@
 #   define __hookScope__        getScope( __hookLocator__ )
 # endif
 
-# if !defined __sym2str__  
+# if !defined __sym2str__
 #   define __sym2str__(sym)     _strip(_str(sym))
 # endif
 
@@ -171,7 +171,7 @@
 
 #   define _callArgHook( hookId, argScope ) \
       call invokeCallback( __hookScope__, hookId, argScope )
-      
+
 
 #   define _removeSymbol( scope, sym ) \
       _remove_scopeSymbol( scope, __sym2str__(sym) )
@@ -182,20 +182,23 @@
 !   a scope symbol everytime it get [re-]allocated
 !
 # define __codefrag_ALLOCATE_hidden( sym, shape, _st ) \
-      allocate( sym shape, stat=_st )
+      allocate( sym shape, stat=_st )                          ;\
+      if (.not. allocated(sym)) then                           ;\
+         call throw( MemoryError, 'The allocation of ' // __sym2str__(sym) // ' with shape ' // __sym2str__(shape) // ' failed' ) ;\
+      end if
 
 # define __codefrag_DEALLOCATE_hidden( sym, _st )      \
       deallocate( sym, stat=_st )
 
 # define __codefrag_ALLOCATE_visible_as( scope, sym, shape, id, _st ) \
-      allocate( sym shape, stat=_st )                                ;\
+      __codefrag_ALLOCATE_hidden( sym, shape, _st ) ;\
       _linkArray_as( scope, sym, id )
 
 # define __codefrag_ALLOCATE_visible( scope, sym, shape, _st )        \
       __codefrag_ALLOCATE_visible_as( scope, sym, shape, __sym2str__(sym), _st )
 
 # define __codefrag_DEALLOCATE_visible( scope, sym, _st ) \
-      deallocate( sym, stat=_st )                        ;\
+      __codefrag_DEALLOCATE_hidden( sym, _st ) ;\
       _removeSymbol( scope, sym )
 
 
@@ -206,18 +209,18 @@
 
 # define _ALLOCATE( sym, shape ) \
       __codefrag_ALLOCATE_hidden( sym, shape, __istat__ )
-    
+
 # define _assert_ALLOCATE( sym, shape )                      \
       if (.not. allocated(sym)) then                        ;\
         __codefrag_ALLOCATE_hidden( sym, shape, __istat__ ) ;\
       end if
 
-# define _REALLOCATE( sym, shape )                           \
-      select case (0); case default                         ;\
-        if (allocated(sym)) deallocate(sym)                 ;\
-        __codefrag_ALLOCATE_hidden( sym, shape, __istat__ ) ;\
+# define _REALLOCATE( sym, shape )                                \
+      select case (0); case default                              ;\
+        if (allocated(sym)) deallocate(sym)                      ;\
+        __codefrag_ALLOCATE_hidden( sym, shape, __istat__ )      ;\
       end select
-      
+
 # define _DEALLOCATE( sym )             \
       __codefrag_DEALLOCATE_hidden( sym, __istat__ )
 
@@ -226,7 +229,7 @@
       select case (0); case default                                        ;\
         __codefrag_ALLOCATE_visible_as( scope, sym, shape, id, __istat__ ) ;\
       end select
-    
+
 # define _ALLOCATE_visible( scope, sym, shape ) \
       _ALLOCATE_visible_as( scope, sym, shape, __sym2str__(sym) )
 
@@ -240,7 +243,7 @@
         if (allocated(sym)) deallocate(sym)                                ;\
         __codefrag_ALLOCATE_visible_as( scope, sym, shape, id, __istat__ ) ;\
       end select
-      
+
 # define _REALLOCATE_visible( scope, sym, shape )    \
       _REALLOCATE_visible_as( scope, sym, shape, __sym2str__(sym) )
 
