@@ -69,37 +69,25 @@
         contains
 
 !_PROC_EXPORT(try_void)
-        function try_void( catch, what, tgt ) result(res)
-!                    . o O (define this to keep the 72 column limit!)
-#         define _tryBaseArgs   res, catch, strBuf(what), c_funloc(tgt)
-
-          integer          :: catch(*)
-          character(len=*) :: what
-          procedure()      :: tgt
-          integer          :: res
-          call try__( _tryBaseArgs, _list_20(_noArg) )
+        function try_void( _tryArgs ) result(res)
+          _tryDecl :: res
+          call try__( _tryPass(res), _list_20(_noArg) )
         end function
 
 !_PROC_EXPORT(try_chs)
-        function try_chs( catch, what, tgt, arg1 ) result(res)
-          integer                   :: catch(*)
-          character(len=*)          :: what
-          procedure()               :: tgt
-          character(len=*)          :: arg1
-          integer                   :: res
+        function try_chs( _tryArgs, arg ) result(res)
+          _tryDecl                  :: res
+          character(len=*)          :: arg
           type(StringRef_t), target :: argStr
-          argStr = str(arg1)
-          call try__( _tryBaseArgs, c_loc(argStr), _list_19(_noArg) )
+          argStr = str(arg)
+          call try__( _tryPass(res), c_loc(argStr), _list_19(_noArg) )
         end function
 
 !_PROC_EXPORT(try_str)
-        function try_str( catch, what, tgt, _enum_1(arg) ) result(res)
-          integer                   :: catch(*)
-          character(len=*)          :: what
-          procedure()               :: tgt
-          type(StringRef_t), target :: _enum_1(arg)
-          integer                   :: res
-          call try__( _tryBaseArgs, _mapEnum_1(c_loc,arg), _list_19(_noArg) )
+        function try_str( _tryArgs, arg ) result(res)
+          _tryDecl                  :: res
+          type(StringRef_t), target :: arg
+          call try__( _tryPass(res), c_loc(arg), _list_19(_noArg) )
         end function
       end module
 
