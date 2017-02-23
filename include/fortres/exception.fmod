@@ -22,6 +22,7 @@
       !   * control ByRef/ByVal-argument passing per call
       !   * allow easy void-pointer handling
       !
+!_PROC_EXPORT(try__)
       subroutine try__( res, catch, what, tgt, _enum_20(arg) )
         use, intrinsic :: iso_c_binding
         use _MODULENAME_stringref

@@ -19,8 +19,8 @@ printFrameLine( StringRef *frameInfo )
 void
 traceStack( int *skippedFrames, const char *msg, unsigned int len )
 {
+  f_tracestack( printFrameLine, *skippedFrames + 2 ); //< skip frames traceStack + f_tracestack
   fprintf( stderr, "%.*s\n", len, msg );
-  f_tracestack( printFrameLine, *skippedFrames + 1 );
 }
 
 
@@ -75,8 +75,8 @@ class Context
       typedef std::vector<Procedure>  ProcList;
 
       
-        CheckPoint( int *codeList, size_t len )
-        : _codes( codeList, codeList + len ), _code(0), _doTrace(false)
+        CheckPoint( int *codeList, size_t len, StringRef *what )
+        : _codes( codeList, codeList + len ), _what(what), _code(0), _doTrace(false)
         {
           memset( &_env, 0, sizeof(std::jmp_buf) );
           std::sort( _codes.begin(), _codes.end(), std::greater<int>() );
@@ -86,8 +86,8 @@ class Context
         check( int code )
         {
           // in any case, call cleanup procedures in reverse order ...
-          for (size_t i = _procs.size(); i > 0; --i)
-            { _procs[i-1](); }
+          for (size_t i = _cleaners.size(); i > 0; --i)
+            { _cleaners[i-1](); }
 
           if (_codes.size())
           {
@@ -105,22 +105,22 @@ class Context
 
       void
         push( Procedure proc )
-          { _procs.push_back( proc ); }
+          { _cleaners.push_back( proc ); }
 
       void
         pop( bool exec )
         {
           if (exec)
-            { _procs.back()(); }
-          _procs.pop_back();
+            { _cleaners.back()(); }
+          _cleaners.pop_back();
         }
 
       // members ...
       std::jmp_buf  _env;
       CodeSet       _codes;
-      ProcList      _procs;
+      StringRef    *_what;
+      ProcList      _cleaners;
       int           _code;
-      std::string   _msg;
       bool          _doTrace;
     };
 
@@ -128,11 +128,11 @@ class Context
 
   public:
     std::jmp_buf &
-      openFrame( int *codeList ) //< expects 0-terminated codeList!
+      openFrame( int *codeList, StringRef *what ) //< expects 0-terminated codeList!
       {
         size_t len;
-        for (len = 0; codeList[len]; ++len);
-        _checkPoints.push_back( CheckPoint( codeList, len ) );
+        for (len = 0; codeList[len]; ++len) {/* empty */};
+        _checkPoints.push_back( CheckPoint( codeList, len, what ) );
         return _checkPoints.back()._env;
       }
     
@@ -153,7 +153,7 @@ class Context
           if (chk.check( code ))
           {
             chk._code    = code;
-            chk._msg     = excMsg;
+           *chk._what    = excMsg;
             chk._doTrace = (code & StandardError) != 0; //< for now: do trace if it's a StandardError
             match        = &chk;
 
@@ -193,10 +193,6 @@ class Context
     void
       pop_cleanup( bool exec )
         { _checkPoints.back().pop( exec ); }
-
-    std::string &
-      message( void )
-        { return _checkPoints.back()._msg; }
 };
 
 
@@ -268,7 +264,7 @@ f_try( int *catchList, StringRef *what, Procedure proc, ... )
   va_end( vaArgs );
 
   context  = getContext();
-  int code = setjmp( context->openFrame( catchList ) ); //< mark current stack location as point of return ...
+  int code = setjmp( context->openFrame( catchList, what ) ); //< mark current stack location as point of return ...
                                                         //  NOTE that setjmp returns 0 for marking!
   
   //<<< longjmp ends up here with some code different from 0!
@@ -322,12 +318,8 @@ f_try( int *catchList, StringRef *what, Procedure proc, ... )
       case 20: proc( expandArgs(20) ); break;
       default: throw; //<< can't handle number of given arguments!
     }
+    //<<< if we end up here, called proc didn't trigger longjmp
     what->erase();
-  }
-  else
-  {
-    // Here, we've just landed the longjmp ...
-    *what = context->message();
   }
 
   context->closeFrame();

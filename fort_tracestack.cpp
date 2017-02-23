@@ -26,14 +26,14 @@ f_tracestack( FrameOperator frameOp, int skippedFrames )
 
 #if defined _MSC_VER
   HANDLE       process;
-  SYMBOL_INFO *symbol;
   char         frameBuffer[512+32];
+  char         symbolBuffer[sizeof(SYMBOL_INFO) + 256 * sizeof(char)];
+  SYMBOL_INFO *symbol = (SYMBOL_INFO*)symbolBuffer;
 
   process   = GetCurrentProcess();
   SymInitialize( process, NULL, TRUE );
   stackSize = CaptureStackBackTrace( 0, sizeof(frames), frames, NULL );
 
-  symbol = (SYMBOL_INFO *)malloc( sizeof(SYMBOL_INFO) + 256 * sizeof(char) );
   symbol->MaxNameLen   = 255;
   symbol->SizeOfStruct = sizeof(SYMBOL_INFO);
 
@@ -41,10 +41,9 @@ f_tracestack( FrameOperator frameOp, int skippedFrames )
   {
     SymFromAddr( process, (DWORD64)(frames[i]), 0, symbol );
     so_filepath_of( (void *)symbol->Address, frameBuffer, 256 );
-    sprintf( frameBuffer, "%s(%s) [0x%0X]", frameBuffer, symbol->Name, symbol->Address );
+    sprintf( frameBuffer, "%s: %s [0x%0X]", frameBuffer, symbol->Name, symbol->Address );
     frameOp( &infoRef.referTo(frameBuffer) );
   }
-  free( symbol );
 #else
 	char **strings;
 
