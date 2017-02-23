@@ -3,49 +3,7 @@
 
 #include "fortres/itfUtil.fpp"
 
-#define _args_0
-#define _args_1              arg1
-#define _args_2     _args_1, arg2
-#define _args_3     _args_2, arg3
-#define _args_4     _args_3, arg4
-#define _args_5     _args_4, arg5
-#define _args_6     _args_5, arg6
-#define _args_7     _args_6, arg7
-#define _args_8     _args_7, arg8
-#define _args_9     _args_8, arg9
-#define _args_10    _args_9, arg10
-#define _args_11    _args_10, arg11
-#define _args_12    _args_11, arg12
-#define _args_13    _args_12, arg13
-#define _args_14    _args_13, arg14
-#define _args_15    _args_14, arg15
-#define _args_16    _args_15, arg16
-#define _args_17    _args_16, arg17
-#define _args_18    _args_17, arg18
-#define _args_19    _args_18, arg19
-#define _args_20    _args_19, arg20
-
-# define _argEnd                 c_null_ptr
-# define _argEnd_2    _argEnd,   c_null_ptr
-# define _argEnd_3    _argEnd_2, c_null_ptr
-# define _argEnd_4    _argEnd_3, c_null_ptr
-# define _argEnd_5    _argEnd_4, c_null_ptr
-# define _argEnd_6    _argEnd_5, c_null_ptr
-# define _argEnd_7    _argEnd_6, c_null_ptr
-# define _argEnd_8    _argEnd_7, c_null_ptr
-# define _argEnd_9    _argEnd_8, c_null_ptr
-# define _argEnd_10   _argEnd_9, c_null_ptr
-# define _argEnd_11   _argEnd_10, c_null_ptr
-# define _argEnd_12   _argEnd_11, c_null_ptr
-# define _argEnd_13   _argEnd_12, c_null_ptr
-# define _argEnd_14   _argEnd_13, c_null_ptr
-# define _argEnd_15   _argEnd_14, c_null_ptr
-# define _argEnd_16   _argEnd_15, c_null_ptr
-# define _argEnd_17   _argEnd_16, c_null_ptr
-# define _argEnd_18   _argEnd_17, c_null_ptr
-# define _argEnd_19   _argEnd_18, c_null_ptr
-# define _argEnd_20   _argEnd_19, c_null_ptr
-
+# define _noArg   c_null_ptr
 
 #define _catch_1(a)                [a, 0]
 #define _catch_2(a,b)              [a,b, 0]

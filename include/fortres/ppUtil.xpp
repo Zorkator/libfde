@@ -23,6 +23,94 @@
 
 #endif
 
+# define _list_0(x)
+# define _list_1(x)                     x
+# define _list_2(x)        _list_1 (x), x
+# define _list_3(x)        _list_2 (x), x
+# define _list_4(x)        _list_3 (x), x
+# define _list_5(x)        _list_4 (x), x
+# define _list_6(x)        _list_5 (x), x
+# define _list_7(x)        _list_6 (x), x
+# define _list_8(x)        _list_7 (x), x
+# define _list_9(x)        _list_8 (x), x
+# define _list_10(x)       _list_9 (x), x
+# define _list_11(x)       _list_10(x), x
+# define _list_12(x)       _list_11(x), x
+# define _list_13(x)       _list_12(x), x
+# define _list_14(x)       _list_13(x), x
+# define _list_15(x)       _list_14(x), x
+# define _list_16(x)       _list_15(x), x
+# define _list_17(x)       _list_16(x), x
+# define _list_18(x)       _list_17(x), x
+# define _list_19(x)       _list_18(x), x
+# define _list_20(x)       _list_19(x), x
+
+# define _map_0(f,x)
+# define _map_1(f,x)                     f(x)
+# define _map_2(f,x)       _map_1 (f,x), f(x)
+# define _map_3(f,x)       _map_2 (f,x), f(x)
+# define _map_4(f,x)       _map_3 (f,x), f(x)
+# define _map_5(f,x)       _map_4 (f,x), f(x)
+# define _map_6(f,x)       _map_5 (f,x), f(x)
+# define _map_7(f,x)       _map_6 (f,x), f(x)
+# define _map_8(f,x)       _map_7 (f,x), f(x)
+# define _map_9(f,x)       _map_8 (f,x), f(x)
+# define _map_10(f,x)      _map_9 (f,x), f(x)
+# define _map_11(f,x)      _map_10(f,x), f(x)
+# define _map_12(f,x)      _map_11(f,x), f(x)
+# define _map_13(f,x)      _map_12(f,x), f(x)
+# define _map_14(f,x)      _map_13(f,x), f(x)
+# define _map_15(f,x)      _map_14(f,x), f(x)
+# define _map_16(f,x)      _map_15(f,x), f(x)
+# define _map_17(f,x)      _map_16(f,x), f(x)
+# define _map_18(f,x)      _map_17(f,x), f(x)
+# define _map_19(f,x)      _map_18(f,x), f(x)
+# define _map_20(f,x)      _map_19(f,x), f(x)
+
+# define _enum_0(x)
+# define _enum_1(x)                    _paste(x,1)
+# define _enum_2(x)        _enum_1 (x), _paste(x,2)
+# define _enum_3(x)        _enum_2 (x), _paste(x,3)
+# define _enum_4(x)        _enum_3 (x), _paste(x,4)
+# define _enum_5(x)        _enum_4 (x), _paste(x,5)
+# define _enum_6(x)        _enum_5 (x), _paste(x,6)
+# define _enum_7(x)        _enum_6 (x), _paste(x,7)
+# define _enum_8(x)        _enum_7 (x), _paste(x,8)
+# define _enum_9(x)        _enum_8 (x), _paste(x,9)
+# define _enum_10(x)       _enum_9 (x), _paste(x,10)
+# define _enum_11(x)       _enum_10(x), _paste(x,11)
+# define _enum_12(x)       _enum_11(x), _paste(x,12)
+# define _enum_13(x)       _enum_12(x), _paste(x,13)
+# define _enum_14(x)       _enum_13(x), _paste(x,14)
+# define _enum_15(x)       _enum_14(x), _paste(x,15)
+# define _enum_16(x)       _enum_15(x), _paste(x,16)
+# define _enum_17(x)       _enum_16(x), _paste(x,17)
+# define _enum_18(x)       _enum_17(x), _paste(x,18)
+# define _enum_19(x)       _enum_18(x), _paste(x,19)
+# define _enum_20(x)       _enum_19(x), _paste(x,20)
+
+# define _mapEnum_0(f,x)
+# define _mapEnum_1(f,x)                     f(_paste(x,1))
+# define _mapEnum_2(f,x)   _mapEnum_1 (f,x), f(_paste(x,2))
+# define _mapEnum_3(f,x)   _mapEnum_2 (f,x), f(_paste(x,3))
+# define _mapEnum_4(f,x)   _mapEnum_3 (f,x), f(_paste(x,4))
+# define _mapEnum_5(f,x)   _mapEnum_4 (f,x), f(_paste(x,5))
+# define _mapEnum_6(f,x)   _mapEnum_5 (f,x), f(_paste(x,6))
+# define _mapEnum_7(f,x)   _mapEnum_6 (f,x), f(_paste(x,7))
+# define _mapEnum_8(f,x)   _mapEnum_7 (f,x), f(_paste(x,8))
+# define _mapEnum_9(f,x)   _mapEnum_8 (f,x), f(_paste(x,9))
+# define _mapEnum_10(f,x)  _mapEnum_9 (f,x), f(_paste(x,10))
+# define _mapEnum_11(f,x)  _mapEnum_10(f,x), f(_paste(x,11))
+# define _mapEnum_12(f,x)  _mapEnum_11(f,x), f(_paste(x,12))
+# define _mapEnum_13(f,x)  _mapEnum_12(f,x), f(_paste(x,13))
+# define _mapEnum_14(f,x)  _mapEnum_13(f,x), f(_paste(x,14))
+# define _mapEnum_15(f,x)  _mapEnum_14(f,x), f(_paste(x,15))
+# define _mapEnum_16(f,x)  _mapEnum_15(f,x), f(_paste(x,16))
+# define _mapEnum_17(f,x)  _mapEnum_16(f,x), f(_paste(x,17))
+# define _mapEnum_18(f,x)  _mapEnum_17(f,x), f(_paste(x,18))
+# define _mapEnum_19(f,x)  _mapEnum_18(f,x), f(_paste(x,19))
+# define _mapEnum_20(f,x)  _mapEnum_19(f,x), f(_paste(x,20))
+
 # define _eatArgList_1(a)
 # define _eatArgList_2(a,b)
 # define _eatArgList_3(a,b,c)
