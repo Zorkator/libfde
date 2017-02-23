@@ -1,5 +1,5 @@
 
-#include "adt/ppUtil.xpp"
+#include "adt/exception.fpp"
 #include "adt/scope.fpp"
 
 module test_basedata
@@ -13,6 +13,7 @@ module test_basedata
   use adt_streamvisitor
   use adt_ostream
   use adt_scope
+  use adt_exception
   use iso_c_binding
   implicit none
 
@@ -1226,7 +1227,6 @@ module debug
   integer, dimension(:), allocatable, target :: buffer
   integer, dimension(:), pointer             :: buf_ptr, other_ptr
 
-
   contains
 
   subroutine test_ref_change()
@@ -1252,8 +1252,49 @@ module debug
     call delete(it)
 
   end subroutine
+end module
 
 
+module test_exception
+  use adt_exception
+  use iso_c_binding
+
+  interface try
+    module procedure try_int
+  end interface
+
+  contains
+
+  function try_int( _tryArgs, arg ) result(res)
+    _tryDecl        :: res
+    integer, target :: arg
+    call try__( _tryPass(res), c_loc(arg), _list_19(_noArg) )
+  end function
+
+  function func( v ) result(res)
+    integer :: v
+    real*8  :: res
+    call throw( ArithmeticError, "something bad happened" )
+    res = v ** 2 / (v - 1)
+  end function
+
+  subroutine test_int( v )
+    integer :: v
+    print *, func(v)
+  end subroutine
+
+  subroutine test_pass_args()
+    character(len=128) :: what
+    integer            :: i
+
+    do i = 0,3
+      select case( try( _catchAny, what, test_int, i ) )
+        case (0)    ; continue
+        case default; print *, trim(what)
+      end select
+    end do
+  end subroutine
+  
 end module
 
 
@@ -1262,11 +1303,14 @@ program test_adt
   use adt_convert
   use pointer_remapping
   use debug
+  use test_exception
 
   type(HashMap_t), pointer :: scope => null()
   character(len=20) :: text = "TestInGEr -- TäxT"
   character(len=20) :: txtout
   v_string = "BlUbbINGER bla uND texT"
+
+  call test_pass_args()
 
   txtout = lower( text )
   call to_lower( text )

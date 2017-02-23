@@ -21,7 +21,7 @@ OUT_TYPE        := shared
 OUT_NAME         = adt.$(mk_TAG)
 MAYOR           := 2.5
 OUT_DIR          = lib/$(mk_TAG)
-FC_INCLUDE_DIRS := ./include ./libfortres/include
+FC_INCLUDE_DIRS := ./libfortres/include ./include
 
 SUBPACKAGES.%    = libfortres
 FC_LIBRARIES.%   = fortres.x$(mk_ARCH)
