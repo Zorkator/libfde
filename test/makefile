@@ -22,6 +22,14 @@ FC_list          = ifort gfortran
 FC_FLAGS.%       = $(fc_threads) $(fc_m)$(mk_ARCH)
 FC_CFLAGS.%      = $(fc_fpp) $(call fc_form,free,none) $(fc_backtrace)
 
+TARGETS          = $(basename $(wildcard test_*.f90))
+
+
+$(TARGETS):
+	$(MAKE) SOURCE_FILES=$@.f90 OUT_NAME=$@ built
+
+#SOURCE_FILES     = test_exception.f90
+
 
 #exe_opts = OUT_TYPE=exe OUT_DIR=exe OUT_NAME=$@.$(mk_TAG) \
 #           FC_INCLUDE_DIRS="include lib/$(mk_TAG)"

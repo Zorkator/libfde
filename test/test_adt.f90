@@ -492,11 +492,11 @@ subroutine do_assert( expr_bool, expr_str )!{{{
     print *, expr_str // ': ', expr_bool
 end subroutine
 
-# define _assert( expr ) \
-    call do_assert( expr, _str(expr) )
-
+!# define _assert( expr ) \
+!    call do_assert( expr, _str(expr) )
+!
 # define _assert_not( expr ) \
-    call do_assert( .not. expr, _str(expr) )
+    _assert( .not. (expr) )
 !}}}
 
 subroutine test_string()!{{{
@@ -1271,6 +1271,9 @@ module test_exception
     call try__( _tryPass(res), c_loc(arg), _list_19(_noArg) )
   end function
 
+  subroutine nop()
+  end subroutine
+
   function func( v ) result(res)
     integer :: v
     real*8  :: res
@@ -1280,7 +1283,9 @@ module test_exception
 
   subroutine test_int( v )
     integer :: v
-    print *, func(v)
+    real*8  :: res
+    res = func(v)
+    print *, res
   end subroutine
 
   subroutine test_pass_args()
@@ -1310,6 +1315,8 @@ program test_adt
   character(len=20) :: txtout
   v_string = "BlUbbINGER bla uND texT"
 
+  call setup_standardExceptions()
+  call set_traceproc( nop )
   call test_pass_args()
 
   txtout = lower( text )
