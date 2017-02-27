@@ -35,19 +35,27 @@
      procedure()      :: tgt      ;\
      integer
 
+
 !--------------------------------------------------------------------
 ! assertion macros throwing AssertionError
 !--------------------------------------------------------------------
 
-#define _assert(cond) \
-  if (cond) then                             ;\
-    call throw( AssertionError, _str(cond) ) ;\
+#define __codefrag_chk_assert__(_maybe, cond, _msgExt) \
+  if (_maybe (cond)) then ;\
+    call throw( AssertionError, 'condition (' // _str(cond) // ') '_msgExt // ' ['// __FILE__ // ']' ) ;\
   end if
 
+#define _assert(cond) \
+  __codefrag_chk_assert__(.not.,cond,// 'failed!')
+
 #define _assert_msg(cond, msg) \
-  if (cond) then                                            ;\
-    call throw( AssertionError, _str(cond) // '>> '// msg ) ;\
-  end if
+  __codefrag_chk_assert__(.not.,cond,// 'failed! ' // msg)
+
+#define _reject(cond) \
+  __codefrag_chk_assert__(,cond,// 'rejected!')
+
+#define _reject_msg(cond, msg) \
+  __codefrag_chk_assert__(,cond,//'rejected! ' // msg)
 
 
 !--------------------------------------------------------------------
