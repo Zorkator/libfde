@@ -727,11 +727,11 @@ end module
 
 !_PROC_EXPORT(list_assign_list_c)
   subroutine list_assign_list_c( lhs, rhs )
-    use impl_list__, only: List_t, ListNode_t, NodeCloner, list_clear_c, list_append_node_c
+    use impl_list__, only: List_t, ListNode_t, NodeCloner, list_clear_c, list_append_node_c, c_f_procpointer, c_funloc
     implicit none
     type(List_t), target, intent(inout) :: lhs
     type(List_t), target,    intent(in) :: rhs
-    type(ListNode_t),               pointer :: copy, ptr, base
+    type(ListNode_t),           pointer :: copy, ptr, base
     procedure(NodeCloner),      pointer :: cloneNode
 
     base => rhs%node%next%prev !< sorry, but rhs is a shallow copy!
@@ -739,7 +739,7 @@ end module
       call list_clear_c( lhs )
       ptr => base%next
       do while (.not. associated( ptr, base ))
-        cloneNode => ptr%typeInfo%cloneObjProc
+        call c_f_procpointer( c_funloc(ptr%typeInfo%cloneObjProc), cloneNode )
         call cloneNode( copy, ptr )
         call list_append_node_c( lhs, copy )
         ptr => ptr%next
@@ -754,7 +754,7 @@ end module
     type(List_t), target, intent(inout) :: lhs
     type(ListIndex_t),       intent(in) :: rhs
     type(ListIndex_t)                   :: idx
-    type(ListNode_t),               pointer :: copy
+    type(ListNode_t),           pointer :: copy
     procedure(NodeCloner),      pointer :: cloneNode
     type(List_t)                        :: tmp
 
@@ -767,7 +767,7 @@ end module
     else
       call list_clear_c( lhs )
       do while (listindex_is_valid_c(idx))
-        cloneNode => idx%node%typeInfo%cloneObjProc
+        call c_f_procpointer( c_funloc(idx%node%typeInfo%cloneObjProc), cloneNode )
         call cloneNode( copy, idx%node )
         call list_append_node_c( lhs, copy )
         call listindex_next_c(idx)
