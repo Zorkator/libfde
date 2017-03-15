@@ -13,9 +13,11 @@ TARGET_doc      := building adt-tests
 OUT_TYPE        := exe
 OUT_NAME         = test.$(mk_TAG)
 OUT_DIR          = exe/$(mk_TAG)
-FC_INCLUDE_DIRS := ../include
+ADT_DIR					 = ..
+FC_INCLUDE_DIRS  = ../include $(ADT_DIR)/lib/$(mk_TAG)
 
-SUBPACKAGES.%    = ..
+#SUBPACKAGES.%    = ..
+FC_LIBRARY_DIRS  = $(ADT_DIR)/lib/$(mk_TAG)
 FC_LIBRARIES.%   = adt.$(mk_TAG) fortres.x$(mk_ARCH)
 
 FC_list          = ifort gfortran
@@ -28,7 +30,7 @@ TARGETS          = $(basename $(wildcard test_*.f90))
 $(TARGETS):
 	$(MAKE) SOURCE_FILES=$@.f90 OUT_NAME=$@ built
 
-#SOURCE_FILES     = test_exception.f90
+#SOURCE_FILES     = test_adt.f90
 
 
 #exe_opts = OUT_TYPE=exe OUT_DIR=exe OUT_NAME=$@.$(mk_TAG) \

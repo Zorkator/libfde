@@ -4,6 +4,7 @@
 program testinger
   use adt_item
   use adt_basetypes
+  use adt_containertypes
   use adt_string
   use adt_list
   use adt_ref
