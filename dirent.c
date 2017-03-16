@@ -8,6 +8,7 @@
 
 */
 
+# define _CRT_SECURE_NO_WARNINGS
 #include "fortres/dirent.h"
 
 #include <errno.h>

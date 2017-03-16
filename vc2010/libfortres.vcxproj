@@ -72,24 +72,24 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>false</LinkIncremental>
     <TargetName>$(ProjectName).2.0.$(PlatformName)</TargetName>
-    <OutDir>..\bin\$(Configuration)</OutDir>
+    <OutDir>..\bin\$(Configuration)\</OutDir>
     <IntDir>.work\$(Configuration).$(PlatformName)\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>false</LinkIncremental>
     <TargetName>$(ProjectName).2.0.$(PlatformName)</TargetName>
-    <OutDir>..\bin\$(Configuration)</OutDir>
+    <OutDir>..\bin\$(Configuration)\</OutDir>
     <IntDir>.work\$(Configuration).$(PlatformName)\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
     <TargetName>$(ProjectName).2.0.$(PlatformName)</TargetName>
-    <OutDir>..\bin\$(Configuration)</OutDir>
+    <OutDir>..\bin\$(Configuration)\</OutDir>
     <IntDir>.work\$(Configuration).$(PlatformName)\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
-    <OutDir>..\bin\$(Configuration)</OutDir>
+    <OutDir>..\bin\$(Configuration)\</OutDir>
     <IntDir>.work\$(Configuration).$(PlatformName)\</IntDir>
     <TargetName>$(ProjectName).2.0.$(PlatformName)</TargetName>
   </PropertyGroup>

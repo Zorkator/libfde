@@ -1,4 +1,5 @@
 
+# define _CRT_SECURE_NO_WARNINGS
 #include <map>
 #include <errno.h>
 #include <stdio.h>

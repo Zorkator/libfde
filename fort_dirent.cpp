@@ -188,7 +188,7 @@ make_realpath( const char *filePath, char *buff, size_t len )
   size_t tgtLen = 0;
 
 #if defined _MSC_VER
-  tgtLen = GetFullPathName( filePath, len, buff, NULL );
+  tgtLen = GetFullPathName( filePath, static_cast<DWORD>(len), buff, NULL );
 #else
   char *ptr;
 
