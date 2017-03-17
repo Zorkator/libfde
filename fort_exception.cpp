@@ -12,23 +12,11 @@
 #include "fortres/tracestack.hpp"
 
 
-void
-printFrameLine( StringRef *frameInfo )
-  { fprintf( stderr, "%s\n", frameInfo->trim().c_str() ); }
-
-void
-traceStack( int *skippedFrames, const char *msg, unsigned int len )
-{
-  f_tracestack( printFrameLine, *skippedFrames + 2 ); //< skip frames traceStack + f_tracestack
-  fprintf( stderr, "%.*s\n", len, msg );
-}
-
-
 /**
  * Allow user specified trace-function, which gets called
  *  for all StandardError exception types.
  */
-static TraceProcedure _traceproc = traceStack;
+static TraceProcedure _traceproc = f_tracestack;
 
 _dllExport_C
 void
@@ -66,6 +54,12 @@ class ExceptionMap
 
 static ExceptionMap exceptionMap;
 
+_dllExport_C
+void
+f_format_exception( StringRef *buf, int code, StringRef *msg )
+  { buf->concat( exceptionMap.get(code) ).concat( *msg ).pad(); }
+
+
 class Context
 {
   private:
@@ -75,8 +69,8 @@ class Context
       typedef std::vector<Procedure>  ProcList;
 
       
-        CheckPoint( int *codeList, size_t len, StringRef *what )
-        : _codes( codeList, codeList + len ), _what(what), _code(0), _doTrace(false)
+        CheckPoint( int *codeList, size_t len, StringRef *what, TraceProcedure tracer )
+        : _codes( codeList, codeList + len ), _what(what), _code(0), _tracer(tracer)
         {
           memset( &_env, 0, sizeof(std::jmp_buf) );
           std::sort( _codes.begin(), _codes.end(), std::greater<int>() );
@@ -116,23 +110,24 @@ class Context
         }
 
       // members ...
-      std::jmp_buf  _env;
-      CodeSet       _codes;
-      StringRef    *_what;
-      ProcList      _cleaners;
-      int           _code;
-      bool          _doTrace;
+      std::jmp_buf   _env;
+      CodeSet        _codes;
+      StringRef     *_what;
+      ProcList       _cleaners;
+      int            _code;
+      TraceProcedure _tracer;
     };
 
     std::vector<CheckPoint> _checkPoints;
 
   public:
     std::jmp_buf &
-      openFrame( int *codeList, StringRef *what ) //< expects 0-terminated codeList!
+      /*                                                           . o O (StringRef-Reference???) */
+      openFrame( int *codeList /*< 0-terminated! */, StringRef *what, TraceProcedure tracer )
       {
         size_t len;
         for (len = 0; codeList[len]; ++len) {/* empty */};
-        _checkPoints.push_back( CheckPoint( codeList, len, what ) );
+        _checkPoints.push_back( CheckPoint( codeList, len, what, tracer ) );
         return _checkPoints.back()._env;
       }
     
@@ -141,32 +136,30 @@ class Context
         { _checkPoints.pop_back(); }
 
     void
-      prepare_exception( int code, const std::string &msg )
+      prepare_exception( int code, const StringRef &msg )
       {
-        CheckPoint *match   = NULL;
-        std::string excMsg  = exceptionMap.get( code ) + msg;
-        bool        doTrace = true;
+        CheckPoint    *match  = NULL;
+        TraceProcedure tracer = _traceproc;
 
         while (_checkPoints.size())
         {
           CheckPoint &chk = _checkPoints.back();
           if (chk.check( code ))
           {
-            chk._code    = code;
-           *chk._what    = excMsg;
-            chk._doTrace = (code & StandardError) != 0; //< for now: do trace if it's a StandardError
-            match        = &chk;
-
-            doTrace     &= chk._doTrace; //< future: CheckPoint might disable trace ...
+            chk._what->concat( exceptionMap.get(code) ).concat( msg ).pad();
+            chk._code = code;
+            match     = &chk;
+            tracer    = chk._tracer;
             break;
           }
           _checkPoints.pop_back();
         }
-
-        if (doTrace && _traceproc)
+        
+        if (tracer)
         {
-          int skipped = 2; /*< skip frames prepare_exception + f_throw */
-          _traceproc( &skipped, excMsg.c_str(), excMsg.length() );
+          std::string msgLine = exceptionMap.get(code) + msg.str();
+          int         skipped = 2; /*< skip frames prepare_exception + f_throw */
+          tracer( (FrameInfoOp)NULL, skipped, &StringRef( msgLine ) );
         }
 
         if (!match)
@@ -264,7 +257,7 @@ f_try( int *catchList, StringRef *what, Procedure proc, ... )
   va_end( vaArgs );
 
   context  = getContext();
-  int code = setjmp( context->openFrame( catchList, what ) ); //< mark current stack location as point of return ...
+  int code = setjmp( context->openFrame( catchList, what, NULL ) ); //< mark current stack location as point of return ...
                                                         //  NOTE that setjmp returns 0 for marking!
   
   //<<< longjmp ends up here with some code different from 0!
@@ -332,7 +325,7 @@ void
 f_throw( int code, const StringRef *what )
 {
   Context *context = getContext();
-  context->prepare_exception( code, what->str() );
+  context->prepare_exception( code, *what );
   context->fire_exception(); //< no RETURN!
 }
 
@@ -341,7 +334,7 @@ void
 f_throw_str( int code, std::string **msg )
 {
   Context *context = getContext();
-  context->prepare_exception( code, **msg );
+  context->prepare_exception( code, StringRef( **msg ) );
   delete *msg; *msg = NULL;
   context->fire_exception(); //< no RETURN!
 }

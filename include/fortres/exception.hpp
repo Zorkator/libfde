@@ -3,6 +3,7 @@
 
 #include "fortres/StringRef.hpp"
 #include "fortres/portdef.h"
+#include "fortres/tracestack.hpp"
 #include "fortres/exception_types.xpp"
 #include "fortres/ppUtil.xpp"
 
@@ -16,8 +17,10 @@ typedef enum {
 class Context;
 
 typedef void (*Procedure)( ... );
-typedef void (*TraceProcedure)( int *skippedFrames, const char *msg, unsigned int len );
 typedef void (*Synchronizer)( Context **, int );
+
+_dllExport_C
+void f_format_exception( StringRef *buf, int code, StringRef *msg );
 
 _dllExport_C
 void f_get_context( Context **context, int contextId );

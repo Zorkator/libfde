@@ -137,6 +137,13 @@
             use, intrinsic :: iso_c_binding
             type (c_funptr), value, intent(in) :: tracer
           end subroutine
+
+          subroutine fmt_exception_( b, c, m ) _cID(f_format_exception)
+            import StringRef_t
+            type (StringRef_t)           :: b, m !< buffer, message
+            integer*4, value, intent(in) :: c    !< exception code
+          end subroutine
+
         end interface
 
         public :: try, throw, proc, c_null_ptr
@@ -196,6 +203,14 @@
         subroutine set_traceproc( tracer )
           procedure() :: tracer
           call set_traceproc_( c_funloc(tracer) )
+        end subroutine
+
+!_PROC_EXPORT(format_exception)
+        subroutine format_exception( buf, code, msg )
+          character(len=*)             :: buf
+          integer,          intent(in) :: code
+          character(len=*), intent(in) :: msg
+          call fmt_exception_( strBuf(buf), code, str(msg) )
         end subroutine
 
 

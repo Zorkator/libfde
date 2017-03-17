@@ -15,24 +15,18 @@
 class StringRef
 {
   public:
-      StringRef( void ): _ref(NULL), _len(0) { /* empty */ }
-      StringRef( const char *cstr )          { referTo( cstr ); }
-      StringRef( std::string &str )          { referTo( str ); }
+      StringRef( void ): _ref(NULL), _len(0)    { /* empty */ }
+      StringRef( const char *cstr, size_t len ) { referTo( cstr, len ); }
+      StringRef( const char *cstr )             { referTo( cstr ); }
+      StringRef( std::string &str )             { referTo( str ); }
+      StringRef( const StringRef &str )         { referTo( str ); }
 
     const StringRef &
-      operator = ( const std::string &str )
+      assignTo( char *cstr, size_t len )
       {
-        if (_ref != NULL)
-        {
-          char  *ref = this->buffer();
-          size_t l   = str.length();
-          if (l < _len)
-          {
-            memset( ref + l, ' ', _len - l );
-            _len = l;
-          }
-          memcpy( ref, str.c_str(), _len );
-        }
+        len = (len < _len)? len : _len;
+        memcpy( cstr, _ref, len );
+        memset( cstr + len, ' ', (_len - len) );
         return *this;
       }
 
@@ -40,21 +34,65 @@ class StringRef
       assignTo( std::string &str ) const
         { str.assign( _ref, _len ); }
 
-    StringRef &
-      referTo( const std::string &str )
+
+    StringRef
+      concat( const char *cstr, size_t len )
       {
-        _ref = str.c_str();
-        _len = str.length();
+        StringRef res;
+        if (_ref != NULL)
+        {
+          len = (_len < len)? _len : len;
+          memcpy( this->buffer(), cstr, len );
+          res.referTo( _ref + len, _len - len );
+        }
+        return res;
+      }
+
+    StringRef
+      concat( const char *cstr )
+        { return this->concat( cstr, strlen(cstr) ); }
+
+    StringRef
+      concat( const std::string &str )
+        { return this->concat( str.c_str(), str.length() ); }
+
+    StringRef
+      concat( const StringRef &str )
+        { return this->concat( str.buffer(), str.length() ); }
+
+
+    StringRef &
+      pad( size_t shift = 0 )
+      {
+        if (_ref != NULL)
+        {
+          shift = (shift < _len)? shift : _len;
+          memset( this->buffer() + shift, ' ', (_len - shift) );
+        }
+        return *this;
+      }
+
+
+    StringRef &
+      referTo( const char *ref, size_t len )
+      {
+        _ref = ref;
+        _len = len;
         return *this;
       }
 
     StringRef &
-      referTo( const char *ref )
-      {
-        _ref = ref;
-        _len = strlen( ref );
-        return *this;
-      }
+      referTo( const char *cstr )
+        { return this->referTo( cstr, strlen(cstr) ); }
+
+    StringRef &
+      referTo( const std::string &str )
+        { return this->referTo( str.c_str(), str.length() ); }
+
+    StringRef &
+      referTo( const StringRef &str )
+        { return this->referTo( str.buffer(), str.length() ); }
+
 
     std::string
       str( void ) const
@@ -62,13 +100,18 @@ class StringRef
 
     std::string
       trim( void ) const
+        { return this->trimmed().str(); }
+
+    StringRef
+      trimmed( void ) const
       {
-        std::string res( _ref, _len );
-        size_t      beg = res.find_first_not_of(" ");
-        size_t      end = res.find_last_not_of(" ");
-        beg = (beg != std::string::npos)? beg : 0;
-        end = (end != std::string::npos)? end : _len;
-        return res.substr( beg, end+1 );
+        const char *beg = _ref, *end = _ref;
+        if (beg != NULL)
+        {
+          for (end = beg + _len; beg < end && *beg == ' '; ++beg) { /* empty */ }
+          for (                ; beg < end && *--end == ' ';    ) { /* empty */ }
+        }
+        return StringRef( beg, (end - beg) + 1 );
       }
 
     void
@@ -79,11 +122,11 @@ class StringRef
       }
 
     char *
-      buffer( void )
+      buffer( void ) const
         { return const_cast<char *>(_ref); }
 
     size_t
-      length( void )
+      length( void ) const
         { return _len; }
 
   private:

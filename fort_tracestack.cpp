@@ -1,7 +1,9 @@
 
 #if defined _MSC_VER
+# define _CRT_SECURE_NO_WARNINGS
 # include <windows.h>
 # include <DbgHelp.h>
+
 #else
 # include <dlfcn.h>
 # include <execinfo.h>
@@ -16,13 +18,33 @@
 #include "fortres/dirent.hpp"
 
 
+void
+f_printFrameLine( StringRef *frameInfo )
+  { fprintf( stderr, "%.*s\n", frameInfo->length(), frameInfo->buffer() ); }
+
+/**
+ * Allow user specified frameLine-function, which gets called
+ *  for all StandardError exception types.
+ */
+static FrameInfoOp _frameInfoOp = f_printFrameLine;
+
 _dllExport_C
 void
-f_tracestack( FrameOperator frameOp, int skippedFrames )
+f_set_frameInfoOp( FrameInfoOp op )
+  { _frameInfoOp = op; }
+
+
+_dllExport_C
+void
+f_tracestack( FrameInfoOp infoOp, int skippedFrames, StringRef *info )
 {
   void     *frames[100];
   int       stackSize;
 	StringRef infoRef;
+
+  /* make sure there is a FrameInfoOp */
+  if (infoOp == NULL) infoOp = _frameInfoOp;
+  if (infoOp == NULL) infoOp = f_printFrameLine;
 
 #if defined _MSC_VER
   HANDLE       process;
@@ -42,7 +64,7 @@ f_tracestack( FrameOperator frameOp, int skippedFrames )
     SymFromAddr( process, (DWORD64)(frames[i]), 0, symbol );
     so_filepath_of( (void *)symbol->Address, frameBuffer, 256 );
     sprintf( frameBuffer, "%s: %s [0x%0X]", frameBuffer, symbol->Name, symbol->Address );
-    frameOp( &infoRef.referTo(frameBuffer) );
+    infoOp( &infoRef.referTo(frameBuffer).trimmed() );
   }
 #else
 	char **strings;
@@ -53,9 +75,12 @@ f_tracestack( FrameOperator frameOp, int skippedFrames )
 	if (strings)
 	{
     for (int i = stackSize - 1; i > skippedFrames; --i)
-			{ frameOp( &infoRef.referTo(strings[i]) ); }
+			{ infoOp( &infoRef.referTo(strings[i]).trimmed() ); }
 		free( strings );
 	}
 #endif
+  
+  if (info)
+    { infoOp( info ); }
 }
 
