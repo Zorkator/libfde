@@ -80,7 +80,7 @@ f_tracestack( FrameInfoOp infoOp, int skippedFrames, StringRef *info )
 	}
 #endif
   
-  if (info)
+  if (info && info->length())
     { infoOp( info ); }
 }
 

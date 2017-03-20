@@ -13,30 +13,45 @@
         implicit none
         private
 
-        public :: tracestack_by
+        public :: tracestack_by, set_frameInfoOp
 
         interface
-          subroutine FrameOperator( framInfo )
+          subroutine FrameInfoOp( frameInfo )
             import StringRef_t
-            type(StringRef_t) :: framInfo
+            type(StringRef_t) :: frameInfo
           end subroutine
       
-          subroutine tracestack_( op, skipped ) _cID(f_tracestack)
-            import c_funptr, c_int
+          subroutine tracestack_( op, skipped, info ) _cID(f_tracestack)
+            import c_funptr, c_int, StringRef_t
             type(c_funptr), value, intent(in) :: op
             integer(kind=c_int), value        :: skipped
+            type(StringRef_t)                 :: info
+          end subroutine
+
+          subroutine set_frameInfoOp_( op ) _cID(f_set_frameInfoOp)
+            use, intrinsic :: iso_c_binding
+            type (c_funptr), value, intent(in) :: op
           end subroutine
         end interface
     
       contains
       
 !_PROC_EXPORT(tracestack_by)
-        subroutine tracestack_by( op, skipped )
-          procedure(FrameOperator) :: op
-          integer, optional        :: skipped
-          integer                  :: skipped_
+        subroutine tracestack_by( op, skipped, info )
+          procedure(FrameInfoOp)     :: op
+          integer,          optional :: skipped
+          character(len=*), optional :: info
+          integer                    :: skipped_ = 0
+          type(StringRef_t)          :: info_
           if (present(skipped)) skipped_ = skipped
-          call tracestack_( c_funloc(op), skipped_ )
+          if (present(info))    info_    = str(info)
+          call tracestack_( c_funloc(op), skipped_, info_ )
+        end subroutine
+
+!_PROC_EXPORT(set_frameInfoOp)
+        subroutine set_frameInfoOp( op )
+          procedure(FrameInfoOp) :: op
+          call set_frameInfoOp_( c_funloc(op) )
         end subroutine
 
       end module

@@ -109,9 +109,10 @@ class StringRef
         if (beg != NULL)
         {
           for (end = beg + _len; beg < end && *beg == ' '; ++beg) { /* empty */ }
-          for (                ; beg < end && *--end == ' ';    ) { /* empty */ }
+          for (end--           ; beg < end && *end == ' '; --end) { /* empty */ }
+		  /* NOTE: here end-pointer is one too short! */
         }
-        return StringRef( beg, (end - beg) + 1 );
+        return StringRef( beg, (end - beg) + 1 /*<< +1 compensates end */ );
       }
 
     void
