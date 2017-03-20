@@ -9,8 +9,8 @@
       which is encoded by the assigned parameter values (hex).
     Their values are not magic but designated by the following rule:
 
-      An exception type is a subtype of another iff a bitwise AND
-      of both values is NOT equal zero.
+      An exception type A is a subtype of type B iff (A & B) == B,
+      or in words, if a bitwise AND of both equals the more generic.
 #endif
 
 # define _fortres_ExceptionTable                                  \

@@ -150,6 +150,11 @@ class Context
             chk._code = code;
             match     = &chk;
             tracer    = chk._tracer;
+
+            // disable trace for StopExecution-codes
+            if ((code & StopExecution) == StopExecution)
+              { tracer = NULL; }
+
             break;
           }
           _checkPoints.pop_back();
@@ -257,7 +262,8 @@ f_try( int *catchList, StringRef *what, Procedure proc, ... )
   va_end( vaArgs );
 
   context  = getContext();
-  int code = setjmp( context->openFrame( catchList, what, NULL ) ); //< mark current stack location as point of return ...
+  /*                                                           . o O (trace at CheckPoint by currently set procedure) */
+  int code = setjmp( context->openFrame( catchList, what, _traceproc ) ); //< mark current stack location as point of return ...
                                                         //  NOTE that setjmp returns 0 for marking!
   
   //<<< longjmp ends up here with some code different from 0!
