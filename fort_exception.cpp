@@ -122,7 +122,6 @@ class Context
 
   public:
     std::jmp_buf &
-      /*                                                           . o O (StringRef-Reference???) */
       openFrame( int *codeList /*< 0-terminated! */, StringRef *what, TraceProcedure tracer )
       {
         size_t len;
@@ -146,7 +145,9 @@ class Context
           CheckPoint &chk = _checkPoints.back();
           if (chk.check( code ))
           {
-            chk._what->concat( exceptionMap.get(code) ).concat( msg ).pad();
+            if (chk._what)
+              { chk._what->concat( exceptionMap.get(code) ).concat( msg ).pad(); }
+
             chk._code = code;
             match     = &chk;
             tracer    = chk._tracer;
@@ -243,28 +244,21 @@ getContext( void )
 
 _dllExport_C
 int
-f_try( int *catchList, StringRef *what, Procedure proc, ... )
+f_try_v( int *catchList, StringRef *what, TraceProcedure tp, Procedure proc, va_list vaArgs )
 {
-  typedef  void *  ArgRef;
+  typedef void *  ArgRef;
 
-  va_list  vaArgs;
-  ArgRef   argBuf[32];
-  size_t   nrArgs;
-  Context *context;
+  ArgRef argBuf[32];
+  size_t nrArgs;
 
-  va_start( vaArgs, proc );
-  {
-    // unpack list of given procedure arguments into argBuf
-    ArgRef *argPtr = argBuf;
-    while( *argPtr++ = va_arg( vaArgs, ArgRef ));
-    nrArgs = (argPtr - argBuf) - 1;
-  }
-  va_end( vaArgs );
+  // unpack list of given procedure arguments into argBuf
+  ArgRef *argPtr = argBuf;
+  while( *argPtr++ = va_arg( vaArgs, ArgRef ) ) { /* empty */ };
+  nrArgs = (argPtr - argBuf) - 1;
 
-  context  = getContext();
-  /*                                                           . o O (trace at CheckPoint by currently set procedure) */
-  int code = setjmp( context->openFrame( catchList, what, _traceproc ) ); //< mark current stack location as point of return ...
-                                                        //  NOTE that setjmp returns 0 for marking!
+  Context *context = getContext();
+  int code = setjmp( context->openFrame( catchList, what, tp ) ); //< mark current stack location as point of return ...
+                                                                  //  NOTE that setjmp returns 0 for marking!
   
   //<<< longjmp ends up here with some code different from 0!
   if (code == 0)
@@ -318,11 +312,28 @@ f_try( int *catchList, StringRef *what, Procedure proc, ... )
       default: throw; //<< can't handle number of given arguments!
     }
     //<<< if we end up here, called proc didn't trigger longjmp
-    what->erase();
+    if (what)
+      { what->erase(); }
   }
 
   context->closeFrame();
   return code;
+}
+
+
+_dllExport_C
+int
+f_try( int *catchList, StringRef *what, TraceProcedure tp, Procedure proc, ... )
+{
+  va_list vaArgs;
+  int     res;
+
+  if (what && !tp) tp = _traceproc;
+
+  va_start( vaArgs, proc );
+    res = f_try_v( catchList, what, tp, proc, vaArgs );
+  va_end( vaArgs );
+  return res;
 }
 
 

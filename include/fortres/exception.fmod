@@ -23,28 +23,36 @@
       !   * allow easy void-pointer handling
       !
 !_PROC_EXPORT(try__)
-      subroutine try__( res, catch, what, tgt, _enum_20(arg) )
+      subroutine try__( res, catch, what, tp, tgt, _enum_20(arg) )
         use, intrinsic :: iso_c_binding
         use _MODULENAME_stringref
-        integer(kind=c_int) :: res
-        integer             :: catch(*)
-        type(StringRef_t)   :: what
-        type(c_funptr)      :: tgt
-        type(c_ptr)         :: _enum_20(arg)
+        integer(kind=c_int)       :: res
+        integer                   :: catch(*)
+        type(StringRef_t), target :: what
+        type(c_funptr)            :: tp, tgt
+        type(c_ptr)               :: _enum_20(arg), whatPtr
 
         interface
-          function c_try_( catch, what, tgt, _enum_20(arg), x_ ) _cID(f_try)
+          function c_try_( c, w, tp, tgt, _enum_20(arg), x_ )_cID(f_try)
             use, intrinsic :: iso_c_binding
             use _MODULENAME_stringref
-            integer(kind=c_int),   intent(in) :: catch(*)
-            type(StringRef_t)                 :: what
-            type(c_funptr), value, intent(in) :: tgt
+            integer(kind=c_int),   intent(in) :: c(*) !< catch-list
+            type(c_ptr),    value             :: w    !< what-buffer
+            type(c_funptr), value, intent(in) :: tp   !< trace procedure
+            type(c_funptr), value, intent(in) :: tgt  !< call target
             type(c_ptr),    value, intent(in) :: _enum_20(arg), x_
             integer(kind=c_int)               :: c_try_
           end function
         end interface
 
-        res = c_try_( catch, what, tgt, _enum_20(arg), _list_1(_noArg) )
+        if (len(what) > 0) then; whatPtr = c_loc(what)
+                           else; whatPtr = c_null_ptr
+        end if
+
+!       have to use pp-definition to avoid line break!
+#       define _c_tryCall(p)  catch, whatPtr, tp, p
+        res = c_try_( _c_tryCall(tgt), _enum_20(arg), _list_1(_noArg) )
+#       undef  _c_tryCall
       end subroutine
 
 
@@ -64,6 +72,8 @@
 
         interface try
           module procedure try_void, try_chs, try_str
+          module procedure try_nt_void, try_nt_chs, try_nt_str
+          module procedure try_tp_void, try_tp_chs, try_tp_str
         end interface
 
         contains
@@ -88,6 +98,52 @@
           _tryDecl                  :: res
           type(StringRef_t), target :: arg
           call try__( _tryPass(res), c_loc(arg), _list_19(_noArg) )
+        end function
+
+
+!_PROC_EXPORT(try_nt_void)
+        function try_nt_void( _tryArgsNT ) result(res)
+          _tryDeclNT :: res
+          call try__( _tryPassNT(res), _list_20(_noArg) )
+        end function
+
+!_PROC_EXPORT(try_nt_chs)
+        function try_nt_chs( _tryArgsNT, arg ) result(res)
+          _tryDeclNT                :: res
+          character(len=*)          :: arg
+          type(StringRef_t), target :: argStr
+          argStr = str(arg)
+          call try__( _tryPassNT(res), c_loc(argStr), _list_19(_noArg) )
+        end function
+
+!_PROC_EXPORT(try_nt_str)
+        function try_nt_str( _tryArgsNT, arg ) result(res)
+          _tryDeclNT                  :: res
+          type(StringRef_t), target :: arg
+          call try__( _tryPassNT(res), c_loc(arg), _list_19(_noArg) )
+        end function
+
+
+!_PROC_EXPORT(try_tp_void)
+        function try_tp_void( _tryArgsTP ) result(res)
+          _tryDeclTP :: res
+          call try__( _tryPassTP(res), _list_20(_noArg) )
+        end function
+
+!_PROC_EXPORT(try_tp_chs)
+        function try_tp_chs( _tryArgsTP, arg ) result(res)
+          _tryDeclTP                :: res
+          character(len=*)          :: arg
+          type(StringRef_t), target :: argStr
+          argStr = str(arg)
+          call try__( _tryPassTP(res), c_loc(argStr), _list_19(_noArg) )
+        end function
+
+!_PROC_EXPORT(try_tp_str)
+        function try_tp_str( _tryArgsTP, arg ) result(res)
+          _tryDeclTP                :: res
+          type(StringRef_t), target :: arg
+          call try__( _tryPassTP(res), c_loc(arg), _list_19(_noArg) )
         end function
       end module
 
@@ -149,7 +205,7 @@
         public :: try, throw, proc, c_null_ptr
         public :: push_cleanup, pop_cleanup, set_traceproc
         public :: set_synchronizer, get_context
-        public :: setup_standardExceptions
+        public :: format_exception, setup_standardExceptions
 
         public :: StringRef_t, str, strBuf, len
 

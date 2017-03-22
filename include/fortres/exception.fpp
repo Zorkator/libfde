@@ -27,12 +27,30 @@
 !     call try__( _tryPass(res), c_loc(arg1), _list_19(_noArg) )
 !   end function
 !--------------------------------------------------------------------
+! --- try-interfaces for tracing exceptions by set stacktracer
 #define _tryArgs        catch, what, tgt
-#define _tryPass(id)    id, catch, strBuf(what), c_funloc(tgt)
+#define _tryPass(id)    id, catch, strBuf(what), c_null_ptr, c_funloc(tgt)
 #define _tryDecl        \
      integer          :: catch(*) ;\
      character(len=*) :: what     ;\
      procedure()      :: tgt      ;\
+     integer
+
+! --- try-interfaces for non-tracing exception handling
+#define _tryArgsNT      catch, tgt
+#define _tryPassNT(id)  id, catch, str(), c_null_ptr, c_funloc(tgt)
+#define _tryDeclNT      \
+     integer          :: catch(*) ;\
+     procedure()      :: tgt      ;\
+     integer
+
+! --- try-interfaces for tracing exceptions by given trace procedure
+#define _tryArgsTP      catch, tp, what, tgt
+#define _tryPassTP(id)  id, catch, strBuf(what), c_funloc(tp), c_funloc(tgt)
+#define _tryDeclTP      \
+     integer          :: catch(*) ;\
+     character(len=*) :: what     ;\
+     procedure()      :: tp, tgt  ;\
      integer
 
 

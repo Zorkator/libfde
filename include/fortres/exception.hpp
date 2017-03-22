@@ -32,7 +32,10 @@ _dllExport_C
 void f_set_traceproc( TraceProcedure traceProc );
 
 _dllExport_C
-int f_try( int *catchList, StringRef *what, Procedure proc, ... );
+int f_try( int *catchList, StringRef *what, TraceProcedure tp, Procedure proc, ... );
+
+_dllExport_C
+int f_try_v( int *catchList, StringRef *what, TraceProcedure tp, Procedure proc, va_list vaArgs );
 
 _dllExport_C
 void f_throw( int code, const StringRef *what );
