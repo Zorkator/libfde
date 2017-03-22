@@ -36,7 +36,7 @@ f_set_frameInfoOp( FrameInfoOp op )
 
 _dllExport_C
 void
-f_tracestack( FrameInfoOp infoOp, int skippedFrames, StringRef *info )
+f_tracestack( FrameInfoOp infoOp, const int *skippedFrames, StringRef *info )
 {
   void     *frames[100];
   int       stackSize;
@@ -59,7 +59,7 @@ f_tracestack( FrameInfoOp infoOp, int skippedFrames, StringRef *info )
   symbol->MaxNameLen   = 255;
   symbol->SizeOfStruct = sizeof(SYMBOL_INFO);
 
-  for (int i = stackSize - 1; i > skippedFrames; --i)
+  for (int i = stackSize - 1; i > *skippedFrames; --i)
   {
     SymFromAddr( process, (DWORD64)(frames[i]), 0, symbol );
     so_filepath_of( (void *)symbol->Address, frameBuffer, 256 );
@@ -74,7 +74,7 @@ f_tracestack( FrameInfoOp infoOp, int skippedFrames, StringRef *info )
 
 	if (strings)
 	{
-    for (int i = stackSize - 1; i > skippedFrames; --i)
+    for (int i = stackSize - 1; i > *skippedFrames; --i)
 			{ infoOp( &infoRef.referTo(strings[i]).trimmed() ); }
 		free( strings );
 	}
