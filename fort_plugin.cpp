@@ -315,7 +315,7 @@ _dllExport_C
 void
 f_plugin_filePath_to_id( StringRef *filePath, StringRef *id )
 {
-  *id = PluginBroker::libFileToId( filePath->str() );
+  id->concat( PluginBroker::libFileToId( filePath->str() ) ).pad();
 }
 
 

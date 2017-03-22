@@ -20,7 +20,7 @@
 
 void
 f_printFrameLine( StringRef *frameInfo )
-  { fprintf( stderr, "%.*s\n", frameInfo->length(), frameInfo->buffer() ); }
+  { fprintf( stderr, "%.*s\n", static_cast<int>(frameInfo->length()), frameInfo->buffer() ); }
 
 /**
  * Allow user specified frameLine-function, which gets called
@@ -64,7 +64,7 @@ f_tracestack( FrameInfoOp infoOp, const int *skippedFrames, StringRef *info )
     SymFromAddr( process, (DWORD64)(frames[i]), 0, symbol );
     so_filepath_of( (void *)symbol->Address, frameBuffer, 256 );
     sprintf( frameBuffer, "%s: %s [0x%0X]", frameBuffer, symbol->Name, symbol->Address );
-    infoOp( &infoRef.referTo(frameBuffer).trimmed() );
+    infoOp( &infoRef.referTo(frameBuffer).trim() );
   }
 #else
 	char **strings;
@@ -75,7 +75,7 @@ f_tracestack( FrameInfoOp infoOp, const int *skippedFrames, StringRef *info )
 	if (strings)
 	{
     for (int i = stackSize - 1; i > *skippedFrames; --i)
-			{ infoOp( &infoRef.referTo(strings[i]).trimmed() ); }
+			{ infoOp( &infoRef.referTo(strings[i]).trim() ); }
 		free( strings );
 	}
 #endif

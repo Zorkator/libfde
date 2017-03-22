@@ -144,7 +144,7 @@ int
 f_isdir( StringRef *pathStr )
 {
   struct stat s;
-  return (!stat( pathStr->trim().c_str(), &s ) && (s.st_mode & S_IFDIR));
+  return (!stat( pathStr->trimmed().str().c_str(), &s ) && (s.st_mode & S_IFDIR));
 }
 
 

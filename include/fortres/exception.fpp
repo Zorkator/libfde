@@ -29,7 +29,7 @@
 !--------------------------------------------------------------------
 ! --- try-interfaces for tracing exceptions by set stacktracer
 #define _tryArgs        catch, what, tgt
-#define _tryPass(id)    id, catch, strBuf(what), c_null_ptr, c_funloc(tgt)
+#define _tryPass(id)    id, catch, c_null_funptr, strBuf(what), c_funloc(tgt)
 #define _tryDecl        \
      integer          :: catch(*) ;\
      character(len=*) :: what     ;\
@@ -38,7 +38,7 @@
 
 ! --- try-interfaces for non-tracing exception handling
 #define _tryArgsNT      catch, tgt
-#define _tryPassNT(id)  id, catch, str(), c_null_ptr, c_funloc(tgt)
+#define _tryPassNT(id)  id, catch, c_null_funptr, str(), c_funloc(tgt)
 #define _tryDeclNT      \
      integer          :: catch(*) ;\
      procedure()      :: tgt      ;\
@@ -46,7 +46,7 @@
 
 ! --- try-interfaces for tracing exceptions by given trace procedure
 #define _tryArgsTP      catch, tp, what, tgt
-#define _tryPassTP(id)  id, catch, strBuf(what), c_funloc(tp), c_funloc(tgt)
+#define _tryPassTP(id)  id, catch, c_funloc(tp), strBuf(what), c_funloc(tgt)
 #define _tryDeclTP      \
      integer          :: catch(*) ;\
      character(len=*) :: what     ;\

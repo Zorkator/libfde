@@ -23,7 +23,7 @@
       !   * allow easy void-pointer handling
       !
 !_PROC_EXPORT(try__)
-      subroutine try__( res, catch, what, tp, tgt, _enum_20(arg) )
+      subroutine try__( res, catch, tp, what, tgt, _enum_20(arg) )
         use, intrinsic :: iso_c_binding
         use _MODULENAME_stringref
         integer(kind=c_int)       :: res
@@ -59,7 +59,7 @@
       module _MODULENAME_try_interface
         use _MODULENAME_stringref
         use iso_c_binding
-        
+
         ! Using the try-catch mechanism requires an interface definition
         !   matching the subroutine that should be called by try.
         ! The following default interfaces are supported for trying ...
@@ -76,8 +76,19 @@
           module procedure try_tp_void, try_tp_chs, try_tp_str
         end interface
 
-        contains
+        interface
+          subroutine try__( res, catch, tp, what, tgt, _enum_20(arg) )
+            import StringRef_t, c_int, c_funptr, c_ptr
+            integer(kind=c_int)       :: res
+            integer                   :: catch(*)
+            type(StringRef_t), target :: what
+            type(c_funptr)            :: tp, tgt
+            type(c_ptr)               :: _enum_20(arg)
+          end subroutine
+        end interface
 
+        contains
+        
 !_PROC_EXPORT(try_void)
         function try_void( _tryArgs ) result(res)
           _tryDecl :: res

@@ -98,22 +98,22 @@ class StringRef
       str( void ) const
         { return std::string( _ref, _len ); }
 
-    std::string
-      trim( void ) const
-        { return this->trimmed().str(); }
+    StringRef &
+      trim( void )
+      {
+        if (_ref != NULL)
+        {
+          const char *end;
+          for (end = _ref + _len; _ref < end && *_ref == ' '; ++_ref) { /* empty */ }
+          for (end--            ; _ref < end &&  *end == ' '; --end)  { /* empty */ }
+          _len = (end - _ref) + 1; /*<< +1 compensates that end points one too short */
+        }
+        return *this;
+      }
 
     StringRef
       trimmed( void ) const
-      {
-        const char *beg = _ref, *end = _ref;
-        if (beg != NULL)
-        {
-          for (end = beg + _len; beg < end && *beg == ' '; ++beg) { /* empty */ }
-          for (end--           ; beg < end && *end == ' '; --end) { /* empty */ }
-		  /* NOTE: here end-pointer is one too short! */
-        }
-        return StringRef( beg, (end - beg) + 1 /*<< +1 compensates end */ );
-      }
+        { return StringRef(*this).trim(); }
 
     void
       erase( void )
