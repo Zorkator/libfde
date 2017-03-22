@@ -164,7 +164,7 @@ class Context
         {
           std::string msgLine = exceptionMap.get(code) + msg.buffer();
           int         skipped = 2; /*< skip frames prepare_exception + f_throw */
-          tracer( (FrameInfoOp)NULL, skipped, &StringRef( msgLine ) );
+          tracer( (FrameInfoOp)NULL, &skipped, &StringRef( msgLine ) );
         }
 
         if (!match)
