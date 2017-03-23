@@ -23,6 +23,7 @@ FC_LIBRARIES.%   = adt.$(mk_TAG) fortres.x$(mk_ARCH)
 FC_list          = ifort gfortran
 FC_FLAGS.%       = $(fc_threads) $(fc_m)$(mk_ARCH)
 FC_CFLAGS.%      = $(fc_fpp) $(call fc_form,free,none) $(fc_backtrace)
+FC_LFLAGS.%      = -rdynamic #< add all symbols to dynamic symbol table (=> stacktrace)
 
 TARGETS          = $(basename $(wildcard test_*.f90))
 

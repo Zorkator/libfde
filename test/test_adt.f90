@@ -1259,44 +1259,48 @@ module test_exception
   use adt_exception
   use iso_c_binding
 
-  interface try
-    module procedure try_int
-  end interface
-
   contains
 
-  function try_int( _tryArgs, arg ) result(res)
-    _tryDecl        :: res
-    integer, target :: arg
-    call try__( _tryPass(res), c_loc(arg), _list_19(_noArg) )
-  end function
-
-  subroutine nop()
+  subroutine tracer( op, skip, msg )
+    procedure()       :: op
+    integer*4         :: skip
+    type(StringRef_t) :: msg
+    print *, "<trace>, skipped frames:", skip
+    print *, str(msg)
   end subroutine
 
-  function func( v ) result(res)
-    integer :: v
-    real*8  :: res
-    call throw( ArithmeticError, "something bad happened" )
-    res = v ** 2 / (v - 1)
+  function reciprocal( valStr ) result(res)
+    type(StringRef_t)         :: valStr
+    real(8)                   :: res
+    character(len=:), pointer :: valStrPtr
+    integer                   :: stat
+
+    res = 0.0
+    valStrPtr => str(valStr)
+    read(valStrPtr, *, iostat=stat) res
+    if (stat /= 0) &
+      call throw( ValueError, "unable to convert string '" // str(valStr) // "' to real!" )
+    res = 1.0 / res
   end function
 
-  subroutine test_int( v )
-    integer :: v
-    real*8  :: res
-    res = func(v)
+  subroutine test_conversion( valStr )
+    type(StringRef_t) :: valStr
+    real*8            :: res
+    res = reciprocal( valStr )
     print *, res
   end subroutine
 
   subroutine test_pass_args()
     character(len=128) :: what
-    integer            :: i
+    character(len=10)  :: table(5)
+    integer            :: idx, code
 
-    do i = 0,3
-      select case( try( _catchAny, what, test_int, i ) )
-        case (0)    ; continue
-        case default; print *, trim(what)
-      end select
+    data table /'2.0', '0.0', '-10', 'trash', '0.25'/
+
+    do idx = 1, size(table)
+      code = try( _catchAny,         what, test_conversion, table(idx) ) !< trace by preset tracer
+      code = try( _catchAny, tracer, what, test_conversion, table(idx) ) !< trace by tracer
+      code = try( _catchAny,               test_conversion, table(idx) ) !< no trace
     end do
   end subroutine
   
@@ -1316,7 +1320,7 @@ program test_adt
   v_string = "BlUbbINGER bla uND texT"
 
   call setup_standardExceptions()
-  call set_traceproc( nop )
+  !call set_traceproc( tracer )
   call test_pass_args()
 
   txtout = lower( text )
