@@ -10,6 +10,7 @@ module impl_scope__
   use adt_string
   use adt_typeinfo
   use adt_basetypes
+  use adt_exception
 end module
 
 
@@ -97,16 +98,16 @@ end module
 
 !_PROC_EXPORT(scope_set_callback_c)
   integer &
-  function scope_set_callback_c( self, ident, proc ) result(res)
+  function scope_set_callback_c( self, ident, proc_ ) result(res)
     use impl_scope__
     implicit none
     type(HashMap_t)       :: self
     character(len=*)      :: ident
-    procedure(), optional :: proc
+    procedure(), optional :: proc_
     procedure(), pointer  :: procPtr
     type(Item_t), pointer :: itemPtr
 
-    procPtr => proc
+    procPtr => proc_
     res = 0
     if (hasKey( self, ident ) .or. .not. associated(procPtr)) then
       call set( self, ident, Item_of(ref_from_Callback(procPtr)) )
@@ -157,4 +158,60 @@ end module
     code = tryCallback( self, ident, argScope )
   end subroutine
 
+
+!_PROC_EXPORT(scope_get_item_)
+  function scope_get_item_( scope, id ) result(res)
+    ! Get pointer to item <id> of given <scope>.
+    ! The given id has to exist within scope or a KeyError is thrown
+    ! The value referenced by the returned item can be accessed by
+    !   either assigning it directly to a scalar variable
+    !   (types have to match!) or by using a dynamic_cast to cast it
+    !   into an appropreate value pointer.
+    use impl_scope__
+    implicit none
+    type(HashMap_t)       :: scope
+    character(len=*)      :: id
+    type(Item_t), pointer :: res
+
+    res => getPtr( scope, id )
+    if (.not. associated(res)) then
+      call throw( KeyError, __no_item(id) )
+    end if
+  end function
+
+
+!_PROC_EXPORT(scope_get_ref_)
+  function scope_get_ref_( scope, id ) result(res)
+    ! Get a reference to variable <id> of given <scope>.
+    ! The given id must exist within scope and it must refer to a
+    !   variable reference.
+    ! Otherwise, either a KeyError or a TypeError is thrown.
+    use impl_scope__
+    implicit none
+    type(HashMap_t)       :: scope
+    character(len=*)      :: id
+    type(Ref_t),  pointer :: res
+
+    if (.not. dynamic_cast( res, getItem( scope, id ) )) then
+      call throw( TypeError, __ill_var_ref(id) )
+    end if
+  end function
+
+
+!_PROC_EXPORT(scope_get_service_)
+  function scope_get_service_( scope, id ) result(res)
+    ! Get generic function pointer named <id> of given <scope>.
+    ! A TypeError is thrown if the scope item is not a routine.
+    use impl_scope__
+    implicit none
+    type(HashMap_t)       :: scope
+    character(len=*)      :: id
+    type(c_funptr)        :: res
+    procedure(),  pointer :: cbPtr
+
+    if (.not. dynamic_cast( cbPtr, getRef( scope, id ))) then
+      call throw( TypeError, __type_mismatch_routine(id) )
+    end if
+    res = c_funloc(cbPtr)
+  end function
 

@@ -254,5 +254,80 @@
 
 # endif
 
+
+# if !defined _ADT_SCOPE_NO_RETRIEVE
+
+!###########################################
+! macros retrieving values & references
+!###########################################
+
+! define some exception messages ...
+#   define __no_item(id) \
+      "can't locate item named "//id
+
+#   define __ill_var_ref(id) \
+      "type mismatch at getting variable reference of "//id
+
+#   define __ill_val_ref(id) \
+      "unable to take value reference of "//id
+
+#   define __type_mismatch_default(id) \
+      "type mismatch at setting default value "//id
+
+#   define __type_mismatch_routine(id) \
+      id//" does not refer to routine"
+
+
+! The following definitions facilitate getting type-safe references of
+!   variables and values provided by the given ATHLET-scope.
+! In these macros the type check is performed by dynamic_cast() which
+!   signals a type mismatch by returning .false.
+! In such case an exception is thrown.
+!
+! In ATHLET there are TWO types of data items:
+!   * global module data objects (arrays, variables, etc.)
+!   * temporary values stored within the scope and that might get
+!       updated during the simulation
+!
+! Both types can be handled the same way by using pointers BUT currently
+!   the way of retrieving such pointer is a bit different.
+! That's why there are two versions: _refVar and _refVal
+
+
+! _refVar: reference a global linked data object, e.g. a variable
+# define _refVar( scope, id, ptr ) \
+    if (.not. dynamic_cast( ptr, getRef( scope, id ) )) \
+      call throw( TypeError, __ill_var_ref(id) )
+
+
+! _refVal: reference a temporary value, stored within the scope.
+# define _refVal( scope, id, ptr ) \
+    if (.not. dynamic_cast( ptr, getItem( scope, id ) )) \
+      call throw( TypeError, __ill_val_ref(id) )
+
+
+! _refVal_default: reference a temporary scope value, if it does not yet
+!                  exist it gets created and initialized to the provided
+!                  default value.
+# define _refVal_default( scope, id, ptr, defaultVal ) \
+    if (.not. dynamic_cast( ptr, setDefault( scope, id, Item_of(defaultVal) ) )) \
+      call throw( TypeError, __type_mismatch_default(id) )
+
+
+! _refVar_check: reference linked data object if exists
+# define _refVar_check( scope, id, ptr ) \
+    if (hasKey( scope, id )) \
+      _refVar( scope, id, ptr )
+
+
+! _getService: connect given routine pointer <ptr> to a service routine
+!                provided in <scope>.
+!              Note that this macro assumes TWO things about <ptr>:
+!               - it is named like the service routine to get
+!               - it is associated to the correct interface
+# define _getService( scope, ptr ) \
+    call c_f_procpointer( getService( scope, _strip(_str(ptr)) ), ptr )
+
+# endif
 #endif
 

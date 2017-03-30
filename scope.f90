@@ -3,6 +3,8 @@
 
 module adt_scope
   use adt_hashmap
+  use adt_item
+  use adt_ref
   use iso_c_binding
   implicit none
   private
@@ -14,7 +16,7 @@ module adt_scope
 
   type(HashMap_t), pointer :: processScope_
 
-  public :: newScope, getScope
+  public :: newScope, getScope, getItem, getRef, getService
   public :: declareCallback, setCallback, tryCallback, invokeCallback
   public :: hook_disabled, hook_undeclared, hook_not_set, hook_called
 
@@ -35,6 +37,33 @@ module adt_scope
       character(len=*)           :: id1
       character(len=*), optional :: id2, id3, id4, id5, id6, id7, id8, id9
       type(HashMap_t),   pointer :: scope
+    end function
+  end interface
+
+  interface getItem
+    function scope_get_item_( scope, id ) result(res)
+      import HashMap_t, Item_t
+      type(HashMap_t)       :: scope
+      character(len=*)      :: id
+      type(Item_t), pointer :: res
+    end function
+  end interface
+
+  interface getRef
+    function scope_get_ref_( scope, id ) result(res)
+      import HashMap_t, Ref_t
+      type(HashMap_t)       :: scope
+      character(len=*)      :: id
+      type(Ref_t),  pointer :: res
+    end function
+  end interface
+
+  interface getService
+    function scope_get_service_( scope, id ) result(res)
+      import HashMap_t, c_funptr
+      type(HashMap_t)  :: scope
+      character(len=*) :: id
+      type(c_funptr)   :: res
     end function
   end interface
 
