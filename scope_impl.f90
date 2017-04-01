@@ -160,7 +160,7 @@ end module
 
 
 !_PROC_EXPORT(scope_get_item_)
-  function scope_get_item_( scope, id ) result(res)
+  function scope_get_item_( scope, id, raise ) result(res)
     ! Get pointer to item <id> of given <scope>.
     ! The given id has to exist within scope or a KeyError is thrown
     ! The value referenced by the returned item can be accessed by
@@ -169,49 +169,78 @@ end module
     !   into an appropreate value pointer.
     use impl_scope__
     implicit none
-    type(HashMap_t)       :: scope
-    character(len=*)      :: id
-    type(Item_t), pointer :: res
+    type(HashMap_t)        :: scope
+    character(len=*)       :: id
+    logical,      optional :: raise
+    type(Item_t), pointer  :: res
+    logical                :: raise_
 
+    if (present(raise)) then; raise_ = raise
+                        else; raise_ = .true.
+    end if
     res => getPtr( scope, id )
-    if (.not. associated(res)) then
+    if (.not. associated(res) .and. raise_) then
       call throw( KeyError, __no_item(id) )
     end if
   end function
 
 
 !_PROC_EXPORT(scope_get_ref_)
-  function scope_get_ref_( scope, id ) result(res)
+  function scope_get_ref_( scope, id, raise ) result(res)
     ! Get a reference to variable <id> of given <scope>.
     ! The given id must exist within scope and it must refer to a
     !   variable reference.
     ! Otherwise, either a KeyError or a TypeError is thrown.
     use impl_scope__
     implicit none
-    type(HashMap_t)       :: scope
-    character(len=*)      :: id
-    type(Ref_t),  pointer :: res
+    type(HashMap_t)        :: scope
+    character(len=*)       :: id
+    logical,      optional :: raise
+    type(Ref_t),  pointer  :: res
+    logical                :: raise_
 
-    if (.not. dynamic_cast( res, getItem( scope, id ) )) then
+    if (present(raise)) then; raise_ = raise
+                        else; raise_ = .true.
+    end if
+    if (.not. dynamic_cast( res, getItem( scope, id, raise_  ) ) .and. raise_) then
       call throw( TypeError, __ill_var_ref(id) )
     end if
   end function
 
 
-!_PROC_EXPORT(scope_get_service_)
-  function scope_get_service_( scope, id ) result(res)
-    ! Get generic function pointer named <id> of given <scope>.
+!_PROC_EXPORT(scope_get_procedure_)
+  function scope_get_procedure_( scope, id, raise ) result(res)
+    ! Get generic procedure pointer named <id> of given <scope>.
     ! A TypeError is thrown if the scope item is not a routine.
     use impl_scope__
     implicit none
-    type(HashMap_t)       :: scope
-    character(len=*)      :: id
-    type(c_funptr)        :: res
-    procedure(),  pointer :: cbPtr
+    type(HashMap_t)        :: scope
+    character(len=*)       :: id
+    logical,      optional :: raise
+    type(c_funptr)         :: res
+    logical                :: raise_
+    type(c_ptr),   pointer :: fptr
 
-    if (.not. dynamic_cast( cbPtr, getRef( scope, id ))) then
+    if (present(raise)) then; raise_ = raise
+                        else; raise_ = .true.
+    end if
+    if (.not. dynamic_cast( fptr, getItem( scope, id, raise_ )) .and. raise_) then
       call throw( TypeError, __type_mismatch_routine(id) )
     end if
-    res = c_funloc(cbPtr)
+    if (associated(fptr)) then; res = transfer( fptr, res )
+                          else; res = c_null_funptr
+    end if
   end function
 
+
+!_PROC_EXPORT(scope_set_procedure_)
+  subroutine scope_set_procedure_( scope, id, proc_ )
+    use impl_scope__
+    type(HashMap_t)  :: scope
+    character(len=*) :: id
+    procedure()      :: proc_
+    type(c_ptr)      :: fptr
+  
+    fptr = transfer( c_funloc(proc_), fptr )
+    call set( scope, id, Item_of(fptr) )
+  end subroutine

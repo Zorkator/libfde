@@ -16,7 +16,7 @@ module adt_scope
 
   type(HashMap_t), pointer :: processScope_
 
-  public :: newScope, getScope, getItem, getRef, getService
+  public :: newScope, getScope, getItem, getRef, setProcedure, getProcedure
   public :: declareCallback, setCallback, tryCallback, invokeCallback
   public :: hook_disabled, hook_undeclared, hook_not_set, hook_called
 
@@ -41,29 +41,41 @@ module adt_scope
   end interface
 
   interface getItem
-    function scope_get_item_( scope, id ) result(res)
+    function scope_get_item_( scope, id, raise ) result(res)
       import HashMap_t, Item_t
-      type(HashMap_t)       :: scope
-      character(len=*)      :: id
-      type(Item_t), pointer :: res
+      type(HashMap_t)        :: scope
+      character(len=*)       :: id
+      logical,      optional :: raise
+      type(Item_t), pointer  :: res
     end function
   end interface
 
   interface getRef
-    function scope_get_ref_( scope, id ) result(res)
+    function scope_get_ref_( scope, id, raise ) result(res)
       import HashMap_t, Ref_t
-      type(HashMap_t)       :: scope
-      character(len=*)      :: id
-      type(Ref_t),  pointer :: res
+      type(HashMap_t)        :: scope
+      character(len=*)       :: id
+      logical,      optional :: raise
+      type(Ref_t),  pointer  :: res
     end function
   end interface
 
-  interface getService
-    function scope_get_service_( scope, id ) result(res)
+  interface setProcedure
+    subroutine scope_set_procedure_( scope, id, proc_ )
+      import HashMap_t
+      type(HashMap_t)   :: scope
+      character(len=*)  :: id
+      procedure()       :: proc_
+    end subroutine
+  end interface
+
+  interface getProcedure
+    function scope_get_procedure_( scope, id, raise ) result(res)
       import HashMap_t, c_funptr
-      type(HashMap_t)  :: scope
-      character(len=*) :: id
-      type(c_funptr)   :: res
+      type(HashMap_t)   :: scope
+      character(len=*)  :: id
+      logical, optional :: raise
+      type(c_funptr)    :: res
     end function
   end interface
 

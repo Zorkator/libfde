@@ -294,13 +294,13 @@
 ! That's why there are two versions: _refVar and _refVal
 
 
-! _refVar: reference a global linked data object, e.g. a variable
+! _refVar: reference a linked data object, e.g. a variable
 # define _refVar( scope, id, ptr ) \
     if (.not. dynamic_cast( ptr, getRef( scope, id ) )) \
       call throw( TypeError, __ill_var_ref(id) )
 
 
-! _refVal: reference a temporary value, stored within the scope.
+! _refVal: reference a value, stored within the scope.
 # define _refVal( scope, id, ptr ) \
     if (.not. dynamic_cast( ptr, getItem( scope, id ) )) \
       call throw( TypeError, __ill_val_ref(id) )
@@ -319,14 +319,37 @@
     if (hasKey( scope, id )) \
       _refVar( scope, id, ptr )
 
+! _refProc: connect given routine pointer <ptr> to a procedure linked in <scope>.
+!           Note that this macro assumes TWO things about <ptr>:
+!             - it is named like the procedure to get from scope
+!             - it should be associated to the correct interface
+# define _refProc( scope, ptr ) \
+    call c_f_procpointer( getProcedure( scope, _strip(_str(ptr)) ), ptr )
 
-! _getService: connect given routine pointer <ptr> to a service routine
-!                provided in <scope>.
-!              Note that this macro assumes TWO things about <ptr>:
-!               - it is named like the service routine to get
-!               - it is associated to the correct interface
-# define _getService( scope, ptr ) \
-    call c_f_procpointer( getService( scope, _strip(_str(ptr)) ), ptr )
+
+!
+! non-raising-version of _ref#-macros
+!
+! _try_refVar: try to reference a linked data object
+!              return .true. on success, .false. otherwise
+# define _try_refVar( scope, id, ptr ) \
+    dynamic_cast( ptr, getRef( scope, id, .false. ) )
+
+
+! _try_refVal: try to reference a value, stored within the scope.
+!              return .true. on success, .false. otherwise
+# define _try_refVal( scope, id, ptr ) \
+    dynamic_cast( ptr, getItem( scope, id, .false. ) )
+
+
+! _refProc_null: connect given routine pointer <ptr> to a procedure linked in <scope>.
+!               if it fails, ptr is set to c_null_funptr
+# define _refProc_null( scope, ptr ) \
+    call c_f_procpointer( getProcedure( scope, _strip(_str(ptr)), .false. ), ptr )
+
+
+! deprecated - just for compatibility 
+# define _getService  _refProc
 
 # endif
 #endif
