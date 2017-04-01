@@ -115,28 +115,34 @@ end module
 
 !_PROC_EXPORT(item_dynamic_type)
   function item_dynamic_type( self ) result(res)
+    ! NOTE: in contrast to the interface argument self is declared optional here!
+    !       This is because we need to handle null pointers here, while we do not allow
+    !         calling dynamic_type with self actually missing!
     use impl_item__, only: Item_t, TypeInfo_t, void_type
     implicit none
-    type(Item_t),  intent(in) :: self
-    type(TypeInfo_t), pointer :: res
+    type(Item_t), optional, intent(in) :: self
+    type(TypeInfo_t),          pointer :: res
 
-    if (associated( self%typeInfo )) then; res => self%typeInfo
-                                     else; res => void_type()
-    end if
+    res => null()
+    if (present(self))         res => self%typeInfo
+    if (.not. associated(res)) res => void_type()
   end function
 
 
 !_PROC_EXPORT(item_dynamic_type_c)
   subroutine item_dynamic_type_c( res, self )
+    ! NOTE: in contrast to the interface argument self is declared optional here!
+    !       This is because we need to handle null pointers here, while we do not allow
+    !         calling dynamic_type with self actually missing!
     use impl_item__
     implicit none
-    type(TypeSpecs_t), intent(inout) :: res
-    type(Item_t),      intent(in)    :: self
-    type(TypeInfo_t),        pointer :: ptr
+    type(TypeSpecs_t),      intent(inout) :: res
+    type(Item_t), optional, intent(in)    :: self
+    type(TypeInfo_t),             pointer :: ptr
 
-    if (associated( self%typeInfo )) then; ptr => self%typeInfo
-                                     else; ptr => void_type()
-    end if
+    ptr => null()
+    if (present(self))         ptr => self%typeInfo
+    if (.not. associated(ptr)) ptr => void_type()
     res = ptr%typeSpecs
   end subroutine
 
@@ -546,14 +552,18 @@ end module
 
 
 ! implement dynamic_cast routines
+! NOTE: in contrast to the interface argument self is declared optional here!
+!       This is because we need to handle null pointers here, while we do not allow
+!         calling dynamic_cast with self actually missing!
 # define _EXPORT_DYNAMIC_CAST(typeId) _PROC_EXPORT(_paste(item_dynamic_cast_,typeId)_c)
 # define _implement_dynamic_cast_(typeId, baseType) \
   logical function _paste(item_dynamic_cast_,typeId)_c( ptr, self ) result(res) ;\
     use impl_item__; implicit none                                              ;\
-    baseType,    pointer :: ptr                                                 ;\
-    type(Item_t), target :: self                                                ;\
-    baseType             :: var                                                 ;\
-    res = associated( static_type(var), self%typeInfo )                         ;\
+    baseType,              pointer :: ptr                                       ;\
+    type(Item_t), optional, target :: self                                      ;\
+    baseType                       :: var                                       ;\
+    res = present(self)                                                         ;\
+    if (res) res = associated( static_type(var), self%typeInfo )                ;\
     if (res) then; call c_f_pointer( c_loc(self%data(1)), ptr )                 ;\
              else; ptr => null()                                                ;\
     end if                                                                      ;\

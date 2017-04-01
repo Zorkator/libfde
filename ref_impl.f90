@@ -409,29 +409,35 @@ end module
 !_PROC_EXPORT(ref_dynamic_type)
 !_ARG_REFERENCE1(self)
   function ref_dynamic_type( self ) result(res)
+    ! NOTE: in contrast to the interface argument self is declared optional here!
+    !       This is because we need to handle null pointers here, while we do not allow
+    !         calling dynamic_type with self actually missing!
     use impl_ref__, only: Ref_t, TypeInfo_t, void_type
     implicit none
-    type(Ref_t), intent(in) :: self
-    type(TypeInfo_t), pointer :: res
+    type(Ref_t), optional, intent(in) :: self
+    type(TypeInfo_t),         pointer :: res
 
-    if (associated( self%typeInfo )) then; res => self%typeInfo
-                                     else; res => void_type()
-    end if
+    res => null()
+    if (present(self))         res => self%typeInfo
+    if (.not. associated(res)) res => void_type()
   end function
 
   
 !_PROC_EXPORT(ref_dynamic_type_c)
 !_ARG_REFERENCE1(self)
   subroutine ref_dynamic_type_c( res, self )
+    ! NOTE: in contrast to the interface argument self is declared optional here!
+    !       This is because we need to handle null pointers here, while we do not allow
+    !         calling dynamic_type with self actually missing!
     use impl_ref__
     implicit none
-    type(TypeSpecs_t), intent(inout) :: res
-    type(Ref_t),          intent(in) :: self
-    type(TypeInfo_t),        pointer :: ptr
+    type(TypeSpecs_t),     intent(inout) :: res
+    type(Ref_t), optional, intent(in)    :: self
+    type(TypeInfo_t),            pointer :: ptr
 
-    if (associated( self%typeInfo )) then; ptr => self%typeInfo
-                                     else; ptr => void_type()
-    end if
+    ptr => null()
+    if (present(self))         ptr => self%typeInfo
+    if (.not. associated(ptr)) ptr => void_type()
     res = ptr%typeSpecs
   end subroutine
 
