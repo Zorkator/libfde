@@ -316,8 +316,9 @@
 
 ! _refVar_check: reference linked data object if exists
 # define _refVar_check( scope, id, ptr ) \
-    if (hasKey( scope, id )) \
-      _refVar( scope, id, ptr )
+    if (hasKey( scope, id )) then       ;\
+      _refVar( scope, id, ptr )         ;\
+    end if
 
 ! _refProc: connect given routine pointer <ptr> to a procedure linked in <scope>.
 !           Note that this macro assumes TWO things about <ptr>:
