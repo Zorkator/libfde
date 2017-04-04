@@ -7,7 +7,6 @@ module impl_item__
   use adt_string
   use adt_ref
   use adt_memoryref
-  use adt_exception
   use iso_c_binding
 
 # define Item_t   Item_t__impl__
@@ -420,7 +419,7 @@ end module
   logical &
   function auto_assignable_( src, lhsPtr, lhsType, rhs ) result(res)
     use impl_item__, only: c_ptr, TypeInfo_t, Item_t, Ref_t, item_dynamic_type, item_get_ref, user_assignment_ &
-                         , temporary_ref, static_type, dynamic_type, ref, cptr, c_loc, throw, TypeError
+                         , temporary_ref, static_type, dynamic_type, ref, cptr, c_loc
     implicit none          
     type(c_ptr),  intent(out) :: src
     type(c_ptr)               :: lhsPtr
@@ -458,7 +457,8 @@ end module
         if (associated( user_assignment_ )) then
           call user_assignment_( lhsPtr, lhsType%typeSpecs, src, rhsType%typeSpecs )
         else
-          call throw( TypeError, "illegal assignment "//"<"//trim(lhsType%typeId)//"> := <"//trim(rhsType%typeId)//">" )
+          write(stdout,*,iostat=stat) "ERROR: skipping illegal assignment " // &
+            "<" // trim(lhsType%typeId) // "> := <" // trim(rhsType%typeId) // ">"
         end if
       end if
     end if
