@@ -162,9 +162,12 @@ so_filepath_of( const void *addr, char buff[], size_t len )
   Dl_info info;
   if (dladdr( const_cast<void *>(addr), &info ))
   {
-    res = std::min( len-1, strlen( info.dli_fname ) );
-    memcpy( buff, info.dli_fname, res );
-    buff[res+1] = '\0';
+    if (len > 0)
+    {
+      res = std::min( len-1, strlen( info.dli_fname ) );
+      memcpy( buff, info.dli_fname, res );
+      buff[res] = '\0'; //< make sure string is terminated!
+    }
   }
 #endif
   return res;
