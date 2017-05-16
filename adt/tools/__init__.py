@@ -4,6 +4,9 @@ __versioninfo__ = (0, 0, 3)
 __version__     = '.'.join( map( str, __versioninfo__ ) )
 __all__         = ['debug']
 
+import logging
+logging.basicConfig( level = logging.ERROR )
+
 def _import( modId, what ):
   _mod = __import__( modId, globals(), locals(), what, -1 )
   for sym in what:

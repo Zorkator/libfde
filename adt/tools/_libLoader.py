@@ -3,6 +3,7 @@ from ctypes import CDLL as _CDLL
 from os     import environ as _env, pathsep as _pathDelim, path as _path, getpid as _getpid
 from glob   import glob
 from sys    import stdout
+from .      import logging
 import platform
 
 _isWin = platform.system() == "Windows"
@@ -89,8 +90,7 @@ class LibLoader(object):
         raise OSError( "unable to load shared library {0}".format(filePath) )
 
       except self.Success:
-        if self.opt('--verbose'):
-          stdout.write( "loaded shared library {0}\n".format(self._hdl._name) )
+        self._log.info( "loaded shared library {0}\n".format(self._hdl._name) )
       return self._hdl
 
 
@@ -103,7 +103,8 @@ class LibLoader(object):
     _env[_PATH] = _pathDelim.join( paths )
     self._hdl   = None
     for f in glob( libPattern ):
-      try   : self._hdl = CDLL_t( f ); break #< break if load succeeded
+      self._log.debug( "try loading " + f )
+      try   : self._hdl = CDLL_t( str(f) ); break #< break if load succeeded
       except: pass
     _env[_PATH] = envPaths
     
@@ -115,18 +116,20 @@ class LibLoader(object):
     if libPattern and self.opt( 'matchExisting' ):
       try  : import psutil, fnmatch
       except ImportError:
-        stdout.write( "library matching not available, need packages psutil and fnmatch!\n" )
+        self._log.error( "library matching not available, need packages psutil and fnmatch!\n" )
       else:
         p = psutil.Process( _getpid() )
         for lib in p.memory_maps():
           if fnmatch.fnmatch( lib.path, libPattern ):
             libPattern = lib.path
+            self._log.info( "matched already loaded library {0}".format(libPattern) )
             break
     return libPattern
 
     
   def __init__( self, **kwArgs ):
     self._opt = kwArgs
+    self._log = logging.getLogger( type(self).__name__ )
 
 
   def __str__( self ):
@@ -139,6 +142,6 @@ class LibLoader(object):
 
 
 
-_libPattern = ('*/libadt.*.so', '*/libadt.*.dll')[_isWin]
+_libPattern = ('libadt.*.so', 'libadt.*.dll')[_isWin]
 core_loader = LibLoader( fileEnv='LIBADT', prioPathEnv='ADTPATH', libPattern=_libPattern, matchExisting=True )
 
