@@ -119,15 +119,38 @@ class PluginBroker
     };
 
 
-    typedef std::pair<String, SharedLib::Handle>  Value;
+    typedef enum
+    {
+      State_invalid  = -1,
+      State_disabled =  0,
+      State_enabled  =  1
+    } PluginState;
 
-    class Map
-    : public std::map<String, Value>
+    
+    class PluginRef
     {
       public:
-        typedef std::pair<String, Value>              Item;
-        typedef std::map<String, Value>::iterator     Iterator;
-        typedef SharedLib::Function                   Initializer;
+        PluginRef( void )
+        : state(State_invalid)
+          { /* nothing to do here */ }
+
+        PluginRef( const char *filePath_, const SharedLib::Handle &handle_, PluginState state_ = State_disabled )
+        : filePath( realpath_of(filePath_) )
+        , handle(handle_)
+        , state(state_)
+          { /* nothing to do here */ }
+
+        String            filePath;
+        SharedLib::Handle handle;
+        PluginState       state;
+    };
+
+    class Map
+    : public std::map<String, PluginRef>
+    {
+      public:
+        typedef std::map<String, PluginRef>::iterator  Iterator;
+        typedef SharedLib::Function                    Initializer;
 
         bool
           hasPlugin( const String &id ) const
@@ -141,17 +164,23 @@ class PluginBroker
 
             if (itr != this->end())
             {
-              String            &filePath = itr->second.first;
-              SharedLib::Handle &libHdl   = itr->second.second;
-              if ((lib = libHdl.get()) == NULL)
+              PluginRef &ref = itr->second;
+              if (ref.state == State_enabled)
               {
-                lib = this->tryLoad( filePath ); //< default Predicate is sufficient here!
-                libHdl.reset( lib );
-                if (lib)
+                /* plugin enabled */
+                lib = ref.handle.get();
+                if (lib == NULL)
                 {
-                  Initializer init = (Initializer)lib->getSymbol("initialize_c_");
-                  if (init)
-                    { init(); }
+                  /* plugin not yet loaded ... */
+                  lib = this->tryLoad( ref.filePath ); //< default Predicate is sufficient here!
+                  ref.handle.reset( lib );
+                  if (lib)
+                  {
+                    /* if implemented, call initialize function */
+                    Initializer init = (Initializer)lib->getSymbol("initialize_c_");
+                    if (init)
+                      { init(); }
+                  }
                 }
               }
             }
@@ -172,11 +201,13 @@ class PluginBroker
           }
 
         void
-          insertPlugin( const String &filePath, const String &id = String()
-                      , const SharedLib::Handle &lib = SharedLib::Handle() )
+          insertPlugin( const String &filePath
+                      , const String &id = String()
+                      , const SharedLib::Handle &lib = SharedLib::Handle()
+                      , PluginState state = State_disabled )
           {
             const String &pluginId = (id.empty())? libFileToId( filePath ) : id;
-            (*this)[pluginId] = Value( realpath_of(filePath.c_str()), lib );
+            (*this)[pluginId] = PluginRef( filePath.c_str(), lib, state );
           }
     };
 
@@ -192,8 +223,20 @@ class PluginBroker
       }
 
     void
-      registerPlugin( const StringRef *filePath )
-        { _pluginMap.insertPlugin( _ref_str(filePath) ); }
+      registerPlugin( const StringRef *filePath, bool isEnabled = true )
+        { _pluginMap.insertPlugin( _ref_str(filePath), (isEnabled)? State_enabled : State_disabled ); }
+
+
+    bool
+      setEnabled( const StringRef *pluginId, bool isEnabled = true )
+      {
+        Map::Iterator itr  = _pluginMap.find( _ref_str(pluginId) );
+        bool          isOk = (itr != _pluginMap.end());
+        if (isOk)
+          { itr->second.state = (isEnabled)? State_enabled : State_disabled; }
+        return isOk;
+      }
+    
 
     void
       scanPlugins( const StringRef *predSym )
@@ -238,7 +281,10 @@ class PluginBroker
       {
         StringRef id, filePath;
         for (Map::Iterator itr = _pluginMap.begin(); itr != _pluginMap.end(); ++itr)
-          { handler( &id.referTo( itr->first ), &filePath.referTo( itr->second.first ) ); }
+        {
+          PluginRef &ref   = itr->second;
+          handler( &id.referTo( itr->first ), &filePath.referTo( ref.filePath ), (int *)&ref.state );
+        }
       }
 
     static String
@@ -297,9 +343,19 @@ f_plugin_set_path( StringRef *path, StringRef *libPath, StringRef *chkSym )
 
 _dllExport_C
 void
-f_plugin_register( StringRef *filePath )
+f_plugin_register( StringRef *filePath, int *isEnabled )
 {
-  getBroker()->registerPlugin( filePath );
+  bool enabled = isEnabled == NULL || *isEnabled != 0; //< default: true!
+  getBroker()->registerPlugin( filePath, enabled );
+}
+
+
+_dllExport_C
+int
+f_plugin_set_enabled( StringRef *pluginId, int *isEnabled )
+{
+  bool enabled = isEnabled == NULL || *isEnabled != 0; //< default: true!
+  return getBroker()->setEnabled( pluginId, enabled );
 }
 
 

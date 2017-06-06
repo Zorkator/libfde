@@ -13,15 +13,16 @@
         implicit none
         private
 
-        public :: plugin_set_path, plugin_register, plugin_iterate
-        public :: plugin_filePath_to_id
+        public :: plugin_set_path, plugin_register, plugin_set_enabled
+        public :: plugin_iterate, plugin_filePath_to_id
         public :: plugin_sym, plugin_proc, plugin_call
         public :: plugin_try_sym, plugin_try_proc, plugin_try_call
 
         interface
-          subroutine PluginInfoHandler( id, fp )
+          subroutine PluginInfoHandler( id, fp, st )
             import StringRef_t
             type(StringRef_t) :: id, fp
+            integer           :: st
           end subroutine
       
           subroutine plugin_set_path_( p, l, c ) _cID(f_plugin_set_path)
@@ -31,10 +32,18 @@
             type(StringRef_t), intent(in) :: c !< check symbol
           end subroutine
 
-          subroutine plugin_register_( id ) _cID(f_plugin_register)
+          subroutine plugin_register_( id, ebl ) _cID(f_plugin_register)
             import StringRef_t
             type(StringRef_t), intent(in) :: id
+            integer                       :: ebl !< plugin enabled?
           end subroutine
+
+          function plugin_set_ebl_( id, ebl ) _cID(f_plugin_set_enabled)
+            import StringRef_t, c_int
+            type(StringRef_t), intent(in) :: id
+            integer                       :: ebl !< plugin enabled?
+            integer(kind=c_int)           :: plugin_set_ebl_
+          end function
 
           subroutine plugin_iterate_( op ) _cID(f_plugin_iterate)
             import c_funptr
@@ -106,10 +115,27 @@
           end subroutine
 
 !_PROC_EXPORT(plugin_register)
-          subroutine plugin_register( pluginFilePath )
-            character(len=*) :: pluginFilePath
-            call plugin_register_( str(pluginFilePath) )
+          subroutine plugin_register( pluginFilePath, enabled )
+            character(len=*)  :: pluginFilePath
+            logical, optional :: enabled
+            integer           :: enabled_
+            if (present(enabled)) then; enabled_ = merge(1, 0, enabled)
+                                  else; enabled_ = 1
+            endif
+            call plugin_register_( str(pluginFilePath), enabled_ )
           end subroutine
+
+!_PROC_EXPORT(plugin_set_enabled)
+          function plugin_set_enabled( pluginId, enabled ) result(res)
+            character(len=*)  :: pluginId
+            logical, optional :: enabled
+            logical           :: res
+            integer           :: enabled_
+            if (present(enabled)) then; enabled_ = merge(1, 0, enabled)
+                                  else; enabled_ = 1
+            endif
+            res = (plugin_set_ebl_( str(pluginId), enabled_ ) /= 0)
+          end function
 
 !_PROC_EXPORT(plugin_iterate)
           subroutine plugin_iterate( op )
