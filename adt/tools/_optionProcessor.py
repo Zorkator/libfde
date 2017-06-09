@@ -1,4 +1,5 @@
 
+from os import path
 
 ####################################
 class OptionProcessor(object):
@@ -10,6 +11,10 @@ class OptionProcessor(object):
   __opts__ = dict( debug     = 0
                  , verbosity = 1
                  )
+
+  @staticmethod
+  def realpath( p ):
+    return path.realpath( path.expanduser( p ) )
 
   @classmethod
   def _merge_class_attrib( _class, attrId ):

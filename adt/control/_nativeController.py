@@ -13,7 +13,7 @@ class NativeController(OptionProcessor):
     according to the native code capabilities.
 
   """
-  __conv__  = dict( lib    = os.path.abspath )
+  __conv__  = dict( lib    = OptionProcessor.realpath )
   __opts__  = dict( lib    = LookupError('missing library specification!')
                   , libEnv = 'ADTPATH'
                   )
