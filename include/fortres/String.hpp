@@ -27,6 +27,7 @@ namespace fortres
           { /* nothing to do here */ }
 
       template <typename TYPE>
+        explicit
         String( const TYPE &val )
         {
           std::ostringstream stream;

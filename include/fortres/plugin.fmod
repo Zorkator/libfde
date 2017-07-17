@@ -32,10 +32,11 @@
             type(StringRef_t), intent(in) :: c !< check symbol
           end subroutine
 
-          subroutine plugin_register_( id, ebl ) _cID(f_plugin_register)
+          subroutine plugin_register_( f, i, e ) _cID(f_plugin_register)
             import StringRef_t
-            type(StringRef_t), intent(in) :: id
-            integer                       :: ebl !< plugin enabled?
+            type(StringRef_t), intent(in) :: f !< plugin filePath
+            type(StringRef_t), intent(in) :: i !< plugin id
+            integer                       :: e !< plugin enabled?
           end subroutine
 
           function plugin_set_ebl_( id, ebl ) _cID(f_plugin_set_enabled)
@@ -115,14 +116,21 @@
           end subroutine
 
 !_PROC_EXPORT(plugin_register)
-          subroutine plugin_register( pluginFilePath, enabled )
-            character(len=*)  :: pluginFilePath
-            logical, optional :: enabled
-            integer           :: enabled_
+          subroutine plugin_register( filePath, id, enabled )
+            character(len=*)                   :: filePath
+            character(len=*), target, optional :: id
+            character(len=:),         pointer  :: id_
+            character(len=1), target           :: empty = ""
+            logical,                  optional :: enabled
+            integer                            :: enabled_
+
+            if (present(id))      then; id_ => id
+                                  else; id_ => empty
+            end if
             if (present(enabled)) then; enabled_ = merge(1, 0, enabled)
                                   else; enabled_ = 1
-            endif
-            call plugin_register_( str(pluginFilePath), enabled_ )
+            end if
+            call plugin_register_( str(filePath), str(id_), enabled_ )
           end subroutine
 
 !_PROC_EXPORT(plugin_set_enabled)
@@ -133,7 +141,7 @@
             integer           :: enabled_
             if (present(enabled)) then; enabled_ = merge(1, 0, enabled)
                                   else; enabled_ = 1
-            endif
+            end if
             res = (plugin_set_ebl_( str(pluginId), enabled_ ) /= 0)
           end function
 

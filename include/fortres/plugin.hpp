@@ -10,7 +10,7 @@ _dllExport_C
 void f_plugin_set_path( StringRef *path, StringRef *libPath, StringRef *chkSym );
 
 _dllExport_C
-void f_plugin_register( StringRef *pluginId, int *isEnabled );
+void f_plugin_register( StringRef *pluginId, StringRef *id, int *isEnabled );
 
 _dllExport_C
 int  f_plugin_set_enabled( StringRef *pluginId, int *isEnabled );

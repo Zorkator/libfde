@@ -213,10 +213,13 @@
 
         end interface
 
+        logical :: SIGINT_ocurred
+
         public :: try, throw, proc, c_null_ptr
         public :: push_cleanup, pop_cleanup, set_traceproc
         public :: set_synchronizer, get_context
         public :: format_exception, setup_standardExceptions
+        public :: interrupt_requested
 
         public :: StringRef_t, str, strBuf, len
 
@@ -282,9 +285,14 @@
 
 
 !_PROC_EXPORT(setup_standardExceptions)
-        subroutine setup_standardExceptions()
+        subroutine setup_standardExceptions( catch_SIGINT )
           _use_if_INTEL(ifport)
-          integer :: code
+          ! catch_SIGINT:
+          !   .false. => don't catch SIGINT
+          !   .true.  => notify caught SIGINT
+          !   missing => handle SIGINT by exception
+          logical, optional :: catch_SIGINT
+          integer           :: code_
 
 # if defined __INTEL_COMPILER
 #         define _signal     signalqq
@@ -304,48 +312,93 @@
 #         define _SIGINT      2
 #         define _SIGFPE      8
 # endif
-          code = _signal( _SIGABRT, handle_abort )
-          code = _signal( _SIGTERM, handle_term )
-          code = _signal( _SIGILL,  handle_ill )
-          code = _signal( _SIGSEGV, handle_segv )
-          code = _signal( _SIGINT,  handle_int )
-          code = _signal( _SIGFPE,  handle_fpe )
+          code_ = _signal( _SIGABRT, handle_abort )
+          code_ = _signal( _SIGTERM, handle_term )
+          code_ = _signal( _SIGILL,  handle_ill )
+          code_ = _signal( _SIGSEGV, handle_segv )
+          code_ = _signal( _SIGFPE,  handle_fpe )
+
+          SIGINT_ocurred = .false.
+          if (.not. present(catch_SIGINT)) then
+            code_ = _signal( _SIGINT, handle_int )
+          elseif (catch_SIGINT) then
+            code_ = _signal( _SIGINT, notify_int )
+          end if
         end subroutine
 
         integer*4 function handle_abort( signum )
+          !DIR$ ATTRIBUTES C :: handle_abort
           integer*2 :: signum
           handle_abort = 1
           call throw( AbortExecution, 'handle_abort' )
         end function
       
         integer*4 function handle_term( signum )
+          !DIR$ ATTRIBUTES C :: handle_term
           integer*2 :: signum
           handle_term = 1
           call throw( TerminateExecution, 'handle_term' )
         end function
       
         integer*4 function handle_ill( signum )
+          !DIR$ ATTRIBUTES C :: handle_ill
           integer*2 :: signum
           handle_ill = 1
           call throw( IllegalInstruction, 'handle_ill' )
         end function
       
         integer*4 function handle_segv( signum )
+          !DIR$ ATTRIBUTES C :: handle_segv
           integer*2 :: signum
           handle_segv = 1
           call throw( SegmentationFault, 'handle_segv' )
         end function
       
+        integer*4 function handle_fpe( signum )
+          !DIR$ ATTRIBUTES C :: handle_fpe
+          integer*2 :: signum
+          handle_fpe = 1
+          call throw( FloatingPointError, 'handle_fpe' )
+        end function
+
         integer*4 function handle_int( signum )
+          !DIR$ ATTRIBUTES C :: handle_int
           integer*2 :: signum
           handle_int = 1
           call throw( KeyboardInterrupt, 'handle_int' )
         end function
       
-        integer*4 function handle_fpe( signum )
+        integer*4 function notify_int( signum )
+          !DIR$ ATTRIBUTES C :: notify_int
           integer*2 :: signum
-          handle_fpe = 1
-          call throw( FloatingPointError, 'handle_fpe' )
+          notify_int = 1
+          ! Due to Windows special handling of SIGINT
+          !  (it uses another thread to deliver this signal [WTH!!?])
+          !  we can't handle it like the other signals.
+          ! So, we just set a flag which the main program can poll by
+          !   calling interrupt_requested() to detect and handle SIGINT.
+          SIGINT_ocurred = .true.
+        end function
+      
+
+!_PROC_EXPORT(interrupt_requested)
+        logical function interrupt_requested( code )
+          integer, optional :: code
+          integer           :: code_
+
+          if (present(code)) then; code_ = code
+                             else; code_ = KeyboardInterrupt
+          end if
+
+          interrupt_requested = SIGINT_ocurred
+          if (interrupt_requested) then
+            ! prevent race condition by clearing the flag
+            !   only if it was set!
+            SIGINT_ocurred = .false.
+            if (code_ /= 0) then
+              call throw( code_, 'handle_int' )
+            end if
+          end if
         end function
       end module
 

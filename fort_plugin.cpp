@@ -223,8 +223,11 @@ class PluginBroker
       }
 
     void
-      registerPlugin( const StringRef *filePath, bool isEnabled = true )
-        { _pluginMap.insertPlugin( _ref_str(filePath), (isEnabled)? State_enabled : State_disabled ); }
+      registerPlugin( const StringRef *filePath, const StringRef *id, bool isEnabled = true )
+      {
+        PluginState state = (isEnabled)? State_enabled : State_disabled;
+        _pluginMap.insertPlugin( _ref_str(filePath), _ref_str(id), NULL, state );
+      }
 
 
     bool
@@ -343,10 +346,10 @@ f_plugin_set_path( StringRef *path, StringRef *libPath, StringRef *chkSym )
 
 _dllExport_C
 void
-f_plugin_register( StringRef *filePath, int *isEnabled )
+f_plugin_register( StringRef *filePath, StringRef *id, int *isEnabled )
 {
   bool enabled = isEnabled == NULL || *isEnabled != 0; //< default: true!
-  getBroker()->registerPlugin( filePath, enabled );
+  getBroker()->registerPlugin( filePath, id, enabled );
 }
 
 
