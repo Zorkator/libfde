@@ -15,5 +15,4 @@ from ._verbose            import Verbose
 from ._commandProcessor   import CommandProcessor
 from ._simulator          import Simulator
 
-__all__.extend( (NativeController, ADTController, ExceptionRouter, Stateful, Hookable, Startable, Verbose, CommandProcessor, Simulator) )
-
+__all__.extend( 'NativeController ADTController ExceptionRouter Stateful Hookable Startable Verbose CommandProcessor Simulator'.split() )

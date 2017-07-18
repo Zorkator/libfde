@@ -18,6 +18,8 @@ from ctypes import *
 
 import adt
 from adt.core import *
+from adt.control import *
+from adt.tools import *
 #%%
 s = String('testinger')
 print("'{0}' has length {1}".format(s, len(s)))

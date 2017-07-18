@@ -14,7 +14,7 @@ from ._convert          import dict2obj
 from ._files            import sys_channel, openFile, makedirs
 from ._optionProcessor  import OptionProcessor
 
-__all__.extend( 'NullHandle, Wallet, NullGuard, LibLoader, core_loader, dict2obj, sys_channel, openFile, makedirs, OptionProcessor'.split() )
+__all__.extend( 'NullHandle Wallet NullGuard LibLoader core_loader dict2obj sys_channel openFile makedirs OptionProcessor'.split() )
 
 class debug(object):
   def __new__( _class ):
