@@ -5,51 +5,53 @@ Created on Mon Nov 03 19:53:28 2014
 @author: sjo
 """
 
-import sys
+from __future__ import print_function
 import os
+import sys
+import glob
+
+basePath = os.path.join( os.path.dirname(__file__), '..' )
+os.environ['LIBADT'] = glob.glob( basePath+'/lib/*/libadt*.so')[0]
+sys.path.insert(0, basePath)
+#%%
 from ctypes import *
 
-try:
-	os.chdir('C:\\Users\\sjo\\Documents\\development\\zappralot\\libadt\\vc2010\\exe')
-	sys.path.insert(0, 'C:\\Users\\sjo\\Documents\\development\\zappralot\\libadt')
-except:
-	pass
-
 import adt
-
-s = adt.String('testinger')
-print "'{0}' has length {1}".format(s, len(s))
-
-c = adt.Complex8(1,-2)
-i = adt.Item()
-i = adt.Item(1)
-i = adt.Item(1.5)
-i = adt.Item(complex(1,2))
-i = adt.Item('bla & text')
-print i.value
+from adt.core import *
+#%%
+s = String('testinger')
+print("'{0}' has length {1}".format(s, len(s)))
+#%%
+c = Complex8(1,-2)
+i = Item()
+i = Item(1)
+i = Item(1.5)
+i = Item(complex(1,2))
+i = Item('bla & text')
+print( i.value )
 i.value = 42
-print i.ftype.baseType
-print i.value
+print( i.ftype.baseType )
+print( i.value )
 i.value = s
-print i.value
+print( i.value )
 len(i.value)
+#%%
+s = String('bla1')
+s = String('bla2')
+s = String('bla3')
+s = String('bla4')
+s = String('bla5')
+#%%
 
-s = adt.String('bla1')
-s = adt.String('bla2')
-s = adt.String('bla3')
-s = adt.String('bla4')
-s = adt.String('bla5')
-
-
-l = adt.List()
-l.value = adt.List()
-
+l = List()
+l.value = List()
+#%%
 ptr = cast( id(s), POINTER(c_void_p) )
 i.value = ptr
-print i.value
-i.value = adt.Item()
+print( i.value )
+i.value = Item()
 i.value = cast( id(s), POINTER(c_void_p) )
 i.value = None
-i.value = adt.Ref()
-print i.value
+i.value = Ref()
+print( i.value )
 

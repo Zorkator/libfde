@@ -1,6 +1,12 @@
 
 from ctypes   import *
 from operator import mul as _mul
+import six
+
+try:
+  from functions import reduce
+except ImportError:
+  pass
 
 
 class MemoryRef(Structure):
@@ -8,7 +14,8 @@ class MemoryRef(Structure):
               ('len', c_size_t)]
 
   def __str__( self ):
-    return string_at( self.ptr, self.len )
+    if six.PY2: return string_at( self.ptr, self.len )
+    else      : return string_at( self.ptr, self.len ).decode('utf-8')
 
   def __nonzero__( self ):
     return self.len > 0 and bool(self.ptr)
@@ -31,7 +38,7 @@ def _mapType( typeId, ftype, ctype, *pyTypes ):
   for py in pyTypes + (ctype,):
     _typeMap_py2id[py] = typeId
     _typeMap_py2ct[py] = ctype
-  
+
 
 def mappedType( typeId, ftype, *pyTypes ):
   def _wrap( ctype ):
@@ -109,7 +116,7 @@ def ARRAY_t( base, shape ):
   cls = reduce( _mul, shp, base )
   cls._shape_    = shp
   cls._basetype_ = base
-  cls._rawtype_  = POINTER(base * (sizeof(cls) / sizeof(base)))
+  cls._rawtype_  = POINTER(base * (sizeof(cls) // sizeof(base)))
   cls.__repr__   = _array_repr
   cls.raw        = property(_array_raw)
   return cls

@@ -1,8 +1,8 @@
 
 from ctypes  import *
-from _object import Object, Compound
-from _item   import Item, ItemPtr
-from _ftypes import MemoryRef, mappedType, _mapType, POINTER_t
+from ._object import Object, Compound
+from ._item   import Item, ItemPtr
+from ._ftypes import MemoryRef, mappedType, _mapType, POINTER_t
 
 
 @mappedType( 'hashmap', 'type(HashMap_t)' )
@@ -36,9 +36,10 @@ class HashMap(Object):
       self[k] = v
 
 
-  def _getptr( self, getter, ident ):
+  def _getptr( self, getter, key ):
     ptr = ItemPtr(); bool(ptr) #< de-optimize Python (????), so next line works
-    getter( byref(ptr), byref(self), c_char_p(ident), c_int(len(ident)) )
+    key = key.encode('utf-8')
+    getter( byref(ptr), byref(self), c_char_p(key), c_int(len(key)) )
     return ptr
 
 
@@ -132,12 +133,12 @@ class HashMap(Object):
       self[k] = v
 
 
-  def pop( self, key, default = Object.__metaclass__ ):
+  def pop( self, key, default = Exception ):
     ptr = ItemPtr()
     self.pop_key_( byref(ptr), byref(self), c_char_p(key), c_int(len(key)) )
     try   : return ptr.contents.resolved
     except:
-      if default is Object.__metaclass__:
+      if default is Exception:
         raise KeyError(key)
       else:
         return default

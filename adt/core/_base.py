@@ -1,7 +1,12 @@
 
-import platform
 from ctypes  import Union, sizeof, Structure, c_int8
 from ..tools import core_loader
+import six
+
+try:
+  from functools import reduce
+except ImportError:
+  pass
 
 
 class _Meta(type(Union)):
@@ -12,7 +17,7 @@ class _Meta(type(Union)):
 
     def _mro( ident, default ):
       scopes = (members,) + tuple( b.__dict__ for b in bases )
-      return filter( None, (s.get( ident ) for s in scopes) ) + [default]
+      return list(filter( None, (s.get( ident ) for s in scopes) )) + [default]
 
     typeName = _mro( '__typename__', name )[0]
     method   = '{0}_{{0}}c_'.format(typeName.lower())
@@ -42,15 +47,14 @@ class _Meta(type(Union)):
     return super(_Meta, _class).__new__( _class, name, bases, members )
 
 
-
+@six.add_metaclass(_Meta)
 class Compound(Union):
-  __metaclass__ = _Meta
   __typeprocs__ = [] #< no procedures for Compound
   __abstract__  = [] #< no abstract bases
 
   @classmethod
   def __getattr__( _class, name ):
-    if name is '_needs_delete': #< if we end up here, slot _needs_delete has not been set!
+    if name == '_needs_delete': #< if we end up here, slot _needs_delete has not been set!
       return False
     if name in ('__members__', '__methods__'):
       return {}

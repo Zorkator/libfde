@@ -7,19 +7,14 @@ __all__         = ['debug']
 import logging
 logging.basicConfig( level = logging.ERROR )
 
-def _import( modId, what ):
-  _mod = __import__( modId, globals(), locals(), what, -1 )
-  for sym in what:
-    globals()[sym] = getattr( _mod, sym )
-  __all__.extend( what )
 
+from ._helper           import NullHandle, Wallet, NullGuard
+from ._libLoader        import LibLoader, core_loader
+from ._convert          import dict2obj
+from ._files            import sys_channel, openFile, makedirs
+from ._optionProcessor  import OptionProcessor
 
-_import( '_helper',          ['NullHandle', 'Wallet', 'NullGuard'] )
-_import( '_libLoader',       ['LibLoader', 'core_loader'] )
-_import( '_convert',         ['dict2obj'] )
-_import( '_files',           ['sys_channel', 'openFile', 'makedirs'] )
-_import( '_optionProcessor', ['OptionProcessor'] )
-
+__all__.extend( 'NullHandle, Wallet, NullGuard, LibLoader, core_loader, dict2obj, sys_channel, openFile, makedirs, OptionProcessor'.split() )
 
 class debug(object):
   def __new__( _class ):

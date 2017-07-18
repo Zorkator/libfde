@@ -1,9 +1,14 @@
 
-from _hashmap import HashMap
-from _ref     import Ref
-from _ftypes  import mappedType, _mapType, CALLBACK, POINTER_t
+from ._hashmap import HashMap
+from ._ref     import Ref
+from ._ftypes  import mappedType, _mapType, CALLBACK, POINTER_t
 from ..tools  import dict2obj
 from ctypes   import byref, c_char_p, c_int, POINTER
+
+try:
+  from functools import reduce
+except ImportError:
+  pass
 
 
 _cbITF_buffer = dict()
@@ -23,6 +28,7 @@ class Scope(HashMap):
   def setCallback( self, ident, cbFunc ):
     if type(type(cbFunc)) is not type(CALLBACK):
       _cbITF_buffer['{0}.{1}'.format(id(self), ident)] = func = CALLBACK(cbFunc or 0)
+    ident = ident.encode('utf-8')
     return self.set_callback_( byref(self), c_char_p(ident), func, c_int(len(ident)) )
 
 
@@ -54,7 +60,7 @@ class Scope(HashMap):
     keyOp = keyOp or (lambda k: [k])
     for p in map( keyOp, paths ):
       yield p, self[p] if p else None
-    
+
 
   def extractDomain( self, paths, keyOp=str.split ):
     def _put( d, k ): return d.setdefault( k, dict() )
@@ -68,7 +74,7 @@ class Scope(HashMap):
   def extractContext( self, paths, keyOp=str.split ):
     return dict2obj( self.extractDomain( paths, keyOp ) )
 
-  
+
   def asContext( self ):
     return dict2obj( self )
 

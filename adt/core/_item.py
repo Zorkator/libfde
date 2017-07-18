@@ -1,9 +1,9 @@
 
 from ctypes    import *
-from _typeinfo import TypedObject, TypeSpecsPtr
-from _ftypes   import mappedType, _mapType, MemoryRef, Complex8, Complex16, Complex32, VOID_Ptr, POINTER_t
-from _string   import String
-from _ref      import Ref
+from ._typeinfo import TypedObject, TypeSpecsPtr
+from ._ftypes   import mappedType, _mapType, MemoryRef, Complex8, Complex16, Complex32, VOID_Ptr, POINTER_t
+from ._string   import String
+from ._ref      import Ref
 
 
 @mappedType( 'item', 'type(Item_t)' )
@@ -16,7 +16,7 @@ class Item(TypedObject):
     if type(type(func)) is not type(_class.UserAssignment):
       _class.__onTypeMismatch = func = _class.UserAssignment(func or 0)
     _class.__getattr__('on_type_mismatch_')( func )
-  
+
 
   @TypedObject.value.getter
   def value( self ):
@@ -40,7 +40,7 @@ class Item(TypedObject):
     except ValueError: return tgt._type_() #< null-pointer access
     except           : return tgt
 
-  
+
   @resolved.setter
   def resolved( self, val ):
     tgt = self.typed
@@ -54,9 +54,9 @@ class Item(TypedObject):
 
   @classmethod
   def assign_void_( _class, *args ):
-    _class.delete_( *args )
+    _class.__getattr__('delete_')( *args )
 
-  
+
   def __init__( self, val = None ):
     super(Item, self).__init__()
     if val is not None:

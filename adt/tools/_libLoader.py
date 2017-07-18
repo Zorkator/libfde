@@ -22,7 +22,7 @@ class CDLL_t(_CDLL):
       return ident[-1]
     else:
       return super(CDLL_t, self).__getitem__( ident )
-  
+
 
 
 ######################################
@@ -97,7 +97,7 @@ class LibLoader(object):
 
   def _tryLoad( self, libPattern, searchPaths ):
     envPaths = _env[_PATH]
-    paths    = filter( _path.isdir, glob( _path.dirname(libPattern) ) ) + searchPaths
+    paths    = list(filter( _path.isdir, glob( _path.dirname(libPattern) ) )) + searchPaths
     paths.append( _env[_PATH] )
 
     _env[_PATH] = _pathDelim.join( paths )
@@ -107,7 +107,7 @@ class LibLoader(object):
       try   : self._hdl = CDLL_t( str(f) ); break #< break if load succeeded
       except: pass
     _env[_PATH] = envPaths
-    
+
     if self._hdl:
       raise self.Success
 
@@ -126,7 +126,7 @@ class LibLoader(object):
             break
     return libPattern
 
-    
+
   def __init__( self, **kwArgs ):
     self._opt = kwArgs
     self._log = logging.getLogger( type(self).__name__ )

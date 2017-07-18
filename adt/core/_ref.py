@@ -1,7 +1,7 @@
 
 from ctypes    import *
-from _typeinfo import TypedObject
-from _ftypes   import mappedType, _mapType, ARRAY_t, VOID_Ptr, POINTER_t
+from ._typeinfo import TypedObject
+from ._ftypes   import mappedType, _mapType, ARRAY_t, VOID_Ptr, POINTER_t
 
 
 @mappedType( 'ref', 'type(Ref_t)' )

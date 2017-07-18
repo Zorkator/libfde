@@ -4,21 +4,15 @@ __versioninfo__ = (0, 0, 2)
 __version__     = '.'.join( map( str, __versioninfo__ ) )
 __all__         = []
 
-def _import( modId, what ):
-  _mod = __import__( modId, globals(), locals(), what, -1 )
-  for sym in what:
-    globals()[sym] = getattr( _mod, sym )
-  __all__.extend( what )
+from ._ftypes      import Complex8, Complex16, Complex32, MemoryRef, CALLBACK
+from ._typeinfo    import TypeInfo
+from ._string      import String,  StringPtr
+from ._item        import Item,    ItemPtr
+from ._ref         import Ref,     RefPtr
+from ._list        import List,    ListPtr
+from ._hashmap     import HashMap, HashMapPtr
+from ._scope       import Scope,   ScopePtr
 
-
-_import( '_ftypes',    ['Complex8', 'Complex16', 'Complex32', 'MemoryRef', 'CALLBACK'] )
-_import( '_typeinfo',  ['TypeInfo'] )
-_import( '_string',    ['String',  'StringPtr'] )
-_import( '_item',      ['Item',    'ItemPtr'] )
-_import( '_ref',       ['Ref',     'RefPtr'] )
-_import( '_list',      ['List',    'ListPtr'] )
-_import( '_hashmap',   ['HashMap', 'HashMapPtr'] )
-_import( '_scope',     ['Scope',   'ScopePtr'] )
-
-del _import
+__all__.extend( 'Complex8 Complex16 Complex32 MemoryRef CALLBACK'.split() )
+__all__.extend( 'TypeInfo String StringPtr Item ItemPtr Ref RefPtr List ListPtr HashMap HashMapPtr Scope ScopePtr'.split() )
 

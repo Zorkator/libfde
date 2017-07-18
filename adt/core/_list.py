@@ -1,7 +1,7 @@
 
 from ctypes  import *
-from _object import Object, Compound
-from _ftypes import mappedType, _mapType, POINTER_t
+from ._object import Object, Compound
+from ._ftypes import mappedType, _mapType, POINTER_t
 
 
 @mappedType( 'list', 'type(List_t)' )

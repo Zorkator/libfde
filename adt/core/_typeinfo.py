@@ -1,8 +1,8 @@
 
 from ctypes  import *
-from _base   import Compound
-from _object import Object
-from _ftypes import MemoryRef, _typeMap_ft2ct
+from ._base   import Compound
+from ._object import Object
+from ._ftypes import MemoryRef, _typeMap_ft2ct
 
 
 class TypeSpecs(Structure):
@@ -25,7 +25,7 @@ class TypeInfo(Compound):
   def ctype( self ):
     """returns appropriate python ctype for this type"""
     cType = _typeMap_ft2ct[str(self.baseType)]
-    sliceLen = self.byteSize / sizeof(cType)
+    sliceLen = self.byteSize // sizeof(cType)
     if sliceLen > 1: return cType * sliceLen
     else           : return cType
 

@@ -1,7 +1,7 @@
 
 from ctypes  import *
-from _base   import Compound
-from _ftypes import _typeMap_py2id as _id_map, _typeMap_py2ct as _ct_map
+from ._base   import Compound
+from ._ftypes import _typeMap_py2id as _id_map, _typeMap_py2ct as _ct_map
 
 
 class Object(Compound):

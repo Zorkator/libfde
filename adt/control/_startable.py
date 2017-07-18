@@ -8,7 +8,7 @@ from ..tools import makedirs, NullGuard, debug
 class Startable(object):
 ########################################
   """Mixin class extending ADTController types.
-    
+
   Startable provides the interface for starting the main process loop of native code.
   The main loop is expected to be implemented as:
 
@@ -17,7 +17,7 @@ class Startable(object):
   This call signature can be changed by overriding the __start__ method.
   After the main loop's exit, an optional finalize routine might be triggered, e.g. for cleanup.
   If such routine exists, its signature is assumed as:
-  
+
   void finalize_c_( void )
 
   Again, this signature can be changed by overriding the __finalize__ method.
@@ -40,12 +40,12 @@ class Startable(object):
     if self._debug > 0: debug()
     childProc = Process( target=self._start, args=(kwArgs,) )
     childProc.start()
-    return childProc 
+    return childProc
 
 
   def _start( self, kwArgs=dict() ):
     self.start( **kwArgs )
-  
+
 
   def start( self, **kwArgs ):
     if self._debug > 0: debug()
@@ -56,7 +56,7 @@ class Startable(object):
     if workdir:
       makedirs( workdir )
       os.chdir( workdir )
-    
+
     # determine argument list ... if not given explicitly use predefined
     args = kwArgs.get('args') or self._args
     try   : args = args.strip and [args] #< if args is string wrap it by list
@@ -67,12 +67,12 @@ class Startable(object):
       code = self.finalize( code, **kwArgs )
     os.chdir( prevdir )
     return code
-    
+
 
   def __start__( self, *args, **kwArgs ):
     retCode = c_int32()
     self._args = ' '.join( map( str, args ) )
-    cmdStr     = self._args.format( **self.about )
+    cmdStr     = self._args.format( **self.about ).encode()
     self.handle[ self._startFunc ]( byref(retCode), c_char_p(cmdStr), c_size_t(len(cmdStr)) )
     return retCode.value
 
@@ -84,4 +84,4 @@ class Startable(object):
   def __finalize__( self, code, **kwArgs ):
     self.handle[ self._finalizeFunc, lambda: None ]()
     return code
-    
+
