@@ -118,9 +118,10 @@ class LibLoader(object):
       except ImportError:
         self._log.error( "library matching not available, need packages psutil and fnmatch!\n" )
       else:
+        prefix = ('*/', '')[_path.isabs(libPattern)]
         p = psutil.Process( _getpid() )
         for lib in p.memory_maps():
-          if fnmatch.fnmatch( lib.path, libPattern ):
+          if fnmatch.fnmatch( lib.path, _path.normpath(prefix + libPattern) ):
             libPattern = lib.path
             self._log.info( "matched already loaded library {0}".format(libPattern) )
             break
