@@ -1,17 +1,37 @@
 @echo off
+rem usage copylib.bat [--tgt] <dir> <src> ... [--tgt <dir> <src> ...]
 
-rem usage copylib.bat <tgtDir> <src> [...]
-set tgtDir=%1     && shift
-set srcPattern=%1 && shift
+echo %0 %*
 
-:loop
+set tgtDir=
+set srcPattern=
+
+rem initial --tgt is not mandatory
+if not "%1" == "--tgt" (
+  set tgtDir=%1 && shift
+  goto :srcLoop
+)
+
+:tgtLoop
+if not "%1" == "--tgt" ( goto :eof )
 shift
-if not "%1"=="" (
-  set srcPattern=%srcPattern% %1
-  goto :loop
+set tgtDir=%1
+shift
+
+set srcPattern=
+:srcLoop
+if not "%1" == "" (
+  if "%1" == "--tgt" ( goto :doCopy )
+  set srcPattern=%srcPattern% %1 && shift
+  goto :srcLoop
 )
 
+:doCopy
+echo ####
+echo #### copying %srcPattern%  to  %tgtDir%
 for %%f in (%srcPattern%) do (
-  copy %%f %tgtDir%
+  echo copy %%f %tgtDir%
+  copy /Y %%f %tgtDir%
 )
+goto :tgtLoop
 
