@@ -5,9 +5,7 @@ from os import path
 class OptionProcessor(object):
 ####################################
 
-  __conv__ = dict( debug     = int
-                 , verbosity = int
-                 )
+  __conv__ = dict()
   __opts__ = dict( debug     = 0
                  , verbosity = 1
                  )
@@ -43,7 +41,7 @@ class OptionProcessor(object):
     Use the class attribute set by optsMap to build up the option dictionary.
 
     """
-    conv, nop = _class._merge_class_attrib( convMap ), lambda x: x
+    conv = _class._merge_class_attrib( convMap )
 
     for optId, valDefault in _class.knownOptions( optsMap ).items():
       # pick value by priority: 1) dashed, 2) explicit, 3) default
@@ -51,7 +49,7 @@ class OptionProcessor(object):
       optVal = opts.pop( '--' + optId, None ) or optVal
 
       if isinstance( optVal, Exception ): raise optVal
-      else                              : yield optId, conv.get( optId, nop )( optVal )
+      else                              : yield optId, conv.get( optId, type(valDefault) )( optVal )
 
 
   def __init__( self, **kwArgs ):
