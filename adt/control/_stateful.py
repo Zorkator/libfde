@@ -44,3 +44,19 @@ class Stateful(object):
     pairs = zip( *self.state.iterDomain( keyList, self.scopeKeyOperator ) )
     return pairs and pairs[1] or []
 
+
+
+from functools import wraps
+
+######################################
+def cached_property( f ):
+######################################
+  @wraps(f)
+  def _wrapper( self ):
+    try  : return getattr( self._stock, '_p_' + f.func_name )
+    except AttributeError:
+      val = f( self )
+      setattr( self._stock, '_p_' + f.func_name, val )
+      return val
+  return property( _wrapper )
+
