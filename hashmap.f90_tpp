@@ -16,6 +16,7 @@ module adt_hashmap
 
   type, public :: HashMap_t
     private
+    type(HashMap_t),            pointer :: parent         => null()
     type(List_t), dimension(:), pointer :: indexVector    => null()
     integer                             :: items          =  0, resize_cnt = 0
     integer                             :: indexLimits(2) =  default_indexLimits
@@ -50,6 +51,7 @@ module adt_hashmap
   public :: delete
   public :: set, get, getPtr, getOrCreate, remove, unset, pop
   public :: setDefault, hasKey
+  public :: setParent, parent
   public :: index, next, set_next, key, value
   public :: hashmap_clear_cache, hashmap_get_stats
   public :: assign, assignment(=)
@@ -210,6 +212,21 @@ module adt_hashmap
       import HashMap_t
       type(HashMap_t)              :: self
       character(len=*), intent(in) :: key
+    end function
+  end interface
+
+  interface setParent
+    subroutine hashmap_set_parent_c( self, parent )
+      import HashMap_t
+      type(HashMap_t) :: self, parent
+    end subroutine
+  end interface
+
+  interface parent
+    function hashmap_parent_c( self ) result(res)
+      import HashMap_t
+      type(HashMap_t)          :: self
+      type(HashMap_t), pointer :: res
     end function
   end interface
 

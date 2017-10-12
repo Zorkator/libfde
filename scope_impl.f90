@@ -35,16 +35,16 @@ end module
 
 
 !_PROC_EXPORT(scope_get_subscope_seq_)
-  function scope_get_subscope_seq_( parent, id1, id2, id3, id4, id5, id6, id7, id8, id9 ) result(scope)
+  function scope_get_subscope_seq_( parent_, id1, id2, id3, id4, id5, id6, id7, id8, id9 ) result(scope)
     use impl_scope__
     use adt_scope
     implicit none
-    type(HashMap_t)            :: parent
+    type(HashMap_t)            :: parent_
     character(len=*)           :: id1
     character(len=*), optional :: id2, id3, id4, id5, id6, id7, id8, id9
     type(HashMap_t),   pointer :: scope
 
-    scope => get_subscope_( parent, id1 )
+    scope => get_subscope_( parent_, id1 )
 
 # define __getSubScope(arg) \
     if (.not. present(arg)) return ;\
@@ -71,6 +71,7 @@ end module
         allocate( scope );
         call initialize( scope )
         call assign( it, Item_of( ref_of( scope, bind = .true. ) ) )
+        call setParent( scope, parent_ )
       else
         if (dynamic_cast( scope, ref(it) )) continue;
       endif

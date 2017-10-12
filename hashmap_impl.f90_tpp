@@ -27,6 +27,7 @@ module impl_hashmap__
 # define HashMapIndex_t   HashMapIndex_t__impl__
 
   type, public :: HashMap_t
+    type(HashMap_t),            pointer :: parent         => null()
     type(List_t), dimension(:), pointer :: indexVector    => null()
     integer                             :: items          =  0, resize_cnt = 0
     integer                             :: indexLimits(2) = default_indexLimits
@@ -821,6 +822,26 @@ end module
     type(ListIndex_t)            :: bucket
 
     res = hashmap_locate_item_( self, key, bucket )
+  end function
+
+
+!_PROC_EXPORT(hashmap_set_parent_c)
+  subroutine hashmap_set_parent_c( self, parent )
+    use impl_hashmap__, only: HashMap_t
+    implicit none
+    type(HashMap_t)         :: self
+    type(HashMap_t), target :: parent
+    self%parent => parent
+  end subroutine
+
+
+!_PROC_EXPORT(hashmap_parent_c)
+  function hashmap_parent_c( self ) result(res)
+    use impl_hashmap__, only: HashMap_t
+    implicit none
+    type(HashMap_t)          :: self
+    type(HashMap_t), pointer :: res
+    res => self%parent
   end function
 
 
