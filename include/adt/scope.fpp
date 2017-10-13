@@ -271,8 +271,8 @@
 #   define __ill_val_ref(id) \
       "unable to take value reference of "//id
 
-#   define __type_mismatch_default(id) \
-      "type mismatch at setting default value "//id
+#   define __type_mismatch_what(what, id) \
+      "type mismatch at setting "//what//" "//id
 
 #   define __type_mismatch_routine(id) \
       id//" does not refer to routine"
@@ -311,7 +311,7 @@
 !                  default value.
 # define _refVal_default( scope, id, ptr, defaultVal ) \
     if (.not. dynamic_cast( ptr, setDefault( scope, id, Item_of(defaultVal) ) )) \
-      call throw( TypeError, __type_mismatch_default(id) )
+      call throw( TypeError, __type_mismatch_what('default value', id) )
 
 
 ! _refVar_check: reference linked data object if exists

@@ -1,7 +1,7 @@
 
 from ._hashmap import HashMap
 from ._ref     import Ref
-from ._ftypes  import mappedType, _mapType, CALLBACK, POINTER_t
+from ._ftypes  import mappedType, _mapType, CALLBACK, SLOT_t, POINTER_t, VOID_Ptr
 from ..tools  import dict2obj
 from ctypes   import byref, c_char_p, c_int, POINTER
 
@@ -24,12 +24,48 @@ class Scope(HashMap):
 
   ######################
 
+  def _mk_CALLBACK( self, ident, func ):
+    if type(type(func)) is not type(CALLBACK):
+      func = _cbITF_buffer.setdefault( id(func), CALLBACK(func or 0) )
+    return ident.encode('utf-8'), func
+
+
+  def _mk_EVENTSLOT( self, ident, func ):
+    ident = ident.encode('utf-8')
+    try:
+      SlotType = _cbITF_buffer[ident]
+      if type(type(func)) is not type(SlotType):
+        func = _cbITF_buffer.setdefault( id(func), SlotType(func or 0) )
+      return ident, func
+    except KeyError:
+      raise KeyError('undeclared event "%s"' % ident )
+
+
+  def declareEvent( self, ident, argType = type(None) ):
+    ident = ident.encode('utf-8')
+    _cbITF_buffer[ident] = SLOT_t(argType)
+    self.declare_event_( byref(self), c_char_p(ident), c_int(len(ident)) )
+
+
+  def connect( self, ident, slotFunc ):
+    ident, slotFunc = self._mk_EVENTSLOT( ident, slotFunc )
+    return self.connect_event_( byref(self), c_char_p(ident), slotFunc, c_int(len(ident)) )
+
+
+  def disconnect( self, ident, slotFunc = None ):
+    ident, slotFunc = self._mk_EVENTSLOT( ident, slotFunc )
+    return self.disconnect_event_( byref(self), c_char_p(ident), slotFunc, c_int(len(ident)) )
+
+
+  def emit( self, ident, cArg = None ):
+    ident  = ident.encode('utf-8')
+    argPtr = VOID_Ptr() if cArg is None else byref(cArg)
+    self.emit_event_( byref(self), c_char_p(ident), argPtr, c_int(len(ident)) )
+
 
   def setCallback( self, ident, cbFunc ):
-    if type(type(cbFunc)) is not type(CALLBACK):
-      _cbITF_buffer['{0}.{1}'.format(id(self), ident)] = func = CALLBACK(cbFunc or 0)
-    ident = ident.encode('utf-8')
-    return self.set_callback_( byref(self), c_char_p(ident), func, c_int(len(ident)) )
+    ident, cbFunc = self._mk_CALLBACK( ident, cbFunc )
+    return self.set_callback_( byref(self), c_char_p(ident), cbFunc, c_int(len(ident)) )
 
 
   def _assign_tree( self, other, keyOp=None ):

@@ -14,11 +14,17 @@ module adt_scope
   integer, parameter :: hook_not_set    =  0
   integer, parameter :: hook_called     =  1
 
+  integer, parameter :: event_undeclared = -1
+  integer, parameter :: event_not_set    =  0
+  integer, parameter :: event_connected  =  1
+
   type(HashMap_t), pointer :: processScope_
 
   public :: newScope, getScope, getItem, getRef, setProcedure, getProcedure
   public :: declareCallback, setCallback, tryCallback, invokeCallback
   public :: hook_disabled, hook_undeclared, hook_not_set, hook_called
+  public :: declareEvent, connect, disconnect, emit
+  public :: event_undeclared, event_not_set, event_connected
 
   interface newScope
     function scope_create_() result(scope)
@@ -77,6 +83,43 @@ module adt_scope
       logical, optional :: raise
       type(c_funptr)    :: res
     end function
+  end interface
+
+  interface declareEvent
+    subroutine scope_declare_event_c( scope, ident )
+      import HashMap_t
+      type(HashMap_t)       :: scope
+      character(len=*)      :: ident
+    end subroutine
+  end interface
+
+  interface connect
+    integer &
+    function scope_connect_event_c( self, ident, proc ) result(res)
+      import HashMap_t
+      type(HashMap_t)       :: self
+      character(len=*)      :: ident
+      procedure(), optional :: proc
+    end function
+  end interface
+
+  interface disconnect
+    integer &
+    function scope_disconnect_event_c( self, ident, proc ) result(res)
+      import HashMap_t
+      type(HashMap_t)       :: self
+      character(len=*)      :: ident
+      procedure(), optional :: proc
+    end function
+  end interface
+
+  interface emit
+    subroutine scope_emit_event_c( self, ident, arg )
+      import HashMap_t, c_ptr
+      type(HashMap_t)       :: self
+      character(len=*)      :: ident
+      type(c_ptr), optional :: arg
+    end subroutine
   end interface
 
   interface declareCallback
