@@ -266,6 +266,7 @@ end module
     integer             :: has_proto
     type(HashMap_t)     :: proto
 
+    self%parent      => null()
     self%indexVector => null()
     self%items       =  0
     self%resize_cnt  =  0
@@ -291,6 +292,7 @@ end module
     type(HashMap_t), intent(inout) :: self
     integer                        :: index_min, index_max
 
+    self%parent         => null()
     self%indexLimits(1) = max(1, index_min)
     self%indexLimits(2) = max(1, index_min, index_max)
     if (.not. is_valid(hashmap_nodeCache)) &
@@ -835,14 +837,24 @@ end module
   end subroutine
 
 
-!_PROC_EXPORT(hashmap_parent_c)
-  function hashmap_parent_c( self ) result(res)
+!_PROC_EXPORT(hashmap_parent)
+  function hashmap_parent( self ) result(res)
     use impl_hashmap__, only: HashMap_t
     implicit none
     type(HashMap_t)          :: self
     type(HashMap_t), pointer :: res
     res => self%parent
   end function
+
+
+!_PROC_EXPORT(hashmap_parent_c)
+  subroutine hashmap_parent_c( res, self )
+    use impl_hashmap__, only: HashMap_t
+    implicit none
+    type(HashMap_t), pointer :: res
+    type(HashMap_t)          :: self
+    res => self%parent
+  end subroutine
 
 
 !_PROC_EXPORT(hashmap_index)

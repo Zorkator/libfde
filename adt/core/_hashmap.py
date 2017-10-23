@@ -29,6 +29,13 @@ class HashMap(Object):
 
   ######################
 
+  @property
+  def parent( self ):
+    ptr = POINTER_t(type(self))()
+    self.parent_( byref(ptr), byref(self) )
+    if ptr: return ptr.contents
+    else  : return None
+
 
   def __init__( self, *args, **kwArgs ):
     super(HashMap, self).__init__()

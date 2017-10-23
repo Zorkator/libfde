@@ -223,7 +223,7 @@ module adt_hashmap
   end interface
 
   interface parent
-    function hashmap_parent_c( self ) result(res)
+    function hashmap_parent( self ) result(res)
       import HashMap_t
       type(HashMap_t)          :: self
       type(HashMap_t), pointer :: res
