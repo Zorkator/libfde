@@ -37,6 +37,19 @@ class HashMap(Object):
     else  : return None
 
 
+  @classmethod
+  def _walk( _class, scope, level = 1 ):
+    keys  = sorted( scope.keys() )
+    width = max( map( len, keys ) or [0] )
+    for k in keys:
+      v = scope[k]
+      yield (level, width, k, v)
+      try:
+        for _ in _class._walk( v, level + 1 ):
+          yield _
+      except: pass
+
+
   def __init__( self, *args, **kwArgs ):
     super(HashMap, self).__init__()
     for k, v in dict( *args, **kwArgs ).items():
@@ -50,8 +63,21 @@ class HashMap(Object):
     return ptr
 
 
+  def _format( self, level = 1, indent = '\t' ):
+    for lvl, keyWdth, key, val in self._walk( self, level ):
+      yield '%s%-*s : %s' % (indent * lvl, keyWdth, key, repr(val))
+
+
   def __len__( self ):
     return self.len_( byref(self) )
+
+
+  def __repr__( self ):
+    return "%s %s [%d]" % (type(self).__name__, hex(id(self)), len(self))
+
+
+  def __str__( self ):
+    return '\n'.join( self._format() )
 
 
   def clear( self ):

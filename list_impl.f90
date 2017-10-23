@@ -275,8 +275,8 @@ end module
   end subroutine
 
   
-!_PROC_EXPORT(list_length_c)
-  function list_length_c( self ) result(res)
+!_PROC_EXPORT(list_len_c)
+  function list_len_c( self ) result(res)
     use impl_list__; implicit none
     type(List_t),     target  :: self
     integer(kind=4)           :: res

@@ -73,7 +73,7 @@ module adt_list
   end interface
 
   interface len
-    function list_length_c( self ) result(res)
+    function list_len_c( self ) result(res)
       import List_t
       type(List_t)    :: self
       integer(kind=4) :: res

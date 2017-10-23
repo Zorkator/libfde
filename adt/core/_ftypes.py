@@ -126,8 +126,9 @@ def POINTER_t( tgtType ):
   T.__repr__ = _ptr_repr
   return T
 
-def SLOT_t( argType = type(None) ):
-  T = CFUNCTYPE(None) if argType is type(None) else CFUNCTYPE(None, POINTER(argType))
+def CALLBACK_t( argType = None ):
+  if argType is None: T = CFUNCTYPE(None)
+  else              : T = CFUNCTYPE(None, POINTER(argType))
   T.__repr__ = _func_repr
   return T
 

@@ -1,7 +1,7 @@
 
 from ._hashmap import HashMap
 from ._ref     import Ref
-from ._ftypes  import mappedType, _mapType, CALLBACK, SLOT_t, POINTER_t, VOID_Ptr
+from ._ftypes  import mappedType, _mapType, CALLBACK, CALLBACK_t, POINTER_t, VOID_Ptr
 from ..tools  import dict2obj
 from ctypes   import byref, c_char_p, c_int, POINTER
 
@@ -10,8 +10,6 @@ try:
 except ImportError:
   pass
 
-
-_cbITF_buffer = dict()
 
 @mappedType( 'hashmap', 'type(HashMap_t)' )
 class Scope(HashMap):
@@ -24,48 +22,46 @@ class Scope(HashMap):
 
   ######################
 
-  def _mk_CALLBACK( self, ident, func ):
-    if type(type(func)) is not type(CALLBACK):
-      func = _cbITF_buffer.setdefault( id(func), CALLBACK(func or 0) )
-    return ident.encode('utf-8'), func
+  def declareCallback( self, ident, argType = None ):
+    ident = ident.encode()
+    self.declare_callback_( byref(self), c_char_p(ident), c_int(len(ident)) )
+    self[ident].pyData['itf'] = CALLBACK_t(argType)
 
 
-  def _mk_EVENTSLOT( self, ident, func ):
-    ident = ident.encode('utf-8')
-    try:
-      SlotType = _cbITF_buffer[ident]
-      if type(type(func)) is not type(SlotType):
-        func = _cbITF_buffer.setdefault( id(func), SlotType(func or 0) )
-      return ident, func
-    except KeyError:
-      raise KeyError('undeclared event "%s"' % ident )
+  def typifyCallback( self, ident, argType ):
+    ident = ident.encode()
+    self[ident].pyData['itf'] = CALLBACK_t(argType)
 
 
-  def declareEvent( self, ident, argType = type(None) ):
-    ident = ident.encode('utf-8')
-    _cbITF_buffer[ident] = SLOT_t(argType)
-    self.declare_event_( byref(self), c_char_p(ident), c_int(len(ident)) )
+  def _mk_CALLBACK( self, ident, func, remove = False ):
+    ident = ident.encode()
+    cb    = self[ident].pyData
+    ITF   = cb.setdefault( 'itf', CALLBACK_t() )
+    if not func:
+      func = ITF(0)
+    elif type(type(func)) is not type(ITF):
+      func = cb.setdefault( id(func), ITF(func) )
+      remove and cb.pop( id(func) )
+    return ident, func
 
 
-  def connect( self, ident, slotFunc ):
-    ident, slotFunc = self._mk_EVENTSLOT( ident, slotFunc )
-    return self.connect_event_( byref(self), c_char_p(ident), slotFunc, c_int(len(ident)) )
+  def connectCallback( self, ident, func ):
+    ident, func = self._mk_CALLBACK( ident, func )
+    return self.connect_callback_( byref(self), c_char_p(ident), func, c_int(len(ident)) )
+  #
+  # compatibility
+  setCallback = connectCallback
 
 
-  def disconnect( self, ident, slotFunc = None ):
-    ident, slotFunc = self._mk_EVENTSLOT( ident, slotFunc )
-    return self.disconnect_event_( byref(self), c_char_p(ident), slotFunc, c_int(len(ident)) )
+  def disconnectCallback( self, ident, func = None ):
+    ident, func = self._mk_CALLBACK( ident, func, remove=True )
+    return self.disconnect_callback_( byref(self), c_char_p(ident), func, c_int(len(ident)) )
 
 
-  def emit( self, ident, cArg = None ):
-    ident  = ident.encode('utf-8')
-    argPtr = VOID_Ptr() if cArg is None else byref(cArg)
-    self.emit_event_( byref(self), c_char_p(ident), argPtr, c_int(len(ident)) )
-
-
-  def setCallback( self, ident, cbFunc ):
-    ident, cbFunc = self._mk_CALLBACK( ident, cbFunc )
-    return self.set_callback_( byref(self), c_char_p(ident), cbFunc, c_int(len(ident)) )
+  def invokeCallback( self, ident, arg = None ):
+    ident = ident.encode()
+    argPtr = VOID_Ptr() if arg is None else byref(arg)
+    self.invoke_callback_( byref(self), c_char_p(ident), argPtr, c_int(len(ident)) )
 
 
   def _assign_tree( self, other, keyOp=None ):
@@ -135,33 +131,6 @@ class Scope(HashMap):
     _class.__getattr__('get_processscope_')( byref(ptr) )
     # resolve scope nesting of given path ...
     return reduce( _class.__getitem__, path, ptr.contents )
-
-
-  @classmethod
-  def _walk( _class, scope, level = 1 ):
-    keys  = sorted( scope.keys() )
-    width = max( map( len, keys ) or [0] )
-    for k in keys:
-      v = scope[k]
-      yield (level, width, k, v)
-      try:
-        for _ in _class._walk( v, level + 1 ):
-          yield _
-      except: pass
-
-
-  def _format( self, level = 1, indent = '\t' ):
-    for lvl, keyWdth, key, val in self._walk( self, level ):
-      yield '%s%-*s : %s' % (indent * lvl, keyWdth, key, repr(val))
-
-
-  def __repr__( self ):
-    return "%s %s [%d]" % (type(self).__name__, hex(id(self)), len(self))
-
-
-  def __str__( self ):
-    return '\n'.join( self._format() )
-
 
 
 

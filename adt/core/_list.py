@@ -9,9 +9,23 @@ class List(Object):
 
   class Index(Compound):
     __typename__ = 'ListIndex'
-    pass
 
-  pass
+    def __nonzero__( self ):
+      return self.is_valid_( byref(self) ) != 0
+
+  ######################
+
+  def __len__( self ):
+    return self.len_( byref(self) )
+
+
+  def __repr__( self ):
+    return "%s %s [%d]" % (type(self).__name__, hex(id(self)), len(self))
+
+
+  def clear( self ):
+    self.clear_( byref(self) )
+
 
 
 ListPtr = POINTER_t(List)

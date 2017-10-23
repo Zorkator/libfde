@@ -14,14 +14,20 @@ module impl_scope__
   use adt_exception
   use adt_containertypes
 
-  interface
-    function scope_get_eventList_( self, ident ) result(res)
-      import HashMap_t, List_t
-      type(HashMap_t)       :: self
-      character(len=*)      :: ident
-      type(List_t), pointer :: res
-    end function
-  end interface
+  contains
+
+  function get_callbackList_( self, ident ) result(res)
+    implicit none
+    type(HashMap_t)       :: self
+    character(len=*)      :: ident
+    type(List_t), pointer :: res
+    type(Ref_t),  pointer :: ref_
+
+    res => null()
+    if (dynamic_cast( ref_, getPtr( self, ident ) )) then
+      if (dynamic_cast( res, ref_ )) continue
+    end if
+  end function
 end module
 
 
@@ -89,132 +95,7 @@ end module
         end if
       endif
     end function
-
   end function
-
-
-!_PROC_EXPORT(scope_declare_event_c)
-  subroutine scope_declare_event_c( self, ident )
-    use impl_scope__
-    implicit none
-    type(HashMap_t)       :: self
-    character(len=*)      :: ident
-    type(List_t), pointer :: eventList
-    type(Item_t), pointer :: it
-    type(Ref_t),  pointer :: ref_
-
-    if (getOrCreate( it, self, ident )) then
-      allocate( eventList )
-      call initialize( eventList )
-      call assign( it, Item_of( ref_of( eventList, bind = .true. ) ) )
-    else
-      if (dynamic_cast( ref_, it )) then
-        if (dynamic_cast( eventList, ref_ )) then
-          call clear( eventList )
-          return
-        end if
-      end if
-      call throw( TypeError, __type_mismatch_what("event list", ident) )
-    end if
-  end subroutine
-
-
-  function scope_get_eventList_( self, ident ) result(res)
-    use impl_scope__
-    implicit none
-    type(HashMap_t)       :: self
-    character(len=*)      :: ident
-    type(List_t), pointer :: res
-    type(Ref_t),  pointer :: ref_
-
-    res => null()
-    if (dynamic_cast( ref_, getPtr( self, ident ) )) then
-      if (dynamic_cast( res, ref_ )) continue
-    end if
-  end function
-
-
-!_PROC_EXPORT(scope_connect_event_c)
-  integer &
-  function scope_connect_event_c( self, ident, proc_ ) result(code)
-    use impl_scope__
-    implicit none
-    type(HashMap_t)       :: self
-    character(len=*)      :: ident
-    procedure(), optional :: proc_
-    procedure(), pointer  :: procPtr
-    type(List_t), pointer :: eventList
-
-    code      = event_undeclared
-    eventList => scope_get_eventList_( self, ident )
-    if (associated( eventList )) then
-      code    = event_not_set
-      procPtr => proc_
-      if (associated( procPtr )) then
-        call append( eventList, new_ListNode_of( ref_from_Callback(procPtr) ) )
-        code = event_connected
-      end if
-    end if
-  end function
-
-
-!_PROC_EXPORT(scope_disconnect_event_c)
-  integer &
-  function scope_disconnect_event_c( self, ident, proc_ ) result(res)
-    use impl_scope__
-    implicit none
-    type(HashMap_t)       :: self
-    character(len=*)      :: ident
-    procedure(), optional :: proc_
-    procedure(), pointer  :: procPtr, ptrSlot
-    type(List_t), pointer :: eventList
-    type(ListIndex_t)     :: idx, delIdx
-
-    res       =  -1
-    eventList => scope_get_eventList_( self, ident )
-    if (associated( eventList )) then
-      procPtr => proc_
-      if (associated( procPtr )) then
-        idx = index( eventList )
-        do while (is_valid(idx))
-          ptrSlot => Callback_from_ref( ref(idx) )
-          if (associated( ptrSlot, procPtr )) then
-            delIdx = index( idx, 0 )
-            call next( idx )
-            call remove( delIdx )
-          else
-            call next( idx )
-          end if
-        end do
-      else
-        call clear( eventList )
-      end if
-      res = len( eventList )
-    end if
-  end function
-
-
-!_PROC_EXPORT(scope_emit_event_c)
-  subroutine scope_emit_event_c( self, ident, arg )
-    use impl_scope__
-    implicit none
-    type(HashMap_t)       :: self
-    character(len=*)      :: ident
-    type(c_ptr), optional :: arg
-    procedure(), pointer  :: slotPtr
-    type(List_t), pointer :: eventList
-    type(ListIndex_t)     :: idx
-
-    eventList => scope_get_eventList_( self, ident )
-    if (associated( eventList )) then
-      idx = index( eventList )
-      do while (is_valid(idx))
-        slotPtr => Callback_from_ref( ref(idx) )
-        call slotPtr( arg )
-        call next(idx)
-      end do
-    end if
-  end subroutine
 
 
 !_PROC_EXPORT(scope_declare_callback_c)
@@ -223,76 +104,128 @@ end module
     implicit none
     type(HashMap_t)       :: self
     character(len=*)      :: ident
-    type(Item_t), pointer :: cbItem
-    procedure(),  pointer :: cbPtr
-    
-    cbItem => get( self, ident )
-    cbPtr  => Callback_from_ref(ref(cbItem))
-    if (.not. associated(cbPtr)) then
-      cbItem = ref_from_Callback(cbPtr)
+    type(List_t), pointer :: cbList
+    type(Item_t), pointer :: it
+    type(Ref_t),  pointer :: ref_
+
+    if (getOrCreate( it, self, ident )) then
+      allocate( cbList )
+      call initialize( cbList )
+      call assign( it, Item_of( ref_of( cbList, bind = .true. ) ) )
+    else
+      if (dynamic_cast( ref_, it )) then
+        if (dynamic_cast( cbList, ref_ )) then
+          call clear( cbList )
+          return
+        end if
+      end if
+      call throw( TypeError, __type_mismatch_what("event list", ident) )
     end if
   end subroutine
 
 
-!_PROC_EXPORT(scope_set_callback_c)
+!_PROC_EXPORT(scope_connect_callback_c)
   integer &
-  function scope_set_callback_c( self, ident, proc_ ) result(res)
+  function scope_connect_callback_c( self, ident, proc_ ) result(res)
+    use impl_scope__
+    implicit none
+    type(HashMap_t)        :: self
+    character(len=*)       :: ident
+    procedure(),  optional :: proc_
+    procedure(),  pointer  :: procPtr
+    type(List_t), pointer  :: cbList
+
+    res    = hook_undeclared
+    cbList => get_callbackList_( self, ident )
+    if (associated( cbList )) then
+      res     = hook_not_set
+      procPtr => proc_
+      if (associated( procPtr )) then
+        call append( cbList, new_ListNode_of( ref_from_Callback(procPtr) ) )
+        res = hook_set
+      end if
+    end if
+  end function
+
+
+!_PROC_EXPORT(scope_disconnect_callback_c)
+  integer &
+  function scope_disconnect_callback_c( self, ident, proc_ ) result(res)
     use impl_scope__
     implicit none
     type(HashMap_t)       :: self
     character(len=*)      :: ident
     procedure(), optional :: proc_
-    procedure(), pointer  :: procPtr
+    procedure(), pointer  :: procPtr, cbf
+    type(List_t), pointer :: cbList
+    type(ListIndex_t)     :: idx, delIdx
 
-    res     = 0
-    procPtr => proc_
-    if (hasKey( self, ident ) .or. .not. associated(procPtr)) then
-      call set( self, ident, Item_of(ref_from_Callback(procPtr)) )
-      res = 1
+    res    =  hook_undeclared
+    cbList => get_callbackList_( self, ident )
+    if (associated( cbList )) then
+      procPtr => proc_
+      if (associated( procPtr )) then
+        idx = index( cbList )
+        do while (is_valid(idx))
+          cbf => Callback_from_ref( ref(idx) )
+          if (associated( cbf, procPtr )) then
+            delIdx = index( idx, 0 )
+            call next( idx )
+            call remove( delIdx )
+          else
+            call next( idx )
+          end if
+        end do
+      else
+        call clear( cbList )
+      end if
+      res = len( cbList )
     end if
   end function
 
 
 !_PROC_EXPORT(scope_try_callback_c)
   integer &
-  function scope_try_callback_c( self, ident, argScope ) result(code)
+  function scope_try_callback_c( self, ident, arg ) result(res)
     ! ident : ident string of hook to call
-    ! code  : hook_undeclared | hook_not_set | hook_called
+    ! res   : hook_undeclared | hook_not_set | hook_called
     use impl_scope__
     implicit none
     type(HashMap_t)           :: self
     character(len=*)          :: ident
-    type(HashMap_t), optional :: argScope
-    procedure(),      pointer :: cb
-    type(Item_t),     pointer :: hookItem
+    type(c_ptr),     optional :: arg
+    type(List_t),    pointer  :: cbList
+    procedure(),     pointer  :: cbf
+    type(ListIndex_t)         :: idx
 
-    code     = hook_undeclared
-    hookItem => getPtr( self, ident )
-    if (associated( hookItem )) then
-      code = hook_not_set
-      cb   => Callback_from_ref(ref(hookItem))
-      if (associated( cb )) then
-        if (present(argScope)) &
-          call set( argScope, '__hook__', Item_of(ident) )
-        call cb()
-        if (present(argScope)) &
-          call remove( argScope, '__hook__' )
-        code = hook_called
+    res    = hook_undeclared
+    cbList => get_callbackList_( self, ident )
+    if (associated( cbList )) then
+      if (len(cbList) > 0) then
+        idx = index( cbList )
+        do while (is_valid(idx))
+          cbf => Callback_from_ref( ref(idx) )
+          call cbf( arg )
+          call next(idx)
+        end do
+        res = hook_called
+      else
+        res = hook_not_set
       end if
     end if
   end function
 
 
 !_PROC_EXPORT(scope_invoke_callback_c)
-  subroutine scope_invoke_callback_c( self, ident, argScope )
+  subroutine scope_invoke_callback_c( self, ident, arg )
     ! ident : ident string of hook to call
     use impl_scope__
     implicit none
-    type(HashMap_t)           :: self
-    character(len=*)          :: ident
-    type(HashMap_t), optional :: argScope
-    integer*4                 :: code
-    code = tryCallback( self, ident, argScope )
+    type(HashMap_t)       :: self
+    character(len=*)      :: ident
+    type(c_ptr), optional :: arg
+    integer*4             :: res
+    res = tryCallback( self, ident, arg )
   end subroutine
 
 
