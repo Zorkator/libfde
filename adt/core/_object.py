@@ -6,7 +6,8 @@ from ._ftypes import _typeMap_py2id as _id_map, _typeMap_py2ct as _ct_map
 
 class Object(Compound):
   __typeprocs__ = [] #< no native methods for object
-  __slots__     = ['_needs_delete']
+  __slots__     = ['_needs_delete', '_py_data']
+  __py_cache__  = dict()
 
   @property
   def value( self ):
@@ -18,6 +19,13 @@ class Object(Compound):
     _ctyp = _ct_map.lookup( type(val) )
     _cval = val if isinstance( val, _ctyp ) else _ctyp(val)
     _call( byref(self), byref(_cval) )
+
+  @property
+  def pyData( self ):
+    try   : return self._py_data
+    except:
+      self._py_data = Object.__py_cache__.setdefault( addressof(self), dict() )
+      return self._py_data
 
 
   def _lookup_method( self, name, _type ):
@@ -44,9 +52,10 @@ class Object(Compound):
 
   def __del__( self ):
     if self._needs_delete:
-      self.delete_( byref(self) )
+      self.delete()
 
 
   def delete( self ):
+    Object.__py_cache__.pop( addressof(self), None )
     self.delete_( byref(self) )
 
