@@ -90,8 +90,11 @@ class Scope(HashMap):
 
   def iterDomain( self, paths, keyOp=str.split ):
     keyOp = keyOp or (lambda k: [k])
-    for p in map( keyOp, paths ):
-      yield p, self[p] if p else None
+    try:
+      for p in map( keyOp, paths ):
+        yield p, self[p] if p else None
+    except (TypeError, KeyError, AttributeError) as e:
+      raise LookupError( "invalid path %s" % p )
 
 
   def extractDomain( self, paths, keyOp=str.split ):
