@@ -35,7 +35,7 @@ class Scope(HashMap):
 
   def _mk_CALLBACK( self, ident, func, remove = False ):
     ident = ident.encode()
-    cb    = self[ident].pyData
+    cb    = self.getItem(ident).pyData
     ITF   = cb.setdefault( 'itf', CALLBACK_t() )
     if not func:
       func = ITF(0)
