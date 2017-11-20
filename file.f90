@@ -1,3 +1,4 @@
+
 #include "adt/itfUtil.fpp"
 
 #define _optArg(var, arg, default)       \
@@ -12,11 +13,13 @@
 
 module adt_file
   use adt_exception
+  implicit none
 
   contains
 
 !_PROC_EXPORT(open_)
   subroutine open_( chnl, file, form, status, iostat, descr )
+    use adt_string
     integer                                         :: chnl
     character(len=*),                   intent(in)  :: file
     character(len=*), optional, target, intent(in)  :: form, status
@@ -35,7 +38,12 @@ module adt_file
     _optArgPtr(status_, status, status_std)
 
     close( chnl )
-    open( chnl, file=file, form=form_, status=status_, iostat=iostat_, err=10 )
+    if (lower(status_) == 'scratch') then
+      open( chnl,            form=form_, status=status_, iostat=iostat_, err=10 )
+    else
+      open( chnl, file=file, form=form_, status=status_, iostat=iostat_, err=10 )
+    end if
+
  10 if  (present(iostat)) then
       ! user wants iostat ...
       iostat = iostat_
