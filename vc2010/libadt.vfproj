@@ -127,6 +127,7 @@
 		<File RelativePath="..\convert.f90"/>
 		<File RelativePath="..\crc.f90"/>
 		<File RelativePath="..\crc_impl.f90"/>
+		<File RelativePath="..\file.f90"/>
 		<File RelativePath="..\fortres_modules.f90"/>
 		<File RelativePath="..\hashmap.f90"/>
 		<File RelativePath="..\hashmap_impl.f90"/>
