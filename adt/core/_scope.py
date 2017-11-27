@@ -3,7 +3,7 @@ from ._hashmap import HashMap
 from ._ref     import Ref
 from ._ftypes  import mappedType, _mapType, CALLBACK, CALLBACK_t, POINTER_t, VOID_Ptr
 from ..tools  import dict2obj
-from ctypes   import byref, c_char_p, c_int, POINTER
+from ctypes   import byref, c_char_p, c_int, POINTER, sizeof, Array
 
 try:
   from functools import reduce
@@ -116,7 +116,11 @@ class Scope(HashMap):
 
   def __getitem__( self, ident ):
     if isinstance( ident, (tuple, list) ):
-      return reduce( lambda d,k: d[k], ident, self )
+      base = reduce( lambda d,k: d[k], ident[:-1], self )
+      if type(type(base)) is type(Array): #< try on Scopes is expensive, so check for ctypes-Array!
+        return base._type_.from_buffer( base, ident[-1] * sizeof(base._type_) )
+      else:
+        return base[ident[-1]]
     else:
       return super(Scope, self).__getitem__( ident )
 

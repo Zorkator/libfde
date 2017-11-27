@@ -133,12 +133,11 @@ def CALLBACK_t( argType = None ):
   return T
 
 VOID_Ptr = POINTER_t(c_void_p)
-CALLBACK = CFUNCTYPE(None)
+CALLBACK = CALLBACK_t()
 SHORT_ID = c_char * 10      #< define this type for gfortran workaround
 
 # Override representation of pointer types
 # ctypes doesn't like deriving those classes.
-CALLBACK.__repr__ = _func_repr
 SHORT_ID.__repr__ = lambda self: "'%s'" % self[:]
 
 

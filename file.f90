@@ -100,6 +100,7 @@ module adt_file
     integer                                         :: iostat_
 
     call open_( unit, file, form, status, action, iostat_, descr )
+    if (present(iostat)) iostat = iostat_
     if (iostat_ /= 0) then; return 1
                       else; return
     end if

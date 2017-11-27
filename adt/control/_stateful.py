@@ -40,9 +40,11 @@ class Stateful(object):
     return True
 
 
-  def getStateData( self, keyList ):
-    pairs = zip( *self.state.iterDomain( keyList, self.scopeKeyOperator ) )
-    return pairs and pairs[1] or []
+  def getStateData( self, keyList = [] ):
+    if keyList:
+      pairs = zip( *self.state.iterDomain( keyList, self.scopeKeyOperator ) )
+      self._stock._stateData = pairs and pairs[1] or []
+    return getattr( self._stock, '_stateData', [] )
 
 
 
