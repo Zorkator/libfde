@@ -3,6 +3,7 @@ from ctypes  import *
 from ._object import Object, Compound
 from ._item   import Item, ItemPtr
 from ._ftypes import MemoryRef, mappedType, _mapType, POINTER_t
+from ..tools  import auto_raise
 
 
 @mappedType( 'hashmap', 'type(HashMap_t)' )
@@ -87,7 +88,7 @@ class HashMap(Object):
   def getItem( self, ident, default = None ):
     ptr = self._getptr( self.get_ptr_, ident )
     if ptr: return ptr.contents
-    else  : return default
+    return auto_raise( default, ident )
 
 
   def get( self, ident, default = None ):
@@ -166,15 +167,11 @@ class HashMap(Object):
       self[k] = v
 
 
-  def pop( self, key, default = Exception ):
+  def pop( self, key, default = KeyError ):
     ptr = ItemPtr()
     self.pop_key_( byref(ptr), byref(self), c_char_p(key), c_int(len(key)) )
     try   : return ptr.contents.resolved
-    except:
-      if default is Exception:
-        raise KeyError(key)
-      else:
-        return default
+    except: return auto_raise( default, key )
 
 
 

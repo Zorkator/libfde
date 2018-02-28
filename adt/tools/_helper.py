@@ -31,3 +31,9 @@ class NullGuard(object):
   def __exit__( self, *args ):
     return 
 
+
+def auto_raise( obj, what = None ):
+  if isinstance( obj, type ) and issubclass( obj, Exception ): raise obj(what)
+  if isinstance( obj, Exception )                            : raise obj
+  return obj
+

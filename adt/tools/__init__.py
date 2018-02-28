@@ -8,7 +8,7 @@ import logging
 logging.basicConfig( level = logging.ERROR )
 
 
-from ._helper           import NullHandle, Wallet, NullGuard
+from ._helper           import NullHandle, Wallet, NullGuard, auto_raise
 from ._libLoader        import LibLoader, core_loader
 from ._convert          import dict2obj
 from ._files            import sys_channel, openFile, makedirs
