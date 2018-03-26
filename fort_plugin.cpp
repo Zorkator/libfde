@@ -330,11 +330,11 @@ f_plugin_set_path( StringRef *path, StringRef *libPath, StringRef *chkSym )
     { fprintf( stdout, "FORTRES: setting plugin path\n >> %s\n", _ref_cstr(path) ); }
   if (libPath->length())
   {
-    String libPathStr( libPath->str() );
+    String libPathStr( libPath->str() + LIB_PATH_SEP );
     String envStr( getenv(LIB_PATH_VAR) );
     if (!envStr.startsWith( libPathStr ))
     {
-      libPathStr.append( LIB_PATH_SEP ).append( envStr );
+      libPathStr.append( _ref_cstr(path) ).append( LIB_PATH_SEP ).append( envStr );
       setenv( LIB_PATH_VAR, libPathStr.c_str(), 1 /*<< override */);
       if (_dbg_info)
         { fprintf( stdout, "FORTRES: setting environment variable\n >> %s = %s\n", LIB_PATH_VAR, libPathStr.c_str() ); }
