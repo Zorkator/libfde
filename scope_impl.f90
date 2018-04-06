@@ -124,6 +124,22 @@ end module
   end subroutine
 
 
+!_PROC_EXPORT(scope_connected_callbacks_c)
+  integer &
+  function scope_connected_callbacks_c( self, ident ) result(res)
+    use impl_scope__
+    type(HashMap_t),  intent(in) :: self
+    character(len=*), intent(in) :: ident
+    type(List_t),       pointer  :: cbList
+
+    res    =  hook_undeclared
+    cbList => get_callbackList_( self, ident )
+    if (associated( cbList )) then
+      res = len( cbList )
+    end if
+  end function
+
+
 !_PROC_EXPORT(scope_connect_callback_c)
   integer &
   function scope_connect_callback_c( self, ident, proc_ ) result(res)

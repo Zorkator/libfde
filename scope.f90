@@ -18,7 +18,7 @@ module adt_scope
   type(HashMap_t), pointer :: processScope_
 
   public :: newScope, getScope, getItem, getRef, setProcedure, getProcedure
-  public :: declareCallback, connectCallback, disconnectCallback, tryCallback, invokeCallback
+  public :: declareCallback, connectedCallbacks, connectCallback, disconnectCallback, tryCallback, invokeCallback
   public :: hook_disabled, hook_undeclared, hook_not_set, hook_set, hook_called
 
   interface newScope
@@ -83,9 +83,18 @@ module adt_scope
   interface declareCallback
     subroutine scope_declare_callback_c( scope, ident )
       import HashMap_t
-      type(HashMap_t)       :: scope
-      character(len=*)      :: ident
+      type(HashMap_t),  intent(in) :: scope
+      character(len=*), intent(in) :: ident
     end subroutine
+  end interface
+
+  interface connectedCallbacks
+    integer &
+    function scope_connected_callbacks_c( scope, ident ) result(res)
+      import HashMap_t
+      type(HashMap_t),  intent(in) :: scope
+      character(len=*), intent(in) :: ident
+    end function
   end interface
 
   interface connectCallback

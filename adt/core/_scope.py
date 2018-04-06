@@ -45,6 +45,10 @@ class Scope(HashMap):
     return ident, func
 
 
+  def connectedCallbacks( self, ident ):
+    return self.connected_callbacks_( byref(self), c_char_p(ident), c_int(len(ident)) )
+
+
   def connectCallback( self, ident, func ):
     ident, func = self._mk_CALLBACK( ident, func )
     return self.connect_callback_( byref(self), c_char_p(ident), func, c_int(len(ident)) )
