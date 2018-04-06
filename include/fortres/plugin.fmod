@@ -15,7 +15,7 @@
 
         public :: plugin_set_path, plugin_register, plugin_set_enabled
         public :: plugin_iterate, plugin_filePath_to_id
-        public :: plugin_sym, plugin_proc, plugin_call
+        public :: plugin_available, plugin_sym, plugin_proc, plugin_call
         public :: plugin_try_sym, plugin_try_proc, plugin_try_call
 
         interface
@@ -56,6 +56,13 @@
             type(StringRef_t), intent(in) :: fp !< plugin filePath
             type(StringRef_t)             :: id !< plugin id
           end subroutine
+
+          function plugin_available_( pId, sId )_cID(f_plugin_available)
+            import
+            type(StringRef_t), intent(in) :: pId !< pluginId
+            type(StringRef_t), intent(in) :: sId !< symbolId
+            integer(kind=c_int)           :: plugin_available_
+          end function
 
           ! routines throwing exceptions ...
 
@@ -108,29 +115,20 @@
 !_PROC_EXPORT(plugin_set_path)
           subroutine plugin_set_path( path, lPath, chkSym )
             character(len=*)           :: path
-            character(len=*), optional :: lPath,  chkSym
-            type(StringRef_t)          :: lPath_, chkSym_
-            if (present(lPath))  lPath_  = str(lPath)
-            if (present(chkSym)) chkSym_ = str(chkSym)
-            call plugin_set_path_( str(path), lPath_, chkSym_ )
+            character(len=*), optional :: lPath, chkSym
+            call plugin_set_path_( str(path), str(lPath), str(chkSym) )
           end subroutine
 
 !_PROC_EXPORT(plugin_register)
           subroutine plugin_register( filePath, id, enabled )
-            character(len=*)                   :: filePath
-            character(len=*), target, optional :: id
-            character(len=:),         pointer  :: id_
-            character(len=1), target           :: empty = ""
-            logical,                  optional :: enabled
-            integer                            :: enabled_
-
-            if (present(id))      then; id_ => id
-                                  else; id_ => empty
-            end if
+            character(len=*)           :: filePath
+            character(len=*), optional :: id
+            logical,          optional :: enabled
+            integer                    :: enabled_
             if (present(enabled)) then; enabled_ = merge(1, 0, enabled)
                                   else; enabled_ = 1
             end if
-            call plugin_register_( str(filePath), str(id_), enabled_ )
+            call plugin_register_( str(filePath), str(id), enabled_ )
           end subroutine
 
 !_PROC_EXPORT(plugin_set_enabled)
@@ -157,6 +155,14 @@
             character(len=*)              :: id
             call plugin_p2i_( str(filePath), str(id, .false.) )
           end subroutine
+
+!_PROC_EXPORT(plugin_available)
+          function plugin_available( pluginId, symId ) result(res)
+            character(len=*)           :: pluginId
+            character(len=*), optional :: symId
+            logical                    :: res
+            res = (plugin_available_( str(pluginId), str(symId) ) /= 0)
+          end function
 
           ! accessing plugin procedures and symbols by pointer
           !  plugin_## routines throw exceptions on error!

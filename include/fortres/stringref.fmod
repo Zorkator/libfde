@@ -18,7 +18,6 @@
         end type
       
         interface str
-          module procedure stringref_create
           module procedure stringref_of_str_trim, stringref_of_str
           module procedure stringref_to_str
         end interface
@@ -49,9 +48,9 @@
 
 !_PROC_EXPORT(stringref_of_str_trim)
         function stringref_of_str_trim( fstr, trimLen ) result(strRef)
-          character(len=*), target, intent(in) :: fstr
-          logical                              :: trimLen
-          type (StringRef_t)                   :: strRef
+          character(len=*), intent(in) :: fstr
+          logical                      :: trimLen
+          type (StringRef_t)           :: strRef
 
           ! NOTE: gfortran doesn't allow to use c_loc on character strings.
           !       We fix this by a little wrapper function that usually gets inlined.
@@ -73,16 +72,18 @@
 
 !_PROC_EXPORT(stringref_of_str)
         function stringref_of_str( fstr ) result(strRef)
-          character(len=*), target, intent(in) :: fstr
-          type (StringRef_t)                   :: strRef
-          strRef = stringref_of_str_trim( fstr, .true. )
+          character(len=*), optional, intent(in) :: fstr
+          type (StringRef_t)                     :: strRef
+          if (present(fstr)) then
+            strRef = stringref_of_str_trim( fstr, .true. )
+          end if
         end function
 
 
 !_PROC_EXPORT(stringref_of_buf)
         function stringref_of_buf( fstrBuf ) result(strRef)
-          character(len=*), target, intent(out) :: fstrBuf
-          type (StringRef_t)                    :: strRef
+          character(len=*),  intent(out) :: fstrBuf
+          type (StringRef_t)             :: strRef
           strRef = stringref_of_str_trim( fstrBuf, .false. )
         end function
 

@@ -275,6 +275,17 @@ class PluginBroker
         return sym;
       }
     
+    bool
+      isAvailable( const StringRef *pluginId, const StringRef *symId = NULL )
+      {
+        SharedLib *lib   = _pluginMap.getPlugin( _ref_str(pluginId) );
+        bool       avail = false;
+
+        if (lib)
+          { avail = (symId == NULL || symId->length() == 0 || lib->getSymbol( _ref_cstr(symId) )); }
+        return avail;
+      }
+
     SharedLib *
       operator [] ( const StringRef *id )
         { return _pluginMap.getPlugin( _ref_str(id) ); }
@@ -375,6 +386,14 @@ void
 f_plugin_filePath_to_id( StringRef *filePath, StringRef *id )
 {
   id->concat( PluginBroker::libFileToId( filePath->str() ) ).pad();
+}
+
+
+_dllExport_C
+int
+f_plugin_available( StringRef *pluginId, StringRef *symId )
+{
+  return getBroker()->isAvailable( pluginId, symId );
 }
 
 
