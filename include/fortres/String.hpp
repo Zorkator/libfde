@@ -212,7 +212,7 @@ namespace fortres
         }
 
       String &
-        operator << ( const String &other )
+        operator << ( const std::string &other )
         {
           this->std::string::append( other.c_str() );
           return (*this);
@@ -298,7 +298,7 @@ namespace fortres
           { return String( *this ) << cstr; }
 
       String
-        operator << ( const String &other ) const
+        operator << ( const std::string &other ) const
           { return String( *this ) << other; }
 
       List

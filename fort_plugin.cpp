@@ -45,6 +45,8 @@
 
 # define _ref_str(strRef)       strRef->str()
 # define _ref_cstr(strRef)      strRef->str().c_str()
+# define _ref_str_chk(strRef)   (strRef? strRef->str() : std::string())
+# define _ref_cstr_chk(strRef)  (strRef? strRef->str().c_str() : "")
 
 using namespace fortres;
 
@@ -92,9 +94,13 @@ class SharedLib
 };
 
 
+/*******************/
 class PluginBroker
+/*******************/
 {
+    /*******************/
     class Predicate
+    /*******************/
     {
       public:
           Predicate( const char *sym = "" ) : _sym(sym) { /* empty*/ }
@@ -127,7 +133,9 @@ class PluginBroker
     } PluginState;
 
     
+    /*******************/
     class PluginRef
+    /*******************/
     {
       public:
         PluginRef( void )
@@ -145,19 +153,32 @@ class PluginBroker
         PluginState       state;
     };
 
+
+    /***************/
     class Map
+    /***************/
     : public std::map<String, PluginRef>
     {
       public:
         typedef std::map<String, PluginRef>::iterator  Iterator;
         typedef SharedLib::Function                    Initializer;
 
-        bool
-          hasPlugin( const String &id ) const
-            { return (this->find(id) != this->end()); }
+        static SharedLib *
+          tryLoad( const String &filePath, const Predicate &pred = Predicate() )
+          {
+            SharedLib        *ptr = NULL;
+            SharedLib::Handle lib( new SharedLib( filePath.c_str() ) );
+
+            if (_dbg_info)
+              { fprintf( stdout, "FORTRES: check plugin '%s' ... ", filePath.c_str() ); }
+            if (pred( lib.get() ))
+              { ptr = lib.release(); }
+            return ptr;
+          }
+
 
         SharedLib *
-          getPlugin( const String &id )
+          getPlugin( const String &id, const String &envPath )
           {
             SharedLib *lib = NULL;
             Iterator   itr = this->find( id );
@@ -172,7 +193,10 @@ class PluginBroker
                 if (lib == NULL)
                 {
                   /* plugin not yet loaded ... */
+                  this->pushEnvPath( envPath );
                   lib = this->tryLoad( ref.filePath ); //< default Predicate is sufficient here!
+                  this->popEnvPath();
+
                   ref.handle.reset( lib );
                   if (lib)
                   {
@@ -187,18 +211,6 @@ class PluginBroker
             return lib;
           }
 
-        static SharedLib *
-          tryLoad( const String &id, const Predicate &pred = Predicate() )
-          {
-            SharedLib        *ptr = NULL;
-            SharedLib::Handle lib( new SharedLib( id.c_str() ) );
-
-            if (_dbg_info)
-              { fprintf( stdout, "FORTRES: check plugin '%s' ... ", id.c_str() ); }
-            if (pred( lib.get() ))
-              { ptr = lib.release(); }
-            return ptr;
-          }
 
         void
           insertPlugin( const String &filePath
@@ -209,19 +221,36 @@ class PluginBroker
             const String &pluginId = (id.empty())? libFileToId( filePath ) : id;
             (*this)[pluginId] = PluginRef( filePath.c_str(), lib, state );
           }
+
+
+        void
+          pushEnvPath( const std::string &envPath )
+          {
+            _envBuff = getenv( LIB_PATH_VAR );
+            setenv( LIB_PATH_VAR, (envPath + _envBuff).c_str(), 1 /*<< override */ );
+          }
+
+
+        void
+          popEnvPath( void )
+            { setenv( LIB_PATH_VAR, _envBuff.c_str(), 1 /*<< override */ ); }
+
+      private:
+        String _envBuff;
     };
 
   public:
-      PluginBroker( const StringRef *path = NULL )
+      PluginBroker( const StringRef *pluginDir = NULL, const StringRef *libPath = NULL )
+      : _pluginDir(_ref_str_chk(pluginDir)), _libPath(_ref_str_chk(pluginDir))
       {
-        if (path != NULL)
-        {
-          _pluginDir = _ref_str(path);
-          if (!_pluginDir.empty())
-            { _pluginDir.append("/"); }
-        }
+        if (!_pluginDir.endsWith("/"))
+          { _pluginDir.append("/"); }
+        if (libPath && libPath->length())
+          { _libPath << LIB_PATH_SEP << _ref_cstr_chk(libPath);  }
+        _libPath << LIB_PATH_SEP;
       }
 
+    
     void
       registerPlugin( const StringRef *filePath, const StringRef *id, bool isEnabled = true )
       {
@@ -249,6 +278,7 @@ class PluginBroker
 
         if (dir != NULL)
         {
+          _pluginMap.pushEnvPath( _libPath );
           while ((entry = readdir( dir )) != NULL)
           {
             String filePath( _pluginDir + entry->d_name );
@@ -261,13 +291,15 @@ class PluginBroker
             }
           }
           closedir( dir );
+          _pluginMap.popEnvPath();
         }
       }
+
 
     void *
       getSymbolOf( const StringRef *pluginId, const StringRef *symId )
       {
-        SharedLib *lib = _pluginMap.getPlugin( _ref_str(pluginId) );
+        SharedLib *lib = _pluginMap.getPlugin( _ref_str(pluginId), _libPath );
         void      *sym = NULL;
 
         if (lib)
@@ -275,10 +307,11 @@ class PluginBroker
         return sym;
       }
     
+
     bool
       isAvailable( const StringRef *pluginId, const StringRef *symId = NULL )
       {
-        SharedLib *lib   = _pluginMap.getPlugin( _ref_str(pluginId) );
+        SharedLib *lib   = _pluginMap.getPlugin( _ref_str(pluginId), _libPath );
         bool       avail = false;
 
         if (lib)
@@ -286,9 +319,11 @@ class PluginBroker
         return avail;
       }
 
+
     SharedLib *
       operator [] ( const StringRef *id )
-        { return _pluginMap.getPlugin( _ref_str(id) ); }
+        { return _pluginMap.getPlugin( _ref_str(id), _libPath ); }
+
 
     void
       iterPlugins( PluginInfoHandler handler )
@@ -300,6 +335,7 @@ class PluginBroker
           handler( &id.referTo( itr->first ), &filePath.referTo( ref.filePath ), (int *)&ref.state );
         }
       }
+
 
     static String
       libFileToId( const String &libFile )
@@ -319,16 +355,17 @@ class PluginBroker
   private:
     Map    _pluginMap;
     String _pluginDir;
+    String _libPath;
 };
 
 
 
 inline PluginBroker *
-getBroker( const StringRef *pluginDir = NULL )
+getBroker( const StringRef *pluginDir = NULL, const StringRef *libPath = NULL )
 {
   static auto_ptr<PluginBroker> broker;
   if (pluginDir)
-    { broker = new PluginBroker( pluginDir ); }
+    { broker = new PluginBroker( pluginDir, libPath ); }
   return broker.get();
 }
 
@@ -339,19 +376,7 @@ f_plugin_set_path( StringRef *path, StringRef *libPath, StringRef *chkSym )
 {
   if (_dbg_info)
     { fprintf( stdout, "FORTRES: setting plugin path\n >> %s\n", _ref_cstr(path) ); }
-  if (libPath->length())
-  {
-    String libPathStr( libPath->str() + LIB_PATH_SEP );
-    String envStr( getenv(LIB_PATH_VAR) );
-    if (!envStr.startsWith( libPathStr ))
-    {
-      libPathStr.append( _ref_cstr(path) ).append( LIB_PATH_SEP ).append( envStr );
-      setenv( LIB_PATH_VAR, libPathStr.c_str(), 1 /*<< override */);
-      if (_dbg_info)
-        { fprintf( stdout, "FORTRES: setting environment variable\n >> %s = %s\n", LIB_PATH_VAR, libPathStr.c_str() ); }
-    }
-  }
-  getBroker( path )->scanPlugins( chkSym );
+  getBroker( path, libPath )->scanPlugins( chkSym );
 }
 
 
