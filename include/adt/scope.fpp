@@ -169,8 +169,8 @@
 #   define _callHook( hookId ) \
       call invokeCallback( __hookScope__, hookId )
 
-#   define _callArgHook( hookId, argScope ) \
-      call invokeCallback( __hookScope__, hookId, argScope )
+#   define _callArgHook( hookId, arg ) \
+      call invokeCallback( __hookScope__, hookId, c_loc(arg) )
 
 
 #   define _removeSymbol( scope, sym ) \
