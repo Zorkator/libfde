@@ -221,6 +221,21 @@
         __codefrag_ALLOCATE_hidden( sym, shape, __istat__ )      ;\
       end select
 
+# define _REALLOCATE_SAVED( sym, tmp_array, shape )                \
+      select case (0); case default                               ;\
+        if (allocated(tmp_array)) deallocate(tmp_array)           ;\
+        __codefrag_ALLOCATE_hidden( tmp_array, shape, __istat__ ) ;\
+        if (size(tmp_array)>=size(sym)) then                      ;\
+           tmp_array(1:size(sym))=sym                             ;\
+        else                                                      ;\
+           tmp_array=sym(1:size(tmp_array))                       ;\
+        endif                                                     ;\
+        if (allocated(sym)) deallocate(sym)                       ;\
+        __codefrag_ALLOCATE_hidden( sym, shape, __istat__ )       ;\
+        sym(1:size(tmp_array)) = tmp_array                        ;\
+        deallocate(tmp_array)                                     ;\
+      end select
+
 # define _DEALLOCATE( sym )             \
       __codefrag_DEALLOCATE_hidden( sym, __istat__ )
 
@@ -242,6 +257,21 @@
       select case (0); case default                                        ;\
         if (allocated(sym)) deallocate(sym)                                ;\
         __codefrag_ALLOCATE_visible_as( scope, sym, shape, id, __istat__ ) ;\
+      end select
+
+# define _REALLOCATE_SAVED_visible_as( sym, tmp_array, shape )    \
+      select case (0); case default                               ;\
+        if (allocated(tmp_array)) deallocate(tmp_array)           ;\
+        __codefrag_ALLOCATE_hidden( tmp_array, shape, __istat__ ) ;\
+        if (size(tmp_array)>=size(sym)) then                      ;\
+           tmp_array(1:size(sym))=sym                             ;\
+        else                                                      ;\
+           tmp_array=sym(1:size(tmp_array))                       ;\
+        endif                                                     ;\
+        if (allocated(sym)) deallocate(sym)                       ;\
+        __codefrag_ALLOCATE_visible_as( scope, sym, shape, id, __istat__ ) ;\
+        sym(1:size(tmp_array)) = tmp_array                        ;\
+        deallocate(tmp_array)                                     ;\
       end select
 
 # define _REALLOCATE_visible( scope, sym, shape )    \
@@ -349,7 +379,7 @@
     call c_f_procpointer( getProcedure( scope, _strip(_str(ptr)), .false. ), ptr )
 
 
-! deprecated - just for compatibility 
+! deprecated - just for compatibility
 # define _getService  _refProc
 
 # endif
