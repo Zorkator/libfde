@@ -201,22 +201,22 @@
         _linkArray_as( scope, sym, id )                                      ;\
       end select
 
-# define _DEALLOCATE_visible_st( scope, sym, _st ) \
-      select case (0); case default               ;\
-        _DEALLOCATE_st( sym, _st )                ;\
-        _removeSymbol( scope, sym )               ;\
-      end select
-
-# define _REALLOCATE_visible_st( scope, sym, shape, _st ) \
+# define _DEALLOCATE_visible_as_st( scope, sym, id, _st ) \
       select case (0); case default                      ;\
-        _REALLOCATE_st( sym, shape, _st )                ;\
-        _linkArray( scope, sym )                         ;\
+        _DEALLOCATE_st( sym, _st )                       ;\
+        _remove_scopeSymbol( scope, id )                 ;\
       end select
 
-# define _copied_REALLOCATE_visible_st( scope, sym, shape, pad, tmp, _st ) \
-      select case (0); case default                                       ;\
-        _copied_REALLOCATE_st( sym, shape, pad, tmp, _st )                ;\
-        _linkArray( scope, sym )                                          ;\
+# define _REALLOCATE_visible_as_st( scope, sym, shape, id, _st ) \
+      select case (0); case default                             ;\
+        _REALLOCATE_st( sym, shape, _st )                       ;\
+        _linkArray_as( scope, sym, id )                         ;\
+      end select
+
+# define _copied_REALLOCATE_visible_as_st( scope, sym, shape, pad, tmp, id, _st ) \
+      select case (0); case default                                              ;\
+        _copied_REALLOCATE_st( sym, shape, pad, tmp, _st )                       ;\
+        _linkArray_as( scope, sym, id )                                          ;\
       end select
 
 
@@ -232,6 +232,14 @@
 # define _assert_checked_ALLOCATE_visible_st( scope, sym, shape, _st ) \
       _assert_checked_ALLOCATE_visible_as_st( scope, sym, shape, __sym2str__(sym), _st )
 
+# define _DEALLOCATE_visible_st( scope, sym, _st ) \
+      _DEALLOCATE_visible_as_st( scope, sym, __sym2str__(sym), _st )
+
+# define _REALLOCATE_visible_st( scope, sym, shape, _st ) \
+      _REALLOCATE_visible_as_st( scope, sym, shape, __sym2str__(sym), _st )
+
+# define _copied_REALLOCATE_visible_st( scope, sym, shape, pad, tmp, _st ) \
+      _copied_REALLOCATE_visible_as_st( scope, sym, shape, pad, tmp, __sym2str__(sym), _st )
 
 !-------------------------------------------
 ! variants using status variable __istat__
@@ -249,14 +257,14 @@
 # define _assert_checked_ALLOCATE_visible_as( scope, sym, shape, id ) \
      _assert_checked_ALLOCATE_visible_as_st( scope, sym, shape, id, __istat__ )
 
-# define _DEALLOCATE_visible( scope, sym ) \
-     _DEALLOCATE_visible_st( scope, sym, __istat__ )
+# define _DEALLOCATE_visible_as( scope, sym, id ) \
+     _DEALLOCATE_visible_as_st( scope, sym, id, __istat__ )
 
-# define _REALLOCATE_visible( scope, sym, shape ) \
-     _REALLOCATE_visible_st( scope, sym, shape, __istat__ )
+# define _REALLOCATE_visible_as( scope, sym, shape, id ) \
+     _REALLOCATE_visible_as_st( scope, sym, shape, id, __istat__ )
 
-# define _copied_REALLOCATE_visible( scope, sym, shape, pad, tmp ) \
-     _copied_REALLOCATE_visible_st( scope, sym, shape, pad, tmp, __istat__ )
+# define _copied_REALLOCATE_visible_as( scope, sym, shape, pad, tmp, id ) \
+     _copied_REALLOCATE_visible_as_st( scope, sym, shape, pad, tmp, id, __istat__ )
 
 # define _ALLOCATE_visible( scope, sym, shape ) \
      _ALLOCATE_visible_st( scope, sym, shape, __istat__ )
@@ -269,6 +277,15 @@
 
 # define _assert_checked_ALLOCATE_visible( scope, sym, shape ) \
      _assert_checked_ALLOCATE_visible_st( scope, sym, shape, __istat__ )
+
+# define _DEALLOCATE_visible( scope, sym ) \
+     _DEALLOCATE_visible_st( scope, sym, __istat__ )
+
+# define _REALLOCATE_visible( scope, sym, shape ) \
+     _REALLOCATE_visible_as_st( scope, sym, shape, __sym2str__(sym), __istat__ )
+
+# define _copied_REALLOCATE_visible( scope, sym, shape, pad, tmp ) \
+     _copied_REALLOCATE_visible_as_st( scope, sym, shape, pad, tmp, __sym2str__(sym), __istat__ )
 
 # endif
  ! ^^ _ADT_SCOPE_NO_SIMPLIFIED
