@@ -1,0 +1,182 @@
+#ifndef __FORTRES_DIRENT_FMOD
+#define __FORTRES_DIRENT_FMOD
+
+#if !defined _MODULENAME_dirent
+# define _MODULENAME_dirent  dirent
+#endif
+
+#include "fortres/itfUtil.fpp"
+
+      module _MODULENAME_dirent
+        use _MODULENAME_stringref
+        use, intrinsic :: iso_c_binding
+        implicit none
+        private
+
+        type, bind(C) :: DIR_t
+          private
+          type(c_ptr) :: ptr
+        end type
+
+        public :: DIR_t
+        public :: relPath
+        public :: opendir, readdir, closedir, rewinddir, isdir
+        public :: realpath, so_filepath
+
+        interface relPath
+          module procedure relPath_from_to, relPath_to
+        end interface
+
+        interface so_filepath
+          module procedure so_filepath_proc, so_filepath_data
+        end interface
+
+        interface
+          subroutine mkrp_ft_( r, s, t ) _cID(f_make_relPath_from_to)
+            import StringRef_t
+            type(StringRef_t) :: r    !< result
+            type(StringRef_t) :: s, t !< paths src + tgt
+          end subroutine
+
+          subroutine mkrp_t_( r, t ) _cID(f_make_relPath_to)
+            import StringRef_t
+            type(StringRef_t) :: r !< result
+            type(StringRef_t) :: t !< tgt-path
+          end subroutine
+
+          function opendir_( dir, path ) _cID(f_opendir)
+            import DIR_t, StringRef_t, c_int
+            type(DIR_t),      intent(out) :: dir
+            type(StringRef_t), intent(in) :: path
+            integer(kind=c_int)           :: opendir_
+          end function
+
+          function readdir_( dir, dirEntry ) _cID(f_readdir)
+            import DIR_t, StringRef_t, c_int
+            type(DIR_t),  value :: dir
+            type(StringRef_t)   :: dirEntry
+            integer(kind=c_int) :: readdir_
+          end function
+
+          subroutine closedir_( dir, stat ) _cID(f_closedir)
+            import DIR_t, c_int
+            type(DIR_t), intent(inout) :: dir
+            integer(kind=c_int)        :: stat
+          end subroutine
+        
+          subroutine rewinddir_( dir, stat ) _cID(f_rewinddir)
+            import DIR_t, c_int
+            type(DIR_t),  value :: dir
+            integer(kind=c_int) :: stat
+          end subroutine
+
+          function isdir_( pathStr ) _cID(f_isdir)
+            import StringRef_t, c_int
+            type(StringRef_t)   :: pathStr
+            integer(kind=c_int) :: isdir_
+          end function
+
+          function realpath_( filePath, resolvedPath ) _cID(f_realpath)
+            import StringRef_t, c_size_t
+            type(StringRef_t)      :: filePath, resolvedPath
+            integer(kind=c_size_t) :: realpath_
+          end function
+
+          function so_filepath_proc_( p, strRef ) _cID(f_so_filepath_of)
+            import StringRef_t, c_funptr, c_size_t
+            type(c_funptr), value, intent(in) :: p !< proc pointer
+            type(StringRef_t)                 :: strRef
+            integer(kind=c_size_t)            :: so_filepath_proc_
+          end function
+
+          function so_filepath_data_( d, strRef ) _cID(f_so_filepath_of)
+            import StringRef_t, c_ptr, c_size_t
+            type(c_ptr), value, intent(in)    :: d !< data pointer
+            type(StringRef_t)                 :: strRef
+            integer(kind=c_size_t)            :: so_filepath_data_
+          end function
+        end interface
+
+      contains
+
+!_PROC_EXPORT(relPath_from_to)
+          subroutine relPath_from_to( res, from, to )
+            character(len=*), intent(inout) :: res
+            character(len=*), intent(in)    :: from, to
+            call mkrp_ft_( strBuf(res), str(from), str(to) )
+          end subroutine
+      
+!_PROC_EXPORT(relPath_to)
+          subroutine relPath_to( res, to )
+            character(len=*), intent(inout) :: res
+            character(len=*), intent(in)    :: to
+            call mkrp_t_( strBuf(res), str(to) )
+          end subroutine
+      
+!_PROC_EXPORT(opendir)
+          function opendir( dir, path )
+            type(DIR_t),     intent(out) :: dir
+            character(len=*), intent(in) :: path
+            logical                      :: opendir
+            opendir = (opendir_( dir, str(path) ) /= 0)
+          end function
+        
+!_PROC_EXPORT(readdir)
+          function readdir( dir, dirEntry )
+            type(DIR_t),               value :: dir
+            type(StringRef_t), intent(inout) :: dirEntry
+            logical                          :: readdir
+            readdir = (readdir_( dir, dirEntry ) /= 0)
+          end function
+
+!_PROC_EXPORT(closedir)
+          subroutine closedir( dir, stat )
+            type(DIR_t), intent(inout) :: dir
+            logical,          optional :: stat
+            integer(kind=c_int)        :: stat_
+            call closedir_( dir, stat_ )
+            if (present(stat)) stat = (stat_ == 0)
+          end subroutine
+  
+!_PROC_EXPORT(rewinddir)
+          subroutine rewinddir( dir, stat )
+            type(DIR_t),  value :: dir
+            logical,   optional :: stat
+            integer(kind=c_int) :: stat_
+            call rewinddir_( dir, stat_ )
+            if (present(stat)) stat = (stat_ == 0)
+          end subroutine
+
+!_PROC_EXPORT(isdir)
+          function isdir( pathStr )
+            character(len=*), intent(in) :: pathStr
+            logical                      :: isdir
+            isdir = (isdir_( str(pathStr) ) /= 0)
+          end function
+
+!_PROC_EXPORT(realpath)
+          function realpath( filePath, buf )
+            character(len=*), intent(in) :: filePath
+            character(len=*)             :: buf
+            integer(kind=c_size_t)       :: realpath
+            realpath = realpath_( str(filePath), strBuf(buf) )
+          end function
+
+!_PROC_EXPORT(so_filepath_proc)
+          function so_filepath_proc( p, buf ) result(res)
+            procedure()            :: p
+            character(len=*)       :: buf
+            integer(kind=c_size_t) :: res
+            res = so_filepath_proc_( c_funloc(p), strBuf(buf) )
+          end function
+
+!_PROC_EXPORT(so_filepath_data)
+          function so_filepath_data( d, buf ) result(res)
+            type(c_ptr), intent(in) :: d !< data pointer
+            character(len=*)        :: buf
+            integer(kind=c_size_t)  :: res
+            res = so_filepath_data_( d, strBuf(buf) )
+          end function
+      end module
+#endif
+

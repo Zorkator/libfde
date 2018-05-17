@@ -1,0 +1,218 @@
+#ifndef __FORTRES_PLUGIN_FMOD
+#define __FORTRES_PLUGIN_FMOD
+
+#if !defined _MODULENAME_plugin
+# define _MODULENAME_plugin  plugin
+#endif
+
+#include "fortres/itfUtil.fpp"
+
+      module _MODULENAME_plugin
+        use _MODULENAME_stringref
+        use, intrinsic :: iso_c_binding
+        implicit none
+        private
+
+        public :: plugin_set_path, plugin_register, plugin_set_enabled
+        public :: plugin_iterate, plugin_filePath_to_id
+        public :: plugin_available, plugin_sym, plugin_proc, plugin_call
+        public :: plugin_try_sym, plugin_try_proc, plugin_try_call
+
+        interface
+          subroutine PluginInfoHandler( id, fp, st )
+            import StringRef_t
+            type(StringRef_t) :: id, fp
+            integer           :: st
+          end subroutine
+      
+          subroutine plugin_set_path_( p, l, c ) _cID(f_plugin_set_path)
+            import StringRef_t
+            type(StringRef_t), intent(in) :: p !< plugin path
+            type(StringRef_t), intent(in) :: l !< library path
+            type(StringRef_t), intent(in) :: c !< check symbol
+          end subroutine
+
+          subroutine plugin_register_( f, i, e ) _cID(f_plugin_register)
+            import StringRef_t
+            type(StringRef_t), intent(in) :: f !< plugin filePath
+            type(StringRef_t), intent(in) :: i !< plugin id
+            integer                       :: e !< plugin enabled?
+          end subroutine
+
+          function plugin_set_ebl_( id, ebl ) _cID(f_plugin_set_enabled)
+            import StringRef_t, c_int
+            type(StringRef_t), intent(in) :: id
+            integer                       :: ebl !< plugin enabled?
+            integer(kind=c_int)           :: plugin_set_ebl_
+          end function
+
+          subroutine plugin_iterate_( op ) _cID(f_plugin_iterate)
+            import c_funptr
+            type(c_funptr), value, intent(in) :: op
+          end subroutine
+
+          subroutine plugin_p2i_( fp, id ) _cID(f_plugin_filePath_to_id)
+            import StringRef_t
+            type(StringRef_t), intent(in) :: fp !< plugin filePath
+            type(StringRef_t)             :: id !< plugin id
+          end subroutine
+
+          function plugin_available_( pId, sId )_cID(f_plugin_available)
+            import
+            type(StringRef_t), intent(in) :: pId !< pluginId
+            type(StringRef_t), intent(in) :: sId !< symbolId
+            integer(kind=c_int)           :: plugin_available_
+          end function
+
+          ! routines throwing exceptions ...
+
+          function plugin_sym_( pId, sId ) _cID(f_plugin_sym)
+            import StringRef_t, c_ptr
+            type(StringRef_t), intent(in) :: pId !< pluginId
+            type(StringRef_t), intent(in) :: sId !< symbolId
+            type(c_ptr)                   :: plugin_sym_
+          end function
+
+          function plugin_proc_( pId, sId ) _cID(f_plugin_sym)
+            import StringRef_t, c_funptr
+            type(StringRef_t), intent(in) :: pId !< pluginId
+            type(StringRef_t), intent(in) :: sId !< symbolId
+            type(c_funptr)                :: plugin_proc_
+          end function
+
+          subroutine plugin_call_( pId, sId ) _cID(f_plugin_call)
+            import StringRef_t
+            type(StringRef_t), intent(in) :: pId !< pluginId
+            type(StringRef_t), intent(in) :: sId !< symbolId
+          end subroutine
+
+          ! routines returning NULL pointers ...
+
+          function plugin_try_sym_( pId, sId ) _cID(f_plugin_try_sym)
+            import StringRef_t, c_ptr
+            type(StringRef_t), intent(in) :: pId !< pluginId
+            type(StringRef_t), intent(in) :: sId !< symbolId
+            type(c_ptr)                   :: plugin_try_sym_
+          end function
+
+          function plugin_try_proc_( pId, sId ) _cID(f_plugin_try_sym)
+            import StringRef_t, c_funptr
+            type(StringRef_t), intent(in) :: pId !< pluginId
+            type(StringRef_t), intent(in) :: sId !< symbolId
+            type(c_funptr)                :: plugin_try_proc_
+          end function
+
+          function plugin_try_call_( pId, sId ) _cID(f_plugin_try_call)
+            import StringRef_t, c_int
+            type(StringRef_t), intent(in) :: pId !< pluginId
+            type(StringRef_t), intent(in) :: sId !< symbolId
+            integer(kind=c_int)           :: plugin_try_call_
+          end function
+        end interface
+
+      contains
+
+!_PROC_EXPORT(plugin_set_path)
+          subroutine plugin_set_path( path, lPath, chkSym )
+            character(len=*)           :: path
+            character(len=*), optional :: lPath, chkSym
+            call plugin_set_path_( str(path), str(lPath), str(chkSym) )
+          end subroutine
+
+!_PROC_EXPORT(plugin_register)
+          subroutine plugin_register( filePath, id, enabled )
+            character(len=*)           :: filePath
+            character(len=*), optional :: id
+            logical,          optional :: enabled
+            integer                    :: enabled_
+            if (present(enabled)) then; enabled_ = merge(1, 0, enabled)
+                                  else; enabled_ = 1
+            end if
+            call plugin_register_( str(filePath), str(id), enabled_ )
+          end subroutine
+
+!_PROC_EXPORT(plugin_set_enabled)
+          function plugin_set_enabled( pluginId, enabled ) result(res)
+            character(len=*)  :: pluginId
+            logical, optional :: enabled
+            logical           :: res
+            integer           :: enabled_
+            if (present(enabled)) then; enabled_ = merge(1, 0, enabled)
+                                  else; enabled_ = 1
+            end if
+            res = (plugin_set_ebl_( str(pluginId), enabled_ ) /= 0)
+          end function
+
+!_PROC_EXPORT(plugin_iterate)
+          subroutine plugin_iterate( op )
+            procedure(PluginInfoHandler) :: op
+            call plugin_iterate_( c_funloc(op) )
+          end subroutine
+
+!_PROC_EXPORT(plugin_filePath_to_id)
+          subroutine plugin_filePath_to_id( filePath, id )
+            character(len=*), intent(in)  :: filePath
+            character(len=*)              :: id
+            call plugin_p2i_( str(filePath), str(id, .false.) )
+          end subroutine
+
+!_PROC_EXPORT(plugin_available)
+          function plugin_available( pluginId, symId ) result(res)
+            character(len=*)           :: pluginId
+            character(len=*), optional :: symId
+            logical                    :: res
+            res = (plugin_available_( str(pluginId), str(symId) ) /= 0)
+          end function
+
+          ! accessing plugin procedures and symbols by pointer
+          !  plugin_## routines throw exceptions on error!
+          !  So it's save using a returned pointer immediately.
+
+!_PROC_EXPORT(plugin_sym)
+          function plugin_sym( pluginId, symId ) result(res)
+            character(len=*) :: pluginId, symId
+            type(c_ptr)      :: res
+            res = plugin_sym_( str(pluginId), str(symId) )
+          end function
+
+!_PROC_EXPORT(plugin_proc)
+          function plugin_proc( pluginId, symId ) result(res)
+            character(len=*) :: pluginId, symId
+            type(c_funptr)   :: res
+            res = plugin_proc_( str(pluginId), str(symId) )
+          end function
+
+!_PROC_EXPORT(plugin_call)
+          subroutine plugin_call( pluginId, symId )
+            character(len=*) :: pluginId, symId
+            call plugin_call_( str(pluginId), str(symId) )
+          end subroutine
+
+          ! accessing plugin procedures and symbols by pointer
+          !  plugin_try_## routines return NULL pointer on error!
+
+!_PROC_EXPORT(plugin_try_sym)
+          function plugin_try_sym( pluginId, symId ) result(res)
+            character(len=*) :: pluginId, symId
+            type(c_ptr)      :: res
+            res = plugin_try_sym_( str(pluginId), str(symId) )
+          end function
+
+!_PROC_EXPORT(plugin_try_proc)
+          function plugin_try_proc( pluginId, symId ) result(res)
+            character(len=*) :: pluginId, symId
+            type(c_funptr)   :: res
+            res = plugin_try_proc_( str(pluginId), str(symId) )
+          end function
+
+!_PROC_EXPORT(plugin_try_call)
+          function plugin_try_call( pluginId, symId ) result(res)
+            character(len=*) :: pluginId, symId
+            logical          :: res
+            res = (plugin_try_call_( str(pluginId), str(symId) ) /= 0)
+          end function
+
+      end module
+
+#endif
+

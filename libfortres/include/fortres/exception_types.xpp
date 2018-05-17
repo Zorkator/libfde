@@ -1,0 +1,54 @@
+#ifndef __FORTRES_EXCEPTION_TYPES__HXX
+#define __FORTRES_EXCEPTION_TYPES__HXX
+
+#if 0
+    Declaration of hierarchical exception types.
+    Hierarchical means that catching a certain type of Error
+      also catches its subtypes.
+    The indentation indicates the relation of different errors,
+      which is encoded by the assigned parameter values (hex).
+    Their values are not magic but designated by the following rule:
+
+      An exception type A is a subtype of type B iff (A & B) == B,
+      or in words, if a bitwise AND of both equals the more generic.
+#endif
+
+# define _fortres_ExceptionTable                                  \
+      _fortres_exception_type( StopExecution           ,01000000) \
+      _fortres_exception_type(   JobDone               ,01010000) \
+      _fortres_exception_type(   AbortExecution        ,01020000) \
+      _fortres_exception_type(   TerminateExecution    ,01040000) \
+                                                                  \
+      _fortres_exception_type( StandardError           ,02000000) \
+                                                                  \
+      _fortres_exception_type(   ArithmeticError       ,02010000) \
+      _fortres_exception_type(     ZeroDivisionError   ,02010100) \
+      _fortres_exception_type(     OverflowError       ,02010200) \
+      _fortres_exception_type(     FloatingPointError  ,02010400) \
+                                                                  \
+      _fortres_exception_type(   AssertionError        ,02020000) \
+                                                                  \
+      _fortres_exception_type(   EnvironmentError      ,02040000) \
+      _fortres_exception_type(     IOError             ,02040100) \
+                                                                  \
+      _fortres_exception_type(   EOFError              ,02080000) \
+                                                                  \
+      _fortres_exception_type(   MemoryError           ,02100000) \
+                                                                  \
+      _fortres_exception_type(   RuntimeError          ,02200000) \
+      _fortres_exception_type(     NotImplementedError ,02200100) \
+      _fortres_exception_type(     LookupError         ,02200200) \
+      _fortres_exception_type(       KeyError          ,02200210) \
+                                                                  \
+      _fortres_exception_type(   TypeError             ,02400000) \
+                                                                  \
+      _fortres_exception_type(   ValueError            ,02800000) \
+                                                                  \
+      _fortres_exception_type( ExecutionError          ,04000000) \
+      _fortres_exception_type(   IllegalInstruction    ,04010000) \
+      _fortres_exception_type(   SegmentationFault     ,04020000) \
+                                                                  \
+      _fortres_exception_type( KeyboardInterrupt       ,08000000) \
+
+#endif /* __FORTRES_EXCEPTION_TYPES__HXX */
+
