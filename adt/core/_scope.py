@@ -34,7 +34,6 @@ class Scope(HashMap):
 
 
   def _mk_CALLBACK( self, ident, func, remove = False ):
-    ident = ident.encode()
     cb    = self.getItem(ident, KeyError).pyData
     ITF   = cb.setdefault( 'itf', CALLBACK_t() )
     if not func:
@@ -42,7 +41,7 @@ class Scope(HashMap):
     elif type(type(func)) is not type(ITF):
       func = cb.setdefault( id(func), ITF(func) )
       remove and cb.pop( id(func), None )
-    return ident, func
+    return ident.encode(), func
 
 
   def connectedCallbacks( self, ident ):

@@ -4,7 +4,7 @@ from operator import mul as _mul
 import six
 
 try:
-  from functions import reduce
+  from functools import reduce
 except ImportError:
   pass
 

@@ -67,3 +67,7 @@ class Compound(Union):
     setattr(_class, name, attr)
     return attr
 
+  
+  def __hash__( self ):
+    return hash( tuple(self._data) )
+
