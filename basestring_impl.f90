@@ -157,12 +157,12 @@
     integer,                parameter :: stderr = 0
     integer                           :: stat
 
-    res = C_NULL_PTR
     if (_ref_isWeakMine( bs%refstat )) then
 # if ADT_DEBUG == ENABLED
       write(stderr,*,iostat=stat) "WARNING: applied basestring_cptr_c on weak reference string!"
 # endif
       deallocate( bs%ptr )
+      res = C_NULL_PTR
     else if (associated(bs%ptr) .and. bs%len > 0) then
       res = c_loc(bs%ptr(1))
     end if
