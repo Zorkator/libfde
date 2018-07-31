@@ -1,13 +1,12 @@
 ###
-# makefile for building libfortres
+# makefile for building libfortres (C-core library of libadt)
 #
 # NOTE: for using this makefile you need some meta-makefiles bundled by another project called 'makeIt'.
 #       Please set the environment variable MAKEIT_DIR to a directory that contains a copy.
 #       For getting a copy you can do ...
-#         svn co htpps://subversion.assembla.com/svn/zappralot/trunk/makeIt
-#
-# You can test it without hassle by creating a static link to this file:
-#   ln -s makefile.makeIt makefile
+#      		git clone https://github.com/Zorkator/makeIt makeIt
+#       or
+#         svn co https://github.com/Zorkator/makeIt/trunk makeIt
 #
 # Type 'make' to get the help screen, or 'make built' to start building libfortres.
 #
