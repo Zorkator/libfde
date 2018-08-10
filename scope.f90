@@ -17,7 +17,7 @@ module adt_scope
 
   type(HashMap_t), pointer :: processScope_
 
-  public :: newScope, getScope, getItem, getRef, setProcedure, getProcedure
+  public :: newScope, getScope, getItem, getRef, getCharPtr, setProcedure, getProcedure
   public :: declareCallback, connectedCallbacks, connectCallback, disconnectCallback, tryCallback, invokeCallback
   public :: hook_disabled, hook_undeclared, hook_not_set, hook_set, hook_called
 
@@ -42,7 +42,7 @@ module adt_scope
   end interface
 
   interface getItem
-    function scope_get_item_( scope, id, raise ) result(res)
+    function scope_get_item_f( scope, id, raise ) result(res)
       import HashMap_t, Item_t
       type(HashMap_t)        :: scope
       character(len=*)       :: id
@@ -52,7 +52,7 @@ module adt_scope
   end interface
 
   interface getRef
-    function scope_get_ref_( scope, id, raise ) result(res)
+    function scope_get_ref_f( scope, id, raise ) result(res)
       import HashMap_t, Ref_t
       type(HashMap_t)        :: scope
       character(len=*)       :: id
@@ -61,8 +61,19 @@ module adt_scope
     end function
   end interface
 
+  interface getCharPtr
+    function scope_get_char_ptr_f( scope, id, assumedLen, raise ) result(res)
+      import HashMap_t
+      type(HashMap_t)            :: scope
+      character(len=*)           :: id
+      integer*4,        optional :: assumedLen
+      logical,          optional :: raise
+      character(len=:),  pointer :: res
+    end function
+  end interface
+
   interface setProcedure
-    subroutine scope_set_procedure_( scope, id, proc_ )
+    subroutine scope_set_procedure_c( scope, id, proc_ )
       import HashMap_t
       type(HashMap_t)   :: scope
       character(len=*)  :: id
@@ -71,7 +82,7 @@ module adt_scope
   end interface
 
   interface getProcedure
-    function scope_get_procedure_( scope, id, raise ) result(res)
+    function scope_get_procedure_f( scope, id, raise ) result(res)
       import HashMap_t, c_funptr
       type(HashMap_t)   :: scope
       character(len=*)  :: id
