@@ -83,7 +83,7 @@ class Scope(HashMap):
 
   def getProcedure( self, ident, retType = _arg(None), args = _arg([]) ):
     ITF = self.getItem( ident, KeyError ).pyData.get('itf')
-    if not ITF:
+    if not ITF or _arg.isGiven(retType) or _arg.isGiven(args):
       ITF = CFUNCTION_t( _arg.get(retType), *_arg.get(args) )
     proc = ITF(0)
     self.get_procedure_( byref(proc), byref(self), c_char_p(ident), VOID_Ptr(), c_int(len(ident)) )

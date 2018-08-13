@@ -40,7 +40,7 @@ class _arg(object):
 
   @classmethod
   def isGiven( _class, arg ):
-    return isinstance( arg, _class )
+    return not isinstance( arg, _class )
 
   @classmethod
   def get( _class, arg ):
