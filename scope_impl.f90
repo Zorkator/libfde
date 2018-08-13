@@ -40,6 +40,22 @@ module impl_scope__
 end module
 
 
+module impl_scope_itf__
+  use impl_scope__
+  implicit none 
+
+  interface 
+    subroutine scope_get_procedure_c( res, scope, id, raise )
+      import
+      type(c_funptr)         :: res
+      type(HashMap_t)        :: scope
+      character(len=*)       :: id
+      logical,      optional :: raise
+    end subroutine
+  end interface
+end module
+
+
 !_PROC_EXPORT(scope_create_)
   function scope_create_() result(scope)
     use impl_scope__; implicit none
@@ -324,12 +340,12 @@ end module
 
     subroutine retrievePtr_( len_ )
       integer,          intent(in) :: len_
-      character(len=len_), pointer :: str
+      character(len=len_), pointer :: str_
 
-      if (.not. dynamic_cast( str, getRef( scope, id, raise_ ) ) .and. raise_) then
+      if (.not. dynamic_cast( str_, getRef( scope, id, raise_ ) ) .and. raise_) then
         call throw( TypeError, __ill_var_ref(id) )
       end if
-      res => mapPtr_( str ) !< there are STILL problems with ifort's bounds remapping - so we do it ourselvs.
+      res => mapPtr_( str_ ) !< there are STILL problems with ifort's bounds remapping - so we do it ourselvs.
      end subroutine
 
      function mapPtr_( in ) result(out)
@@ -359,10 +375,10 @@ end module
     ! A TypeError is thrown if the scope item is not a routine.
     use impl_scope__
     implicit none
+    type(c_funptr)         :: res
     type(HashMap_t)        :: scope
     character(len=*)       :: id
     logical,      optional :: raise
-    type(c_funptr)         :: res
     logical                :: raise_
     type(c_ptr),   pointer :: fptr
 
@@ -381,6 +397,7 @@ end module
     ! Get generic procedure pointer named <id> of given <scope>.
     ! A TypeError is thrown if the scope item is not a routine.
     use impl_scope__
+    use impl_scope_itf__
     implicit none
     type(HashMap_t)        :: scope
     character(len=*)       :: id
