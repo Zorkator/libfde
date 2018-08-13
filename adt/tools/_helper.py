@@ -32,6 +32,22 @@ class NullGuard(object):
     return 
 
 
+######################################
+class _arg(object):
+######################################
+  def __init__( self, default ):
+    self._default = default
+
+  @classmethod
+  def isGiven( _class, arg ):
+    return isinstance( arg, _class )
+
+  @classmethod
+  def get( _class, arg ):
+    if isinstance( arg, _class ): return arg._default
+    else                        : return arg
+
+
 def auto_raise( obj, what = None ):
   if isinstance( obj, type ) and issubclass( obj, Exception ): raise obj(what)
   if isinstance( obj, Exception )                            : raise obj

@@ -1,8 +1,8 @@
 
 from ._hashmap import HashMap
 from ._ref     import Ref
-from ._ftypes  import mappedType, _mapType, CALLBACK, CALLBACK_t, POINTER_t, VOID_Ptr
-from ..tools  import dict2obj
+from ._ftypes  import mappedType, _mapType, CALLBACK, CALLBACK_t, CFUNCTION_t, POINTER_t, VOID_Ptr
+from ..tools  import dict2obj, _arg
 from ctypes   import byref, c_char_p, c_int, POINTER, sizeof, Array
 
 try:
@@ -22,6 +22,14 @@ class Scope(HashMap):
 
   ######################
 
+  def _mk_CFUNCTION( self, func, funcRetType = None, funcArgTypes = () ):
+    ITF  = CFUNCTION_t( funcRetType, *funcArgTypes )
+    func = func or 0
+    if type(type(func)) is not type(ITF):
+      func = ITF(func)
+    return func, ITF
+
+
   def declareCallback( self, ident, argType = None ):
     ident = ident.encode()
     self.declare_callback_( byref(self), c_char_p(ident), c_int(len(ident)) )
@@ -34,14 +42,14 @@ class Scope(HashMap):
 
 
   def _mk_CALLBACK( self, ident, func, remove = False ):
-    cb    = self.getItem(ident, KeyError).pyData
-    ITF   = cb.setdefault( 'itf', CALLBACK_t() )
+    cb  = self.getItem(ident, KeyError).pyData
+    ITF = cb.setdefault( 'itf', CALLBACK_t() )
     if not func:
-      func = ITF(0)
+      cfunc = ITF(0)
     elif type(type(func)) is not type(ITF):
-      func = cb.setdefault( id(func), ITF(func) )
+      cfunc = cb.setdefault( id(func), ITF(func) )
       remove and cb.pop( id(func), None )
-    return ident.encode(), func
+    return ident.encode(), cfunc
 
 
   def connectedCallbacks( self, ident ):
@@ -65,6 +73,22 @@ class Scope(HashMap):
     ident = ident.encode()
     argPtr = VOID_Ptr() if arg is None else byref(arg)
     self.invoke_callback_( byref(self), c_char_p(ident), argPtr, c_int(len(ident)) )
+
+
+  def setProcedure( self, ident, func, retType = None, args = () ):
+    cfunc, ITF = self._mk_CFUNCTION( func, retType, args )
+    self.set_procedure_( byref(self), c_char_p(ident), cfunc, c_int(len(ident)) )
+    self.getItem( ident, KeyError ).pyData.update( itf = ITF )
+
+
+  def getProcedure( self, ident, retType = _arg(None), args = _arg([]) ):
+    ITF = self.getItem( ident, KeyError ).pyData.get('itf')
+    if not ITF:
+      ITF = CFUNCTION_t( _arg.get(retType), *_arg.get(args) )
+    proc = ITF(0)
+    self.get_procedure_( byref(proc), byref(self), c_char_p(ident), VOID_Ptr(), c_int(len(ident)) )
+    proc._itf = ITF
+    return proc
 
 
   def _assign_tree( self, other, keyOp=None ):

@@ -132,6 +132,12 @@ def CALLBACK_t( argType = None ):
   T.__repr__ = _func_repr
   return T
 
+def CFUNCTION_t( retType = None, *args ):
+  T = CFUNCTYPE( retType, *args )
+  T.__repr__ = _func_repr
+  return T
+
+
 VOID_Ptr = POINTER_t(c_void_p)
 CALLBACK = CALLBACK_t()
 SHORT_ID = c_char * 10      #< define this type for gfortran workaround

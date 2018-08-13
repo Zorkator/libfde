@@ -1,17 +1,6 @@
 
 #include "adt/itfUtil.fpp"
 
-#define _optArg(var, arg, default)       \
-  if (present(arg)) then; var = arg     ;\
-                    else; var = default ;\
-  end if
-
-#define _optArgPtr(ptr, arg, default)     \
-  if (present(arg)) then; ptr => arg     ;\
-                    else; ptr => default ;\
-  end if
-
-
 module adt_file
   use adt_exception
   implicit none
