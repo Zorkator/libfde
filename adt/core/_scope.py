@@ -2,7 +2,7 @@
 from ._hashmap import HashMap
 from ._ref     import Ref
 from ._ftypes  import mappedType, _mapType, CALLBACK, CALLBACK_t, CFUNCTION_t, POINTER_t, VOID_Ptr
-from ..tools  import dict2obj, _arg
+from ..tools  import dict2obj, _arg, auto_raise
 from ctypes   import byref, c_char_p, c_int, POINTER, sizeof, Array
 
 try:
@@ -115,26 +115,26 @@ class Scope(HashMap):
     self._assign_tree( path_dict, keyOp )
 
 
-  def iterDomain( self, paths, keyOp=str.split ):
+  def iterDomain( self, paths, keyOp=str.split, default=LookupError ):
     keyOp = keyOp or (lambda k: [k])
-    try:
-      for p in map( keyOp, paths ):
+    for p in map( keyOp, paths ):
+      try:
         yield p, self[p] if p else None
-    except (TypeError, KeyError, AttributeError) as e:
-      raise LookupError( "invalid path %s" % p )
+      except (TypeError, KeyError, AttributeError) as e:
+        yield p, auto_raise( default, 'invalid path %s' % p )
 
 
-  def extractDomain( self, paths, keyOp=str.split ):
+  def extractDomain( self, paths, keyOp=str.split, default=LookupError ):
     def _put( d, k ): return d.setdefault( k, dict() )
 
     domain = dict()
-    for p, v in self.iterDomain( paths, keyOp ):
+    for p, v in self.iterDomain( paths, keyOp, default ):
       if p: reduce( _put, p[:-1], domain )[p[-1]] = v
     return domain
 
 
-  def extractContext( self, paths, keyOp=str.split ):
-    return dict2obj( self.extractDomain( paths, keyOp ) )
+  def extractContext( self, paths, keyOp=str.split, default=LookupError ):
+    return dict2obj( self.extractDomain( paths, keyOp, default ) )
 
 
   def asContext( self ):
