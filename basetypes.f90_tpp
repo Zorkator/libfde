@@ -91,7 +91,9 @@ module adt_basetypes
   !_TypeGen_declare_RefType( public, String_2d, type(String_t),  dimension(:,:), streaming=array )
 
   interface
-    subroutine Callback_itf()
+    subroutine Callback_itf( arg )
+      import
+      integer(kind=c_intptr_t) :: arg
     end subroutine
   end interface
   public :: Callback_itf

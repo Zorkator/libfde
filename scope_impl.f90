@@ -14,15 +14,6 @@ module impl_scope__
   use adt_exception
   use adt_containertypes
 
-  ! thanks to another gfortran (7.2.0) bug, we have to redefine Callback_itf here!
-# define Callback_itf  Callback_itf_
-  interface
-    subroutine Callback_itf_( arg )
-      import c_ptr
-      type(c_ptr) :: arg
-    end subroutine
-  end interface
-
   contains
 
   function get_callbackList_( self, ident ) result(res)
@@ -235,7 +226,7 @@ end module
     type(HashMap_t)                  :: self
     character(len=*)                 :: ident
     type(c_ptr),            optional :: arg
-    type(c_ptr)                      :: arg_
+    integer(kind=c_intptr_t)         :: arg_
     type(List_t),            pointer :: cbList
     procedure(Callback_itf), pointer :: cbf
     type(ListIndex_t)                :: idx
@@ -244,14 +235,13 @@ end module
     cbList => get_callbackList_( self, ident )
     if (associated( cbList )) then
       if (len(cbList) > 0) then
-        if (present(arg)) then
-          arg_ = arg
+        if (present(arg)) then; arg_ = transfer( arg, arg_ )
+                          else; arg_ = 0
         end if
 
         idx = index( cbList )
         do while (is_valid(idx))
-          ! redefinition of Callback_itf above forces us to cast the hard way ...
-          call c_f_procpointer( c_funloc(Callback_from_ref( ref(idx) )), cbf )
+          cbf => Callback_from_ref( ref(idx) )
           call cbf( arg_ )
           call next(idx)
         end do
