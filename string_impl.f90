@@ -84,10 +84,12 @@ end module
     use impl_string__; implicit none
     type(String_t)            :: self
     character(len=:), pointer :: res
-    if (_isHard( self )) then; res => _ptr(self)
-                         else; res => empty_string_
+    if (_isHard( self )) then
+      res => _ptr(self)
+    else
+      res => empty_string_
+      _release_weak( self )
     end if
-    _release_weak( self )
   end function
 
 
@@ -169,8 +171,8 @@ end module
       res => tmp( : len_trim( tmp ) )
     else
       res => empty_string_
+      _release_weak(self)
     end if
-    _release_weak(self)
   end function
 
 
@@ -180,14 +182,18 @@ end module
     type(String_t)                     :: self
     character(len=:),          pointer :: res
     character(len=_len(self)), pointer :: tmp
+    integer :: idx
 
     if (_isHard( self )) then
       tmp => _ptr(self)
-      res => tmp( verify( tmp, ' ' )+1 : len_trim( tmp ) )
+      idx = verify( tmp, ' ' )
+      if (idx > 0) then; res => tmp( idx: len_trim(tmp) )
+                   else; res => empty_string_
+      end if
     else
       res => empty_string_
+      _release_weak(self)
     end if
-    _release_weak(self)
   end function
 
 
@@ -198,8 +204,9 @@ end module
     type(String_t) :: self
     if (_isHard( self )) then
       call basestring_assign_charstring_c( self%str, string_strip( self ) )
+    else
+      _release_weak( self )
     end if
-    _release_weak( self )
   end subroutine
 
 
@@ -775,10 +782,12 @@ end module
     use impl_string__; implicit none
     type(String_t)            :: filePath
     character(len=:), pointer :: res
-    if (_isHard( filePath )) then; res => file_basename( _ptr(filePath) )
-                             else; res => empty_string_
+    if (_isHard( filePath )) then
+      res => file_basename( _ptr(filePath) )
+    else
+      res => empty_string_
+      _release_weak(filePath)
     end if
-    _release_weak(filePath)
   end function
 
 
@@ -797,9 +806,11 @@ end module
     use impl_string__; implicit none
     type(String_t)            :: filePath
     character(len=:), pointer :: res
-    if (_isHard( filePath )) then; res => file_dirname( _ptr(filePath) )
-                             else; res => empty_string_
+    if (_isHard( filePath )) then
+      res => file_dirname( _ptr(filePath) )
+    else
+      res => empty_string_
+      _release_weak(filePath)
     end if
-    _release_weak(filePath)
   end function
 
