@@ -1,5 +1,6 @@
 
 #include "adt/itfUtil.fpp"
+#include "adt/ref_status.fpp"
 
 module impl_string__
   use adt_string
@@ -17,12 +18,15 @@ module impl_string__
 #   define _charAt(self,idx)    self%str%ptr(idx)
 #   define _reflen(self)        basestring_len_ref( self%str )
 #   define _release_weak(self)  call basestring_release_weak( self%str )
+#   define _isHard(self)        _ref_isHard(self%str%refstat)
   end type
 
-  integer, parameter :: uc_A = iachar('A')
-  integer, parameter :: uc_Z = iachar('Z')
-  integer, parameter :: lc_a = iachar('a')
-  integer, parameter :: lc_z = iachar('z')
+  integer, parameter   :: uc_A = iachar('A')
+  integer, parameter   :: uc_Z = iachar('Z')
+  integer, parameter   :: lc_a = iachar('a')
+  integer, parameter   :: lc_z = iachar('z')
+  character(0), target :: empty_string_ = ''
+
 
   interface
     subroutine charstring_to_upper( cs )
@@ -68,13 +72,12 @@ end module
 !_PROC_EXPORT(string_str)
   function string_str( self ) result(res)
     use impl_string__; implicit none
-    type(String_t)                        :: self
-    character(len=_reflen(self)), pointer :: res
-    type(c_ptr)                           :: ptr
-    ptr = basestring_cptr( self%str )
-    if (c_associated( ptr )) then; call c_f_pointer( ptr, res )
-                             else; res => null()
+    type(String_t)            :: self
+    character(len=:), pointer :: res
+    if (_isHard( self )) then; res => _ptr(self)
+                         else; res => empty_string_
     end if
+    _release_weak( self )
   end function
 
 
@@ -697,23 +700,46 @@ end module
 !_PROC_EXPORT(string_file_basename_charstring)
   function string_file_basename_charstring( filePath ) result(res)
     use impl_string__; implicit none
-    character(len=*)             :: filePath
-    character(len=len(filePath)) :: res
-    integer :: i,j
+    character(len=*),  target :: filePath
+    character(len=:), pointer :: res
+    integer                   :: i,j
     i = max( index( filePath, '/', back=.true. ), index( filePath, '\', back=.true. ) )
     j = index( filePath, '.', back=.true. ) - 1
     j = merge( j, -1, j > i )
     j = modulo( j, len(filePath) + 1 )
-    res = filePath(i+1:j)
+    res => filePath(i+1:j)
   end function
 
 !_PROC_EXPORT(string_file_basename_string)
   function string_file_basename_string( filePath ) result(res)
     use impl_string__; implicit none
-    type(String_t)                :: filePath
-    character(len=_len(filePath)) :: res
-    integer :: i,j
-    res = file_basename( _ptr(filePath) )
+    type(String_t)            :: filePath
+    character(len=:), pointer :: res
+    if (_isHard( filePath )) then; res => file_basename( _ptr(filePath) )
+                             else; res => empty_string_
+    end if
+    _release_weak(filePath)
+  end function
+
+
+!_PROC_EXPORT(string_file_dirname_charstring)
+  function string_file_dirname_charstring( filePath ) result(res)
+    use impl_string__; implicit none
+    character(len=*),  target :: filePath
+    character(len=:), pointer :: res
+    integer                   :: i
+    i = max( index( filePath, '/', back=.true. ), index( filePath, '\', back=.true. ) )
+    res => filePath(:i)
+  end function
+
+!_PROC_EXPORT(string_file_dirname_string)
+  function string_file_dirname_string( filePath ) result(res)
+    use impl_string__; implicit none
+    type(String_t)            :: filePath
+    character(len=:), pointer :: res
+    if (_isHard( filePath )) then; res => file_dirname( _ptr(filePath) )
+                             else; res => empty_string_
+    end if
     _release_weak(filePath)
   end function
 
