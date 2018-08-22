@@ -1,17 +1,11 @@
 
-lib/
-
 *.pyc
 
-vc2010/\.work/
+*.sw?
 
-libfortres/vc2010/\.work/
+*/\.work/
 
-libfortres/bin/Debug/
-
-libfortres/bin/Release/
-
-*.swp
+*/*/\.work/
 
 basetypes\.f90
 
@@ -29,6 +23,10 @@ ref\.f90
 
 string\.f90
 
-libfortres/vc2010/libfortres\.vcxproj\.user
+lib/
 
-vc2010/libadt\.u2d
+vc2010/*.u2d
+
+libfortres/bin/
+
+libfortres/vc2010/*.user
