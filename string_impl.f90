@@ -146,6 +146,24 @@ end module
   end subroutine
 
 !##################################
+  
+!_PROC_EXPORT(string_trim)
+  function string_trim( self ) result(res)
+    use impl_string__; implicit none
+    type(String_t)                     :: self
+    character(len=:),          pointer :: res
+    character(len=_len(self)), pointer :: tmp
+    integer                            :: i
+
+    if (_isHard( self )) then
+      tmp => _ptr(self)
+      res => tmp( : len_trim( tmp ) )
+    else
+      res => empty_string_
+    end if
+    _release_weak(self)
+  end function
+
 
 !_PROC_EXPORT(charstring_to_lower)
   subroutine charstring_to_lower( cs )

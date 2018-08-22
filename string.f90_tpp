@@ -39,7 +39,7 @@ module adt_string
 
   public :: lower, to_lower
   public :: upper, to_upper
-  public ::        to_trimmed
+  public :: trim,  to_trimmed
   public :: reserve
   public :: adjustl
   public :: adjustr
@@ -175,6 +175,15 @@ module adt_string
       import String_t
       type(String_t)          :: ds
       character(len=_len(ds)) :: res
+    end function
+  end interface
+
+
+  interface trim
+    function string_trim( ds ) result(res)
+      import String_t
+      type(String_t)            :: ds
+      character(len=:), pointer :: res
     end function
   end interface
 
