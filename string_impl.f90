@@ -26,7 +26,11 @@ module impl_string__
   integer, parameter   :: lc_a = iachar('a')
   integer, parameter   :: lc_z = iachar('z')
   character(0), target :: empty_string_ = ''
+end module
 
+
+module impl_string_itf__
+  use impl_string__, only: String_t
 
   interface
     subroutine charstring_to_upper( cs )
@@ -36,9 +40,15 @@ module impl_string__
     subroutine charstring_to_lower( cs )
       character(len=*) :: cs
     end subroutine
-  end interface
 
+    function string_strip( ds ) result(res)
+      import
+      type(String_t)            :: ds
+      character(len=:), pointer :: res
+    end function
+  end interface
 end module
+
 
 !_PROC_EXPORT(string_object_size_c)
   integer(kind=4) &
@@ -153,7 +163,6 @@ end module
     type(String_t)                     :: self
     character(len=:),          pointer :: res
     character(len=_len(self)), pointer :: tmp
-    integer                            :: i
 
     if (_isHard( self )) then
       tmp => _ptr(self)
@@ -163,6 +172,35 @@ end module
     end if
     _release_weak(self)
   end function
+
+
+!_PROC_EXPORT(string_strip)
+  function string_strip( self ) result(res)
+    use impl_string__; implicit none
+    type(String_t)                     :: self
+    character(len=:),          pointer :: res
+    character(len=_len(self)), pointer :: tmp
+
+    if (_isHard( self )) then
+      tmp => _ptr(self)
+      res => tmp( verify( tmp, ' ' )+1 : len_trim( tmp ) )
+    else
+      res => empty_string_
+    end if
+    _release_weak(self)
+  end function
+
+
+!_PROC_EXPORT(string_to_stripped)
+  subroutine string_to_stripped( self )
+    use impl_string_itf__
+    use impl_string__; implicit none
+    type(String_t) :: self
+    if (_isHard( self )) then
+      call basestring_assign_charstring_c( self%str, string_strip( self ) )
+    end if
+    _release_weak( self )
+  end subroutine
 
 
 !_PROC_EXPORT(charstring_to_lower)
@@ -181,8 +219,8 @@ end module
 
 !_PROC_EXPORT(string_to_lower)
   subroutine string_to_lower( self )
-    use impl_string__
-    implicit none
+    use impl_string_itf__
+    use impl_string__; implicit none
     type(String_t) :: self
     call charstring_to_lower( _ptr(self) )
     _release_weak( self )
@@ -190,6 +228,7 @@ end module
 
 !_PROC_EXPORT(charstring_lower)
   function charstring_lower( cs ) result(res)
+    use impl_string_itf__
     use impl_string__; implicit none
     character(len=*)       :: cs
     character(len=len(cs)) :: res
@@ -199,6 +238,7 @@ end module
 
 !_PROC_EXPORT(string_lower)
   function string_lower( self ) result(res)
+    use impl_string_itf__
     use impl_string__; implicit none
     type(String_t)            :: self
     character(len=_len(self)) :: res
@@ -224,8 +264,8 @@ end module
 
 !_PROC_EXPORT(string_to_upper)
   subroutine string_to_upper( self )
-    use impl_string__
-    implicit none
+    use impl_string_itf__
+    use impl_string__; implicit none
     type(String_t) :: self
     call charstring_to_upper( _ptr(self) )
     _release_weak( self )
@@ -233,6 +273,7 @@ end module
 
 !_PROC_EXPORT(charstring_upper)
   function charstring_upper( cs ) result(res)
+    use impl_string_itf__
     use impl_string__; implicit none
     character(len=*)       :: cs
     character(len=len(cs)) :: res
@@ -242,6 +283,7 @@ end module
 
 !_PROC_EXPORT(string_upper)
   function string_upper( self ) result(res)
+    use impl_string_itf__
     use impl_string__; implicit none
     type(String_t)            :: self
     character(len=_len(self)) :: res
