@@ -56,6 +56,28 @@ program testinger
   print *, "#" // adjustr(String('text')) // '#'
   print *, "#" // adjustl(String('       text ')) // '#' // String('usw')
 
+  print *, trim(ds2)//'<<'
+  print *, file_dirname( __FILE__ )
+  print *, file_basename( __FILE__ )
+  ds2 = __FILE__
+  print *, file_dirname( ds2 )
+  print *, file_basename( ds2 )
+  print *, file_dirname( string(__FILE__) )
+  print *, file_basename( string(__FILE__) )
+  print *, str( string(__FILE__) )
+  ds2 = ds2 // "                                       "
+  print *, trim(ds2)//'<<'
+  ds2 = ' testinger  '
+  print *, trim(ds2)//'<<'
+  ds2 = ''
+  print *, trim(ds2)//'<<'
+  print *, trim( string(' testinger     ') )//'<<'
+  ds2 = ''
+  print *, '>>'//strip(ds2)//'<<'
+  print *, strip( string('    testinger     ') )//'<<'
+  ds2 = ' testinger  '
+  print *, '>>'//strip(ds2)//'<<'
+
   ds2 = "abcdef"
 
   buffer = ' '
