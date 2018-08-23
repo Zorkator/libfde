@@ -339,6 +339,17 @@ module adt_item
     end subroutine
   end interface
 
+  public :: auto_resolve
+  interface auto_resolve
+    integer &
+    function item_auto_resolve( refPtr, itemPtr, tgt ) result(res)
+      import
+      type(Ref_t),  pointer, intent(inout) :: refPtr
+      type(Item_t), pointer, intent(inout) :: itemPtr
+      type(TypeInfo_t),             target :: tgt
+    end function
+  end interface
+
   interface
     subroutine item_init_by_item_c( self, has_proto, proto )
       import Item_t
