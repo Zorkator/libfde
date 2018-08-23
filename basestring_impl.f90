@@ -7,7 +7,6 @@
 !_ARG_REFERENCE2(bs, proto)
   subroutine basestring_init_by_basestring_c( bs, has_proto, proto )
     use adt_basestring, only: BaseString_t, basestring_assign_buf
-    use iso_c_binding
     implicit none
     type(BaseString_t), intent(inout) :: bs
     integer(kind=4),    intent(in)    :: has_proto
@@ -125,6 +124,29 @@
     else
       res => null()
     end if
+  end function
+
+
+!_PROC_EXPORT(basestring_safeptr)
+!_ARG_REFERENCE1(bs)
+  function basestring_safeptr( bs ) result(res)
+    use adt_basestring, only: BaseString_t, basestring_release_weak, empty_string_
+    use iso_c_binding
+    implicit none
+    type(BaseString_t), intent(in) :: bs
+    character(len=:),      pointer :: res
+    character(len=bs%len), pointer :: tmp
+
+    if (_ref_isHard( bs%refstat )) then
+      if (associated(bs%ptr) .and. bs%len > 0) then
+        call c_f_pointer( c_loc(bs%ptr(1)), tmp )
+        res => tmp
+        return
+      end if
+    else
+      call basestring_release_weak( bs )
+    end if
+    res => empty_string_
   end function
 
 

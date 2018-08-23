@@ -4,35 +4,12 @@
 module adt_basestring
   use iso_c_binding
   implicit none
-  private
   
-  type, public :: BaseString_t
+  type BaseString_t
     character(len=1), dimension(:), pointer :: ptr     => null()
     integer(kind=c_size_t)                  :: len     = 0
     _RefStatus                              :: refstat = _ref_HardLent
   end type
-
-  ! interface visibility
-
-  public :: basestring_init_by_basestring_c
-  public :: basestring_init_by_charstring_c
-  public :: basestring_init_by_buf
-  public :: basestring_set_attribute
-  public :: basestring_release_weak
-  public :: basestring_delete_c
-  public :: basestring_ptr
-  public :: basestring_cptr
-  public :: basestring_cptr_c
-  public :: basestring_len_ref
-  public :: basestring_reserve
-  public :: basestring_trim
-  public :: basestring_assign_charstring_c
-  public :: basestring_assign_buf
-  public :: basestring_assign_basestring_c
-
-  public :: temporary_string, permanent_string
-  public :: attribute_volatile, attribute_permanent
-
 
   ! parameter definitions
 
@@ -40,6 +17,8 @@ module adt_basestring
   type(BaseString_t), parameter :: permanent_string    = BaseString_t( null(), 0, _ref_HardLent )
   integer(kind=1),    parameter :: attribute_volatile  = 0
   integer(kind=1),    parameter :: attribute_permanent = 1
+
+  character(0),          target :: empty_string_ = ''
 
   ! interface definitions
 
@@ -85,6 +64,12 @@ module adt_basestring
       import BaseString_t
       type(BaseString_t), intent(in) :: bs
       character(len=bs%len), pointer :: res
+    end function
+
+    function basestring_safeptr( bs ) result(res)
+      import BaseString_t
+      type(BaseString_t), intent(in) :: bs
+      character(len=:),      pointer :: res
     end function
 
     function basestring_cptr( ds ) result(res)

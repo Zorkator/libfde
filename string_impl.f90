@@ -14,6 +14,7 @@ module impl_string__
 
 #   define _len(self)           self%str%len
 #   define _ptr(self)           basestring_ptr(self%str)
+#   define _safeptr(self)       basestring_safeptr(self%str)
 #   define _array(self)         self%str%ptr(:self%str%len)
 #   define _charAt(self,idx)    self%str%ptr(idx)
 #   define _reflen(self)        basestring_len_ref( self%str )
@@ -25,7 +26,6 @@ module impl_string__
   integer, parameter   :: uc_Z = iachar('Z')
   integer, parameter   :: lc_a = iachar('a')
   integer, parameter   :: lc_z = iachar('z')
-  character(0), target :: empty_string_ = ''
 end module
 
 
@@ -84,12 +84,7 @@ end module
     use impl_string__; implicit none
     type(String_t)            :: self
     character(len=:), pointer :: res
-    if (_isHard( self )) then
-      res => _ptr(self)
-    else
-      res => empty_string_
-      _release_weak( self )
-    end if
+    res => _safeptr( self )
   end function
 
 
@@ -162,17 +157,11 @@ end module
 !_PROC_EXPORT(string_trim)
   function string_trim( self ) result(res)
     use impl_string__; implicit none
-    type(String_t)                     :: self
-    character(len=:),          pointer :: res
-    character(len=_len(self)), pointer :: tmp
+    type(String_t)            :: self
+    character(len=:), pointer :: res
 
-    if (_isHard( self )) then
-      tmp => _ptr(self)
-      res => tmp( : len_trim( tmp ) )
-    else
-      res => empty_string_
-      _release_weak(self)
-    end if
+    res => _safeptr( self )
+    res => res( : len_trim( res ) )
   end function
 
 
@@ -184,15 +173,10 @@ end module
     character(len=_len(self)), pointer :: tmp
     integer :: idx
 
-    if (_isHard( self )) then
-      tmp => _ptr(self)
-      idx = verify( tmp, ' ' )
-      if (idx > 0) then; res => tmp( idx: len_trim(tmp) )
-                   else; res => empty_string_
-      end if
-    else
-      res => empty_string_
-      _release_weak(self)
+    res => _safeptr( self )
+    idx = verify( res, ' ' )
+    if (idx > 0) then
+      res => res( idx : len_trim(res) )
     end if
   end function
 
@@ -202,11 +186,7 @@ end module
     use impl_string_itf__
     use impl_string__; implicit none
     type(String_t) :: self
-    if (_isHard( self )) then
-      call basestring_assign_charstring_c( self%str, string_strip( self ) )
-    else
-      _release_weak( self )
-    end if
+    call basestring_assign_charstring_c( self%str, string_strip( self ) )
   end subroutine
 
 
@@ -229,8 +209,7 @@ end module
     use impl_string_itf__
     use impl_string__; implicit none
     type(String_t) :: self
-    call charstring_to_lower( _ptr(self) )
-    _release_weak( self )
+    call charstring_to_lower( _safeptr(self) )
   end subroutine
 
 !_PROC_EXPORT(charstring_lower)
@@ -274,8 +253,7 @@ end module
     use impl_string_itf__
     use impl_string__; implicit none
     type(String_t) :: self
-    call charstring_to_upper( _ptr(self) )
-    _release_weak( self )
+    call charstring_to_upper( _safeptr(self) )
   end subroutine
 
 !_PROC_EXPORT(charstring_upper)
@@ -782,12 +760,7 @@ end module
     use impl_string__; implicit none
     type(String_t)            :: filePath
     character(len=:), pointer :: res
-    if (_isHard( filePath )) then
-      res => file_basename( _ptr(filePath) )
-    else
-      res => empty_string_
-      _release_weak(filePath)
-    end if
+    res => file_basename( _safeptr(filePath) )
   end function
 
 
@@ -806,11 +779,6 @@ end module
     use impl_string__; implicit none
     type(String_t)            :: filePath
     character(len=:), pointer :: res
-    if (_isHard( filePath )) then
-      res => file_dirname( _ptr(filePath) )
-    else
-      res => empty_string_
-      _release_weak(filePath)
-    end if
+    res => file_dirname( _safeptr(filePath) )
   end function
 
