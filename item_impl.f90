@@ -671,3 +671,61 @@ end module
 !_EXPORT_ASSIGN_TO(complex16)
   _implement_assign_to_(complex16,  complex*16)
 
+
+#if 0
+  integer &
+  function auto_resolve( refPtr, itemPtr, tgt ) result(res)
+    use impl_item__
+    implicit none
+    type(Ref_t),  pointer, intent(inout) :: refPtr
+    type(Item_t), pointer, intent(inout) :: itemPtr
+    type(TypeInfo_t),             target :: tgt
+    type(TypeInfo_t),            pointer :: dt, refType, itemType
+  
+    !type(Ref_t),  pointer :: refPtr
+    !type(Item_t), pointer :: itemPtr
+
+    !refPtr => self
+    !select (auto_resolve( refPtr, itemPtr, tgt ))
+    !  case (1): refPtr ...
+    !  case (2):
+    !  case default: not found :-(
+    !end select
+
+    refType  => static_type(refPtr)
+    itemType => static_type(itemPtr)
+    res = 0
+    do while (res == 0)
+      if (associated( refPtr )) then
+        dt => dynamic_type( refPtr )
+
+        if (associated( dt, tgt )) then
+          res = 1
+        else if (associated( dt, refType )) then
+          refPtr  => ref(refPtr)
+          itemPtr => null()
+        else if (associated( dt, itemType )) then
+          itemPtr => item(refPtr)
+          refPtr  => null()
+        else
+          exit
+        end if
+
+      elseif (associated( itemPtr )) then
+        dt => dynamic_type( itemPtr )
+
+        if (associated( dt, tgt )) then
+          res = 2
+        else if (associated( dt, refType )) then
+          refPtr  => ref(itemPtr)
+          itemPtr => null()
+        else
+          exit
+        end if
+      else
+        exit
+      end if
+    end do
+  end function
+#endif
+
