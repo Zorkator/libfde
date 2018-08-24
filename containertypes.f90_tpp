@@ -10,6 +10,7 @@ module adt_containertypes
   use adt_string
   use adt_hashmap
   use adt_convert
+  use adt_basetypes
   use adt_ostream
   implicit none
   private

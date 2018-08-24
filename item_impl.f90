@@ -6,6 +6,7 @@ module impl_item__
   use adt_typeinfo
   use adt_string
   use adt_ref
+  use adt_basetypes
   use adt_memoryref
   use iso_c_binding
 
@@ -46,6 +47,21 @@ module impl_item__
       import Item_i, Ref_t
       type(Item_i), target :: self
       type(Ref_t), pointer :: res
+    end function
+
+    function item_get_data_cptr( self ) result(res)
+      import
+      type(Item_t) :: self
+      type(c_ptr)  :: res
+    end function
+
+    integer &
+    function item_resolve_data( ctgt, ti, ref, item )
+      import
+      type(c_ptr),         intent(out) :: ctgt
+      type(TypeInfo_t)                 :: ti
+      type(Ref_t),    optional, target :: ref
+      type(Item_t),   optional, target :: item
     end function
   end interface
 
@@ -557,44 +573,19 @@ end module
 !         calling dynamic_cast with self actually missing!
 # define _EXPORT_DYNAMIC_CAST(typeId) _PROC_EXPORT(_paste(item_dynamic_cast_,typeId)_c)
 # define _implement_dynamic_cast_(typeId, baseType) \
-  logical function _paste(item_dynamic_cast_,typeId)_c( ptr, self ) result(res) ;\
+  logical function _paste(item_dynamic_cast_,typeId)_c( tgt, self ) result(res) ;\
     use impl_item__; implicit none                                              ;\
-    baseType,              pointer :: ptr                                       ;\
-    type(Item_i), optional, target :: self                                      ;\
+    baseType,              pointer :: tgt                                       ;\
+    type(Item_t), optional, target :: self                                      ;\
     baseType                       :: var                                       ;\
-    res = present(self)                                                         ;\
-    if (res) res = associated( static_type(var), self%typeInfo )                ;\
-    if (res) then; call c_f_pointer( c_loc(self%data(1)), ptr )                 ;\
-             else; ptr => null()                                                ;\
-    end if                                                                      ;\
+    type(c_ptr)                    :: cp                                        ;\
+    select case (item_resolve_data( cp, static_type(var), item=self ))          ;\
+      case (1); call c_f_unwrap( cp, tgt );  res = .true.                       ;\
+      case (2); call c_f_pointer( cp, tgt ); res = .true.                       ;\
+      case default;           tgt => null(); res = .false.                      ;\
+    end select                                                                  ;\
   end function
 
-!_EXPORT_DYNAMIC_CAST(bool1)
-  _implement_dynamic_cast_(bool1,      logical*1)
-!_EXPORT_DYNAMIC_CAST(bool2)
-  _implement_dynamic_cast_(bool2,      logical*2)
-!_EXPORT_DYNAMIC_CAST(bool4)
-  _implement_dynamic_cast_(bool4,      logical*4)
-!_EXPORT_DYNAMIC_CAST(bool8)
-  _implement_dynamic_cast_(bool8,      logical*8)
-!_EXPORT_DYNAMIC_CAST(int1)
-  _implement_dynamic_cast_(int1,       integer*1)
-!_EXPORT_DYNAMIC_CAST(int2)
-  _implement_dynamic_cast_(int2,       integer*2)
-!_EXPORT_DYNAMIC_CAST(int4)
-  _implement_dynamic_cast_(int4,       integer*4)
-!_EXPORT_DYNAMIC_CAST(int8)
-  _implement_dynamic_cast_(int8,       integer*8)
-!_EXPORT_DYNAMIC_CAST(real4)
-  _implement_dynamic_cast_(real4,      real*4)
-!_EXPORT_DYNAMIC_CAST(real8)
-  _implement_dynamic_cast_(real8,      real*8)
-!_EXPORT_DYNAMIC_CAST(complex8)
-  _implement_dynamic_cast_(complex8,   complex*8)
-!_EXPORT_DYNAMIC_CAST(complex16)
-  _implement_dynamic_cast_(complex16,  complex*16)
-!_EXPORT_DYNAMIC_CAST(c_void_ptr)
-  _implement_dynamic_cast_(c_void_ptr, type(c_ptr))
 !_EXPORT_DYNAMIC_CAST(string)
   _implement_dynamic_cast_(string,     type(String_t))
 !_EXPORT_DYNAMIC_CAST(ref)
@@ -612,8 +603,6 @@ end module
   _implement_assign_to_(real16,       real*16)
 !_EXPORT_TYPECHECK(real16)
   _implement_typecheck_(real16,       real*16)
-!_EXPORT_DYNAMIC_CAST(real16)
-  _implement_dynamic_cast_(real16,    real*16)
 
 !_EXPORT_CONSTRUCTOR(complex32)
   _implement_constructor_(complex32,  complex*32)
@@ -625,8 +614,6 @@ end module
   _implement_assign_to_(complex32,    complex*32)
 !_EXPORT_TYPECHECK(complex32)
   _implement_typecheck_(complex32,    complex*32)
-!_EXPORT_DYNAMIC_CAST(complex32)
-  _implement_dynamic_cast_(complex32, complex*32)
 # endif
 
 
@@ -672,59 +659,69 @@ end module
   _implement_assign_to_(complex16,  complex*16)
 
 
+  function item_get_data_cptr( self ) result(res)
+    use impl_item__, only: Item_i, c_ptr, c_loc
+    type(Item_i) :: self
+    type(c_ptr)  :: res
+    res = c_loc(self%data(1))
+  end function
+
+
+!_PROC_EXPORT(item_resolve_data)
   integer &
-  function item_auto_resolve( refPtr, itemPtr, tgt ) result(res)
-    use impl_item__
+  function item_resolve_data( ctgt, ti, ref_, item_ ) result(res)
+    use impl_item__, only: TypeInfo_t, Ref_t, Item_t, static_type, temporary_ref, dynamic_type
+    use impl_item__, only: dynamic_type, ref_get_typereference, ref, item, item_get_data_cptr
+    use iso_c_binding
     implicit none
-    type(Ref_t),  pointer, intent(inout) :: refPtr
-    type(Item_t), pointer, intent(inout) :: itemPtr
-    type(TypeInfo_t),             target :: tgt
-    type(TypeInfo_t),            pointer :: dt, refType, itemType
-  
-    !  type(Ref_t),  pointer :: refptr
-    !  type(Item_t), pointer :: itemptr
+    type(c_ptr),         intent(out) :: ctgt
+    type(TypeInfo_t),         target :: ti
+    type(Ref_t),    optional, target :: ref_
+    type(Item_t),   optional, target :: item_
+    type(Ref_t),             pointer :: refPtr
+    type(Item_t),            pointer :: itemPtr
+    type(TypeInfo_t),        pointer :: dt, refType, itemType
 
-    !  refptr => self
-    !  select case (auto_resolve( refptr, itemptr, static_type(ptr) ))
-    !    case (1); ptr => item(refptr)
-    !    case (2); ptr => item(itemptr)
-    !    case default; ptr => null()
-    !  end select
-
-
+    refPtr   => ref_
+    itemPtr  => item_
     refType  => static_type(temporary_ref)
     itemType => static_type(itemPtr)
-    res = 0
-    do while (res == 0)
+
+    res  = 0
+    ctgt = C_NULL_PTR
+
+    do while (.true.)
       if (associated( refPtr )) then
         dt => dynamic_type( refPtr )
 
-        if (associated( dt, tgt )) then
-          res = 1
+        if (associated( dt, ti )) then
+          ctgt = ref_get_typereference( refPtr )
+          res  = 1
         else if (associated( dt, refType )) then
           refPtr  => ref(refPtr)
           itemPtr => null()
+          cycle
         else if (associated( dt, itemType )) then
           itemPtr => item(refPtr)
           refPtr  => null()
-        else
-          exit
+          cycle
         end if
 
       elseif (associated( itemPtr )) then
         dt => dynamic_type( itemPtr )
 
-        if (associated( dt, tgt )) then
-          res = 2
+        if (associated( dt, ti )) then
+          ctgt = item_get_data_cptr(itemPtr)
+          res  = 2
         else if (associated( dt, refType )) then
           refPtr  => ref(itemPtr)
           itemPtr => null()
-        else
-          exit
+          cycle
         end if
-      else
-        exit
       end if
+      exit
     end do
   end function
+
+
 

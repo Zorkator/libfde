@@ -26,7 +26,8 @@ module adt_ref
   !     deleteProc = ref_delete_c,       \
   !     cloneMode  = _type,              \
   !     streamProc = ref_stream_wrap_,   \
-  !     acceptProc = ref_accept_wrap_ )
+  !     acceptProc = ref_accept_wrap_,   \
+  !     itemCast   = false  )
 
 
   type, public :: RefEncoding_t

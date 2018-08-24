@@ -586,6 +586,97 @@ subroutine test_item()!{{{
 end subroutine!}}}
 
 
+subroutine test_dyncast()!{{{
+  use test_basedata
+  implicit none
+  type(Item_t) :: item_
+  type(Ref_t)  :: ref_
+  type(c_ptr)  :: cp
+
+  ref_ = ref_of(item_)
+  
+# define _chk_dyn_cast( typeId )                     ;\
+  item_ = ref_of(_paste(v_,typeId))                  ;\
+  if (dynamic_cast( _paste(p_,typeId), item_ )) then ;\
+    call accept( _paste(p_,typeId), streamer%super ) ;\
+  end if                                             ;\
+  if (dynamic_cast( _paste(p_,typeId), ref_ )) then  ;\
+    call accept( _paste(p_,typeId), streamer%super ) ;\
+  end if
+
+  _chk_dyn_cast(bool1)
+  _chk_dyn_cast(bool2)
+  _chk_dyn_cast(bool4)
+  _chk_dyn_cast(bool8)
+  _chk_dyn_cast(int1)
+  _chk_dyn_cast(int2)
+  _chk_dyn_cast(int4)
+  _chk_dyn_cast(int8)
+  _chk_dyn_cast(real4)
+  _chk_dyn_cast(real8)
+  _chk_dyn_cast(complex8)
+  _chk_dyn_cast(complex16)
+  _chk_dyn_cast(c_void_ptr)
+  !_chk_dyn_cast(char10)
+  _chk_dyn_cast(string)
+  _chk_dyn_cast(ref)
+  _chk_dyn_cast(item)
+  _chk_dyn_cast(list)
+  _chk_dyn_cast(hashmap)
+  _chk_dyn_cast(bool1_1d)
+  _chk_dyn_cast(bool2_1d)
+  _chk_dyn_cast(bool4_1d)
+  _chk_dyn_cast(bool8_1d)
+  _chk_dyn_cast(int1_1d)
+  _chk_dyn_cast(int2_1d)
+  _chk_dyn_cast(int4_1d)
+  _chk_dyn_cast(int8_1d)
+  _chk_dyn_cast(real4_1d)
+  _chk_dyn_cast(real8_1d)
+  _chk_dyn_cast(complex8_1d)
+  _chk_dyn_cast(complex16_1d)
+  !_chk_dyn_cast(c_void_ptr_1d)
+  !_chk_dyn_cast(char10_1d)
+  _chk_dyn_cast(string_1d)
+  !_chk_dyn_cast(ref_1d)
+  !_chk_dyn_cast(item_1d)
+  _chk_dyn_cast(bool1_2d)
+  _chk_dyn_cast(bool2_2d)
+  _chk_dyn_cast(bool4_2d)
+  _chk_dyn_cast(bool8_2d)
+  _chk_dyn_cast(int1_2d)
+  _chk_dyn_cast(int2_2d)
+  _chk_dyn_cast(int4_2d)
+  _chk_dyn_cast(int8_2d)
+  _chk_dyn_cast(real4_2d)
+  _chk_dyn_cast(real8_2d)
+  _chk_dyn_cast(complex8_2d)
+  _chk_dyn_cast(complex16_2d)
+  !_chk_dyn_cast(c_void_ptr_2d)
+  !_chk_dyn_cast(char10_2d)
+  _chk_dyn_cast(string_2d)
+  !_chk_dyn_cast(ref_2d)
+  !_chk_dyn_cast(item_2d)
+  _chk_dyn_cast(bool1_3d)
+  _chk_dyn_cast(bool2_3d)
+  _chk_dyn_cast(bool4_3d)
+  _chk_dyn_cast(bool8_3d)
+  _chk_dyn_cast(int1_3d)
+  _chk_dyn_cast(int2_3d)
+  _chk_dyn_cast(int4_3d)
+  _chk_dyn_cast(int8_3d)
+  _chk_dyn_cast(real4_3d)
+  _chk_dyn_cast(real8_3d)
+  _chk_dyn_cast(complex8_3d)
+  _chk_dyn_cast(complex16_3d)
+  !_chk_dyn_cast(c_void_ptr_3d)
+  !_chk_dyn_cast(char10_3d)
+  !_chk_dyn_cast(string_3d)
+  !_chk_dyn_cast(ref_3d)
+  !_chk_dyn_cast(item_3d)
+end subroutine!}}}
+
+
 subroutine test_list()!{{{
   use test_basedata
   implicit none
@@ -729,11 +820,10 @@ subroutine test_hashmap()!{{{
   _map_ref(char10)
   _map_ref(item)
   _map_ref(list)
-  _map_ref(hashmap)
+  !_map_ref(hashmap) !!<< adding ref to itself causes endless recursion on accept()!
 
-  call set( v_hashmap, 'submap', Item_of( clone( ref_ptr ) ) )
+  call set( v_hashmap, 'submap', Item_of( clone( ref_of(v_hashmap) ) ) )
   p_hashmap => hashmap( ref( get( v_hashmap, 'submap' ) ) )
-  call set( p_hashmap, 'subsubmap', Item_of( clone( ref_ptr ) ) )
 
   idx = index( p_hashmap )
   do while (is_valid(idx))
@@ -888,7 +978,7 @@ subroutine test_file_string()!{{{
 end subroutine!}}}
 
 
-subroutine test_visitor()
+subroutine test_visitor()!{{{
   use test_basedata
 
 # define _visit_(typeId) \
@@ -919,7 +1009,7 @@ subroutine test_visitor()
   v_item = Item_of( ref_of( v_real8 ) )
   call accept( v_item, streamer%super )
   
-end subroutine
+end subroutine!}}}
 
 
 module visitor_testmod!{{{
@@ -1346,6 +1436,7 @@ program test_adt
   call test_string()
   call test_ref()
   call test_item()
+  call test_dyncast()
   call test_list()
   call test_hashmap_nesting()
   call test_hashmap_cloning()
