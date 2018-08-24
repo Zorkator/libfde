@@ -67,7 +67,8 @@ class TypeSpec(object):
     if self._varBase:
       baseType = baseType.replace('len=*', 'len=:')
 
-    isDerived = self.baseTypeIdMatch( baseType )
+    isDerived  = self.baseTypeIdMatch( baseType )
+    isItemType = not (self._isArray or self._isProc)
 
     self.access       = access
     self.typeId       = typeId
@@ -82,6 +83,7 @@ class TypeSpec(object):
     self.dimSpec      = ('', ', dimension(%s)' % ','.join( [':'] * self.dimCount ))[self._isArray]
     self.baseExtra    = ('', ', nopass')[self._isProc]
     self.valAttrib    = (', target, intent(in)', '')[self._isProc]
+    self.itemCast     = ('!case(2); type not supported by Item_t', 'case (2); call c_f_pointer( cp, tgt ); res = .true.')[isItemType]
     self.shapeArg     = ('', ', shape(src)')[self._isArray]
     self.rank         = ('0', 'size(shape(self))')[self._isArray] #< NOTE: we ask for object shape only in case of arrays ...
                                                                   # This is for two reasons:
@@ -527,7 +529,7 @@ class RefType(TypeSpec):
       
       select case (item_resolve_data( cp, type_{typeId}, ref=self ))
         case (1); call c_f_unwrap( cp, tgt );  res = .true.
-        case (2); call c_f_pointer( cp, tgt ); res = .true.
+        {itemCast}
         case default;           tgt => null(); res = .false.
       end select
     end function
@@ -557,7 +559,7 @@ class RefType(TypeSpec):
       
       select case (item_resolve_data( cp, type_{typeId}, item=self ))
         case (1); call c_f_unwrap( cp, tgt );  res = .true.
-        case (2); call c_f_pointer( cp, tgt ); res = .true.
+        {itemCast}
         case default;           tgt => null(); res = .false.
       end select
     end function
@@ -661,7 +663,7 @@ class RefType(TypeSpec):
     streamTpl  = self._template['ref_streaming'][streamType]
     writeSize  = keySpecs.get( 'writeSize', 'ti%typeSpecs%streamLen' ) #< FORTRAN-COMPILERBUG: can't use storage_size on proc pointers!
     writeExpr  = ('self%ptr', "'%s'" % self.baseTypeId)[bool(self._isDerived)]
-    itemCast   = keySpecs.get('itemCast', 'true').lower() in '1 true yes'.split()
+    doItemCast = keySpecs.get('itemCast', 'true').lower() in '1 true yes'.split()
 
     keySpecs.update(
       writeBuf  = ('{0}', 'size(self%ptr)*{0}')[self._isArray].format( writeSize ),
@@ -675,7 +677,7 @@ class RefType(TypeSpec):
     keySpecs.update( streamWriting = streamTpl.format( **dict( self.__dict__, **keySpecs ) ) )
     
     self._itf          = ('ref_itf',           'proc_itf'         )[self._isProc]
-    self._itemCastItf  = ('',                  'item_itf',        )[itemCast]
+    self._itemCastItf  = ('',                  'item_itf',        )[doItemCast]
     self._access       = ('access_ref',        'access_proc'      )[self._isProc]
     self._refCloner    = ('ref_cloner',        ''                 )[self._isProc]
     self._inspector    = ('ref_inspector',     ''                 )[self._isProc]
@@ -684,7 +686,7 @@ class RefType(TypeSpec):
     self._acceptor     = ('ref_acceptor',      ''                 )['acceptProc' in keySpecs]
     self._streamerItf  = ('',                  'ref_streamerItf'  )['streamProc' in keySpecs]
     self._streamer     = ('ref_streamer',      ''                 )['streamProc' in keySpecs]
-    self._itemcaster   = ('',                  'item_dynamic_cast')[itemCast]
+    self._itemcaster   = ('',                  'item_dynamic_cast')[doItemCast]
 
     if streamType == 'array':
       self.visitorGroup_beg = '\n      call group( vstr, size(wrap%ptr) )'

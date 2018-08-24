@@ -661,8 +661,8 @@ end module
 
   function item_get_data_cptr( self ) result(res)
     use impl_item__, only: Item_i, c_ptr, c_loc
-    type(Item_i) :: self
-    type(c_ptr)  :: res
+    type(Item_i), target :: self
+    type(c_ptr)          :: res
     res = c_loc(self%data(1))
   end function
 

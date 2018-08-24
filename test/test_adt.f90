@@ -674,6 +674,15 @@ subroutine test_dyncast()!{{{
   !_chk_dyn_cast(string_3d)
   !_chk_dyn_cast(ref_3d)
   !_chk_dyn_cast(item_3d)
+
+
+  item_ = 6
+  item_ = ref_of( v_int4 )
+
+  if (dynamic_cast( p_int4, item_ )) &
+    call accept( p_int4, streamer%super )
+
+
 end subroutine!}}}
 
 
@@ -885,7 +894,7 @@ subroutine test_hashmap_nesting()!{{{
 
   call set( scope, 'myfunc', Item_of( ref_from_Callback(init_basedata) ) )
   
-  if (dynamic_cast( r_array, ref(get(scope, 'value')) )) &
+  if (dynamic_cast( r_array, get(scope, 'value') )) &
     print *, r_array
 
   call stream( scope, fout )
@@ -1216,7 +1225,7 @@ module pointer_remapping
     matrix(-3:,9,:) = 1
     matrix(-2:,8,:) = 1
 
-    if (dynamic_cast( ptr, ref( get( v_hashmap, 'matrix' ) ) )) then
+    if (dynamic_cast( ptr, get( v_hashmap, 'matrix' ) ) ) then
       print *, ptr
       print *, shape(ptr)
       print *, lbound(ptr)
@@ -1334,7 +1343,7 @@ module debug
     allocate( buf_ptr(20) )
     it = Item_of(ref_of(buf_ptr, bind=.true.))
     print *, shape(ref(it))
-    print *, dynamic_cast( other_ptr, ref(it) )
+    print *, dynamic_cast( other_ptr, it )
     other_ptr(-3:3) => buf_ptr
     it = Item_of(ref_of(other_ptr))
     print *, shape(ref(it))
