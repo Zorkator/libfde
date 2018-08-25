@@ -67,7 +67,8 @@ class TypeSpec(object):
     if self._varBase:
       baseType = baseType.replace('len=*', 'len=:')
 
-    isDerived = self.baseTypeIdMatch( baseType )
+    isDerived  = self.baseTypeIdMatch( baseType )
+    isItemType = not (self._isArray or self._isProc)
 
     self.access       = access
     self.typeId       = typeId
@@ -82,6 +83,7 @@ class TypeSpec(object):
     self.dimSpec      = ('', ', dimension(%s)' % ','.join( [':'] * self.dimCount ))[self._isArray]
     self.baseExtra    = ('', ', nopass')[self._isProc]
     self.valAttrib    = (', target, intent(in)', '')[self._isProc]
+    self.itemCast     = ('!case(2); type not supported by Item_t', 'case (2); call c_f_pointer( cp, tgt ); res = .true.')[isItemType]
     self.shapeArg     = ('', ', shape(src)')[self._isArray]
     self.rank         = ('0', 'size(shape(self))')[self._isArray] #< NOTE: we ask for object shape only in case of arrays ...
                                                                   # This is for two reasons:
@@ -142,12 +144,28 @@ class RefType(TypeSpec):
     #   access:     private | public
     #   typeId:     type identifier
     #
+    common_itf = """
+    interface is_{typeId} ; module procedure {typeId}_in_ref_         ; end interface
+    interface c_f_unwrap  ; module procedure {typeId}_unwrap_         ; end interface
+    interface dynamic_cast; module procedure {typeId}_dynamic_cast_r_ ; end interface
+    interface static_type ; module procedure {typeId}_typeinfo_       ; end interface
+    """,
+
+    # parameters:
+    #   access:     private | public
+    #   typeId:     type identifier
+    #
+    item_itf = """
+    interface dynamic_cast; module procedure {typeId}_dynamic_cast_i_ ; end interface
+    """,
+
+    # parameters:
+    #   access:     private | public
+    #   typeId:     type identifier
+    #
     ref_itf = """
-    interface ref_of      ; module procedure {typeId}_encode_ref_   ; end interface
-    interface {typeId}    ; module procedure {typeId}_decode_ref_   ; end interface
-    interface is_{typeId} ; module procedure {typeId}_in_ref_       ; end interface
-    interface dynamic_cast; module procedure {typeId}_dynamic_cast_ ; end interface
-    interface static_type ; module procedure {typeId}_typeinfo_     ; end interface
+    interface ref_of      ; module procedure {typeId}_encode_ref_     ; end interface
+    interface {typeId}    ; module procedure {typeId}_decode_ref_     ; end interface
     """,
 
     access_ref = "{typeId}, is_{typeId}",
@@ -161,11 +179,8 @@ class RefType(TypeSpec):
     #   For the decoder, it's obviously due to various compiler bugs ...
     #
     proc_itf = """
-    interface ref_from_{typeId}; module procedure {typeId}_encode_ref_   ; end interface
-    interface {typeId}_from_ref; module procedure {typeId}_decode_ref_   ; end interface
-    interface is_{typeId}      ; module procedure {typeId}_in_ref_       ; end interface
-    interface dynamic_cast     ; module procedure {typeId}_dynamic_cast_ ; end interface
-    interface static_type      ; module procedure {typeId}_typeinfo_     ; end interface
+    interface ref_from_{typeId}; module procedure {typeId}_encode_ref_     ; end interface
+    interface {typeId}_from_ref; module procedure {typeId}_decode_ref_     ; end interface
     """,
 
     access_proc = "ref_from_{typeId}, {typeId}_from_ref, is_{typeId}",
@@ -472,26 +487,83 @@ class RefType(TypeSpec):
 
     # parameters:
     #   typeId: type identifier
-    ref_dynamic_cast = """
-!_PROC_EXPORT({typeId}_dynamic_cast_)
-!_ARG_REFERENCE2(ptr, self)
-    logical &
-    function {typeId}_dynamic_cast_( ptr, self ) result(res)
+    ref_unwrap = """
+!_PROC_EXPORT({typeId}_unwrap_)
+!_ARG_REFERENCE2(cp, tgt)
+    subroutine {typeId}_unwrap_( cp, tgt )
       use iso_c_binding
-      {baseType}{dimSpec}, pointer, intent(out) :: ptr
-      type(Ref_t),                  intent(in)  :: self
+      type(c_ptr),                  intent(in)  :: cp
+      {baseType}{dimSpec}, pointer, intent(out) :: tgt
       type({typeId}Ptr_t),              pointer :: wrap
       
-      res = associated( dynamic_type(self), type_{typeId} )
-      if (res) then
-        call c_f_pointer( ref_get_typereference(self), wrap )
-        ptr => wrap%ptr
+      if (c_associated( cp )) then
+        call c_f_pointer( cp, wrap )
+        tgt => wrap%ptr
       else
-        ptr => null()
+        tgt => null()
       endif
+    end subroutine
+    """,
+
+    # parameters:
+    #   typeId: type identifier
+    ref_dynamic_cast = """
+!_PROC_EXPORT({typeId}_dynamic_cast_r_)
+!_ARG_REFERENCE2(tgt, self)
+    logical &
+    function {typeId}_dynamic_cast_r_( tgt, self ) result(res)
+      use iso_c_binding
+      {baseType}{dimSpec}, pointer, intent(out) :: tgt
+      type(Ref_t),                  intent(in)  :: self
+      type(c_ptr)                               :: cp
+
+      interface
+        integer function item_resolve_data( ctgt, ti, ref, dummy )
+          import
+          type(c_ptr),        intent(out) :: ctgt
+          type(TypeInfo_t)                :: ti
+          type(Ref_t),   optional, target :: ref
+          type(Ref_t),   optional, target :: dummy
+        end function
+      end interface
+      
+      select case (item_resolve_data( cp, type_{typeId}, ref=self ))
+        case (1); call c_f_unwrap( cp, tgt );  res = .true.
+        {itemCast}
+        case default;           tgt => null(); res = .false.
+      end select
     end function
     """,
 
+    # parameters:
+    #   typeId: type identifier
+    item_dynamic_cast = """
+!_PROC_EXPORT({typeId}_dynamic_cast_i_)
+!_ARG_REFERENCE2(tgt, self)
+    logical &
+    function {typeId}_dynamic_cast_i_( tgt, self ) result(res)
+      use iso_c_binding
+      {baseType}{dimSpec}, pointer, intent(out) :: tgt
+      type(Item_t),                 intent(in)  :: self
+      type(c_ptr)                               :: cp
+
+      interface
+        integer function item_resolve_data( ctgt, ti, ref, item )
+          import
+          type(c_ptr),        intent(out) :: ctgt
+          type(TypeInfo_t)                :: ti
+          type(Ref_t),   optional, target :: ref
+          type(Item_t),  optional, target :: item
+        end function
+      end interface
+      
+      select case (item_resolve_data( cp, type_{typeId}, item=self ))
+        case (1); call c_f_unwrap( cp, tgt );  res = .true.
+        {itemCast}
+        case default;           tgt => null(); res = .false.
+      end select
+    end function
+    """,
 
     # parameters:
     #   typeId:       type identifier
@@ -591,6 +663,7 @@ class RefType(TypeSpec):
     streamTpl  = self._template['ref_streaming'][streamType]
     writeSize  = keySpecs.get( 'writeSize', 'ti%typeSpecs%streamLen' ) #< FORTRAN-COMPILERBUG: can't use storage_size on proc pointers!
     writeExpr  = ('self%ptr', "'%s'" % self.baseTypeId)[bool(self._isDerived)]
+    doItemCast = keySpecs.get('itemCast', 'true').lower() in '1 true yes'.split()
 
     keySpecs.update(
       writeBuf  = ('{0}', 'size(self%ptr)*{0}')[self._isArray].format( writeSize ),
@@ -604,6 +677,7 @@ class RefType(TypeSpec):
     keySpecs.update( streamWriting = streamTpl.format( **dict( self.__dict__, **keySpecs ) ) )
     
     self._itf          = ('ref_itf',           'proc_itf'         )[self._isProc]
+    self._itemCastItf  = ('',                  'item_itf',        )[doItemCast]
     self._access       = ('access_ref',        'access_proc'      )[self._isProc]
     self._refCloner    = ('ref_cloner',        ''                 )[self._isProc]
     self._inspector    = ('ref_inspector',     ''                 )[self._isProc]
@@ -612,6 +686,7 @@ class RefType(TypeSpec):
     self._acceptor     = ('ref_acceptor',      ''                 )['acceptProc' in keySpecs]
     self._streamerItf  = ('',                  'ref_streamerItf'  )['streamProc' in keySpecs]
     self._streamer     = ('ref_streamer',      ''                 )['streamProc' in keySpecs]
+    self._itemcaster   = ('',                  'item_dynamic_cast')[doItemCast]
 
     if streamType == 'array':
       self.visitorGroup_beg = '\n      call group( vstr, size(wrap%ptr) )'
@@ -646,9 +721,9 @@ class RefType(TypeSpec):
 
   def declare( self, out ):
     if not self._declared:
-      self.expand( out, 'info', 'type', self._itf, 'ref_streamItf', self._streamerItf,
+      self.expand( out, 'info', 'type', 'common_itf', self._itf, self._itemCastItf, 'ref_streamItf', self._streamerItf,
                    'ref_acceptItf', self._acceptorItf )
-      self.expandAccess( out, self.access, 'ref_of', 'static_type', 'dynamic_cast', 'stream', 'accept' )
+      self.expandAccess( out, self.access, 'ref_of', 'static_type', 'dynamic_cast', 'stream', 'accept', 'c_f_unwrap' )
       self.expandAccessString( out, self.access, self._template[self._access] )
       TypeGenerator.setDeclaration( self.typeId, self )
       self._declared = True
@@ -656,7 +731,7 @@ class RefType(TypeSpec):
 
   def implement( self, out ):
     if not self._implemented:
-      self.expand( out, 'header', 'ref_encoder', 'ref_decoder', 'ref_typechecker', 'ref_dynamic_cast',
+      self.expand( out, 'header', 'ref_encoder', 'ref_decoder', 'ref_typechecker', 'ref_unwrap', 'ref_dynamic_cast', self._itemcaster,
                    self._refCloner, self._inspector, self._typeinfo, 'ref_accept', self._acceptor )
       self.expand( out, 'ref_stream', self._tryStreamer, self._streamer, **self._kwArgs )
       out( self._ptrCloner.format( **self.__dict__ ) )

@@ -11,6 +11,7 @@ module impl_hashmap__
   use adt_memoryref
   use adt_ostream
   use adt_visitor
+  use adt_basetypes
   use iso_c_binding
 
   type(List_t), target :: hashmap_nodeCache

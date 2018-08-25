@@ -16,18 +16,9 @@ module impl_scope__
 
   contains
 
-  function get_callbackList_( self, ident ) result(res)
-    implicit none
-    type(HashMap_t)       :: self
-    character(len=*)      :: ident
-    type(List_t), pointer :: res
-    type(Ref_t),  pointer :: ref_
+# define _get_callbackList( listPtr, scope, ident ) \
+    dynamic_cast( listPtr, getPtr( scope, ident ) )
 
-    res => null()
-    if (dynamic_cast( ref_, getPtr( self, ident ) )) then
-      if (dynamic_cast( res, ref_ )) continue
-    end if
-  end function
 end module
 
 
@@ -129,11 +120,9 @@ end module
       call initialize( cbList )
       call assign( it, Item_of( ref_of( cbList, bind = .true. ) ) )
     else
-      if (dynamic_cast( ref_, it )) then
-        if (dynamic_cast( cbList, ref_ )) then
-          call clear( cbList )
-          return
-        end if
+      if (dynamic_cast( cbList, it )) then
+        call clear( cbList )
+        return
       end if
       call throw( TypeError, __type_mismatch_what("event list", ident) )
     end if
@@ -148,9 +137,8 @@ end module
     character(len=*), intent(in) :: ident
     type(List_t),       pointer  :: cbList
 
-    res    =  hook_undeclared
-    cbList => get_callbackList_( self, ident )
-    if (associated( cbList )) then
+    res = hook_undeclared
+    if (_get_callbackList( cbList, self, ident )) then
       res = len( cbList )
     end if
   end function
@@ -167,9 +155,8 @@ end module
     procedure(),  pointer  :: procPtr
     type(List_t), pointer  :: cbList
 
-    res    = hook_undeclared
-    cbList => get_callbackList_( self, ident )
-    if (associated( cbList )) then
+    res = hook_undeclared
+    if (_get_callbackList( cbList, self, ident )) then
       res     = hook_not_set
       procPtr => proc_
       if (associated( procPtr )) then
@@ -192,9 +179,8 @@ end module
     type(List_t), pointer :: cbList
     type(ListIndex_t)     :: idx, delIdx
 
-    res    =  hook_undeclared
-    cbList => get_callbackList_( self, ident )
-    if (associated( cbList )) then
+    res = hook_undeclared
+    if (_get_callbackList( cbList, self, ident )) then
       procPtr => proc_
       if (associated( procPtr )) then
         idx = index( cbList )
@@ -231,9 +217,8 @@ end module
     procedure(Callback_itf), pointer :: cbf
     type(ListIndex_t)                :: idx
 
-    res    = hook_undeclared
-    cbList => get_callbackList_( self, ident )
-    if (associated( cbList )) then
+    res = hook_undeclared
+    if (_get_callbackList( cbList, self, ident )) then
       if (len(cbList) > 0) then
         if (present(arg)) then; arg_ = transfer( arg, arg_ )
                           else; arg_ = 0

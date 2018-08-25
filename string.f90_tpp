@@ -26,7 +26,8 @@ module adt_string
   !     assignProc = basestring_assign_basestring_c,  \
   !     deleteProc = basestring_delete_c,             \
   !     cloneMode  = _type,                           \
-  !     writeExpr  = "str(self%ptr)", streaming=direct )
+  !     writeExpr  = "str(self%ptr)", streaming=direct, \
+  !     itemCast   = false  )
 
 
   !public :: String <= is set public by RefType declaration!
