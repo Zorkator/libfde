@@ -892,7 +892,9 @@ subroutine test_hashmap_nesting()!{{{
   scope => getScope( hashmap(ref1), _this_file_basename(), 'gcsm', 'signal' )
   scope => _file_scope_in( scope )
 
-  call set( scope, 'myfunc', Item_of( ref_from_Callback(init_basedata) ) )
+  call declareCallback( scope, 'myCB' )
+  print *, connectCallback( scope, 'myCB', callback_proc )
+  call invokeCallback( scope, 'myCB', c_loc(scope) )
   
   if (dynamic_cast( r_array, get(scope, 'value') )) &
     print *, r_array
@@ -906,6 +908,17 @@ subroutine test_hashmap_nesting()!{{{
   call accept( getScope(), streamer%super )
 
   call delete( ref1 )
+
+  contains
+
+  subroutine callback_proc( arg )
+    integer(kind=c_intptr_t) :: arg
+    type(c_ptr)              :: ptr
+    type(HashMap_t), pointer :: scope_ptr
+
+    call c_f_pointer( transfer( arg, ptr ), scope_ptr )
+    call accept( scope_ptr, streamer%super )
+  end subroutine
 end subroutine!}}}
 
 

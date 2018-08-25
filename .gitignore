@@ -3,6 +3,8 @@
 
 *.sw?
 
+\.work/
+
 */\.work/
 
 */*/\.work/
@@ -30,3 +32,5 @@ vc2010/*.u2d
 libfortres/bin/
 
 libfortres/vc2010/*.user
+
+test/exe/
