@@ -39,7 +39,8 @@ module adt_string
 
   public :: lower, to_lower
   public :: upper, to_upper
-  public ::        to_trimmed
+  public :: trim,  to_trimmed
+  public :: strip, to_stripped
   public :: reserve
   public :: adjustl
   public :: adjustr
@@ -64,6 +65,7 @@ module adt_string
 
   ! auxiliary functions
   public :: file_basename
+  public :: file_dirname
 
 
   ! interface definitions
@@ -86,8 +88,8 @@ module adt_string
   interface str
     function string_str( ds ) result(res)
       import String_t
-      type(String_t)                      :: ds
-      character(len=_reflen(ds)), pointer :: res
+      type(String_t)            :: ds
+      character(len=:), pointer :: res
     end function
   end interface
 
@@ -178,6 +180,24 @@ module adt_string
   end interface
 
 
+  interface trim
+    function string_trim( ds ) result(res)
+      import String_t
+      type(String_t)            :: ds
+      character(len=:), pointer :: res
+    end function
+  end interface
+
+
+  interface strip
+    function string_strip( ds ) result(res)
+      import String_t
+      type(String_t)            :: ds
+      character(len=:), pointer :: res
+    end function
+  end interface
+
+
   interface to_lower
     subroutine charstring_to_lower( cs )
       character(len=*) :: cs
@@ -204,6 +224,15 @@ module adt_string
   
   interface to_trimmed
     subroutine basestring_trim( ds )
+      import String_t
+      implicit none
+      type(String_t) :: ds
+    end subroutine
+  end interface
+
+
+  interface to_stripped
+    subroutine string_to_stripped( ds )
       import String_t
       implicit none
       type(String_t) :: ds
@@ -572,13 +601,26 @@ module adt_string
   interface file_basename
     function string_file_basename_charstring( cs ) result(res)
       character(len=*), intent(in) :: cs
-      character(len=len(cs))       :: res
+      character(len=:),    pointer :: res
     end function
 
     function string_file_basename_string( ds ) result(res)
       import String_t
       type(String_t)               :: ds
-      character(len=_len(ds))      :: res
+      character(len=:),    pointer :: res
+    end function
+  end interface
+
+  interface file_dirname
+    function string_file_dirname_charstring( cs ) result(res)
+      character(len=*), intent(in) :: cs
+      character(len=:),    pointer :: res
+    end function
+
+    function string_file_dirname_string( ds ) result(res)
+      import String_t
+      type(String_t)               :: ds
+      character(len=:),    pointer :: res
     end function
   end interface
 

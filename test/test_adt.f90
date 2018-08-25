@@ -793,7 +793,9 @@ subroutine test_hashmap_nesting()!{{{
   scope => getScope( hashmap(ref1), _this_file_basename(), 'gcsm', 'signal' )
   scope => _file_scope_in( scope )
 
-  call set( scope, 'myfunc', Item_of( ref_from_Callback(init_basedata) ) )
+  call declareCallback( scope, 'myCB' )
+  print *, connectCallback( scope, 'myCB', callback_proc )
+  call invokeCallback( scope, 'myCB', c_loc(scope) )
   
   if (dynamic_cast( r_array, ref(get(scope, 'value')) )) &
     print *, r_array
@@ -807,6 +809,17 @@ subroutine test_hashmap_nesting()!{{{
   call accept( getScope(), streamer%super )
 
   call delete( ref1 )
+
+  contains
+
+  subroutine callback_proc( arg )
+    integer(kind=c_intptr_t) :: arg
+    type(c_ptr)              :: ptr
+    type(HashMap_t), pointer :: scope_ptr
+
+    call c_f_pointer( transfer( arg, ptr ), scope_ptr )
+    call accept( scope_ptr, streamer%super )
+  end subroutine
 end subroutine!}}}
 
 
@@ -883,6 +896,8 @@ subroutine test_file_string()!{{{
   print *, file_basename("c:\path/testinger.f90")
   print *, file_basename("path/testinger")
   print *, file_basename("testinger")
+
+  print *, file_dirname("c:\path/testinger.f90")
 
   call delete(s)
 end subroutine!}}}
@@ -1317,7 +1332,7 @@ program test_adt
   type(HashMap_t), pointer :: scope => null()
   character(len=20) :: text = "TestInGEr -- TäxT"
   character(len=20) :: txtout
-  v_string = "BlUbbINGER bla uND texT"
+  v_string = "BlUbbINGER bla uND texT     "
 
   call setup_standardExceptions()
   !call set_traceproc( tracer )
@@ -1335,6 +1350,25 @@ program test_adt
   v_string = "shOrt"
   print *, upper( v_string )
   call to_lower( v_string )
+
+  call delete( v_string )
+  print *, '>>' // str(v_string) // '<<'
+  print *, '>>' // trim(v_string) // '<<'
+  print *, '>>' // strip(v_string) // '<<'
+  v_string = '              '
+  print *, '>>' // trim(v_string) // '<<'
+  print *, '>>' // strip(v_string) // '<<'
+
+  v_string = '   ** test **   '
+  print *, '>>' // str(v_string) // '<<'
+  print *, '>>' // trim(v_string) // '<<'
+  print *, '>>' // strip(v_string) // '<<'
+  call to_trimmed( v_string )
+  print *, '>>' // str(v_string) // '<<'
+  v_string = '   ** test **   '
+  call to_stripped( v_string )
+  print *, '>>' // str(v_string) // '<<'
+
 
   call init_basedata()
   call stream( v_item, fout )
