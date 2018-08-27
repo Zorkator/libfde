@@ -148,7 +148,7 @@ class RefType(TypeSpec):
     interface is_{typeId} ; module procedure {typeId}_in_ref_         ; end interface
     interface c_f_unwrap  ; module procedure {typeId}_unwrap_         ; end interface
     interface dynamic_cast; module procedure {typeId}_dynamic_cast_r_ ; end interface
-    interface static_type ; module procedure {typeId}_typeinfo_       ; end interface
+    interface type_of     ; module procedure {typeId}_typeinfo_       ; end interface
     """,
 
     # parameters:
@@ -207,7 +207,7 @@ class RefType(TypeSpec):
       type(ostream_t)                :: outs
       type(TypeInfo_t),      pointer :: ti
       type({typeId}Ptr_t)            :: wrap
-      ti => static_type(self)
+      ti => type_of(self)
       wrap%ptr => self
       call ti%streamProc( wrap, ti, outs )
     end subroutine
@@ -304,7 +304,7 @@ class RefType(TypeSpec):
       type(Visitor_t)                :: vstr
       type(TypeInfo_t),      pointer :: ti
       type({typeId}Ptr_t)            :: wrap
-      ti       => static_type(self)
+      ti       => type_of(self)
       wrap%ptr => self
       call ti%acceptProc( wrap, ti, vstr )
     end subroutine
@@ -371,7 +371,7 @@ class RefType(TypeSpec):
       type(RefEncoding_t)                :: res( ceiling( storage_size(encoder) / real(storage_size(dummy)) ) )
 
       encoder%ref_wrap%ptr    => {encoder_ptr_tgt}
-      encoder%typeInfo(1)%ptr => static_type(val)
+      encoder%typeInfo(1)%ptr => type_of(val)
       if (present(bind)) then
         if (bind) &
           encoder%typeInfo(2)%ptr => encoder%typeInfo(1)%ptr
@@ -448,7 +448,7 @@ class RefType(TypeSpec):
         type(TypeInfo_t),        pointer :: ti
 
         allocate( tgt ) !< initializes res as default {typeId}
-        ti => static_type( tgt )
+        ti => type_of( tgt )
         if (associated( ti%initProc )) then
           call ti%initProc( tgt, 1, src )
         else
@@ -481,7 +481,7 @@ class RefType(TypeSpec):
     function {typeId}_in_ref_( self ) result(res)
       type(Ref_t), intent(in) :: self
       logical                 :: res
-      res = associated( dynamic_type(self), type_{typeId} )
+      res = associated( content_type(self), type_{typeId} )
     end function
     """,
 
@@ -702,7 +702,7 @@ class RefType(TypeSpec):
       self._tryStreamer  = ''
       self.tryStreamProc = ''
 
-    self.lookupSubtype = ('', ', subtype = static_type(sub)')[self._isArray]
+    self.lookupSubtype = ('', ', subtype = type_of(sub)')[self._isArray]
 
     self._kwArgs = dict( (k, self.peelString(v)) for k,v in keySpecs.items() )
     self.import_baseType = ('', 'import %s' % self.baseTypeId)[bool(self._isDerived)]
@@ -723,7 +723,7 @@ class RefType(TypeSpec):
     if not self._declared:
       self.expand( out, 'info', 'type', 'common_itf', self._itf, self._itemCastItf, 'ref_streamItf', self._streamerItf,
                    'ref_acceptItf', self._acceptorItf )
-      self.expandAccess( out, self.access, 'ref_of', 'static_type', 'dynamic_cast', 'stream', 'accept', 'c_f_unwrap' )
+      self.expandAccess( out, self.access, 'ref_of', 'type_of', 'dynamic_cast', 'stream', 'accept', 'c_f_unwrap' )
       self.expandAccessString( out, self.access, self._template[self._access] )
       TypeGenerator.setDeclaration( self.typeId, self )
       self._declared = True
@@ -776,7 +776,7 @@ class ListNode(TypeSpec):
       res => type_{typeId}_node
       if (.not. res%initialized) &
         call typeinfo_init( res, '{typeId}_node', 'type({typeId}_node_t)' &
-                          , int(storage_size(node),4), 0, subtype = static_type(val) &
+                          , int(storage_size(node),4), 0, subtype = type_of(val) &
                           , cloneObjProc = {typeId}_clone_node_ )
     end function
     """,
@@ -791,7 +791,7 @@ class ListNode(TypeSpec):
       type(TypeInfo_t),                 pointer :: ti
 
       allocate( node )
-      ti => static_type( node%value )
+      ti => type_of( node%value )
       if (associated( ti%initProc )) &
         call ti%initProc( node%value, 0 ) !< 0 => init value as default instance - no prototype!
       valPtr => node%value
@@ -832,7 +832,7 @@ class ListNode(TypeSpec):
       type(TypeInfo_t),              pointer :: ti
 
       allocate( node )
-      ti => static_type( node%value )
+      ti => type_of( node%value )
       if (associated( ti%initProc )) &
         call ti%initProc( node%value, 0 ) !< init value as default instance!
       node%value = src%value

@@ -49,7 +49,7 @@ module adt_list
   public :: append
   public :: delete
   public :: clear
-  public :: dynamic_type
+  public :: content_type
   public :: index, cptr
   public :: prev, set_prev, get_prev
   public :: next, set_next, get_next
@@ -134,8 +134,8 @@ module adt_list
     end subroutine
   end interface
   
-  interface dynamic_type
-    function listindex_dynamic_type( self ) result(res)
+  interface content_type
+    function listindex_content_type( self ) result(res)
       import ListIndex_t, TypeInfo_t
       type(ListIndex_t), intent(in) :: self
       type(TypeInfo_t),     pointer :: res

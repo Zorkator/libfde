@@ -773,7 +773,7 @@ subroutine test_list()!{{{
 
   idx = index( v_list )
   do while (is_valid(idx))
-    ti => dynamic_type( idx )
+    ti => content_type( idx )
     print *, trim(ti%baseType)
     call next( idx )
   end do
@@ -808,7 +808,7 @@ subroutine test_hashmap()!{{{
     ref_ptr = ref_of( _paste(v_,typeId) )
 
   ! fist, we add an array clone to test hooking weak references.
-  ! This is for checking static_type() on weak Ref_t's if typeInfo has NOT been initialized yet!
+  ! This is for checking type_of() on weak Ref_t's if typeInfo has NOT been initialized yet!
   call set( v_hashmap, 'initial matrix-clone', Item_of( clone( ref_of(v_int4_2d) ) ) )
 
   _map_get(bool1)
@@ -839,9 +839,9 @@ subroutine test_hashmap()!{{{
     val => value(idx)
     if (is_ref(val)) then
       ref_ptr => ref( val )
-      ti      => dynamic_type( ref_ptr )
+      ti      => content_type( ref_ptr )
     else
-      ti => dynamic_type( val )
+      ti => content_type( val )
     end if
     print *, str(key(idx)), ' => ', trim(ti%baseType)
     call next( idx )

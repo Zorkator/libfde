@@ -301,9 +301,9 @@ module adt_item
     end function
   end interface
 
-  public :: dynamic_type
-  interface dynamic_type
-    function item_dynamic_type( self ) result(res)
+  public :: content_type
+  interface content_type
+    function item_content_type( self ) result(res)
       import Item_t, TypeInfo_t
       type(Item_t),  intent(in) :: self
       type(TypeInfo_t), pointer :: res

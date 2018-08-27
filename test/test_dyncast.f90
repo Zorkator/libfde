@@ -16,20 +16,20 @@ module test_dyncast
 
   contains
   
-  subroutine test_dynamic_type()
+  subroutine test_content_type()
     ref_ptr  => null()
     item_ptr => null()
-    ti => dynamic_type(ref_)     ; _assert(ti%typeid == 'void')
-    ti => dynamic_type(ref_ptr)  ; _assert(ti%typeid == 'void')
-    ti => dynamic_type(item_)    ; _assert(ti%typeid == 'void')
-    ti => dynamic_type(item_ptr) ; _assert(ti%typeid == 'void')
+    ti => content_type(ref_)     ; _assert(ti%typeid == 'void')
+    ti => content_type(ref_ptr)  ; _assert(ti%typeid == 'void')
+    ti => content_type(item_)    ; _assert(ti%typeid == 'void')
+    ti => content_type(item_ptr) ; _assert(ti%typeid == 'void')
 
     item_ptr => item_
-    ti => dynamic_type(item_ptr) ; _assert(ti%typeid == 'void')
+    ti => content_type(item_ptr) ; _assert(ti%typeid == 'void')
     item_ = 5
-    ti => dynamic_type(item_ptr) ; _assert(ti%typeid == 'int4')
+    ti => content_type(item_ptr) ; _assert(ti%typeid == 'int4')
 
-    print *, "test_dynamic_type: ok"
+    print *, "test_content_type: ok"
   end subroutine
 
 
@@ -57,7 +57,7 @@ end module
 program dyn_cast
   use test_dyncast 
 
-  call test_dynamic_type()
+  call test_content_type()
   call test_dynamic_cast()
 end program
 

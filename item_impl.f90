@@ -37,7 +37,7 @@ module impl_item__
       type(Item_i),      target :: rhs
     end function
 
-    function item_dynamic_type( self ) result(res)
+    function item_content_type( self ) result(res)
       import Item_i, TypeInfo_t
       type(Item_i),  intent(in) :: self
       type(TypeInfo_t), pointer :: res
@@ -129,11 +129,11 @@ end module
   end function
 
 
-!_PROC_EXPORT(item_dynamic_type)
-  function item_dynamic_type( self ) result(res)
+!_PROC_EXPORT(item_content_type)
+  function item_content_type( self ) result(res)
     ! NOTE: in contrast to the interface argument self is declared optional here!
     !       This is because we need to handle null pointers here, while we do not allow
-    !         calling dynamic_type with self actually missing!
+    !         calling content_type with self actually missing!
     use impl_item__, only: Item_i, TypeInfo_t, void_type
     implicit none
     type(Item_i), optional, intent(in) :: self
@@ -145,11 +145,11 @@ end module
   end function
 
 
-!_PROC_EXPORT(item_dynamic_type_c)
-  subroutine item_dynamic_type_c( res, self )
+!_PROC_EXPORT(item_content_type_c)
+  subroutine item_content_type_c( res, self )
     ! NOTE: in contrast to the interface argument self is declared optional here!
     !       This is because we need to handle null pointers here, while we do not allow
-    !         calling dynamic_type with self actually missing!
+    !         calling content_type with self actually missing!
     use impl_item__
     implicit none
     type(TypeSpecs_t),      intent(inout) :: res
@@ -188,7 +188,7 @@ end module
     baseType             :: val                          ;\
     baseType,    pointer :: ptr                          ;\
     type(Item_i), target :: res                          ;\
-    if (item_reshape_( res, static_type(val) )) then     ;\
+    if (item_reshape_( res, type_of(val) )) then         ;\
       call res%typeInfo%initProc( res%data, 1, proto )   ;\
     end if                                               ;\
     call c_f_pointer( c_loc(res%data(1)), ptr )          ;\
@@ -235,7 +235,7 @@ end module
     type(String_t), pointer :: ptr
     type(Item_i),    target :: res
 
-    if (item_reshape_( res, static_type(string_var) )) &
+    if (item_reshape_( res, type_of(string_var) )) &
       call res%typeInfo%initProc( res%data, 1, temporary_string )
     call c_f_pointer( c_loc(res%data(1)), ptr )
     call assign( ptr, val )
@@ -249,7 +249,7 @@ end module
     type(RefEncoding_t), dimension(:) :: val
     type(Ref_t),              pointer :: ptr
     type(Item_i),              target :: res
-    if (item_reshape_( res, static_type(ref_var) )) &
+    if (item_reshape_( res, type_of(ref_var) )) &
       call res%typeInfo%initProc( res%data, 1, temporary_ref )
     call c_f_pointer( c_loc(res%data(1)), ptr )
     call assign( ptr, val )
@@ -272,11 +272,11 @@ end module
 # define _implement_getter_(typeId, baseType)              \
   function _paste(item_get_,typeId)( self ) result(res)   ;\
     use impl_item__, only: Item_i, Ref_t, String_t, c_ptr ,\
-        static_type, item_reshape_, c_f_pointer, c_loc    ;\
+            type_of, item_reshape_, c_f_pointer, c_loc    ;\
     type(Item_i), target :: self                          ;\
     baseType,    pointer :: res                           ;\
     baseType             :: var                           ;\
-    if (item_reshape_( self, static_type(var) )) then     ;\
+    if (item_reshape_( self, type_of(var) )) then         ;\
       call self%typeInfo%initProc( self%data, 0 )         ;\
     end if                                                ;\
     call c_f_pointer( c_loc(self%data(1)), res )          ;\
@@ -339,7 +339,7 @@ end module
     type(Item_i), target, intent(inout) :: lhs         ;\
     baseType,                intent(in) :: rhs         ;\
     baseType,                   pointer :: ptr         ;\
-    if (item_reshape_( lhs, static_type(rhs) )) then   ;\
+    if (item_reshape_( lhs, type_of(rhs) )) then       ;\
       call lhs%typeInfo%initProc( lhs%data, 0 )        ;\
     end if                                             ;\
     call c_f_pointer( c_loc(lhs%data(1)), ptr )        ;\
@@ -385,7 +385,7 @@ end module
     type(Item_i), target, intent(inout) :: lhs
     character(len=*),        intent(in) :: rhs
     type(String_t),             pointer :: ptr
-    if (item_reshape_( lhs, static_type(string_var) )) &
+    if (item_reshape_( lhs, type_of(string_var) )) &
       call lhs%typeInfo%initProc( lhs%data, 0 )
     call c_f_pointer( c_loc(lhs%data(1)), ptr )
     call assign( ptr, rhs )
@@ -399,7 +399,7 @@ end module
     type(Item_i),           target, intent(inout) :: lhs
     type(RefEncoding_t), dimension(:), intent(in) :: rhs
     type(Ref_t),                          pointer :: ptr
-    if (item_reshape_( lhs, static_type(ref_var) )) &
+    if (item_reshape_( lhs, type_of(ref_var) )) &
       call lhs%typeInfo%initProc( lhs%data, 0 )
     call c_f_pointer( c_loc(lhs%data(1)), ptr )
     call assign( ptr, rhs )
@@ -434,8 +434,8 @@ end module
 
   logical &
   function auto_assignable_( src, lhsPtr, lhsType, rhs ) result(res)
-    use impl_item__, only: c_ptr, TypeInfo_t, Item_i, Ref_t, item_dynamic_type, item_get_ref, user_assignment_ &
-                         , temporary_ref, static_type, dynamic_type, ref, cptr, c_loc
+    use impl_item__, only: c_ptr, TypeInfo_t, Item_i, Ref_t, item_content_type, item_get_ref, user_assignment_ &
+                         , temporary_ref, type_of, content_type, ref, cptr, c_loc
     implicit none          
     type(c_ptr),  intent(out) :: src
     type(c_ptr)               :: lhsPtr
@@ -445,19 +445,19 @@ end module
     integer,        parameter :: stdout = 6
     integer                   :: stat
   
-    rhsType => item_dynamic_type(rhs)
+    rhsType => item_content_type(rhs)
     res     =  associated( lhsType, rhsType )
     if (res) then
       ! types match
       src = c_loc(rhs%data(1))
     else
       ! type mismatch - check if rhs is reference
-      refType => static_type(temporary_ref)
+      refType => type_of(temporary_ref)
       if (associated( rhsType, refType )) then
         ! rhs is reference: deref as far as possible ...
         refPtr => item_get_ref(rhs)
         do while (.true.)
-          rhsType => dynamic_type(refPtr)
+          rhsType => content_type(refPtr)
           if (.not. associated( rhsType, refType )) &
             exit
           refPtr => ref(refPtr)
@@ -482,17 +482,17 @@ end module
 
 
 # define _EXPORT_ASSIGN_TO(typeId)    _PROC_EXPORT(_paste(item_assign_to_,typeId)_c)
-# define _implement_assign_to_(typeId, baseType)                     \
-  subroutine _paste(item_assign_to_,typeId)_c( lhs, rhs )           ;\
-    use impl_item__; implicit none                                  ;\
-    baseType,     target, intent(inout) :: lhs                      ;\
-    type(Item_i), target                :: rhs                      ;\
-    baseType,                   pointer :: ptr                      ;\
-    type(c_ptr)                         :: src                      ;\
-    if (auto_assignable_( src, c_loc(lhs), static_type(lhs), rhs )) then ;\
-      call c_f_pointer( src, ptr )                                  ;\
-      lhs = ptr                                                     ;\
-    end if                                                          ;\
+# define _implement_assign_to_(typeId, baseType)                      \
+  subroutine _paste(item_assign_to_,typeId)_c( lhs, rhs )            ;\
+    use impl_item__; implicit none                                   ;\
+    baseType,     target, intent(inout) :: lhs                       ;\
+    type(Item_i), target                :: rhs                       ;\
+    baseType,                   pointer :: ptr                       ;\
+    type(c_ptr)                         :: src                       ;\
+    if (auto_assignable_( src, c_loc(lhs), type_of(lhs), rhs )) then ;\
+      call c_f_pointer( src, ptr )                                   ;\
+      lhs = ptr                                                      ;\
+    end if                                                           ;\
   end subroutine
 
 !_EXPORT_ASSIGN_TO(bool1)
@@ -529,11 +529,11 @@ end module
     use impl_item__; implicit none                               ;\
     type(Item_i), intent(in) :: self                             ;\
     baseType                 :: var                              ;\
-    res = associated( static_type(var), self%typeInfo )          ;\
+    res = associated( type_of(var), self%typeInfo )          ;\
   end function
-  ! For the pointer check (associated) above it is really important to give static_type() as the
+  ! For the pointer check (associated) above it is really important to give type_of() as the
   !   first argument, otherwise Fortrans starts to deref self%typeInfo (WTH!?)
-  !   and compares the pointer returned by static_type() to this copy - which is of course different.
+  !   and compares the pointer returned by type_of() to this copy - which is of course different.
 
 !_EXPORT_TYPECHECK(bool1)
   _implement_typecheck_(bool1,      logical*1)
@@ -579,7 +579,7 @@ end module
     type(Item_t), optional, target :: self                                      ;\
     baseType                       :: var                                       ;\
     type(c_ptr)                    :: cp                                        ;\
-    select case (item_resolve_data( cp, static_type(var), item=self ))          ;\
+    select case (item_resolve_data( cp, type_of(var), item=self ))          ;\
       case (1); call c_f_unwrap( cp, tgt );  res = .true.                       ;\
       case (2); call c_f_pointer( cp, tgt ); res = .true.                       ;\
       case default;           tgt => null(); res = .false.                      ;\
@@ -627,7 +627,7 @@ end module
     type(Visitor_t)           :: vstr
     type(TypeInfo_t), pointer :: ti
 
-    ti => item_dynamic_type(wrap%ptr)
+    ti => item_content_type(wrap%ptr)
     call c_f_pointer( c_loc(wrap%ptr%data), wrap%ptr )
     call ti%acceptProc( wrap, ti, vstr )
   end subroutine
@@ -645,7 +645,7 @@ end module
     type(void_t)              :: dataWrap
     character(len=32)         :: buff
     
-    ti => item_dynamic_type(wrap%ptr)
+    ti => item_content_type(wrap%ptr)
     call c_f_pointer( c_loc(wrap%ptr%data), dataWrap%ptr )
     call ti%streamProc( dataWrap, ti, outs )
   end subroutine
@@ -670,8 +670,8 @@ end module
 !_PROC_EXPORT(item_resolve_data)
   integer &
   function item_resolve_data( ctgt, ti, ref_, item_ ) result(res)
-    use impl_item__, only: TypeInfo_t, Ref_t, Item_t, static_type, temporary_ref, dynamic_type
-    use impl_item__, only: dynamic_type, ref_get_typereference, ref, item, item_get_data_cptr
+    use impl_item__, only: TypeInfo_t, Ref_t, Item_t, type_of, temporary_ref
+    use impl_item__, only: content_type, ref_get_typereference, ref, item, item_get_data_cptr
     use iso_c_binding
     implicit none
     type(c_ptr),         intent(out) :: ctgt
@@ -684,15 +684,15 @@ end module
 
     refPtr   => ref_
     itemPtr  => item_
-    refType  => static_type(temporary_ref)
-    itemType => static_type(itemPtr)
+    refType  => type_of(temporary_ref)
+    itemType => type_of(itemPtr)
 
     res  = 0
     ctgt = C_NULL_PTR
 
     do while (.true.)
       if (associated( refPtr )) then
-        dt => dynamic_type( refPtr )
+        dt => content_type( refPtr )
 
         if (associated( dt, ti )) then
           ctgt = ref_get_typereference( refPtr )
@@ -708,7 +708,7 @@ end module
         end if
 
       elseif (associated( itemPtr )) then
-        dt => dynamic_type( itemPtr )
+        dt => content_type( itemPtr )
 
         if (associated( dt, ti )) then
           ctgt = item_get_data_cptr(itemPtr)

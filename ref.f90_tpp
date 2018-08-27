@@ -120,8 +120,8 @@ module adt_ref
     end subroutine
   end interface
 
-  interface dynamic_type
-    function ref_dynamic_type( self ) result(res)
+  interface content_type
+    function ref_content_type( self ) result(res)
       import Ref_t, TypeInfo_t
       type(Ref_t),   intent(in) :: self
       type(TypeInfo_t), pointer :: res
@@ -196,7 +196,7 @@ module adt_ref
   public :: cptr
   public :: delete
   public :: free
-  public :: dynamic_type
+  public :: content_type
   public :: bind, permanent_ref, temporary_ref
   public :: set_attribute, attribute_permanent, attribute_volatile
   public :: is_valid

@@ -379,8 +379,8 @@ end module
   end subroutine
 
 
-!_PROC_EXPORT(listindex_dynamic_type)
-  function listindex_dynamic_type( self ) result(res)
+!_PROC_EXPORT(listindex_content_type)
+  function listindex_content_type( self ) result(res)
     use impl_list__; implicit none
     type(ListIndex_t), intent(in) :: self
     type(TypeInfo_t),     pointer :: res
@@ -391,8 +391,8 @@ end module
   end function
 
 
-!_PROC_EXPORT(listindex_dynamic_type_c)
-  subroutine listindex_dynamic_type_c( res, self )
+!_PROC_EXPORT(listindex_content_type_c)
+  subroutine listindex_content_type_c( res, self )
     use impl_list__; implicit none
     type(TypeSpecs_t), intent(inout) :: res
     type(ListIndex_t), intent(in)    :: self

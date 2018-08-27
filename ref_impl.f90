@@ -77,7 +77,7 @@ module impl_ref__
       type(Ref_t) :: self
     end subroutine
 
-    function ref_dynamic_type( self ) result(res)
+    function ref_content_type( self ) result(res)
       import Ref_t, TypeInfo_t
       type(Ref_t), intent(in) :: self
       type(TypeInfo_t), pointer :: res
@@ -406,12 +406,12 @@ end module
   end subroutine
 
 
-!_PROC_EXPORT(ref_dynamic_type)
+!_PROC_EXPORT(ref_content_type)
 !_ARG_REFERENCE1(self)
-  function ref_dynamic_type( self ) result(res)
+  function ref_content_type( self ) result(res)
     ! NOTE: in contrast to the interface argument self is declared optional here!
     !       This is because we need to handle null pointers here, while we do not allow
-    !         calling dynamic_type with self actually missing!
+    !         calling content_type with self actually missing!
     use impl_ref__, only: Ref_t, TypeInfo_t, void_type
     implicit none
     type(Ref_t), optional, intent(in) :: self
@@ -423,12 +423,12 @@ end module
   end function
 
   
-!_PROC_EXPORT(ref_dynamic_type_c)
+!_PROC_EXPORT(ref_content_type_c)
 !_ARG_REFERENCE1(self)
-  subroutine ref_dynamic_type_c( res, self )
+  subroutine ref_content_type_c( res, self )
     ! NOTE: in contrast to the interface argument self is declared optional here!
     !       This is because we need to handle null pointers here, while we do not allow
-    !         calling dynamic_type with self actually missing!
+    !         calling content_type with self actually missing!
     use impl_ref__
     implicit none
     type(TypeSpecs_t),     intent(inout) :: res
@@ -481,17 +481,17 @@ end module
 !_ARG_REFERENCE1(self)
   function ref_resolve( self ) result(res)
     use impl_ref__
-    use adt_ref, only: static_type, temporary_ref
+    use adt_ref, only: type_of, temporary_ref
     implicit none
     type(Ref_t),       target :: self
     type(Ref_t),      pointer :: res
     type(TypeInfo_t), pointer :: ti, refType
     type(ref_wrap_t), pointer :: wrap
 
-    refType => static_type(temporary_ref)
+    refType => type_of(temporary_ref)
     res     => self
     do while(.true.)
-      ti => ref_dynamic_type( res )
+      ti => ref_content_type( res )
       if (.not. associated( ti, refType )) &
         exit
       call c_f_pointer( ref_get_typereference(res), wrap )
@@ -511,7 +511,7 @@ end module
     type(TypeInfo_t), pointer :: ti
     type(ref_wrap_t), pointer :: tgtWrap
 
-    ti => ref_dynamic_type( wrap%ptr )
+    ti => ref_content_type( wrap%ptr )
     call c_f_pointer( ref_get_typereference( wrap%ptr ), tgtWrap )
     call ti%acceptProc( tgtWrap, ti, vstr )
   end subroutine
@@ -530,7 +530,7 @@ end module
     type(ref_wrap_t), pointer :: tgtWrap
     character(len=64)         :: buff
 
-    ti => ref_dynamic_type( wrap%ptr )
+    ti => ref_content_type( wrap%ptr )
     call c_f_pointer( ref_get_typereference( wrap%ptr ), tgtWrap )
     call ti%streamProc( tgtWrap, ti, outs )
   end subroutine
