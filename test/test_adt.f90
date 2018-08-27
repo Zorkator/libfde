@@ -585,91 +585,92 @@ subroutine test_item()!{{{
   !item_array(1:) = v_item_1d(1:) !< shallow copy! fortran can't do proper array assignment with derived types!!!
 end subroutine!}}}
 
-subroutine test_dyntype()
+
+subroutine test_dyntype()!{{{
   use test_basedata
   implicit none
   type(Item_t)              :: item_
   type(Ref_t)               :: ref_
-  type(TypeInfo_t), pointer :: ti
+  type(TypeInfo_t), pointer :: ti1, ti2
 
-  item_ = ref_of( v_item )
+# define _chk_dyntype( typeId, neg )       \
+    write(*,*) "dyntype " // _str(typeId) ;\
+    item_ = ref_of( _paste(v_,typeId ) )  ;\
+    ti1 => dynamic_type( item_ )          ;\
+    ti2 => type_of( _paste(v_,typeId) )  ;\
+    _assert( neg associated( ti1, ti2 ) )
 
-# define _chk_dyntype( typeId )  \
-    v_item = ref_of( _paste(v_,typeId ) ) ;\
-    ti => dynamic_type( item_ )
-    !_assert( associated( ti, type_of( _paste(v_,typeId) ) ) )
-
-  _chk_dyntype(bool1)
-  _chk_dyntype(bool2)
-  _chk_dyntype(bool4)
-  _chk_dyntype(bool8)
-  _chk_dyntype(int1)
-  _chk_dyntype(int2)
-  _chk_dyntype(int4)
-  _chk_dyntype(int8)
-  _chk_dyntype(real4)
-  _chk_dyntype(real8)
-  _chk_dyntype(complex8)
-  _chk_dyntype(complex16)
-  _chk_dyntype(c_void_ptr)
-  !_chk_dyntype(char10)
-  _chk_dyntype(string)
-  _chk_dyntype(ref)
-  _chk_dyntype(item)
-  _chk_dyntype(list)
-  _chk_dyntype(hashmap)
-  _chk_dyntype(bool1_1d)
-  _chk_dyntype(bool2_1d)
-  _chk_dyntype(bool4_1d)
-  _chk_dyntype(bool8_1d)
-  _chk_dyntype(int1_1d)
-  _chk_dyntype(int2_1d)
-  _chk_dyntype(int4_1d)
-  _chk_dyntype(int8_1d)
-  _chk_dyntype(real4_1d)
-  _chk_dyntype(real8_1d)
-  _chk_dyntype(complex8_1d)
-  _chk_dyntype(complex16_1d)
-  !_chk_dyntype(c_void_ptr_1d)
-  !_chk_dyntype(char10_1d)
-  _chk_dyntype(string_1d)
-  !_chk_dyntype(ref_1d)
-  !_chk_dyntype(item_1d)
-  _chk_dyntype(bool1_2d)
-  _chk_dyntype(bool2_2d)
-  _chk_dyntype(bool4_2d)
-  _chk_dyntype(bool8_2d)
-  _chk_dyntype(int1_2d)
-  _chk_dyntype(int2_2d)
-  _chk_dyntype(int4_2d)
-  _chk_dyntype(int8_2d)
-  _chk_dyntype(real4_2d)
-  _chk_dyntype(real8_2d)
-  _chk_dyntype(complex8_2d)
-  _chk_dyntype(complex16_2d)
-  !_chk_dyntype(c_void_ptr_2d)
-  !_chk_dyntype(char10_2d)
-  _chk_dyntype(string_2d)
-  !_chk_dyntype(ref_2d)
-  !_chk_dyntype(item_2d)
-  _chk_dyntype(bool1_3d)
-  _chk_dyntype(bool2_3d)
-  _chk_dyntype(bool4_3d)
-  _chk_dyntype(bool8_3d)
-  _chk_dyntype(int1_3d)
-  _chk_dyntype(int2_3d)
-  _chk_dyntype(int4_3d)
-  _chk_dyntype(int8_3d)
-  _chk_dyntype(real4_3d)
-  _chk_dyntype(real8_3d)
-  _chk_dyntype(complex8_3d)
-  _chk_dyntype(complex16_3d)
-  !_chk_dyntype(c_void_ptr_3d)
-  !_chk_dyntype(char10_3d)
-  !_chk_dyntype(string_3d)
-  !_chk_dyntype(ref_3d)
-  !_chk_dyntype(item_3d)
-end subroutine
+  _chk_dyntype(bool1,)
+  _chk_dyntype(bool2,)
+  _chk_dyntype(bool4,)
+  _chk_dyntype(bool8,)
+  _chk_dyntype(int1,)
+  _chk_dyntype(int2,)
+  _chk_dyntype(int4,)
+  _chk_dyntype(int8,)
+  _chk_dyntype(real4,)
+  _chk_dyntype(real8,)
+  _chk_dyntype(complex8,)
+  _chk_dyntype(complex16,)
+  _chk_dyntype(c_void_ptr,)
+  _chk_dyntype(char10,)
+  _chk_dyntype(string,)
+  _chk_dyntype(ref,.not.)
+  _chk_dyntype(item,.not.)
+  _chk_dyntype(list,)
+  _chk_dyntype(hashmap,)
+  _chk_dyntype(bool1_1d,)
+  _chk_dyntype(bool2_1d,)
+  _chk_dyntype(bool4_1d,)
+  _chk_dyntype(bool8_1d,)
+  _chk_dyntype(int1_1d,)
+  _chk_dyntype(int2_1d,)
+  _chk_dyntype(int4_1d,)
+  _chk_dyntype(int8_1d,)
+  _chk_dyntype(real4_1d,)
+  _chk_dyntype(real8_1d,)
+  _chk_dyntype(complex8_1d,)
+  _chk_dyntype(complex16_1d,)
+  !_chk_dyntype(c_void_ptr_1d,)
+  _chk_dyntype(char10_1d,)
+  _chk_dyntype(string_1d,)
+  !_chk_dyntype(ref_1d,)
+  !_chk_dyntype(item_1d,)
+  _chk_dyntype(bool1_2d,)
+  _chk_dyntype(bool2_2d,)
+  _chk_dyntype(bool4_2d,)
+  _chk_dyntype(bool8_2d,)
+  _chk_dyntype(int1_2d,)
+  _chk_dyntype(int2_2d,)
+  _chk_dyntype(int4_2d,)
+  _chk_dyntype(int8_2d,)
+  _chk_dyntype(real4_2d,)
+  _chk_dyntype(real8_2d,)
+  _chk_dyntype(complex8_2d,)
+  _chk_dyntype(complex16_2d,)
+  !_chk_dyntype(c_void_ptr_2d,)
+  _chk_dyntype(char10_2d,)
+  _chk_dyntype(string_2d,)
+  !_chk_dyntype(ref_2d,)
+  !_chk_dyntype(item_2d,)
+  _chk_dyntype(bool1_3d,)
+  _chk_dyntype(bool2_3d,)
+  _chk_dyntype(bool4_3d,)
+  _chk_dyntype(bool8_3d,)
+  _chk_dyntype(int1_3d,)
+  _chk_dyntype(int2_3d,)
+  _chk_dyntype(int4_3d,)
+  _chk_dyntype(int8_3d,)
+  _chk_dyntype(real4_3d,)
+  _chk_dyntype(real8_3d,)
+  _chk_dyntype(complex8_3d,)
+  _chk_dyntype(complex16_3d,)
+  !_chk_dyntype(c_void_ptr_3d,)
+  !_chk_dyntype(char10_3d,)
+  !_chk_dyntype(string_3d,)
+  !_chk_dyntype(ref_3d,)
+  !_chk_dyntype(item_3d,)
+end subroutine!}}}
 
 
 subroutine test_dyncast()!{{{
@@ -1515,67 +1516,17 @@ program test_adt
   use test_exception
 
   type(HashMap_t), pointer :: scope => null()
-  character(len=20) :: text = "TestInGEr -- TäxT"
-  character(len=20) :: txtout
+  character(len=255) :: what
+  character(len=20)  :: text = "TestInGEr -- TäxT"
+  character(len=20)  :: txtout
   v_string = "BlUbbINGER bla uND texT     "
 
   call setup_standardExceptions()
   !call set_traceproc( tracer )
-  call test_pass_args()
-
-  txtout = lower( text )
-  call to_lower( text )
-  txtout = upper( text )
-  call to_upper( text )
-  print *, upper(v_string)
-  call to_lower(v_string)
-  print *, str(v_string)
-  call to_upper(v_string)
-  print *, str(v_string)
-  v_string = "shOrt"
-  print *, upper( v_string )
-  call to_lower( v_string )
-
-  call delete( v_string )
-  print *, '>>' // str(v_string) // '<<'
-  print *, '>>' // trim(v_string) // '<<'
-  print *, '>>' // strip(v_string) // '<<'
-  v_string = '              '
-  print *, '>>' // trim(v_string) // '<<'
-  print *, '>>' // strip(v_string) // '<<'
-
-  v_string = '   ** test **   '
-  print *, '>>' // str(v_string) // '<<'
-  print *, '>>' // trim(v_string) // '<<'
-  print *, '>>' // strip(v_string) // '<<'
-  call to_trimmed( v_string )
-  print *, '>>' // str(v_string) // '<<'
-  v_string = '   ** test **   '
-  call to_stripped( v_string )
-  print *, '>>' // str(v_string) // '<<'
-
-
-  call init_basedata()
-  call stream( v_item, fout )
-
-  call stream( v_bool1_1d, fout )
-
-  !call test_dyntype()
-  call test_dyncast()
-  call test_visitor()
-  call test_hashmap()
-  call test_string()
-  call test_ref()
-  call test_item()
-  call test_dyncast()
-  call test_list()
-  call test_hashmap_nesting()
-  call test_hashmap_cloning()
-  call test_file_string()
-  call test_write_read()
-  call test_ref_change()
-  call test_pointer_bounds()
-
+  select case (try( _catchAny, what, run_tests ))
+    case     (0); continue
+    case default; print *, trim(what)
+  end select
 
   ! delete process scope to make inspector happy
   scope => getScope()
@@ -1585,5 +1536,63 @@ program test_adt
   call cleanup_basedata()
   call hashmap_clear_cache()
 
+  contains
+
+  subroutine run_tests()
+    call test_pass_args()
+
+    txtout = lower( text )
+    call to_lower( text )
+    txtout = upper( text )
+    call to_upper( text )
+    print *, upper(v_string)
+    call to_lower(v_string)
+    print *, str(v_string)
+    call to_upper(v_string)
+    print *, str(v_string)
+    v_string = "shOrt"
+    print *, upper( v_string )
+    call to_lower( v_string )
+
+    call delete( v_string )
+    print *, '>>' // str(v_string) // '<<'
+    print *, '>>' // trim(v_string) // '<<'
+    print *, '>>' // strip(v_string) // '<<'
+    v_string = '              '
+    print *, '>>' // trim(v_string) // '<<'
+    print *, '>>' // strip(v_string) // '<<'
+
+    v_string = '   ** test **   '
+    print *, '>>' // str(v_string) // '<<'
+    print *, '>>' // trim(v_string) // '<<'
+    print *, '>>' // strip(v_string) // '<<'
+    call to_trimmed( v_string )
+    print *, '>>' // str(v_string) // '<<'
+    v_string = '   ** test **   '
+    call to_stripped( v_string )
+    print *, '>>' // str(v_string) // '<<'
+
+
+    call init_basedata()
+    call stream( v_item, fout )
+
+    call stream( v_bool1_1d, fout )
+
+    call test_dyntype()
+    call test_dyncast()
+    call test_visitor()
+    call test_hashmap()
+    call test_string()
+    call test_ref()
+    call test_item()
+    call test_dyncast()
+    call test_list()
+    call test_hashmap_nesting()
+    call test_hashmap_cloning()
+    call test_file_string()
+    call test_write_read()
+    call test_ref_change()
+    call test_pointer_bounds()
+  end subroutine
 end
 
