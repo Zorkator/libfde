@@ -50,7 +50,7 @@ module adt_item
     end subroutine
   end interface
 
-  !_TypeGen_declare_RefType( public, Item, type(Item_t), scalar, \
+  !_TypeGen_declare_RefType( public, item, type(Item_t), scalar, \
   !     initProc   = item_init_by_item_c, \
   !     assignProc = item_assign_item_c,  \
   !     deleteProc = item_delete_c,       \
@@ -304,6 +304,15 @@ module adt_item
   public :: content_type
   interface content_type
     function item_content_type( self ) result(res)
+      import Item_t, TypeInfo_t
+      type(Item_t),  intent(in) :: self
+      type(TypeInfo_t), pointer :: res
+    end function
+  end interface
+
+  public :: dynamic_type
+  interface dynamic_type
+    function item_dynamic_type( self ) result(res)
       import Item_t, TypeInfo_t
       type(Item_t),  intent(in) :: self
       type(TypeInfo_t), pointer :: res

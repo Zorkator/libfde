@@ -43,6 +43,12 @@ module impl_item__
       type(TypeInfo_t), pointer :: res
     end function
 
+    function item_dynamic_type( self ) result(res)
+      import Item_t, TypeInfo_t
+      type(Item_t),  intent(in) :: self
+      type(TypeInfo_t), pointer :: res
+    end function
+
     function item_get_ref( self ) result(res)
       import Item_i, Ref_t
       type(Item_i), target :: self
@@ -161,6 +167,28 @@ end module
     if (.not. associated(ptr)) ptr => void_type()
     res = ptr%typeSpecs
   end subroutine
+
+
+!_PROC_EXPORT(item_dynamic_type)
+  function item_dynamic_type( self ) result(res)
+    ! NOTE: in contrast to the interface argument self is declared optional here!
+    !       This is because we need to handle null pointers here, while we do not allow
+    !         calling dynamic_type with self actually missing!
+    use impl_item__, only: Ref_t, Item_i, TypeInfo_t
+    implicit none
+    type(Item_i), optional, intent(in) :: self
+    type(TypeInfo_t),          pointer :: res
+
+    interface
+      function item_resolve_type( ref, item ) result(ti)
+        import
+        type(Ref_t),  optional, target :: ref
+        type(Item_i), optional, target :: item
+        type(TypeInfo_t),      pointer :: ti
+      end function
+    end interface
+    res => item_resolve_type( item=self )
+  end function
 
 
 !_PROC_EXPORT(item_delete_c)
@@ -579,7 +607,7 @@ end module
     type(Item_t), optional, target :: self                                      ;\
     baseType                       :: var                                       ;\
     type(c_ptr)                    :: cp                                        ;\
-    select case (item_resolve_data( cp, type_of(var), item=self ))          ;\
+    select case (item_resolve_data( cp, type_of(var), item=self ))              ;\
       case (1); call c_f_unwrap( cp, tgt );  res = .true.                       ;\
       case (2); call c_f_pointer( cp, tgt ); res = .true.                       ;\
       case default;           tgt => null(); res = .false.                      ;\
@@ -678,49 +706,92 @@ end module
     type(TypeInfo_t),         target :: ti
     type(Ref_t),    optional, target :: ref_
     type(Item_t),   optional, target :: item_
-    type(Ref_t),             pointer :: refPtr
-    type(Item_t),            pointer :: itemPtr
     type(TypeInfo_t),        pointer :: dt, refType, itemType
 
-    refPtr   => ref_
-    itemPtr  => item_
     refType  => type_of(temporary_ref)
-    itemType => type_of(itemPtr)
+    itemType => type_of(item_)
 
-    res  = 0
-    ctgt = C_NULL_PTR
+    if     (present(ref_))  then; call visit_ref( ref_ )
+    elseif (present(item_)) then; call visit_item( item_ )
+    else
+      ctgt = C_NULL_PTR
+      res  = 0
+    end if
 
-    do while (.true.)
-      if (associated( refPtr )) then
-        dt => content_type( refPtr )
+    contains
 
-        if (associated( dt, ti )) then
-          ctgt = ref_get_typereference( refPtr )
-          res  = 1
-        else if (associated( dt, refType )) then
-          refPtr  => ref(refPtr)
-          itemPtr => null()
-          cycle
-        else if (associated( dt, itemType )) then
-          itemPtr => item(refPtr)
-          refPtr  => null()
-          cycle
-        end if
-
-      elseif (associated( itemPtr )) then
-        dt => content_type( itemPtr )
-
-        if (associated( dt, ti )) then
-          ctgt = item_get_data_cptr(itemPtr)
-          res  = 2
-        else if (associated( dt, refType )) then
-          refPtr  => ref(itemPtr)
-          itemPtr => null()
-          cycle
-        end if
+    recursive &
+    subroutine visit_ref( r )
+      type(Ref_t) :: r
+      
+      dt => content_type( r )
+      if (associated( dt, ti )) then
+        ctgt = ref_get_typereference( r )
+        res  = 1
+      else if (associated( dt, refType ))  then; call visit_ref( ref(r) )
+      else if (associated( dt, itemType )) then; call visit_item( item(r) )
+      else
+        ctgt = C_NULL_PTR
+        res  = 0
       end if
-      exit
-    end do
+    end subroutine
+
+    recursive &
+    subroutine visit_item( i )
+      type(Item_t) :: i
+
+      dt => content_type( i )
+      if (associated( dt, ti )) then
+        ctgt = item_get_data_cptr( i )
+        res  = 2
+      else if (associated( dt, refType )) then; call visit_ref( ref(i) )
+      else
+        ctgt = C_NULL_PTR
+        res  = 0
+      end if
+    end subroutine
+  end function
+
+
+!_PROC_EXPORT(item_resolve_type)
+  function item_resolve_type( ref_, item_ ) result(res)
+    use impl_item__, only: TypeInfo_t, Ref_t, Item_t, type_of, temporary_ref
+    use impl_item__, only: content_type, ref, item, void_type
+    use iso_c_binding
+    implicit none
+    type(Ref_t),  optional, target :: ref_
+    type(Item_t), optional, target :: item_
+    type(TypeInfo_t),      pointer :: res
+    type(TypeInfo_t),      pointer :: refType, itemType
+
+    refType  => type_of(temporary_ref)
+    itemType => type_of(item_)
+
+    if     (present(ref_))  then; call visit_ref( ref_ )
+    elseif (present(item_)) then; call visit_item( item_ )
+                            else; res => void_type()
+    end if
+
+    contains
+
+    recursive &
+    subroutine visit_ref( r )
+      type(Ref_t) :: r
+
+      res => content_type( r )
+      if     (associated( res, refType ))  then; call visit_ref( ref(r) )
+      elseif (associated( res, itemType )) then; call visit_item( item(r) )
+      end if
+    end subroutine
+
+    recursive &
+    subroutine visit_item( i )
+      type(Item_t) :: i
+
+      res => content_type( i )
+      if (associated( res, refType )) then; call visit_ref( ref(i) )
+      end if
+    end subroutine
   end function
 
 

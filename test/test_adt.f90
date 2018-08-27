@@ -585,6 +585,92 @@ subroutine test_item()!{{{
   !item_array(1:) = v_item_1d(1:) !< shallow copy! fortran can't do proper array assignment with derived types!!!
 end subroutine!}}}
 
+subroutine test_dyntype()
+  use test_basedata
+  implicit none
+  type(Item_t)              :: item_
+  type(Ref_t)               :: ref_
+  type(TypeInfo_t), pointer :: ti
+
+  item_ = ref_of( v_item )
+
+# define _chk_dyntype( typeId )  \
+    v_item = ref_of( _paste(v_,typeId ) ) ;\
+    ti => dynamic_type( item_ )
+    !_assert( associated( ti, type_of( _paste(v_,typeId) ) ) )
+
+  _chk_dyntype(bool1)
+  _chk_dyntype(bool2)
+  _chk_dyntype(bool4)
+  _chk_dyntype(bool8)
+  _chk_dyntype(int1)
+  _chk_dyntype(int2)
+  _chk_dyntype(int4)
+  _chk_dyntype(int8)
+  _chk_dyntype(real4)
+  _chk_dyntype(real8)
+  _chk_dyntype(complex8)
+  _chk_dyntype(complex16)
+  _chk_dyntype(c_void_ptr)
+  !_chk_dyntype(char10)
+  _chk_dyntype(string)
+  _chk_dyntype(ref)
+  _chk_dyntype(item)
+  _chk_dyntype(list)
+  _chk_dyntype(hashmap)
+  _chk_dyntype(bool1_1d)
+  _chk_dyntype(bool2_1d)
+  _chk_dyntype(bool4_1d)
+  _chk_dyntype(bool8_1d)
+  _chk_dyntype(int1_1d)
+  _chk_dyntype(int2_1d)
+  _chk_dyntype(int4_1d)
+  _chk_dyntype(int8_1d)
+  _chk_dyntype(real4_1d)
+  _chk_dyntype(real8_1d)
+  _chk_dyntype(complex8_1d)
+  _chk_dyntype(complex16_1d)
+  !_chk_dyntype(c_void_ptr_1d)
+  !_chk_dyntype(char10_1d)
+  _chk_dyntype(string_1d)
+  !_chk_dyntype(ref_1d)
+  !_chk_dyntype(item_1d)
+  _chk_dyntype(bool1_2d)
+  _chk_dyntype(bool2_2d)
+  _chk_dyntype(bool4_2d)
+  _chk_dyntype(bool8_2d)
+  _chk_dyntype(int1_2d)
+  _chk_dyntype(int2_2d)
+  _chk_dyntype(int4_2d)
+  _chk_dyntype(int8_2d)
+  _chk_dyntype(real4_2d)
+  _chk_dyntype(real8_2d)
+  _chk_dyntype(complex8_2d)
+  _chk_dyntype(complex16_2d)
+  !_chk_dyntype(c_void_ptr_2d)
+  !_chk_dyntype(char10_2d)
+  _chk_dyntype(string_2d)
+  !_chk_dyntype(ref_2d)
+  !_chk_dyntype(item_2d)
+  _chk_dyntype(bool1_3d)
+  _chk_dyntype(bool2_3d)
+  _chk_dyntype(bool4_3d)
+  _chk_dyntype(bool8_3d)
+  _chk_dyntype(int1_3d)
+  _chk_dyntype(int2_3d)
+  _chk_dyntype(int4_3d)
+  _chk_dyntype(int8_3d)
+  _chk_dyntype(real4_3d)
+  _chk_dyntype(real8_3d)
+  _chk_dyntype(complex8_3d)
+  _chk_dyntype(complex16_3d)
+  !_chk_dyntype(c_void_ptr_3d)
+  !_chk_dyntype(char10_3d)
+  !_chk_dyntype(string_3d)
+  !_chk_dyntype(ref_3d)
+  !_chk_dyntype(item_3d)
+end subroutine
+
 
 subroutine test_dyncast()!{{{
   use test_basedata
@@ -1474,6 +1560,8 @@ program test_adt
 
   call stream( v_bool1_1d, fout )
 
+  !call test_dyntype()
+  call test_dyncast()
   call test_visitor()
   call test_hashmap()
   call test_string()
