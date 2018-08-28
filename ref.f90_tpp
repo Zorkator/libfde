@@ -128,6 +128,15 @@ module adt_ref
     end function
   end interface
 
+  public :: dynamic_type
+  interface dynamic_type
+    function ref_dynamic_type( self ) result(res)
+      import Ref_t, TypeInfo_t
+      type(Ref_t),   intent(in) :: self
+      type(TypeInfo_t), pointer :: res
+    end function
+  end interface
+
   interface bind
     subroutine ref_bind_c( self, do_bind )
       import Ref_t

@@ -518,12 +518,12 @@ class RefType(TypeSpec):
       type(c_ptr)                               :: cp
 
       interface
-        integer function item_resolve_data( ctgt, ti, ref, dummy )
+        integer function item_resolve_data( ctgt, ti, ref, item )
           import
           type(c_ptr),        intent(out) :: ctgt
           type(TypeInfo_t)                :: ti
           type(Ref_t),   optional, target :: ref
-          type(Ref_t),   optional, target :: dummy
+          type(Ref_t),   optional, target :: item !< we cannot use Item_t here, but its ignored anyways!
         end function
       end interface
       

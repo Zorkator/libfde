@@ -593,11 +593,15 @@ subroutine test_dyntype()!{{{
   type(Ref_t)               :: ref_
   type(TypeInfo_t), pointer :: ti1, ti2
 
+  ref_ = ref_of( item_ )
+
 # define _chk_dyntype( typeId, neg )       \
     write(*,*) "dyntype " // _str(typeId) ;\
     item_ = ref_of( _paste(v_,typeId ) )  ;\
     ti1 => dynamic_type( item_ )          ;\
-    ti2 => type_of( _paste(v_,typeId) )  ;\
+    ti2 => type_of( _paste(v_,typeId) )   ;\
+    _assert( neg associated( ti1, ti2 ) ) ;\
+    ti1 => dynamic_type( ref_ )           ;\
     _assert( neg associated( ti1, ti2 ) )
 
   _chk_dyntype(bool1,)
@@ -1517,7 +1521,7 @@ program test_adt
 
   type(HashMap_t), pointer :: scope => null()
   character(len=255) :: what
-  character(len=20)  :: text = "TestInGEr -- TäxT"
+  character(len=20)  :: text = "TestInGEr -- Tï¿½xT"
   character(len=20)  :: txtout
   v_string = "BlUbbINGER bla uND texT     "
 
@@ -1585,7 +1589,6 @@ program test_adt
     call test_string()
     call test_ref()
     call test_item()
-    call test_dyncast()
     call test_list()
     call test_hashmap_nesting()
     call test_hashmap_cloning()

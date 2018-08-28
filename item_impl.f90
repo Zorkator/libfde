@@ -43,12 +43,6 @@ module impl_item__
       type(TypeInfo_t), pointer :: res
     end function
 
-    function item_dynamic_type( self ) result(res)
-      import Item_t, TypeInfo_t
-      type(Item_t),  intent(in) :: self
-      type(TypeInfo_t), pointer :: res
-    end function
-
     function item_get_ref( self ) result(res)
       import Item_i, Ref_t
       type(Item_i), target :: self

@@ -423,6 +423,29 @@ end module
   end function
 
   
+!_PROC_EXPORT(ref_dynamic_type)
+!_ARG_REFERENCE1(self)
+  function ref_dynamic_type( self ) result(res)
+    ! NOTE: in contrast to the interface argument self is declared optional here!
+    !       This is because we need to handle null pointers here, while we do not allow
+    !         calling content_type with self actually missing!
+    use impl_ref__, only: Ref_t, TypeInfo_t
+    implicit none
+    type(Ref_t), optional, intent(in) :: self
+    type(TypeInfo_t),         pointer :: res
+
+    interface
+      function item_resolve_type( ref, item ) result(ti)
+        import
+        type(Ref_t), optional, target :: ref
+        type(Ref_t), optional, target :: item !< we cannot use Item_t here, but its ignored anyways!
+        type(TypeInfo_t),     pointer :: ti
+      end function
+    end interface
+    res => item_resolve_type( ref=self )
+  end function
+
+  
 !_PROC_EXPORT(ref_content_type_c)
 !_ARG_REFERENCE1(self)
   subroutine ref_content_type_c( res, self )
