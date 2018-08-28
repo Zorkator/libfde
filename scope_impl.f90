@@ -97,7 +97,7 @@ end module
         call assign( it, Item_of( ref_of( scope, bind = .true. ) ) )
         call setParent( scope, parent_ )
       else
-        if (.not. dynamic_cast( scope, ref(it) )) then
+        if (.not. dynamic_cast( scope, it )) then
           call throw( TypeError, __type_mismatch_what("subscope", id_) )
         end if
       endif
@@ -315,15 +315,21 @@ end module
 
     subroutine retrievePtr_( len_ )
       integer,          intent(in) :: len_
-      character(len=len_), pointer :: str_
+      type(Item_t),        pointer :: item_
+      type(String_t),      pointer :: string_
+      character(len=len_), pointer :: chrstr_
 
-      if (.not. dynamic_cast( str_, getRef( scope, id, raise_ ) ) .and. raise_) then
+      item_ => getItem( scope, id, raise_ )
+      if     (dynamic_cast( string_, item_ )) then
+        res => str( string_ )
+      elseif (dynamic_cast( chrstr_, item_ )) then
+        res => mapPtr_( chrstr_ )
+      elseif (raise_) then
         call throw( TypeError, __ill_var_ref(id) )
       end if
-      res => mapPtr_( str_ ) !< there are STILL problems with ifort's bounds remapping - so we do it ourselvs.
      end subroutine
 
-     function mapPtr_( in ) result(out)
+     function mapPtr_( in ) result(out) !< there are STILL problems with ifort's bounds remapping - so we do it ourselvs.
        character(len=*),             target :: in
        character(len=len_trim(in)), pointer :: out
        out => in
