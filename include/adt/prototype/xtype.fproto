@@ -1,0 +1,28 @@
+#ifndef __PROTOTYPE_XTYPE_FMOD
+#define __PROTOTYPE_XTYPE_FMOD
+
+# include "adt/prototype/itf.fpp"
+# include "adt/ref_status.fpp"
+
+
+  type Xtype_t
+    _private
+    type(c_ptr)             :: ptr
+    integer(kind=c_int32_t) :: len, alc
+    _RefStatus              :: refstat= _ref_HardLent
+  end type
+
+  interface
+    subroutine xtype_create_by_xtype_c( self, other ); import
+      type(Xtype_t)           :: self
+      type(Xtype_t), optional :: other
+    end subroutine
+
+    subroutine xtype_create_by_chrstr_c( self, chrstr ); import
+      type(Xtype_t)    :: self
+      character(len=*) :: chrstr
+    end subroutine
+  end interface
+
+#endif
+
