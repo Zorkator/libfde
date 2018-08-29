@@ -11,12 +11,14 @@ module adt_xtype
 
 contains
 
+!_PROC_EXPORT(create_by_xtype)
   function create_by_xtype( other ) result(self)
     type(Xtype_t), optional :: other
     type(Xtype_t)           :: self
     call xtype_create_by_xtype_c( self, other )
   end function
 
+!_PROC_EXPORT(create_by_chrstr)
   function create_by_chrstr( chrstr ) result(self)
     character(len=*) :: chrstr
     type(Xtype_t)    :: self

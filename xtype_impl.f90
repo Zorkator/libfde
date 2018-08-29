@@ -8,7 +8,7 @@ module adt_xtype_impl__
 
 end module
 
-
+!_PROC_EXPORT(xtype_create_by_xtype_c)
 subroutine xtype_create_by_xtype_c( self, other )
   use adt_xtype_impl__, only: Xtype_t
   implicit none
@@ -24,6 +24,7 @@ subroutine xtype_create_by_xtype_c( self, other )
 end subroutine
 
 
+!_PROC_EXPORT(xtype_create_by_chrstr_c)
 subroutine xtype_create_by_chrstr_c( self, chrstr )
   use adt_xtype_impl__, only: Xtype_t
   use iso_c_binding

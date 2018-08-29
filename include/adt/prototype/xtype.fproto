@@ -4,7 +4,6 @@
 # include "adt/prototype/itf.fpp"
 # include "adt/ref_status.fpp"
 
-
   type Xtype_t
     _private
     type(c_ptr)             :: ptr
