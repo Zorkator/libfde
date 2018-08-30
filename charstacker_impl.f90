@@ -34,7 +34,7 @@ subroutine charstacker_push_c( self, what )
   character(len=:), pointer :: tosPtr
 
   self%tos = self%tos + 1
-  tosPtr   => self%buffer( self%idx( self%tos )+1: )
+  tosPtr   => self%buffer( self%idx( self%tos )+1 : len(self%buffer) )
   tosPtr   = what
   self%idx( self%tos+1 ) = self%idx( self%tos ) + len(what)
 end subroutine
@@ -50,15 +50,13 @@ end subroutine
 
 
 !_PROC_EXPORT(charstacker_get_c)
-function charstacker_get_c( self, lvl ) result(res)
+function charstacker_get_c( self ) result(res)
   use charstacker_impl__, only: CharStacker_t
   implicit none
   type(CharStacker_t)       :: self
-  integer*4,       optional :: lvl
   character(len=:), pointer :: res
   integer*4                 :: tos
 
-  _optArg( tos, lvl, min(lvl, self%tos) )
-  res => self%buffer( :self%idx(tos+1) )
+  res => self%buffer( :self%idx(self%tos+1) )
 end function
 
