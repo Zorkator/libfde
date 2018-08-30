@@ -1,7 +1,7 @@
-#ifndef __PROTOTYPE_XTYPE_FMOD
-#define __PROTOTYPE_XTYPE_FMOD
+#ifndef __PROTOTYPE_XTYPE_FTYPE
+#define __PROTOTYPE_XTYPE_FTYPE
 
-# include "adt/prototype/itf.fpp"
+# include "adt/type/itf.fpp"
 # include "adt/ref_status.fpp"
 
   type Xtype_t
