@@ -674,6 +674,9 @@ subroutine test_dyntype()!{{{
   !_chk_dyntype(string_3d,)
   !_chk_dyntype(ref_3d,)
   !_chk_dyntype(item_3d,)
+  
+  call delete( item_ )
+  call delete( ref_ )
 end subroutine!}}}
 
 
@@ -773,7 +776,8 @@ subroutine test_dyncast()!{{{
   if (dynamic_cast( p_int4, item_ )) &
     call accept( p_int4, streamer%super )
 
-
+  call delete( item_ )
+  call delete( ref_ )
 end subroutine!}}}
 
 
