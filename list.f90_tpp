@@ -71,6 +71,12 @@ module adt_list
       import List_t
       type(List_t) :: self
     end subroutine
+
+    subroutine listnode_init_f( self, nodeType )
+      import ListNode_t, TypeInfo_t
+      type (ListNode_t), target :: self
+      type (TypeInfo_t), target :: nodeType
+    end subroutine
   end interface
 
   interface len

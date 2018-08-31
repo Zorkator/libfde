@@ -66,7 +66,7 @@ module impl_list__
       type(List_t) :: self
     end subroutine
 
-    subroutine listnode_init_( self, nodeType )
+    subroutine listnode_init_f( self, nodeType )
       import ListNode_t, TypeInfo_t
       type (ListNode_t)              :: self
       type(TypeInfo_t), optional :: nodeType
@@ -189,7 +189,8 @@ end module
   end function
 
 
-  subroutine listnode_init_( self, nodeType )
+!_PROC_EXPORT(listnode_init_f)
+  subroutine listnode_init_f( self, nodeType )
     use impl_list__, only: ListNode_t, TypeInfo_t
     implicit none
     type (ListNode_t),               target :: self
@@ -261,15 +262,15 @@ end module
 
 !_PROC_EXPORT(list_init_c)
   subroutine list_init_c( self )
-    use impl_list__, only: List_t, listnode_init_, list_is_valid_c, &
-                          listnode_init_, list_stale_list
+    use impl_list__, only: List_t, listnode_init_f, list_is_valid_c, &
+                          listnode_init_f, list_stale_list
     implicit none
     type(List_t), target :: self
 
-    call listnode_init_( self%node )
+    call listnode_init_f( self%node )
     self%length = 0
     if (.not. list_is_valid_c( list_stale_list )) then
-      call listnode_init_( list_stale_list%node )
+      call listnode_init_f( list_stale_list%node )
       list_stale_list%length = 0
     end if
   end subroutine
@@ -357,7 +358,7 @@ end module
 !_PROC_EXPORT(list_clear_c)
   recursive &
   subroutine list_clear_c( self )
-    use impl_list__, only: List_t, ListNode_t, ValueNode_t, listnode_init_
+    use impl_list__, only: List_t, ListNode_t, ValueNode_t, listnode_init_f
     use iso_c_binding
     implicit none
     type(List_t), target, intent(inout) :: self
@@ -366,15 +367,17 @@ end module
 
     ptr => self%node%next
     do while (.not. associated( ptr, self%node ))
-      if (associated( ptr%typeInfo%subtype%deleteProc )) then
-        call c_f_pointer( c_loc(ptr), valNodePtr )
-        call ptr%typeInfo%subtype%deleteProc( valNodePtr%pseudoValue )
+      if (associated( ptr%typeInfo )) then
+        if (associated( ptr%typeInfo%subtype%deleteProc )) then
+          call c_f_pointer( c_loc(ptr), valNodePtr )
+          call ptr%typeInfo%subtype%deleteProc( valNodePtr%pseudoValue )
+        end if
       end if
       delPtr => ptr
       ptr    => ptr%next !< jump to next here, since deleteProc might have appended additional nodes ...
       deallocate( delPtr )
     end do
-    call listnode_init_( self%node )
+    call listnode_init_f( self%node )
     self%length = 0
   end subroutine
 
@@ -739,9 +742,11 @@ end module
       call list_clear_c( lhs )
       ptr => base%next
       do while (.not. associated( ptr, base ))
-        call c_f_procpointer( c_funloc(ptr%typeInfo%cloneObjProc), cloneNode )
-        call cloneNode( copy, ptr )
-        call list_append_node_c( lhs, copy )
+        if (associated( ptr%typeInfo )) then
+          call c_f_procpointer( c_funloc(ptr%typeInfo%cloneObjProc), cloneNode )
+          call cloneNode( copy, ptr )
+          call list_append_node_c( lhs, copy )
+        end if
         ptr => ptr%next
       end do
     end if
@@ -767,9 +772,11 @@ end module
     else
       call list_clear_c( lhs )
       do while (listindex_is_valid_c(idx))
-        call c_f_procpointer( c_funloc(idx%node%typeInfo%cloneObjProc), cloneNode )
-        call cloneNode( copy, idx%node )
-        call list_append_node_c( lhs, copy )
+        if (associated( idx%node%typeInfo )) then
+          call c_f_procpointer( c_funloc(idx%node%typeInfo%cloneObjProc), cloneNode )
+          call cloneNode( copy, idx%node )
+          call list_append_node_c( lhs, copy )
+        end if
         call listindex_next_c(idx)
       end do
     end if
@@ -798,11 +805,13 @@ end module
     ptr => wrap%ptr%node%next
     call enter( vstr )
     do while (.not. associated( ptr, wrap%ptr%node ))
-      ti => ptr%typeInfo%subtype
-      call c_f_pointer( c_loc(ptr), valNodePtr )
-      nodeWrap%ptr => valNodePtr%pseudoValue
+      if (associated( ptr%typeInfo )) then
+        ti => ptr%typeInfo%subtype
+        call c_f_pointer( c_loc(ptr), valNodePtr )
+        nodeWrap%ptr => valNodePtr%pseudoValue
 
-      call ti%acceptProc( nodeWrap, ti, vstr )
+        call ti%acceptProc( nodeWrap, ti, vstr )
+      end if
       if (is_valid( vstr )) then; ptr => ptr%next
                             else; return !< skips visitor-leave!
       end if
