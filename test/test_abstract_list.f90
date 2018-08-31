@@ -248,6 +248,7 @@ program testinger
   call delete( l7 )
   call delete( strg )
 
+  call test_anonymous_nodes()
   
   contains
 
@@ -306,6 +307,37 @@ program testinger
     end do
     print *, ''
     print *, 'items: ', len(list)
+  end subroutine
+
+  
+  subroutine test_anonymous_nodes()
+    type MyNode
+      type(ListNode_t) :: super
+      integer*4        :: ival
+      real*4           :: rval
+    end type
+    type(MyNode), pointer :: node
+    type(List_t)          :: someList
+    type(ListIndex_t)     :: idx
+    integer               :: i
+
+    call initialize( someList )
+
+    do i = 1, 10
+      allocate( node )
+      node%ival = i
+      node%rval = i * 0.345
+      call append( someList, node%super )
+    end do
+    
+    idx = index(someList)
+    do while (is_valid(idx))
+      call c_f_pointer( cptr(idx), node )
+      print *, node%ival, node%rval
+      call next(idx)
+    end do
+
+    call clear( someList )
   end subroutine
 
 end program
