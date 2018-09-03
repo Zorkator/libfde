@@ -130,13 +130,20 @@ module adt_list
       import List_t
       type (List_t), intent(inout) :: self
     end subroutine
+
+    subroutine list_delete_act_c( self, delAction )
+      import List_t
+      type (List_t), intent(inout) :: self
+      procedure()                  :: delAction
+    end subroutine
   end interface
   
   interface clear
     recursive &
-    subroutine list_clear_c( self )
+    subroutine list_clear_c( self, clearAction )
       import List_t
       type (List_t), intent(inout) :: self
+      procedure(),        optional :: clearAction
     end subroutine
   end interface
   
