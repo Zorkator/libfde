@@ -868,13 +868,6 @@ subroutine test_list()!{{{
   v_ref = ref_of( v_list )
   call accept( v_ref, streamer%super )
   call delete( v_list )
-end subroutine
-
-
-subroutine test_typed_list()
-  use test_basedata
-  implicit none
-  type(List_t) :: idx
 
   _list_append_ref(bool1)
   _list_append_ref(bool2)
@@ -891,21 +884,10 @@ subroutine test_typed_list()
   _list_append_ref(c_void_ptr)
   _list_append_ref(char10)
   _list_append_ref(string)
-  call foreach( v_list, printRefType_ )
-  call accept( v_list, streamer%super )
   call delete( v_list, onDelRef_ )
 
   contains
 
-  subroutine printRefType_( ref )
-    type(Ref_t)               :: ref
-    type(TypeInfo_t), pointer :: ti
-
-    ti => content_type(ref)
-    print *, trim(ti%typeId)
-  end subroutine
-    
-  
   subroutine onDelRef_( ref )
     type(Ref_t)               :: ref
     type(TypeInfo_t), pointer :: ti
@@ -913,6 +895,36 @@ subroutine test_typed_list()
     ti => content_type(ref)
     print *, "deleting ref to ", trim(ti%typeId)
   end subroutine
+end subroutine
+
+
+subroutine test_usernode_list()
+  use test_basedata
+  implicit none
+  type UserNode_t
+    type(ListNode_t) :: asNode
+    integer          :: value
+  end type
+  type(UserNode_t), pointer :: ptr
+  integer                   :: i
+
+  do i=1, 10
+    allocate(ptr)
+    ptr%value = i
+    call append( v_list, ptr%asNode )
+  end do
+
+  call foreach( v_list, printValue_ )
+  call delete( v_list )
+
+  contains
+
+  subroutine printValue_( node )
+    type(UserNode_t) :: node
+    print *, node%value
+  end subroutine
+    
+  
 end subroutine!}}}
 
 
@@ -1627,7 +1639,7 @@ program test_adt
     call test_ref()
     call test_item()
     call test_list()
-    call test_typed_list()
+    call test_usernode_list()
     call test_hashmap_nesting()
     call test_hashmap_cloning()
     call test_file_string()

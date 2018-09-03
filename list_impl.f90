@@ -37,6 +37,11 @@ module impl_list__
   type(List_t) :: list_stale_list
 
   interface
+    subroutine NodeAction( node )
+      import ListNode_t
+      type(ListNode_t) :: node
+    end subroutine
+
     subroutine NodeCloner( tgt, src )
       import ListNode_t
       type(ListNode_t), pointer, intent(out) :: tgt
@@ -357,18 +362,16 @@ end module
 !_PROC_EXPORT(list_foreach_c)
   recursive &
   subroutine list_foreach_c( self, action )
-    use impl_list__, only: List_t, ListNode_t, ValueNode_t
+    use impl_list__, only: List_t, ListNode_t, NodeAction
     use iso_c_binding
     implicit none
     type (List_t), target, intent(in) :: self
-    procedure()                       :: action
+    procedure(NodeAction)             :: action
     type(ListNode_t),         pointer :: ptr
-    type(ValueNode_t),        pointer :: valNodePtr
 
     ptr => self%node%next
     do while (.not. associated( ptr, self%node ))
-      call c_f_pointer( c_loc(ptr), valNodePtr )
-      call action( valNodePtr%pseudoValue )
+      call action( ptr )
       ptr => ptr%next !< jump to next here
     end do
   end subroutine
