@@ -49,17 +49,9 @@ module impl_list__
     end subroutine
 
     recursive &
-    subroutine list_foreach_c( self, action )
-      import List_t
-      type (List_t), intent(in) :: self
-      procedure()               :: action
-    end subroutine
-
-    recursive &
-    subroutine list_clear_c( self, clearAction )
+    subroutine list_clear_c( self )
       import List_t
       type(List_t), intent(inout) :: self
-      procedure(),       optional :: clearAction
     end subroutine
 
     pure logical &
@@ -387,36 +379,21 @@ end module
   end subroutine
 
   
-!_PROC_EXPORT(list_delete_act_c)
-  recursive &
-  subroutine list_delete_act_c( self, delAction )
-    use impl_list__; implicit none
-    type (List_t), target, intent(inout) :: self
-    procedure()                          :: delAction
-    call list_clear_c( self, delAction )
-    call list_clear_c( list_stale_list )
-  end subroutine
-
-  
 !_PROC_EXPORT(list_clear_c)
   recursive &
-  subroutine list_clear_c( self, clearAction )
+  subroutine list_clear_c( self )
     use impl_list__, only: List_t, ListNode_t, ValueNode_t, listnode_init_f
     use iso_c_binding
     implicit none
     type(List_t), target, intent(inout) :: self
-    procedure(),               optional :: clearAction
     type(ListNode_t),           pointer :: ptr, delPtr
     type(ValueNode_t),          pointer :: valNodePtr
 
     ptr => self%node%next
     do while (.not. associated( ptr, self%node ))
-      call c_f_pointer( c_loc(ptr), valNodePtr )
-      if (present(clearAction)) then
-         call clearAction( valNodePtr%pseudoValue )
-      end if
       if (associated( ptr%typeInfo )) then
         if (associated( ptr%typeInfo%subtype%deleteProc )) then
+          call c_f_pointer( c_loc(ptr), valNodePtr )
           call ptr%typeInfo%subtype%deleteProc( valNodePtr%pseudoValue )
         end if
       end if

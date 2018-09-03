@@ -785,6 +785,7 @@ subroutine test_list()!{{{
   use test_basedata
   implicit none
   !type(List_t) :: list_array(5)
+  type(ListIndex_t)         :: idx
   type(TypeInfo_t), pointer :: ti
 
   !list_array(1:) = v_list_1d(1:) !< shallow copy! fortran can't do proper array assignment with derived types!!!
@@ -813,6 +814,21 @@ subroutine test_list()!{{{
   _list_append(item)
   !_list_append(list)
   !_list_append(hashmap)
+  _list_append_ref(bool1)
+  _list_append_ref(bool2)
+  _list_append_ref(bool4)
+  _list_append_ref(bool8)
+  _list_append_ref(int1)
+  _list_append_ref(int2)
+  _list_append_ref(int4)
+  _list_append_ref(int8)
+  _list_append_ref(real4)
+  _list_append_ref(real8)
+  _list_append_ref(complex8)
+  _list_append_ref(complex16)
+  _list_append_ref(c_void_ptr)
+  _list_append_ref(char10)
+  _list_append_ref(string)
   _list_append_ref(bool1_1d)
   _list_append_ref(bool2_1d)
   _list_append_ref(bool4_1d)
@@ -865,36 +881,16 @@ subroutine test_list()!{{{
   !_list_append_ref(ref_3d)
   !_list_append_ref(item_3d)
   
+  idx = index( v_list )
+  do while (is_valid(idx))
+    ti => content_type( idx )
+    print *, trim(ti%baseType)
+    call next( idx )
+  end do
+
   v_ref = ref_of( v_list )
   call accept( v_ref, streamer%super )
   call delete( v_list )
-
-  _list_append_ref(bool1)
-  _list_append_ref(bool2)
-  _list_append_ref(bool4)
-  _list_append_ref(bool8)
-  _list_append_ref(int1)
-  _list_append_ref(int2)
-  _list_append_ref(int4)
-  _list_append_ref(int8)
-  _list_append_ref(real4)
-  _list_append_ref(real8)
-  _list_append_ref(complex8)
-  _list_append_ref(complex16)
-  _list_append_ref(c_void_ptr)
-  _list_append_ref(char10)
-  _list_append_ref(string)
-  call delete( v_list, onDelRef_ )
-
-  contains
-
-  subroutine onDelRef_( ref )
-    type(Ref_t)               :: ref
-    type(TypeInfo_t), pointer :: ti
-
-    ti => content_type(ref)
-    print *, "deleting ref to ", trim(ti%typeId)
-  end subroutine
 end subroutine
 
 
@@ -923,8 +919,6 @@ subroutine test_usernode_list()
     type(UserNode_t) :: node
     print *, node%value
   end subroutine
-    
-  
 end subroutine!}}}
 
 
