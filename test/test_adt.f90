@@ -891,10 +891,20 @@ subroutine test_typed_list()
   _list_append_ref(c_void_ptr)
   _list_append_ref(char10)
   _list_append_ref(string)
+  call foreach( v_list, printRefType_ )
   call accept( v_list, streamer%super )
   call delete( v_list, onDelRef_ )
 
   contains
+
+  subroutine printRefType_( ref )
+    type(Ref_t)               :: ref
+    type(TypeInfo_t), pointer :: ti
+
+    ti => content_type(ref)
+    print *, trim(ti%typeId)
+  end subroutine
+    
   
   subroutine onDelRef_( ref )
     type(Ref_t)               :: ref

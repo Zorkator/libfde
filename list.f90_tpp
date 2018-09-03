@@ -49,6 +49,7 @@ module adt_list
   public :: append
   public :: delete
   public :: clear
+  public :: foreach
   public :: content_type
   public :: index, cptr
   public :: prev, set_prev, get_prev
@@ -144,6 +145,15 @@ module adt_list
       import List_t
       type (List_t), intent(inout) :: self
       procedure(),        optional :: clearAction
+    end subroutine
+  end interface
+
+  interface foreach
+    recursive &
+    subroutine list_foreach_c( self, action )
+      import List_t
+      type (List_t), intent(in) :: self
+      procedure()               :: action
     end subroutine
   end interface
   

@@ -44,6 +44,13 @@ module impl_list__
     end subroutine
 
     recursive &
+    subroutine list_foreach_c( self, action )
+      import List_t
+      type (List_t), intent(in) :: self
+      procedure()               :: action
+    end subroutine
+
+    recursive &
     subroutine list_clear_c( self, clearAction )
       import List_t
       type(List_t), intent(inout) :: self
@@ -344,6 +351,26 @@ end module
     type (List_t), target :: self
     type (ListIndex_t)    :: idx
     call listindex_insert_idx_c( list_index_int(self, tail, 0), idx )
+  end subroutine
+
+
+!_PROC_EXPORT(list_foreach_c)
+  recursive &
+  subroutine list_foreach_c( self, action )
+    use impl_list__, only: List_t, ListNode_t, ValueNode_t
+    use iso_c_binding
+    implicit none
+    type (List_t), target, intent(in) :: self
+    procedure()                       :: action
+    type(ListNode_t),         pointer :: ptr
+    type(ValueNode_t),        pointer :: valNodePtr
+
+    ptr => self%node%next
+    do while (.not. associated( ptr, self%node ))
+      call c_f_pointer( c_loc(ptr), valNodePtr )
+      call action( valNodePtr%pseudoValue )
+      ptr => ptr%next !< jump to next here
+    end do
   end subroutine
 
 
