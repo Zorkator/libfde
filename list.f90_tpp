@@ -289,6 +289,18 @@ module adt_list
     end subroutine
   end interface
 
+  interface sort
+    subroutine list_sort_c( self, compare )
+      import List_t
+      type(List_t)              :: self
+      interface
+        logical function compare( left, right ); import
+          type(ListNode_t) :: left, right
+        end function
+      end interface
+    end subroutine
+  end interface
+
   interface assignment(=) 
     module procedure list_assign_list_private, list_assign_idx_private                   
   end interface

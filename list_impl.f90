@@ -171,6 +171,12 @@ module impl_list__
       type(List_t), intent(inout) :: lhs
       type(List_t),    intent(in) :: rhs
     end subroutine
+
+    function list_len_c( self ) result(res)
+      import List_t
+      type(List_t),     target  :: self
+      integer(kind=4)           :: res
+    end function
   end interface
     
 end module
@@ -283,7 +289,8 @@ end module
   
 !_PROC_EXPORT(list_len_c)
   function list_len_c( self ) result(res)
-    use impl_list__; implicit none
+    use impl_list__, only: List_t, ListNode_t
+    implicit none
     type(List_t),     target  :: self
     integer(kind=4)           :: res
     type(ListNode_t), pointer :: ptr
@@ -841,6 +848,51 @@ end module
       end if
     end do  
     call leave( vstr )
+  end subroutine
+
+
+!_PROC_EXPORT(list_sort_c)
+  subroutine list_sort_c( self, is_lower )
+    use impl_list__
+    implicit none
+    type(List_t) :: self
+    interface
+      logical function is_lower( left, right ); import
+        type(ListNode_t) :: left, right
+      end function
+    end interface
+
+    call mergeSort( self, list_len_c( self ) )
+
+  contains
+
+    recursive &
+    subroutine mergeSort( left, l )
+      type(List_t),      target :: left, right
+      type(ListNode_t), pointer :: head, tail
+      integer                   :: l, i, j
+
+      if (l > 1) then
+        tail => left%node%next
+        do i = 1, l/2
+          tail => tail%next
+        end do
+        call list_init_c( right )
+        call list_insert_nodes_( right%node, tail%prev, left%node%prev )
+        call mergeSort( left, l/2 )
+        call mergeSort( right, l - l/2 )
+
+        head => left%node%next
+        tail => right%node%next
+        do i = 1, l - l/2
+          do while (is_lower( head, tail ))
+            head => head%next
+          end do
+          call list_unlink_node_( tail%prev, tail%next )
+          call list_link_node_( tail, head%prev, head%next )
+        end do
+      end if
+    end subroutine
   end subroutine
 
 
