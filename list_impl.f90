@@ -878,18 +878,18 @@ end module
           tail => tail%next
         end do
         call list_init_c( right )
-        call list_insert_nodes_( right%node, tail%prev, left%node%prev )
+        call list_insert_nodes_( right%node, tail%prev, left%node )
         call mergeSort( left, l/2 )
         call mergeSort( right, l - l/2 )
 
         head => left%node%next
-        tail => right%node%next
         do i = 1, l - l/2
+          tail => right%node%next
           do while (is_lower( head, tail ))
             head => head%next
           end do
           call list_unlink_node_( tail%prev, tail%next )
-          call list_link_node_( tail, head%prev, head%next )
+          call list_link_node_( tail, head%prev, head )
         end do
       end if
     end subroutine

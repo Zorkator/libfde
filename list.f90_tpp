@@ -57,6 +57,7 @@ module adt_list
   public :: insert
   public :: remove
   public :: pop
+  public :: sort
   public :: operator(==), operator(/=)
   public :: assign, assignment(=)
 
@@ -292,12 +293,14 @@ module adt_list
   interface sort
     subroutine list_sort_c( self, compare )
       import List_t
-      type(List_t)              :: self
-      interface
-        logical function compare( left, right ); import
-          type(ListNode_t) :: left, right
-        end function
-      end interface
+      type(List_t) :: self
+      procedure()  :: compare
+      !interface
+      !  logical function compare( left, right )
+      !    import ListNode_t
+      !    type(ListNode_t) :: left, right
+      !  end function
+      !end interface
     end subroutine
   end interface
 
