@@ -8,6 +8,7 @@ module test_list
   use adt_string
   use adt_list
   use adt_ref
+  use adt_exception
   use iso_c_binding
   implicit none
 
@@ -319,11 +320,11 @@ module test_list
     type(MyNode), pointer :: node
     type(List_t)          :: someList
     type(ListIndex_t)     :: idx
-    integer               :: i
+    integer               :: i, chk
 
     call initialize( someList )
 
-    do i = 10, 1, -1
+    do i = 10000000, 1, -1
       allocate( node )
       node%ival = i
       node%rval = i * 0.345
@@ -333,9 +334,11 @@ module test_list
     !call foreach( someList, initDebug )
     !call foreach( someList, printNode )
     call sort( someList, is_lower_ )
-    !call foreach( someList, printNode )
+    chk = 1
+    call foreach( someList, chkNode )
     call sort( someList, is_lower_ )
-    !call foreach( someList, printNode )
+    chk = 1
+    call foreach( someList, chkNode )
     call clear( someList )
 
   contains
@@ -348,6 +351,14 @@ module test_list
       type(XNode), pointer :: ptr
       call c_f_pointer( c_loc(node), ptr )
       ptr%val(4) = node%ival
+    end subroutine
+
+
+    subroutine chkNode( node )
+      type(MyNode) :: node
+      if (node%ival /= chk) then; call throw( ValueError, "value mismatch at chkNode" )
+                            else; chk = chk + 1
+      end if
     end subroutine
 
 
