@@ -330,12 +330,26 @@ module test_list
       call append( someList, node%super )
     end do
     
-    call foreach( someList, printNode )
+    !call foreach( someList, initDebug )
+    !call foreach( someList, printNode )
     call sort( someList, is_lower_ )
-    call foreach( someList, printNode )
+    !call foreach( someList, printNode )
+    call sort( someList, is_lower_ )
+    !call foreach( someList, printNode )
     call clear( someList )
 
   contains
+
+    subroutine initDebug( node )
+      type(MyNode), target :: node
+      type XNode
+        integer(8) :: val(4)
+      end type
+      type(XNode), pointer :: ptr
+      call c_f_pointer( c_loc(node), ptr )
+      ptr%val(4) = node%ival
+    end subroutine
+
 
     subroutine printNode( node )
       type(MyNode) :: node
