@@ -862,34 +862,46 @@ end module
       end function
     end interface
 
-    call mergeSort( self, list_len_c( self ) )
+    call mergeSort( self%node, list_len_c( self ) )
 
   contains
 
     recursive &
-    subroutine mergeSort( left, l )
-      type(List_t),      target :: left, right
+    subroutine mergeSort( left, length )
+      type(ListNode_t),  target :: left, right
       type(ListNode_t), pointer :: head, tail
-      integer                   :: l, i, j
+      integer                   :: length, lenLeft, lenRight, i
 
-      if (l > 1) then
-        tail => left%node%next
-        do i = 1, l/2
+      if (length > 1) then
+        lenLeft  =  length/2
+        lenRight =  length - lenLeft
+
+        ! search the middle node ...
+        tail => left%next
+        do i = 1, lenLeft
           tail => tail%next
         end do
-        call list_init_c( right )
-        call list_insert_nodes_( right%node, tail%prev, left%node )
-        call mergeSort( left, l/2 )
-        call mergeSort( right, l - l/2 )
+        ! move tail to separate list ...
+        call listnode_init_f( right )
+        call list_insert_nodes_( right, tail%prev, left )
 
-        head => left%node%next
-        do i = 1, l - l/2
-          tail => right%node%next
-          do while (is_lower( head, tail ))
-            head => head%next
+        ! sort left and right part separately ...
+        call mergeSort( left,  lenLeft )
+        call mergeSort( right, lenRight )
+
+        ! merge right back into left ...
+        head => left%next    !< head marks insert position, start at begin of left
+        do i = 1, lenRight
+          tail => right%next !< tail marks node to be inserted, set to begin of right
+
+          ! search in left for insert position by comparing nodes ...
+          do while (.not. associated( head, left )) !< do not cross list end!
+            if (is_lower( head, tail )) then; head => head%next
+                                        else; exit
+            end if
           end do
-          call list_unlink_node_( tail%prev, tail%next )
-          call list_link_node_( tail, head%prev, head )
+          call list_unlink_node_( tail%prev, tail%next ) !< unlink tail from it's list (right)
+          call list_link_node_( tail, head%prev, head )  !< ... and insert it into left
         end do
       end if
     end subroutine
