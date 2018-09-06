@@ -895,9 +895,13 @@ end module
           tail => right%next !< tail marks node to be inserted, set to begin of right
 
           ! search in left for insert position by comparing nodes ...
-          do while (.not. associated( head, left )) !< do not cross list end!
-            if (is_lower( head, tail )) then; head => head%next
-                                        else; exit
+          do while (.true.)
+            if (associated( head, left )) then
+              ! head reached end of left, just append rest of right - and we are done!
+              call list_insert_nodes_( head, tail%prev, right )
+              return
+            elseif (is_lower( head, tail )) then; head => head%next !< advance insert position
+                                            else; exit              !< insert position ok
             end if
           end do
           call list_unlink_node_( tail%prev, tail%next ) !< unlink tail from it's list (right)
