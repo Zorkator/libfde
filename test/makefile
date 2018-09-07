@@ -4,7 +4,7 @@
 # NOTE: for using this makefile you need some meta-makefiles bundled by another project called 'makeIt'.
 #       Please set the environment variable MAKEIT_DIR to a directory that contains a copy.
 #       For getting a copy you can do ...
-#      		git clone https://github.com/Zorkator/makeIt makeIt
+#         git clone https://github.com/Zorkator/makeIt makeIt
 #       or
 #         svn co https://github.com/Zorkator/makeIt/trunk makeIt
 #
@@ -15,7 +15,8 @@ TARGET_doc      := building adt-tests
 OUT_TYPE        := exe
 OUT_NAME         = test.$(mk_TAG)
 OUT_DIR          = exe/$(mk_TAG)
-ADT_DIR					 = ..
+ADT_DIR          = ..
+SOURCE_DIRS      = .
 FC_INCLUDE_DIRS  = ../include $(ADT_DIR)/lib/$(mk_TAG)
 
 FC_LIBRARY_DIRS  = $(ADT_DIR)/lib/$(mk_TAG)

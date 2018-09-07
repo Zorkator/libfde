@@ -33,7 +33,7 @@ program testinger
   print *, is_valid(v1)
   print *, is_real4(v1)
 
-  ti = dynamic_type(v1)
+  ti = content_type(v1)
   print *, ti%typeId
 
   v1 = Item_of(String('testinger'))
@@ -127,7 +127,7 @@ end
     vi  = val                          ;\
     ptr => _typeId(vi)                 ;\
     val = vi                           ;\
-    ti  => dynamic_type(vi)            ;\
+    ti  => content_type(vi)            ;\
     print *, ti%typeId, ti%baseType    ;\
     print *, 'byteSize:', ti%typeSpecs%byteSize  ;\
     print *, _paste(is_,_typeId)( vi ) ;\

@@ -6,13 +6,14 @@ module impl_item__
   use adt_typeinfo
   use adt_string
   use adt_ref
+  use adt_basetypes
   use adt_memoryref
   use iso_c_binding
 
-# define Item_t   Item_t__impl__
+# define Item_i   Item_t__impl__
 
   type Item_wrap_t
-    type(Item_t), pointer :: ptr
+    type(Item_i), pointer :: ptr
   end type
 
   type (String_t)                    :: string_var
@@ -22,30 +23,45 @@ module impl_item__
   interface
     logical &
     function item_reshape_( self, new_typeInfo )
-      import Item_t, TypeInfo_t
-      type(Item_t)                         :: self
+      import Item_i, TypeInfo_t
+      type(Item_i)                         :: self
       type(TypeInfo_t), target, intent(in) :: new_typeInfo
     end function
 
     logical &
     function auto_assignable_( src, lhsPtr, lhsType, rhs )
-      import c_ptr, TypeInfo_t, Item_t
+      import c_ptr, TypeInfo_t, Item_i
       type(c_ptr),  intent(out) :: src
       type(c_ptr)               :: lhsPtr
       type(TypeInfo_t), pointer :: lhsType, rhsType
-      type(Item_t),      target :: rhs
+      type(Item_i),      target :: rhs
     end function
 
-    function item_dynamic_type( self ) result(res)
-      import Item_t, TypeInfo_t
-      type(Item_t),  intent(in) :: self
+    function item_content_type( self ) result(res)
+      import Item_i, TypeInfo_t
+      type(Item_i),  intent(in) :: self
       type(TypeInfo_t), pointer :: res
     end function
 
     function item_get_ref( self ) result(res)
-      import Item_t, Ref_t
-      type(Item_t), target :: self
+      import Item_i, Ref_t
+      type(Item_i), target :: self
       type(Ref_t), pointer :: res
+    end function
+
+    function item_get_data_cptr( self ) result(res)
+      import
+      type(Item_t) :: self
+      type(c_ptr)  :: res
+    end function
+
+    integer &
+    function item_resolve_data( ctgt, ti, ref, item )
+      import
+      type(c_ptr),         intent(out) :: ctgt
+      type(TypeInfo_t)                 :: ti
+      type(Ref_t),    optional, target :: ref
+      type(Item_t),   optional, target :: item
     end function
   end interface
 
@@ -56,7 +72,7 @@ end module
   integer(kind=4) &
   function item_object_size_c() result(res)
     use impl_item__; implicit none
-    type (Item_t) :: tmp
+    type (Item_i) :: tmp
     res = storage_size(tmp) / 8
   end function
 
@@ -65,9 +81,9 @@ end module
   subroutine item_init_by_item_c( self, has_proto, proto )
     use impl_item__
     implicit none
-    type(Item_t),    intent(inout) :: self
+    type(Item_i),    intent(inout) :: self
     integer(kind=4), intent(in)    :: has_proto
-    type(Item_t),    intent(in)    :: proto
+    type(Item_i),    intent(in)    :: proto
     self%data     = 0
     self%typeInfo => null()
     if (has_proto /= 0) &
@@ -76,9 +92,9 @@ end module
 
 
   function item_reshape_( self, new_typeInfo ) result(res)
-    use impl_item__, only: Item_t, TypeInfo_t
+    use impl_item__, only: Item_i, TypeInfo_t
     implicit none
-    type(Item_t)                         :: self
+    type(Item_i)                         :: self
     type(TypeInfo_t), target, intent(in) :: new_typeInfo
     logical                              :: res
 
@@ -108,19 +124,19 @@ end module
   logical function item_is_valid_c( self ) result(res)
     use impl_item__
     implicit none
-    type(Item_t), intent(in) :: self
+    type(Item_i), intent(in) :: self
     res = associated( self%typeInfo )
   end function
 
 
-!_PROC_EXPORT(item_dynamic_type)
-  function item_dynamic_type( self ) result(res)
+!_PROC_EXPORT(item_content_type)
+  function item_content_type( self ) result(res)
     ! NOTE: in contrast to the interface argument self is declared optional here!
     !       This is because we need to handle null pointers here, while we do not allow
-    !         calling dynamic_type with self actually missing!
-    use impl_item__, only: Item_t, TypeInfo_t, void_type
+    !         calling content_type with self actually missing!
+    use impl_item__, only: Item_i, TypeInfo_t, void_type
     implicit none
-    type(Item_t), optional, intent(in) :: self
+    type(Item_i), optional, intent(in) :: self
     type(TypeInfo_t),          pointer :: res
 
     res => null()
@@ -129,15 +145,15 @@ end module
   end function
 
 
-!_PROC_EXPORT(item_dynamic_type_c)
-  subroutine item_dynamic_type_c( res, self )
+!_PROC_EXPORT(item_content_type_c)
+  subroutine item_content_type_c( res, self )
     ! NOTE: in contrast to the interface argument self is declared optional here!
     !       This is because we need to handle null pointers here, while we do not allow
-    !         calling dynamic_type with self actually missing!
+    !         calling content_type with self actually missing!
     use impl_item__
     implicit none
     type(TypeSpecs_t),      intent(inout) :: res
-    type(Item_t), optional, intent(in)    :: self
+    type(Item_i), optional, intent(in)    :: self
     type(TypeInfo_t),             pointer :: ptr
 
     ptr => null()
@@ -147,12 +163,34 @@ end module
   end subroutine
 
 
+!_PROC_EXPORT(item_dynamic_type)
+  function item_dynamic_type( self ) result(res)
+    ! NOTE: in contrast to the interface argument self is declared optional here!
+    !       This is because we need to handle null pointers here, while we do not allow
+    !         calling dynamic_type with self actually missing!
+    use impl_item__, only: Ref_t, Item_i, TypeInfo_t
+    implicit none
+    type(Item_i), optional, intent(in) :: self
+    type(TypeInfo_t),          pointer :: res
+
+    interface
+      function item_resolve_type( ref, item ) result(ti)
+        import
+        type(Ref_t),  optional, target :: ref
+        type(Item_i), optional, target :: item
+        type(TypeInfo_t),      pointer :: ti
+      end function
+    end interface
+    res => item_resolve_type( item=self )
+  end function
+
+
 !_PROC_EXPORT(item_delete_c)
   recursive &
   subroutine item_delete_c( self )
     use impl_item__
     implicit none
-    type(Item_t) :: self
+    type(Item_i) :: self
     
     if (associated( self%typeInfo )) then
       if (associated( self%typeInfo%deleteProc )) &
@@ -171,8 +209,8 @@ end module
     use impl_item__; implicit none                       ;\
     baseType             :: val                          ;\
     baseType,    pointer :: ptr                          ;\
-    type(Item_t), target :: res                          ;\
-    if (item_reshape_( res, static_type(val) )) then     ;\
+    type(Item_i), target :: res                          ;\
+    if (item_reshape_( res, type_of(val) )) then         ;\
       call res%typeInfo%initProc( res%data, 1, proto )   ;\
     end if                                               ;\
     call c_f_pointer( c_loc(res%data(1)), ptr )          ;\
@@ -217,9 +255,9 @@ end module
     implicit none
     character(len=*)        :: val
     type(String_t), pointer :: ptr
-    type(Item_t),    target :: res
+    type(Item_i),    target :: res
 
-    if (item_reshape_( res, static_type(string_var) )) &
+    if (item_reshape_( res, type_of(string_var) )) &
       call res%typeInfo%initProc( res%data, 1, temporary_string )
     call c_f_pointer( c_loc(res%data(1)), ptr )
     call assign( ptr, val )
@@ -232,8 +270,8 @@ end module
     implicit none
     type(RefEncoding_t), dimension(:) :: val
     type(Ref_t),              pointer :: ptr
-    type(Item_t),              target :: res
-    if (item_reshape_( res, static_type(ref_var) )) &
+    type(Item_i),              target :: res
+    if (item_reshape_( res, type_of(ref_var) )) &
       call res%typeInfo%initProc( res%data, 1, temporary_ref )
     call c_f_pointer( c_loc(res%data(1)), ptr )
     call assign( ptr, val )
@@ -244,8 +282,8 @@ end module
   function item_of_item( val ) result(res)
     use impl_item__
     implicit none
-    type(Item_t) :: val
-    type(Item_t) :: res
+    type(Item_i) :: val
+    type(Item_i) :: res
     call item_assign_item_c( res, val )
   end function
 
@@ -255,12 +293,12 @@ end module
 # define _EXPORT_GETTER(typeId)    _PROC_EXPORT(_paste(item_get_,typeId))
 # define _implement_getter_(typeId, baseType)              \
   function _paste(item_get_,typeId)( self ) result(res)   ;\
-    use impl_item__, only: Item_t, Ref_t, String_t, c_ptr ,\
-        static_type, item_reshape_, c_f_pointer, c_loc    ;\
-    type(Item_t), target :: self                          ;\
+    use impl_item__, only: Item_i, Ref_t, String_t, c_ptr ,\
+            type_of, item_reshape_, c_f_pointer, c_loc    ;\
+    type(Item_i), target :: self                          ;\
     baseType,    pointer :: res                           ;\
     baseType             :: var                           ;\
-    if (item_reshape_( self, static_type(var) )) then     ;\
+    if (item_reshape_( self, type_of(var) )) then         ;\
       call self%typeInfo%initProc( self%data, 0 )         ;\
     end if                                                ;\
     call c_f_pointer( c_loc(self%data(1)), res )          ;\
@@ -302,7 +340,7 @@ end module
   subroutine item_memoryref_c( res, self )
     use impl_item__
     implicit none
-    type(Item_t), target, intent(in) :: self
+    type(Item_i), target, intent(in) :: self
     type(MemoryRef_t), intent(inout) :: res
     
     if (associated( self%typeInfo )) then
@@ -320,10 +358,10 @@ end module
 # define _implement_assign_(typeId, baseType)           \
   subroutine _paste(item_assign_,typeId)_c( lhs, rhs ) ;\
     use impl_item__; implicit none                     ;\
-    type(Item_t), target, intent(inout) :: lhs         ;\
+    type(Item_i), target, intent(inout) :: lhs         ;\
     baseType,                intent(in) :: rhs         ;\
     baseType,                   pointer :: ptr         ;\
-    if (item_reshape_( lhs, static_type(rhs) )) then   ;\
+    if (item_reshape_( lhs, type_of(rhs) )) then       ;\
       call lhs%typeInfo%initProc( lhs%data, 0 )        ;\
     end if                                             ;\
     call c_f_pointer( c_loc(lhs%data(1)), ptr )        ;\
@@ -366,10 +404,10 @@ end module
   subroutine item_assign_charstring_c( lhs, rhs )
     use impl_item__
     implicit none
-    type(Item_t), target, intent(inout) :: lhs
+    type(Item_i), target, intent(inout) :: lhs
     character(len=*),        intent(in) :: rhs
     type(String_t),             pointer :: ptr
-    if (item_reshape_( lhs, static_type(string_var) )) &
+    if (item_reshape_( lhs, type_of(string_var) )) &
       call lhs%typeInfo%initProc( lhs%data, 0 )
     call c_f_pointer( c_loc(lhs%data(1)), ptr )
     call assign( ptr, rhs )
@@ -380,10 +418,10 @@ end module
   subroutine item_assign_refencoding_( lhs, rhs )
     use impl_item__
     implicit none
-    type(Item_t),           target, intent(inout) :: lhs
+    type(Item_i),           target, intent(inout) :: lhs
     type(RefEncoding_t), dimension(:), intent(in) :: rhs
     type(Ref_t),                          pointer :: ptr
-    if (item_reshape_( lhs, static_type(ref_var) )) &
+    if (item_reshape_( lhs, type_of(ref_var) )) &
       call lhs%typeInfo%initProc( lhs%data, 0 )
     call c_f_pointer( c_loc(lhs%data(1)), ptr )
     call assign( ptr, rhs )
@@ -394,8 +432,8 @@ end module
   subroutine item_assign_item_c( lhs, rhs )
     use impl_item__
     implicit none
-    type(Item_t), intent(inout) :: lhs
-    type(Item_t)                :: rhs
+    type(Item_i), intent(inout) :: lhs
+    type(Item_i)                :: rhs
 
     if (associated( rhs%typeInfo )) then
       ! can't prevent self assignment ... (since fortran gives us a shallow copy of rhs)
@@ -418,30 +456,30 @@ end module
 
   logical &
   function auto_assignable_( src, lhsPtr, lhsType, rhs ) result(res)
-    use impl_item__, only: c_ptr, TypeInfo_t, Item_t, Ref_t, item_dynamic_type, item_get_ref, user_assignment_ &
-                         , temporary_ref, static_type, dynamic_type, ref, cptr, c_loc
+    use impl_item__, only: c_ptr, TypeInfo_t, Item_i, Ref_t, item_content_type, item_get_ref, user_assignment_ &
+                         , temporary_ref, type_of, content_type, ref, cptr, c_loc
     implicit none          
     type(c_ptr),  intent(out) :: src
     type(c_ptr)               :: lhsPtr
     type(TypeInfo_t), pointer :: lhsType, rhsType, refType
-    type(Item_t),      target :: rhs
+    type(Item_i),      target :: rhs
     type(Ref_t),      pointer :: refPtr
     integer,        parameter :: stdout = 6
     integer                   :: stat
   
-    rhsType => item_dynamic_type(rhs)
+    rhsType => item_content_type(rhs)
     res     =  associated( lhsType, rhsType )
     if (res) then
       ! types match
       src = c_loc(rhs%data(1))
     else
       ! type mismatch - check if rhs is reference
-      refType => static_type(temporary_ref)
+      refType => type_of(temporary_ref)
       if (associated( rhsType, refType )) then
         ! rhs is reference: deref as far as possible ...
         refPtr => item_get_ref(rhs)
         do while (.true.)
-          rhsType => dynamic_type(refPtr)
+          rhsType => content_type(refPtr)
           if (.not. associated( rhsType, refType )) &
             exit
           refPtr => ref(refPtr)
@@ -466,17 +504,17 @@ end module
 
 
 # define _EXPORT_ASSIGN_TO(typeId)    _PROC_EXPORT(_paste(item_assign_to_,typeId)_c)
-# define _implement_assign_to_(typeId, baseType)                     \
-  subroutine _paste(item_assign_to_,typeId)_c( lhs, rhs )           ;\
-    use impl_item__; implicit none                                  ;\
-    baseType,     target, intent(inout) :: lhs                      ;\
-    type(Item_t), target                :: rhs                      ;\
-    baseType,                   pointer :: ptr                      ;\
-    type(c_ptr)                         :: src                      ;\
-    if (auto_assignable_( src, c_loc(lhs), static_type(lhs), rhs )) then ;\
-      call c_f_pointer( src, ptr )                                  ;\
-      lhs = ptr                                                     ;\
-    end if                                                          ;\
+# define _implement_assign_to_(typeId, baseType)                      \
+  subroutine _paste(item_assign_to_,typeId)_c( lhs, rhs )            ;\
+    use impl_item__; implicit none                                   ;\
+    baseType,     target, intent(inout) :: lhs                       ;\
+    type(Item_i), target                :: rhs                       ;\
+    baseType,                   pointer :: ptr                       ;\
+    type(c_ptr)                         :: src                       ;\
+    if (auto_assignable_( src, c_loc(lhs), type_of(lhs), rhs )) then ;\
+      call c_f_pointer( src, ptr )                                   ;\
+      lhs = ptr                                                      ;\
+    end if                                                           ;\
   end subroutine
 
 !_EXPORT_ASSIGN_TO(bool1)
@@ -511,13 +549,13 @@ end module
 # define _implement_typecheck_(typeId, baseType)                  \
   logical function _paste(item_is_,typeId)_c( self ) result(res) ;\
     use impl_item__; implicit none                               ;\
-    type(Item_t), intent(in) :: self                             ;\
+    type(Item_i), intent(in) :: self                             ;\
     baseType                 :: var                              ;\
-    res = associated( static_type(var), self%typeInfo )          ;\
+    res = associated( type_of(var), self%typeInfo )          ;\
   end function
-  ! For the pointer check (associated) above it is really important to give static_type() as the
+  ! For the pointer check (associated) above it is really important to give type_of() as the
   !   first argument, otherwise Fortrans starts to deref self%typeInfo (WTH!?)
-  !   and compares the pointer returned by static_type() to this copy - which is of course different.
+  !   and compares the pointer returned by type_of() to this copy - which is of course different.
 
 !_EXPORT_TYPECHECK(bool1)
   _implement_typecheck_(bool1,      logical*1)
@@ -557,44 +595,19 @@ end module
 !         calling dynamic_cast with self actually missing!
 # define _EXPORT_DYNAMIC_CAST(typeId) _PROC_EXPORT(_paste(item_dynamic_cast_,typeId)_c)
 # define _implement_dynamic_cast_(typeId, baseType) \
-  logical function _paste(item_dynamic_cast_,typeId)_c( ptr, self ) result(res) ;\
+  logical function _paste(item_dynamic_cast_,typeId)_c( tgt, self ) result(res) ;\
     use impl_item__; implicit none                                              ;\
-    baseType,              pointer :: ptr                                       ;\
+    baseType,              pointer :: tgt                                       ;\
     type(Item_t), optional, target :: self                                      ;\
     baseType                       :: var                                       ;\
-    res = present(self)                                                         ;\
-    if (res) res = associated( static_type(var), self%typeInfo )                ;\
-    if (res) then; call c_f_pointer( c_loc(self%data(1)), ptr )                 ;\
-             else; ptr => null()                                                ;\
-    end if                                                                      ;\
+    type(c_ptr)                    :: cp                                        ;\
+    select case (item_resolve_data( cp, type_of(var), item=self ))              ;\
+      case (1); call c_f_unwrap( cp, tgt );  res = .true.                       ;\
+      case (2); call c_f_pointer( cp, tgt ); res = .true.                       ;\
+      case default;           tgt => null(); res = .false.                      ;\
+    end select                                                                  ;\
   end function
 
-!_EXPORT_DYNAMIC_CAST(bool1)
-  _implement_dynamic_cast_(bool1,      logical*1)
-!_EXPORT_DYNAMIC_CAST(bool2)
-  _implement_dynamic_cast_(bool2,      logical*2)
-!_EXPORT_DYNAMIC_CAST(bool4)
-  _implement_dynamic_cast_(bool4,      logical*4)
-!_EXPORT_DYNAMIC_CAST(bool8)
-  _implement_dynamic_cast_(bool8,      logical*8)
-!_EXPORT_DYNAMIC_CAST(int1)
-  _implement_dynamic_cast_(int1,       integer*1)
-!_EXPORT_DYNAMIC_CAST(int2)
-  _implement_dynamic_cast_(int2,       integer*2)
-!_EXPORT_DYNAMIC_CAST(int4)
-  _implement_dynamic_cast_(int4,       integer*4)
-!_EXPORT_DYNAMIC_CAST(int8)
-  _implement_dynamic_cast_(int8,       integer*8)
-!_EXPORT_DYNAMIC_CAST(real4)
-  _implement_dynamic_cast_(real4,      real*4)
-!_EXPORT_DYNAMIC_CAST(real8)
-  _implement_dynamic_cast_(real8,      real*8)
-!_EXPORT_DYNAMIC_CAST(complex8)
-  _implement_dynamic_cast_(complex8,   complex*8)
-!_EXPORT_DYNAMIC_CAST(complex16)
-  _implement_dynamic_cast_(complex16,  complex*16)
-!_EXPORT_DYNAMIC_CAST(c_void_ptr)
-  _implement_dynamic_cast_(c_void_ptr, type(c_ptr))
 !_EXPORT_DYNAMIC_CAST(string)
   _implement_dynamic_cast_(string,     type(String_t))
 !_EXPORT_DYNAMIC_CAST(ref)
@@ -612,8 +625,6 @@ end module
   _implement_assign_to_(real16,       real*16)
 !_EXPORT_TYPECHECK(real16)
   _implement_typecheck_(real16,       real*16)
-!_EXPORT_DYNAMIC_CAST(real16)
-  _implement_dynamic_cast_(real16,    real*16)
 
 !_EXPORT_CONSTRUCTOR(complex32)
   _implement_constructor_(complex32,  complex*32)
@@ -625,8 +636,6 @@ end module
   _implement_assign_to_(complex32,    complex*32)
 !_EXPORT_TYPECHECK(complex32)
   _implement_typecheck_(complex32,    complex*32)
-!_EXPORT_DYNAMIC_CAST(complex32)
-  _implement_dynamic_cast_(complex32, complex*32)
 # endif
 
 
@@ -640,7 +649,7 @@ end module
     type(Visitor_t)           :: vstr
     type(TypeInfo_t), pointer :: ti
 
-    ti => item_dynamic_type(wrap%ptr)
+    ti => item_content_type(wrap%ptr)
     call c_f_pointer( c_loc(wrap%ptr%data), wrap%ptr )
     call ti%acceptProc( wrap, ti, vstr )
   end subroutine
@@ -658,7 +667,7 @@ end module
     type(void_t)              :: dataWrap
     character(len=32)         :: buff
     
-    ti => item_dynamic_type(wrap%ptr)
+    ti => item_content_type(wrap%ptr)
     call c_f_pointer( c_loc(wrap%ptr%data), dataWrap%ptr )
     call ti%streamProc( dataWrap, ti, outs )
   end subroutine
@@ -670,4 +679,114 @@ end module
   _implement_assign_to_(complex8,   complex*8)
 !_EXPORT_ASSIGN_TO(complex16)
   _implement_assign_to_(complex16,  complex*16)
+
+
+  function item_get_data_cptr( self ) result(res)
+    use impl_item__, only: Item_i, c_ptr, c_loc
+    type(Item_i), target :: self
+    type(c_ptr)          :: res
+    res = c_loc(self%data(1))
+  end function
+
+
+!_PROC_EXPORT(item_resolve_data)
+  integer &
+  function item_resolve_data( ctgt, ti, ref_, item_ ) result(res)
+    use impl_item__, only: TypeInfo_t, Ref_t, Item_t, type_of, temporary_ref
+    use impl_item__, only: content_type, ref_get_typereference, ref, item, item_get_data_cptr
+    use iso_c_binding
+    implicit none
+    type(c_ptr),         intent(out) :: ctgt
+    type(TypeInfo_t),         target :: ti
+    type(Ref_t),    optional, target :: ref_
+    type(Item_t),   optional, target :: item_
+    type(TypeInfo_t),        pointer :: dt, refType, itemType
+
+    refType  => type_of(temporary_ref)
+    itemType => type_of(item_)
+
+    if     (present(ref_))  then; call visit_ref( ref_ )
+    elseif (present(item_)) then; call visit_item( item_ )
+    else
+      ctgt = C_NULL_PTR
+      res  = 0
+    end if
+
+    contains
+
+    recursive &
+    subroutine visit_ref( r )
+      type(Ref_t) :: r
+      
+      dt => content_type( r )
+      if (associated( dt, ti )) then
+        ctgt = ref_get_typereference( r )
+        res  = 1
+      else if (associated( dt, refType ))  then; call visit_ref( ref(r) )
+      else if (associated( dt, itemType )) then; call visit_item( item(r) )
+      else
+        ctgt = C_NULL_PTR
+        res  = 0
+      end if
+    end subroutine
+
+    recursive &
+    subroutine visit_item( i )
+      type(Item_t) :: i
+
+      dt => content_type( i )
+      if (associated( dt, ti )) then
+        ctgt = item_get_data_cptr( i )
+        res  = 2
+      else if (associated( dt, refType )) then; call visit_ref( ref(i) )
+      else
+        ctgt = C_NULL_PTR
+        res  = 0
+      end if
+    end subroutine
+  end function
+
+
+!_PROC_EXPORT(item_resolve_type)
+  function item_resolve_type( ref_, item_ ) result(res)
+    use impl_item__, only: TypeInfo_t, Ref_t, Item_t, type_of, temporary_ref
+    use impl_item__, only: content_type, ref, item, void_type
+    use iso_c_binding
+    implicit none
+    type(Ref_t),  optional, target :: ref_
+    type(Item_t), optional, target :: item_
+    type(TypeInfo_t),      pointer :: res
+    type(TypeInfo_t),      pointer :: refType, itemType
+
+    refType  => type_of(temporary_ref)
+    itemType => type_of(item_)
+
+    if     (present(ref_))  then; call visit_ref( ref_ )
+    elseif (present(item_)) then; call visit_item( item_ )
+                            else; res => void_type()
+    end if
+
+    contains
+
+    recursive &
+    subroutine visit_ref( r )
+      type(Ref_t) :: r
+
+      res => content_type( r )
+      if     (associated( res, refType ))  then; call visit_ref( ref(r) )
+      elseif (associated( res, itemType )) then; call visit_item( item(r) )
+      end if
+    end subroutine
+
+    recursive &
+    subroutine visit_item( i )
+      type(Item_t) :: i
+
+      res => content_type( i )
+      if (associated( res, refType )) then; call visit_ref( ref(i) )
+      end if
+    end subroutine
+  end function
+
+
 

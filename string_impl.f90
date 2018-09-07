@@ -1,5 +1,6 @@
 
 #include "adt/itfUtil.fpp"
+#include "adt/ref_status.fpp"
 
 module impl_string__
   use adt_string
@@ -13,16 +14,23 @@ module impl_string__
 
 #   define _len(self)           self%str%len
 #   define _ptr(self)           basestring_ptr(self%str)
+#   define _safeptr(self)       basestring_safeptr(self%str)
 #   define _array(self)         self%str%ptr(:self%str%len)
 #   define _charAt(self,idx)    self%str%ptr(idx)
 #   define _reflen(self)        basestring_len_ref( self%str )
 #   define _release_weak(self)  call basestring_release_weak( self%str )
+#   define _isHard(self)        _ref_isHard(self%str%refstat)
   end type
 
-  integer, parameter :: uc_A = iachar('A')
-  integer, parameter :: uc_Z = iachar('Z')
-  integer, parameter :: lc_a = iachar('a')
-  integer, parameter :: lc_z = iachar('z')
+  integer, parameter   :: uc_A = iachar('A')
+  integer, parameter   :: uc_Z = iachar('Z')
+  integer, parameter   :: lc_a = iachar('a')
+  integer, parameter   :: lc_z = iachar('z')
+end module
+
+
+module impl_string_itf__
+  use impl_string__, only: String_t
 
   interface
     subroutine charstring_to_upper( cs )
@@ -32,9 +40,15 @@ module impl_string__
     subroutine charstring_to_lower( cs )
       character(len=*) :: cs
     end subroutine
-  end interface
 
+    function string_strip( ds ) result(res)
+      import
+      type(String_t)            :: ds
+      character(len=:), pointer :: res
+    end function
+  end interface
 end module
+
 
 !_PROC_EXPORT(string_object_size_c)
   integer(kind=4) &
@@ -68,13 +82,9 @@ end module
 !_PROC_EXPORT(string_str)
   function string_str( self ) result(res)
     use impl_string__; implicit none
-    type(String_t)                        :: self
-    character(len=_reflen(self)), pointer :: res
-    type(c_ptr)                           :: ptr
-    ptr = basestring_cptr( self%str )
-    if (c_associated( ptr )) then; call c_f_pointer( ptr, res )
-                             else; res => null()
-    end if
+    type(String_t)            :: self
+    character(len=:), pointer :: res
+    res => _safeptr( self )
   end function
 
 
@@ -143,6 +153,42 @@ end module
   end subroutine
 
 !##################################
+  
+!_PROC_EXPORT(string_trim)
+  function string_trim( self ) result(res)
+    use impl_string__; implicit none
+    type(String_t)            :: self
+    character(len=:), pointer :: res
+
+    res => _safeptr( self )
+    res => res( : len_trim( res ) )
+  end function
+
+
+!_PROC_EXPORT(string_strip)
+  function string_strip( self ) result(res)
+    use impl_string__; implicit none
+    type(String_t)                     :: self
+    character(len=:),          pointer :: res
+    character(len=_len(self)), pointer :: tmp
+    integer :: idx
+
+    res => _safeptr( self )
+    idx = verify( res, ' ' )
+    if (idx > 0) then
+      res => res( idx : len_trim(res) )
+    end if
+  end function
+
+
+!_PROC_EXPORT(string_to_stripped)
+  subroutine string_to_stripped( self )
+    use impl_string_itf__
+    use impl_string__; implicit none
+    type(String_t) :: self
+    call basestring_assign_charstring_c( self%str, string_strip( self ) )
+  end subroutine
+
 
 !_PROC_EXPORT(charstring_to_lower)
   subroutine charstring_to_lower( cs )
@@ -160,15 +206,15 @@ end module
 
 !_PROC_EXPORT(string_to_lower)
   subroutine string_to_lower( self )
-    use impl_string__
-    implicit none
+    use impl_string_itf__
+    use impl_string__; implicit none
     type(String_t) :: self
-    call charstring_to_lower( _ptr(self) )
-    _release_weak( self )
+    call charstring_to_lower( _safeptr(self) )
   end subroutine
 
 !_PROC_EXPORT(charstring_lower)
   function charstring_lower( cs ) result(res)
+    use impl_string_itf__
     use impl_string__; implicit none
     character(len=*)       :: cs
     character(len=len(cs)) :: res
@@ -178,6 +224,7 @@ end module
 
 !_PROC_EXPORT(string_lower)
   function string_lower( self ) result(res)
+    use impl_string_itf__
     use impl_string__; implicit none
     type(String_t)            :: self
     character(len=_len(self)) :: res
@@ -203,15 +250,15 @@ end module
 
 !_PROC_EXPORT(string_to_upper)
   subroutine string_to_upper( self )
-    use impl_string__
-    implicit none
+    use impl_string_itf__
+    use impl_string__; implicit none
     type(String_t) :: self
-    call charstring_to_upper( _ptr(self) )
-    _release_weak( self )
+    call charstring_to_upper( _safeptr(self) )
   end subroutine
 
 !_PROC_EXPORT(charstring_upper)
   function charstring_upper( cs ) result(res)
+    use impl_string_itf__
     use impl_string__; implicit none
     character(len=*)       :: cs
     character(len=len(cs)) :: res
@@ -221,6 +268,7 @@ end module
 
 !_PROC_EXPORT(string_upper)
   function string_upper( self ) result(res)
+    use impl_string_itf__
     use impl_string__; implicit none
     type(String_t)            :: self
     character(len=_len(self)) :: res
@@ -697,23 +745,40 @@ end module
 !_PROC_EXPORT(string_file_basename_charstring)
   function string_file_basename_charstring( filePath ) result(res)
     use impl_string__; implicit none
-    character(len=*)             :: filePath
-    character(len=len(filePath)) :: res
-    integer :: i,j
+    character(len=*),  target :: filePath
+    character(len=:), pointer :: res
+    integer                   :: i,j
     i = max( index( filePath, '/', back=.true. ), index( filePath, '\', back=.true. ) )
     j = index( filePath, '.', back=.true. ) - 1
     j = merge( j, -1, j > i )
     j = modulo( j, len(filePath) + 1 )
-    res = filePath(i+1:j)
+    res => filePath(i+1:j)
   end function
 
 !_PROC_EXPORT(string_file_basename_string)
   function string_file_basename_string( filePath ) result(res)
     use impl_string__; implicit none
-    type(String_t)                :: filePath
-    character(len=_len(filePath)) :: res
-    integer :: i,j
-    res = file_basename( _ptr(filePath) )
-    _release_weak(filePath)
+    type(String_t)            :: filePath
+    character(len=:), pointer :: res
+    res => file_basename( _safeptr(filePath) )
+  end function
+
+
+!_PROC_EXPORT(string_file_dirname_charstring)
+  function string_file_dirname_charstring( filePath ) result(res)
+    use impl_string__; implicit none
+    character(len=*),  target :: filePath
+    character(len=:), pointer :: res
+    integer                   :: i
+    i = max( index( filePath, '/', back=.true. ), index( filePath, '\', back=.true. ) )
+    res => filePath(:i)
+  end function
+
+!_PROC_EXPORT(string_file_dirname_string)
+  function string_file_dirname_string( filePath ) result(res)
+    use impl_string__; implicit none
+    type(String_t)            :: filePath
+    character(len=:), pointer :: res
+    res => file_dirname( _safeptr(filePath) )
   end function
 

@@ -219,6 +219,12 @@
         _linkArray_as( scope, sym, id )                                          ;\
       end select
 
+# define _expand_REALLOCATE_visible_as_st( scope, sym, times, pad, tmp, id, _st ) \
+      select case (0); case default                                              ;\
+        _expand_REALLOCATE_st( sym, times, pad, tmp, _st )                       ;\
+        _linkArray_as( scope, sym, id )                                          ;\
+      end select
+
 
 # define _ALLOCATE_visible_st( scope, sym, shape, _st ) \
       _ALLOCATE_visible_as_st( scope, sym, shape, __sym2str__(sym), _st )
@@ -240,6 +246,9 @@
 
 # define _copied_REALLOCATE_visible_st( scope, sym, shape, pad, tmp, _st ) \
       _copied_REALLOCATE_visible_as_st( scope, sym, shape, pad, tmp, __sym2str__(sym), _st )
+
+# define _expand_REALLOCATE_visible_st( scope, sym, times, pad, tmp, _st ) \
+      _expand_REALLOCATE_visible_as_st( scope, sym, times, pad, tmp, __sym2str__(sym), _st )
 
 !-------------------------------------------
 ! variants using status variable __istat__
@@ -266,6 +275,9 @@
 # define _copied_REALLOCATE_visible_as( scope, sym, shape, pad, tmp, id ) \
      _copied_REALLOCATE_visible_as_st( scope, sym, shape, pad, tmp, id, __istat__ )
 
+# define _expand_REALLOCATE_visible_as( scope, sym, times, pad, tmp, id ) \
+     _expand_REALLOCATE_visible_as_st( scope, sym, times, pad, tmp, id, __istat__ )
+
 # define _ALLOCATE_visible( scope, sym, shape ) \
      _ALLOCATE_visible_st( scope, sym, shape, __istat__ )
 
@@ -286,6 +298,9 @@
 
 # define _copied_REALLOCATE_visible( scope, sym, shape, pad, tmp ) \
      _copied_REALLOCATE_visible_as_st( scope, sym, shape, pad, tmp, __sym2str__(sym), __istat__ )
+
+# define _expand_REALLOCATE_visible( scope, sym, times, pad, tmp ) \
+     _expand_REALLOCATE_visible_as_st( scope, sym, times, pad, tmp, __sym2str__(sym), __istat__ )
 
 # endif
  ! ^^ _ADT_SCOPE_NO_SIMPLIFIED

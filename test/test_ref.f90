@@ -119,7 +119,7 @@ program testinger
 
   allocate( ptr2d(4,4) )
   ref1 = ref_of(ptr2d)
-  ti => dynamic_type(ref1)
+  ti => content_type(ref1)
   call bind( ref1, .false. )
   call bind( ref1, .true. )
 

@@ -26,7 +26,8 @@ module adt_ref
   !     deleteProc = ref_delete_c,       \
   !     cloneMode  = _type,              \
   !     streamProc = ref_stream_wrap_,   \
-  !     acceptProc = ref_accept_wrap_ )
+  !     acceptProc = ref_accept_wrap_,   \
+  !     itemCast   = false  )
 
 
   type, public :: RefEncoding_t
@@ -119,6 +120,15 @@ module adt_ref
     end subroutine
   end interface
 
+  interface content_type
+    function ref_content_type( self ) result(res)
+      import Ref_t, TypeInfo_t
+      type(Ref_t),   intent(in) :: self
+      type(TypeInfo_t), pointer :: res
+    end function
+  end interface
+
+  public :: dynamic_type
   interface dynamic_type
     function ref_dynamic_type( self ) result(res)
       import Ref_t, TypeInfo_t
@@ -195,7 +205,7 @@ module adt_ref
   public :: cptr
   public :: delete
   public :: free
-  public :: dynamic_type
+  public :: content_type
   public :: bind, permanent_ref, temporary_ref
   public :: set_attribute, attribute_permanent, attribute_volatile
   public :: is_valid

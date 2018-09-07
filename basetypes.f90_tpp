@@ -5,6 +5,7 @@
 module adt_basetypes
   use iso_c_binding
   use adt_ref
+  use adt_item
   use adt_list
   use adt_string
   use adt_convert

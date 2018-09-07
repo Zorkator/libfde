@@ -3,6 +3,7 @@
 
 module adt_list
   use adt_ref
+  use adt_item
   use adt_visitor
   use adt_ostream
   implicit none
@@ -48,13 +49,15 @@ module adt_list
   public :: append
   public :: delete
   public :: clear
-  public :: dynamic_type
+  public :: foreach
+  public :: content_type
   public :: index, cptr
   public :: prev, set_prev, get_prev
   public :: next, set_next, get_next
   public :: insert
   public :: remove
   public :: pop
+  public :: sort
   public :: operator(==), operator(/=)
   public :: assign, assignment(=)
 
@@ -69,6 +72,12 @@ module adt_list
     subroutine list_init_c( self )
       import List_t
       type(List_t) :: self
+    end subroutine
+
+    subroutine listnode_init_f( self, nodeType )
+      import ListNode_t, TypeInfo_t
+      type (ListNode_t), target :: self
+      type (TypeInfo_t), target :: nodeType
     end subroutine
   end interface
 
@@ -132,9 +141,18 @@ module adt_list
       type (List_t), intent(inout) :: self
     end subroutine
   end interface
+
+  interface foreach
+    recursive &
+    subroutine list_foreach_c( self, action )
+      import List_t
+      type (List_t), intent(in) :: self
+      procedure()               :: action
+    end subroutine
+  end interface
   
-  interface dynamic_type
-    function listindex_dynamic_type( self ) result(res)
+  interface content_type
+    function listindex_content_type( self ) result(res)
       import ListIndex_t, TypeInfo_t
       type(ListIndex_t), intent(in) :: self
       type(TypeInfo_t),     pointer :: res
@@ -269,6 +287,20 @@ module adt_list
       import List_t, ListIndex_t
       type(List_t),   intent(inout) :: lhs
       type(ListIndex_t), intent(in) :: rhs
+    end subroutine
+  end interface
+
+  interface sort
+    subroutine list_sort_c( self, compare )
+      import List_t
+      type(List_t) :: self
+      procedure()  :: compare
+      !interface
+      !  logical function compare( left, right )
+      !    import ListNode_t
+      !    type(ListNode_t) :: left, right
+      !  end function
+      !end interface
     end subroutine
   end interface
 

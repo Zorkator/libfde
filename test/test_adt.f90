@@ -586,6 +586,201 @@ subroutine test_item()!{{{
 end subroutine!}}}
 
 
+subroutine test_dyntype()!{{{
+  use test_basedata
+  implicit none
+  type(Item_t)              :: item_
+  type(Ref_t)               :: ref_
+  type(TypeInfo_t), pointer :: ti1, ti2
+
+  ref_ = ref_of( item_ )
+
+# define _chk_dyntype( typeId, neg )       \
+    write(*,*) "dyntype " // _str(typeId) ;\
+    item_ = ref_of( _paste(v_,typeId ) )  ;\
+    ti1 => dynamic_type( item_ )          ;\
+    ti2 => type_of( _paste(v_,typeId) )   ;\
+    _assert( neg associated( ti1, ti2 ) ) ;\
+    ti1 => dynamic_type( ref_ )           ;\
+    _assert( neg associated( ti1, ti2 ) )
+
+  _chk_dyntype(bool1,)
+  _chk_dyntype(bool2,)
+  _chk_dyntype(bool4,)
+  _chk_dyntype(bool8,)
+  _chk_dyntype(int1,)
+  _chk_dyntype(int2,)
+  _chk_dyntype(int4,)
+  _chk_dyntype(int8,)
+  _chk_dyntype(real4,)
+  _chk_dyntype(real8,)
+  _chk_dyntype(complex8,)
+  _chk_dyntype(complex16,)
+  _chk_dyntype(c_void_ptr,)
+  _chk_dyntype(char10,)
+  _chk_dyntype(string,)
+  _chk_dyntype(ref,.not.)
+  _chk_dyntype(item,.not.)
+  _chk_dyntype(list,)
+  _chk_dyntype(hashmap,)
+  _chk_dyntype(bool1_1d,)
+  _chk_dyntype(bool2_1d,)
+  _chk_dyntype(bool4_1d,)
+  _chk_dyntype(bool8_1d,)
+  _chk_dyntype(int1_1d,)
+  _chk_dyntype(int2_1d,)
+  _chk_dyntype(int4_1d,)
+  _chk_dyntype(int8_1d,)
+  _chk_dyntype(real4_1d,)
+  _chk_dyntype(real8_1d,)
+  _chk_dyntype(complex8_1d,)
+  _chk_dyntype(complex16_1d,)
+  !_chk_dyntype(c_void_ptr_1d,)
+  _chk_dyntype(char10_1d,)
+  _chk_dyntype(string_1d,)
+  !_chk_dyntype(ref_1d,)
+  !_chk_dyntype(item_1d,)
+  _chk_dyntype(bool1_2d,)
+  _chk_dyntype(bool2_2d,)
+  _chk_dyntype(bool4_2d,)
+  _chk_dyntype(bool8_2d,)
+  _chk_dyntype(int1_2d,)
+  _chk_dyntype(int2_2d,)
+  _chk_dyntype(int4_2d,)
+  _chk_dyntype(int8_2d,)
+  _chk_dyntype(real4_2d,)
+  _chk_dyntype(real8_2d,)
+  _chk_dyntype(complex8_2d,)
+  _chk_dyntype(complex16_2d,)
+  !_chk_dyntype(c_void_ptr_2d,)
+  _chk_dyntype(char10_2d,)
+  _chk_dyntype(string_2d,)
+  !_chk_dyntype(ref_2d,)
+  !_chk_dyntype(item_2d,)
+  _chk_dyntype(bool1_3d,)
+  _chk_dyntype(bool2_3d,)
+  _chk_dyntype(bool4_3d,)
+  _chk_dyntype(bool8_3d,)
+  _chk_dyntype(int1_3d,)
+  _chk_dyntype(int2_3d,)
+  _chk_dyntype(int4_3d,)
+  _chk_dyntype(int8_3d,)
+  _chk_dyntype(real4_3d,)
+  _chk_dyntype(real8_3d,)
+  _chk_dyntype(complex8_3d,)
+  _chk_dyntype(complex16_3d,)
+  !_chk_dyntype(c_void_ptr_3d,)
+  !_chk_dyntype(char10_3d,)
+  !_chk_dyntype(string_3d,)
+  !_chk_dyntype(ref_3d,)
+  !_chk_dyntype(item_3d,)
+  
+  call delete( item_ )
+  call delete( ref_ )
+end subroutine!}}}
+
+
+subroutine test_dyncast()!{{{
+  use test_basedata
+  implicit none
+  type(Item_t) :: item_
+  type(Ref_t)  :: ref_
+  type(c_ptr)  :: cp
+
+  ref_ = ref_of(item_)
+  
+# define _chk_dyn_cast( typeId )                     ;\
+  item_ = ref_of(_paste(v_,typeId))                  ;\
+  if (dynamic_cast( _paste(p_,typeId), item_ )) then ;\
+    call accept( _paste(p_,typeId), streamer%super ) ;\
+  end if                                             ;\
+  if (dynamic_cast( _paste(p_,typeId), ref_ )) then  ;\
+    call accept( _paste(p_,typeId), streamer%super ) ;\
+  end if
+
+  _chk_dyn_cast(bool1)
+  _chk_dyn_cast(bool2)
+  _chk_dyn_cast(bool4)
+  _chk_dyn_cast(bool8)
+  _chk_dyn_cast(int1)
+  _chk_dyn_cast(int2)
+  _chk_dyn_cast(int4)
+  _chk_dyn_cast(int8)
+  _chk_dyn_cast(real4)
+  _chk_dyn_cast(real8)
+  _chk_dyn_cast(complex8)
+  _chk_dyn_cast(complex16)
+  _chk_dyn_cast(c_void_ptr)
+  !_chk_dyn_cast(char10)
+  _chk_dyn_cast(string)
+  _chk_dyn_cast(ref)
+  _chk_dyn_cast(item)
+  _chk_dyn_cast(list)
+  _chk_dyn_cast(hashmap)
+  _chk_dyn_cast(bool1_1d)
+  _chk_dyn_cast(bool2_1d)
+  _chk_dyn_cast(bool4_1d)
+  _chk_dyn_cast(bool8_1d)
+  _chk_dyn_cast(int1_1d)
+  _chk_dyn_cast(int2_1d)
+  _chk_dyn_cast(int4_1d)
+  _chk_dyn_cast(int8_1d)
+  _chk_dyn_cast(real4_1d)
+  _chk_dyn_cast(real8_1d)
+  _chk_dyn_cast(complex8_1d)
+  _chk_dyn_cast(complex16_1d)
+  !_chk_dyn_cast(c_void_ptr_1d)
+  !_chk_dyn_cast(char10_1d)
+  _chk_dyn_cast(string_1d)
+  !_chk_dyn_cast(ref_1d)
+  !_chk_dyn_cast(item_1d)
+  _chk_dyn_cast(bool1_2d)
+  _chk_dyn_cast(bool2_2d)
+  _chk_dyn_cast(bool4_2d)
+  _chk_dyn_cast(bool8_2d)
+  _chk_dyn_cast(int1_2d)
+  _chk_dyn_cast(int2_2d)
+  _chk_dyn_cast(int4_2d)
+  _chk_dyn_cast(int8_2d)
+  _chk_dyn_cast(real4_2d)
+  _chk_dyn_cast(real8_2d)
+  _chk_dyn_cast(complex8_2d)
+  _chk_dyn_cast(complex16_2d)
+  !_chk_dyn_cast(c_void_ptr_2d)
+  !_chk_dyn_cast(char10_2d)
+  _chk_dyn_cast(string_2d)
+  !_chk_dyn_cast(ref_2d)
+  !_chk_dyn_cast(item_2d)
+  _chk_dyn_cast(bool1_3d)
+  _chk_dyn_cast(bool2_3d)
+  _chk_dyn_cast(bool4_3d)
+  _chk_dyn_cast(bool8_3d)
+  _chk_dyn_cast(int1_3d)
+  _chk_dyn_cast(int2_3d)
+  _chk_dyn_cast(int4_3d)
+  _chk_dyn_cast(int8_3d)
+  _chk_dyn_cast(real4_3d)
+  _chk_dyn_cast(real8_3d)
+  _chk_dyn_cast(complex8_3d)
+  _chk_dyn_cast(complex16_3d)
+  !_chk_dyn_cast(c_void_ptr_3d)
+  !_chk_dyn_cast(char10_3d)
+  !_chk_dyn_cast(string_3d)
+  !_chk_dyn_cast(ref_3d)
+  !_chk_dyn_cast(item_3d)
+
+
+  item_ = 6
+  item_ = ref_of( v_int4 )
+
+  if (dynamic_cast( p_int4, item_ )) &
+    call accept( p_int4, streamer%super )
+
+  call delete( item_ )
+  call delete( ref_ )
+end subroutine!}}}
+
+
 subroutine test_list()!{{{
   use test_basedata
   implicit none
@@ -619,6 +814,21 @@ subroutine test_list()!{{{
   _list_append(item)
   !_list_append(list)
   !_list_append(hashmap)
+  _list_append_ref(bool1)
+  _list_append_ref(bool2)
+  _list_append_ref(bool4)
+  _list_append_ref(bool8)
+  _list_append_ref(int1)
+  _list_append_ref(int2)
+  _list_append_ref(int4)
+  _list_append_ref(int8)
+  _list_append_ref(real4)
+  _list_append_ref(real8)
+  _list_append_ref(complex8)
+  _list_append_ref(complex16)
+  _list_append_ref(c_void_ptr)
+  _list_append_ref(char10)
+  _list_append_ref(string)
   _list_append_ref(bool1_1d)
   _list_append_ref(bool2_1d)
   _list_append_ref(bool4_1d)
@@ -670,22 +880,45 @@ subroutine test_list()!{{{
   !_list_append_ref(string_3d)
   !_list_append_ref(ref_3d)
   !_list_append_ref(item_3d)
-
+  
   idx = index( v_list )
   do while (is_valid(idx))
-    ti => dynamic_type( idx )
+    ti => content_type( idx )
     print *, trim(ti%baseType)
     call next( idx )
   end do
 
-  call accept( get( v_hashmap, 'initial matrix-clone' ), streamer%super )
-  
-  
   v_ref = ref_of( v_list )
   call accept( v_ref, streamer%super )
+  call delete( v_list )
+end subroutine
 
+
+subroutine test_usernode_list()
+  use test_basedata
+  implicit none
+  type UserNode_t
+    type(ListNode_t) :: asNode
+    integer          :: value
+  end type
+  type(UserNode_t), pointer :: ptr
+  integer                   :: i
+
+  do i=1, 10
+    allocate(ptr)
+    ptr%value = i
+    call append( v_list, ptr%asNode )
+  end do
+
+  call foreach( v_list, printValue_ )
   call delete( v_list )
 
+  contains
+
+  subroutine printValue_( node )
+    type(UserNode_t) :: node
+    print *, node%value
+  end subroutine
 end subroutine!}}}
 
 
@@ -708,7 +941,7 @@ subroutine test_hashmap()!{{{
     ref_ptr = ref_of( _paste(v_,typeId) )
 
   ! fist, we add an array clone to test hooking weak references.
-  ! This is for checking static_type() on weak Ref_t's if typeInfo has NOT been initialized yet!
+  ! This is for checking type_of() on weak Ref_t's if typeInfo has NOT been initialized yet!
   call set( v_hashmap, 'initial matrix-clone', Item_of( clone( ref_of(v_int4_2d) ) ) )
 
   _map_get(bool1)
@@ -729,26 +962,26 @@ subroutine test_hashmap()!{{{
   _map_ref(char10)
   _map_ref(item)
   _map_ref(list)
-  _map_ref(hashmap)
+  !_map_ref(hashmap) !!<< adding ref to itself causes endless recursion on accept()!
 
-  call set( v_hashmap, 'submap', Item_of( clone( ref_ptr ) ) )
+  call set( v_hashmap, 'submap', Item_of( clone( ref_of(v_hashmap) ) ) )
   p_hashmap => hashmap( ref( get( v_hashmap, 'submap' ) ) )
-  call set( p_hashmap, 'subsubmap', Item_of( clone( ref_ptr ) ) )
 
   idx = index( p_hashmap )
   do while (is_valid(idx))
     val => value(idx)
     if (is_ref(val)) then
       ref_ptr => ref( val )
-      ti      => dynamic_type( ref_ptr )
+      ti      => content_type( ref_ptr )
     else
-      ti => dynamic_type( val )
+      ti => content_type( val )
     end if
     print *, str(key(idx)), ' => ', trim(ti%baseType)
     call next( idx )
   end do
   
   call delete( ref_1 )
+  call accept( get( v_hashmap, 'initial matrix-clone' ), streamer%super )
 
 end subroutine!}}}
 
@@ -793,9 +1026,11 @@ subroutine test_hashmap_nesting()!{{{
   scope => getScope( hashmap(ref1), _this_file_basename(), 'gcsm', 'signal' )
   scope => _file_scope_in( scope )
 
-  call set( scope, 'myfunc', Item_of( ref_from_Callback(init_basedata) ) )
+  call declareCallback( scope, 'myCB' )
+  print *, connectCallback( scope, 'myCB', callback_proc )
+  call invokeCallback( scope, 'myCB', c_loc(scope) )
   
-  if (dynamic_cast( r_array, ref(get(scope, 'value')) )) &
+  if (dynamic_cast( r_array, get(scope, 'value') )) &
     print *, r_array
 
   call stream( scope, fout )
@@ -807,6 +1042,17 @@ subroutine test_hashmap_nesting()!{{{
   call accept( getScope(), streamer%super )
 
   call delete( ref1 )
+
+  contains
+
+  subroutine callback_proc( arg )
+    integer(kind=c_intptr_t) :: arg
+    type(c_ptr)              :: ptr
+    type(HashMap_t), pointer :: scope_ptr
+
+    call c_f_pointer( transfer( arg, ptr ), scope_ptr )
+    call accept( scope_ptr, streamer%super )
+  end subroutine
 end subroutine!}}}
 
 
@@ -884,11 +1130,13 @@ subroutine test_file_string()!{{{
   print *, file_basename("path/testinger")
   print *, file_basename("testinger")
 
+  print *, file_dirname("c:\path/testinger.f90")
+
   call delete(s)
 end subroutine!}}}
 
 
-subroutine test_visitor()
+subroutine test_visitor()!{{{
   use test_basedata
 
 # define _visit_(typeId) \
@@ -919,7 +1167,7 @@ subroutine test_visitor()
   v_item = Item_of( ref_of( v_real8 ) )
   call accept( v_item, streamer%super )
   
-end subroutine
+end subroutine!}}}
 
 
 module visitor_testmod!{{{
@@ -1126,7 +1374,7 @@ module pointer_remapping
     matrix(-3:,9,:) = 1
     matrix(-2:,8,:) = 1
 
-    if (dynamic_cast( ptr, ref( get( v_hashmap, 'matrix' ) ) )) then
+    if (dynamic_cast( ptr, get( v_hashmap, 'matrix' ) ) ) then
       print *, ptr
       print *, shape(ptr)
       print *, lbound(ptr)
@@ -1244,7 +1492,7 @@ module debug
     allocate( buf_ptr(20) )
     it = Item_of(ref_of(buf_ptr, bind=.true.))
     print *, shape(ref(it))
-    print *, dynamic_cast( other_ptr, ref(it) )
+    print *, dynamic_cast( other_ptr, it )
     other_ptr(-3:3) => buf_ptr
     it = Item_of(ref_of(other_ptr))
     print *, shape(ref(it))
@@ -1315,45 +1563,17 @@ program test_adt
   use test_exception
 
   type(HashMap_t), pointer :: scope => null()
-  character(len=20) :: text = "TestInGEr -- TäxT"
-  character(len=20) :: txtout
-  v_string = "BlUbbINGER bla uND texT"
+  character(len=255) :: what
+  character(len=20)  :: text = "TestInGEr -- Tï¿½xT"
+  character(len=20)  :: txtout
+  v_string = "BlUbbINGER bla uND texT     "
 
   call setup_standardExceptions()
   !call set_traceproc( tracer )
-  call test_pass_args()
-
-  txtout = lower( text )
-  call to_lower( text )
-  txtout = upper( text )
-  call to_upper( text )
-  print *, upper(v_string)
-  call to_lower(v_string)
-  print *, str(v_string)
-  call to_upper(v_string)
-  print *, str(v_string)
-  v_string = "shOrt"
-  print *, upper( v_string )
-  call to_lower( v_string )
-
-  call init_basedata()
-  call stream( v_item, fout )
-
-  call stream( v_bool1_1d, fout )
-
-  call test_visitor()
-  call test_hashmap()
-  call test_string()
-  call test_ref()
-  call test_item()
-  call test_list()
-  call test_hashmap_nesting()
-  call test_hashmap_cloning()
-  call test_file_string()
-  call test_write_read()
-  call test_ref_change()
-  call test_pointer_bounds()
-
+  select case (try( _catchAny, what, run_tests ))
+    case     (0); continue
+    case default; print *, trim(what)
+  end select
 
   ! delete process scope to make inspector happy
   scope => getScope()
@@ -1363,5 +1583,63 @@ program test_adt
   call cleanup_basedata()
   call hashmap_clear_cache()
 
+  contains
+
+  subroutine run_tests()
+    call test_pass_args()
+
+    txtout = lower( text )
+    call to_lower( text )
+    txtout = upper( text )
+    call to_upper( text )
+    print *, upper(v_string)
+    call to_lower(v_string)
+    print *, str(v_string)
+    call to_upper(v_string)
+    print *, str(v_string)
+    v_string = "shOrt"
+    print *, upper( v_string )
+    call to_lower( v_string )
+
+    call delete( v_string )
+    print *, '>>' // str(v_string) // '<<'
+    print *, '>>' // trim(v_string) // '<<'
+    print *, '>>' // strip(v_string) // '<<'
+    v_string = '              '
+    print *, '>>' // trim(v_string) // '<<'
+    print *, '>>' // strip(v_string) // '<<'
+
+    v_string = '   ** test **   '
+    print *, '>>' // str(v_string) // '<<'
+    print *, '>>' // trim(v_string) // '<<'
+    print *, '>>' // strip(v_string) // '<<'
+    call to_trimmed( v_string )
+    print *, '>>' // str(v_string) // '<<'
+    v_string = '   ** test **   '
+    call to_stripped( v_string )
+    print *, '>>' // str(v_string) // '<<'
+
+
+    call init_basedata()
+    call stream( v_item, fout )
+
+    call stream( v_bool1_1d, fout )
+
+    call test_dyntype()
+    call test_dyncast()
+    call test_visitor()
+    call test_hashmap()
+    call test_string()
+    call test_ref()
+    call test_item()
+    call test_list()
+    call test_usernode_list()
+    call test_hashmap_nesting()
+    call test_hashmap_cloning()
+    call test_file_string()
+    call test_write_read()
+    call test_ref_change()
+    call test_pointer_bounds()
+  end subroutine
 end
 
