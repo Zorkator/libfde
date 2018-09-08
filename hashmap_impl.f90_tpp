@@ -406,10 +406,10 @@ end module
 
 !_PROC_EXPORT(hashmap_clear_cache_c)
   subroutine hashmap_clear_cache_c()
-    use impl_hashmap__, only: clear, hashmap_nodeCache
+    use impl_hashmap__, only: delete, hashmap_nodeCache
     implicit none
 
-    call clear( hashmap_nodeCache )
+    call delete( hashmap_nodeCache )
   end subroutine
 
 

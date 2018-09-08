@@ -37,6 +37,11 @@ module impl_list__
   type(List_t) :: list_stale_list
 
   interface
+    subroutine NodeAction( node )
+      import ListNode_t
+      type(ListNode_t) :: node
+    end subroutine
+
     subroutine NodeCloner( tgt, src )
       import ListNode_t
       type(ListNode_t), pointer, intent(out) :: tgt
@@ -66,7 +71,7 @@ module impl_list__
       type(List_t) :: self
     end subroutine
 
-    subroutine listnode_init_( self, nodeType )
+    subroutine listnode_init_f( self, nodeType )
       import ListNode_t, TypeInfo_t
       type (ListNode_t)              :: self
       type(TypeInfo_t), optional :: nodeType
@@ -166,6 +171,12 @@ module impl_list__
       type(List_t), intent(inout) :: lhs
       type(List_t),    intent(in) :: rhs
     end subroutine
+
+    function list_len_c( self ) result(res)
+      import List_t
+      type(List_t),     target  :: self
+      integer(kind=4)           :: res
+    end function
   end interface
     
 end module
@@ -189,7 +200,8 @@ end module
   end function
 
 
-  subroutine listnode_init_( self, nodeType )
+!_PROC_EXPORT(listnode_init_f)
+  subroutine listnode_init_f( self, nodeType )
     use impl_list__, only: ListNode_t, TypeInfo_t
     implicit none
     type (ListNode_t),               target :: self
@@ -261,15 +273,15 @@ end module
 
 !_PROC_EXPORT(list_init_c)
   subroutine list_init_c( self )
-    use impl_list__, only: List_t, listnode_init_, list_is_valid_c, &
-                          listnode_init_, list_stale_list
+    use impl_list__, only: List_t, listnode_init_f, list_is_valid_c, &
+                          listnode_init_f, list_stale_list
     implicit none
     type(List_t), target :: self
 
-    call listnode_init_( self%node )
+    call listnode_init_f( self%node )
     self%length = 0
     if (.not. list_is_valid_c( list_stale_list )) then
-      call listnode_init_( list_stale_list%node )
+      call listnode_init_f( list_stale_list%node )
       list_stale_list%length = 0
     end if
   end subroutine
@@ -277,7 +289,8 @@ end module
   
 !_PROC_EXPORT(list_len_c)
   function list_len_c( self ) result(res)
-    use impl_list__; implicit none
+    use impl_list__, only: List_t, ListNode_t
+    implicit none
     type(List_t),     target  :: self
     integer(kind=4)           :: res
     type(ListNode_t), pointer :: ptr
@@ -345,7 +358,26 @@ end module
   end subroutine
 
 
+!_PROC_EXPORT(list_foreach_c)
+  recursive &
+  subroutine list_foreach_c( self, action )
+    use impl_list__, only: List_t, ListNode_t, NodeAction
+    use iso_c_binding
+    implicit none
+    type (List_t), target, intent(in) :: self
+    procedure(NodeAction)             :: action
+    type(ListNode_t),         pointer :: ptr
+
+    ptr => self%node%next
+    do while (.not. associated( ptr, self%node ))
+      call action( ptr )
+      ptr => ptr%next !< jump to next here
+    end do
+  end subroutine
+
+
 !_PROC_EXPORT(list_delete_c)
+  recursive &
   subroutine list_delete_c( self )
     use impl_list__; implicit none
     type (List_t), target, intent(inout) :: self
@@ -357,7 +389,7 @@ end module
 !_PROC_EXPORT(list_clear_c)
   recursive &
   subroutine list_clear_c( self )
-    use impl_list__, only: List_t, ListNode_t, ValueNode_t, listnode_init_
+    use impl_list__, only: List_t, ListNode_t, ValueNode_t, listnode_init_f
     use iso_c_binding
     implicit none
     type(List_t), target, intent(inout) :: self
@@ -366,15 +398,17 @@ end module
 
     ptr => self%node%next
     do while (.not. associated( ptr, self%node ))
-      if (associated( ptr%typeInfo%subtype%deleteProc )) then
-        call c_f_pointer( c_loc(ptr), valNodePtr )
-        call ptr%typeInfo%subtype%deleteProc( valNodePtr%pseudoValue )
+      if (associated( ptr%typeInfo )) then
+        if (associated( ptr%typeInfo%subtype%deleteProc )) then
+          call c_f_pointer( c_loc(ptr), valNodePtr )
+          call ptr%typeInfo%subtype%deleteProc( valNodePtr%pseudoValue )
+        end if
       end if
       delPtr => ptr
       ptr    => ptr%next !< jump to next here, since deleteProc might have appended additional nodes ...
       deallocate( delPtr )
     end do
-    call listnode_init_( self%node )
+    call listnode_init_f( self%node )
     self%length = 0
   end subroutine
 
@@ -739,9 +773,11 @@ end module
       call list_clear_c( lhs )
       ptr => base%next
       do while (.not. associated( ptr, base ))
-        call c_f_procpointer( c_funloc(ptr%typeInfo%cloneObjProc), cloneNode )
-        call cloneNode( copy, ptr )
-        call list_append_node_c( lhs, copy )
+        if (associated( ptr%typeInfo )) then
+          call c_f_procpointer( c_funloc(ptr%typeInfo%cloneObjProc), cloneNode )
+          call cloneNode( copy, ptr )
+          call list_append_node_c( lhs, copy )
+        end if
         ptr => ptr%next
       end do
     end if
@@ -767,9 +803,11 @@ end module
     else
       call list_clear_c( lhs )
       do while (listindex_is_valid_c(idx))
-        call c_f_procpointer( c_funloc(idx%node%typeInfo%cloneObjProc), cloneNode )
-        call cloneNode( copy, idx%node )
-        call list_append_node_c( lhs, copy )
+        if (associated( idx%node%typeInfo )) then
+          call c_f_procpointer( c_funloc(idx%node%typeInfo%cloneObjProc), cloneNode )
+          call cloneNode( copy, idx%node )
+          call list_append_node_c( lhs, copy )
+        end if
         call listindex_next_c(idx)
       end do
     end if
@@ -798,16 +836,79 @@ end module
     ptr => wrap%ptr%node%next
     call enter( vstr )
     do while (.not. associated( ptr, wrap%ptr%node ))
-      ti => ptr%typeInfo%subtype
-      call c_f_pointer( c_loc(ptr), valNodePtr )
-      nodeWrap%ptr => valNodePtr%pseudoValue
+      if (associated( ptr%typeInfo )) then
+        ti => ptr%typeInfo%subtype
+        call c_f_pointer( c_loc(ptr), valNodePtr )
+        nodeWrap%ptr => valNodePtr%pseudoValue
 
-      call ti%acceptProc( nodeWrap, ti, vstr )
+        call ti%acceptProc( nodeWrap, ti, vstr )
+      end if
       if (is_valid( vstr )) then; ptr => ptr%next
                             else; return !< skips visitor-leave!
       end if
     end do  
     call leave( vstr )
+  end subroutine
+
+
+!_PROC_EXPORT(list_sort_c)
+  subroutine list_sort_c( self, is_lower )
+    use impl_list__
+    implicit none
+    type(List_t) :: self
+    interface
+      logical function is_lower( left, right ); import
+        type(ListNode_t) :: left, right
+      end function
+    end interface
+
+    call mergeSort( self%node, list_len_c( self ) )
+
+  contains
+
+    recursive &
+    subroutine mergeSort( left, length )
+      type(ListNode_t),  target :: left, right
+      type(ListNode_t), pointer :: head, tail
+      integer                   :: length, lenLeft, lenRight, i
+
+      if (length > 1) then
+        lenLeft  =  length/2
+        lenRight =  length - lenLeft
+
+        ! search the middle node ...
+        tail => left%next
+        do i = 1, lenLeft
+          tail => tail%next
+        end do
+        ! move tail to separate list ...
+        call listnode_init_f( right )
+        call list_insert_nodes_( right, tail%prev, left )
+
+        ! sort left and right part separately ...
+        call mergeSort( left,  lenLeft )
+        call mergeSort( right, lenRight )
+
+        ! merge right back into left ...
+        head => left%next    !< head marks insert position, start at begin of left
+        do i = 1, lenRight
+          tail => right%next !< tail marks node to be inserted, set to begin of right
+
+          ! search in left for insert position by comparing nodes ...
+          do while (.true.)
+            if (associated( head, left )) then
+              ! head reached end of left, just append rest of right - and we are done!
+              call list_insert_nodes_( head, tail%prev, right )
+              return
+            elseif (is_lower( head, tail )) then; head => head%next !< advance insert position
+                                            else; exit              !< insert position ok
+            end if
+          end do
+          call list_unlink_node_( tail%prev, tail%next ) !< unlink tail from it's list (right)
+          call list_link_node_( tail, head%prev, head )  !< ... and insert it into left
+        end do
+      end if
+    end subroutine
   end subroutine
 
 

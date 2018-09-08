@@ -48,7 +48,7 @@
       end select
 
 
-# define _copied_REALLOCATE_st( sym, shape_, pad, tmp, _st )               \
+# define _copied_REALLOCATE_st( sym, shape_, pad, tmp, _st )             \
       select case (0); case default                                     ;\
         call move_alloc( sym, tmp )                                     ;\
         _checked_ALLOCATE_st( sym, shape_, _st )                        ;\
@@ -57,6 +57,10 @@
         end if                                                          ;\
         _DEALLOCATE_st( tmp, _st )                                      ;\
       end select
+
+
+# define _expand_REALLOCATE_st( sym, times, pad, tmp, _st ) \
+    _copied_REALLOCATE_st( sym, (size(tmp)*times), pad, tmp, _st )
 
 
 ! The following definition might be changed by the native code using libadt.
@@ -86,6 +90,9 @@
 
 # define _copied_REALLOCATE( sym, shape, pad, tmp ) \
     _copied_REALLOCATE_st( sym, shape, pad, tmp, __istat__ )
+
+# define _expand_REALLOCATE( sym, times, pad, tmp ) \
+    _expand_REALLOCATE_st( sym, times, pad, tmp, __istat__ )
 
 #endif 
 ! ^^ __ADT_ALLOCATE_FPP

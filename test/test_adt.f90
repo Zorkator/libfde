@@ -674,6 +674,9 @@ subroutine test_dyntype()!{{{
   !_chk_dyntype(string_3d,)
   !_chk_dyntype(ref_3d,)
   !_chk_dyntype(item_3d,)
+  
+  call delete( item_ )
+  call delete( ref_ )
 end subroutine!}}}
 
 
@@ -773,7 +776,8 @@ subroutine test_dyncast()!{{{
   if (dynamic_cast( p_int4, item_ )) &
     call accept( p_int4, streamer%super )
 
-
+  call delete( item_ )
+  call delete( ref_ )
 end subroutine!}}}
 
 
@@ -810,6 +814,21 @@ subroutine test_list()!{{{
   _list_append(item)
   !_list_append(list)
   !_list_append(hashmap)
+  _list_append_ref(bool1)
+  _list_append_ref(bool2)
+  _list_append_ref(bool4)
+  _list_append_ref(bool8)
+  _list_append_ref(int1)
+  _list_append_ref(int2)
+  _list_append_ref(int4)
+  _list_append_ref(int8)
+  _list_append_ref(real4)
+  _list_append_ref(real8)
+  _list_append_ref(complex8)
+  _list_append_ref(complex16)
+  _list_append_ref(c_void_ptr)
+  _list_append_ref(char10)
+  _list_append_ref(string)
   _list_append_ref(bool1_1d)
   _list_append_ref(bool2_1d)
   _list_append_ref(bool4_1d)
@@ -861,7 +880,7 @@ subroutine test_list()!{{{
   !_list_append_ref(string_3d)
   !_list_append_ref(ref_3d)
   !_list_append_ref(item_3d)
-
+  
   idx = index( v_list )
   do while (is_valid(idx))
     ti => content_type( idx )
@@ -869,14 +888,37 @@ subroutine test_list()!{{{
     call next( idx )
   end do
 
-  call accept( get( v_hashmap, 'initial matrix-clone' ), streamer%super )
-  
-  
   v_ref = ref_of( v_list )
   call accept( v_ref, streamer%super )
+  call delete( v_list )
+end subroutine
 
+
+subroutine test_usernode_list()
+  use test_basedata
+  implicit none
+  type UserNode_t
+    type(ListNode_t) :: asNode
+    integer          :: value
+  end type
+  type(UserNode_t), pointer :: ptr
+  integer                   :: i
+
+  do i=1, 10
+    allocate(ptr)
+    ptr%value = i
+    call append( v_list, ptr%asNode )
+  end do
+
+  call foreach( v_list, printValue_ )
   call delete( v_list )
 
+  contains
+
+  subroutine printValue_( node )
+    type(UserNode_t) :: node
+    print *, node%value
+  end subroutine
 end subroutine!}}}
 
 
@@ -939,6 +981,7 @@ subroutine test_hashmap()!{{{
   end do
   
   call delete( ref_1 )
+  call accept( get( v_hashmap, 'initial matrix-clone' ), streamer%super )
 
 end subroutine!}}}
 
@@ -1590,6 +1633,7 @@ program test_adt
     call test_ref()
     call test_item()
     call test_list()
+    call test_usernode_list()
     call test_hashmap_nesting()
     call test_hashmap_cloning()
     call test_file_string()

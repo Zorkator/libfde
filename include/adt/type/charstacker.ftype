@@ -33,9 +33,8 @@
   end interface
 
   interface get
-    function charstacker_get_c( self, lvl ) result(res); import
+    function charstacker_get_c( self ) result(res); import
       type(CharStacker_t)       :: self
-      integer*4,       optional :: lvl
       character(len=:), pointer :: res
     end function
   end interface
