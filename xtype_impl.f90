@@ -29,9 +29,8 @@ subroutine xtype_create_by_chrstr_c( self, chrstr )
   use xtype_impl__, only: Xtype_t
   use iso_c_binding
   implicit none
-  type(Xtype_t)      :: self
-  character(len=*)   :: chrstr
-  integer*1, dimension(:), pointer :: buff
+  type(Xtype_t)    :: self
+  character(len=*) :: chrstr
 
   self%len = len(chrstr)
   if (self%len > 0) then
