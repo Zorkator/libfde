@@ -1551,7 +1551,44 @@ module test_exception
       code = try( _catchAny,               test_conversion, table(idx) ) !< no trace
     end do
   end subroutine
-  
+end module
+
+
+module sorting
+  use adt_sort
+  contains
+
+  subroutine test_sort()
+    integer :: array(10)
+    integer :: i, cmp, swp
+
+    do i = 1, size(array)
+      array(i) = size(array)-i
+    end do
+    cmp = 0; swp = 0
+    call qsort( is_lower_, swap_, size(array) )
+    cmp = 0; swp = 0
+    call qsort( is_lower_, swap_, size(array) )
+    cmp = 0; swp = 0
+    call heapsort( is_lower_, swap_, size(array) )
+
+  contains
+
+    logical &
+    function is_lower_( l, r ) result(res)
+      integer :: l, r
+      cmp = cmp + 1
+      res = array(l) < array(r)
+    end function
+
+    subroutine swap_( l, r )
+      integer :: l, r, t
+      swp = swp + 1
+      t = array(l)
+      array(l) = array(r)
+      array(r) = t
+    end subroutine
+  end subroutine
 end module
 
 
@@ -1561,6 +1598,7 @@ program test_adt
   use pointer_remapping
   use debug
   use test_exception
+  use sorting
 
   type(HashMap_t), pointer :: scope => null()
   character(len=255) :: what
@@ -1586,6 +1624,9 @@ program test_adt
   contains
 
   subroutine run_tests()
+    use adt_sort
+
+    call test_sort()
     call test_pass_args()
 
     txtout = lower( text )
