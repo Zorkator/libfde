@@ -1556,37 +1556,60 @@ end module
 
 module sorting
   use adt_sort
+  use adt_exception
   contains
 
   subroutine test_sort()
-    integer :: array(10)
-    integer :: i, cmp, swp
+    real(8), dimension(:), allocatable :: array
+    integer                            :: i, cmp, swp
 
+    allocate( array(10000) )
     do i = 1, size(array)
       array(i) = size(array)-i
     end do
     cmp = 0; swp = 0
-    call qsort( is_lower_, swap_, size(array) )
-    cmp = 0; swp = 0
-    call qsort( is_lower_, swap_, size(array) )
-    cmp = 0; swp = 0
-    call heapsort( is_lower_, swap_, size(array) )
+    call qsort( is_lower_, swap_, size(array) ); call chk_array( "qsort on reversed" )
+    call qsort( is_lower_, swap_, size(array) ); call chk_array( "qsort on sorted" )
+
+    do i = 1, size(array)
+      array(i) = size(array)-i
+    end do
+    call heapsort( is_lower_, swap_, size(array) ); call chk_array( "heapsort on reversed" )
+    call heapsort( is_lower_, swap_, size(array) ); call chk_array( "heapsort on sorted" )
 
   contains
 
     logical &
     function is_lower_( l, r ) result(res)
       integer :: l, r
-      cmp = cmp + 1
       res = array(l) < array(r)
+      cmp = cmp + 1
+    end function
+
+    logical &
+    function is_greater_( l, r ) result(res)
+      integer :: l, r
+      res = array(l) > array(r)
+      cmp = cmp + 1
     end function
 
     subroutine swap_( l, r )
-      integer :: l, r, t
-      swp = swp + 1
+      integer :: l, r
+      real(8) :: t
       t = array(l)
       array(l) = array(r)
       array(r) = t
+      swp = swp + 1
+    end subroutine
+
+    subroutine chk_array( msg )
+      character(len=*) :: msg
+      do i = 2, size(array)
+        if (array(i-1) > array(i)) &
+          call throw( AssertionError, "unsorted sequence!" )
+      end do
+      print *, msg, cmp, "comparisons", swp, "swaps"
+      cmp = 0; swp = 0
     end subroutine
   end subroutine
 end module

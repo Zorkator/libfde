@@ -31,7 +31,7 @@ contains
     end do
 
     do i = n - 1, 1, -1
-      _swap( 0+1, i+1 )
+      _swap( 1, i+1 )
       call heapify_( i, 0 )
     end do
   contains
@@ -66,36 +66,55 @@ contains
   subroutine qsort( is_lower, swap, high, low )
     procedure(ValLower_itf) :: is_lower
     procedure(ValSwap_itf)  :: swap
-    integer                 :: high, low_
+    integer,          value :: high
     integer,       optional :: low
+    integer                 :: low_
+
+    integer, dimension(:), allocatable :: stack
+    integer                            :: tos, pIdx
 
     _optArg( low_, low, 1 )
-    call sort_range_( low_, high )
+    allocate( stack( high - low_ + 1 ) ); tos = 0
+
+    call push_( low_, high )
+    do while (tos > 0)
+      call pop_( low_, high )
+      pIdx = partition_( low_, high )
+      call push_( low_, pIdx - 1 )
+      call push_( pIdx + 1, high )
+    end do
   contains
 
-    recursive &
-    subroutine sort_range_( low, high )
-      integer :: low, high, pIdx
-
-      if (low < high) then
-        pIdx = partition_( low, high )
-        call sort_range_( low, pIdx - 1 )
-        call sort_range_( pIdx + 1, high )
+    subroutine push_( l, h )
+      integer :: l, h
+      if (l < h) then
+        tos = tos + 2
+        stack(tos-1:tos) = [l, h]
       end if
     end subroutine
 
+    subroutine pop_( l, h )
+      integer :: l, h
+      l = stack(tos-1)
+      h = stack(tos)
+      tos = tos - 2
+    end subroutine
+
+
     integer &
     function partition_( low, high ) result(idx)
-      integer :: low, high, j
+      integer :: low, high, jdx
 
       idx = low
-      do j = low, high - 1
-        if (is_lower( j, high )) then
-          _swap( idx, j )
+      do jdx = low, high - 1
+        if (.not. is_lower( high, jdx )) then
+          _swap( idx, jdx )
           idx = idx + 1
         end if
       end do
-      _swap( idx, high )
+      if (idx == high) then; high = high - 1
+                       else; call swap( idx, high )
+      end if
     end function
   end subroutine
 end module
