@@ -1561,21 +1561,35 @@ module sorting
 
   subroutine test_sort()
     real(8), dimension(:), allocatable :: array
-    integer                            :: i, cmp, swp
+    integer                            :: i, cmp, swp, timing
 
     allocate( array(10000) )
-    do i = 1, size(array)
-      array(i) = size(array)-i
-    end do
     cmp = 0; swp = 0
-    call qsort( is_lower_, swap_, size(array) ); call chk_array( "qsort on reversed" )
-    call qsort( is_lower_, swap_, size(array) ); call chk_array( "qsort on sorted" )
+    
+#   define _sortArrayBy( sort, msg )             \
+      timing = startTimer()                     ;\
+      call sort( is_lower_, swap_, size(array) );\
+      call getTiming( _str(sort)//msg, timing ) ;\
+      call chk_array()
 
     do i = 1, size(array)
       array(i) = size(array)-i
     end do
-    call heapsort( is_lower_, swap_, size(array) ); call chk_array( "heapsort on reversed" )
-    call heapsort( is_lower_, swap_, size(array) ); call chk_array( "heapsort on sorted" )
+    _sortArrayBy( qsort, "on reversed" )
+    _sortArrayBy( qsort, "on sorted" )
+
+    do i = 1, size(array)
+      array(i) = size(array)-i
+    end do
+    _sortArrayBy( heapsort, "on reversed" )
+    _sortArrayBy( heapsort, "on sorted" )
+
+    call init_random_seed(0)
+    call random_number( array )
+    _sortArrayBy( qsort, "on random" )
+    call init_random_seed(0)
+    call random_number( array )
+    _sortArrayBy( heapsort, "on random" )
 
   contains
 
@@ -1602,15 +1616,37 @@ module sorting
       swp = swp + 1
     end subroutine
 
-    subroutine chk_array( msg )
-      character(len=*) :: msg
+    subroutine chk_array()
       do i = 2, size(array)
         if (array(i-1) > array(i)) &
           call throw( AssertionError, "unsorted sequence!" )
       end do
-      print *, msg, cmp, "comparisons", swp, "swaps"
+      print *, cmp, "comparisons", swp, "swaps"
       cmp = 0; swp = 0
     end subroutine
+  end subroutine
+
+  subroutine init_random_seed( val )
+    integer              :: val
+    integer, allocatable :: seed(:)
+    integer              :: n
+    call random_seed( size=n )
+    allocate( seed(n) )
+    seed = val
+    call random_seed( put=seed )
+  end subroutine
+
+  function startTimer() result(res)
+    integer :: res
+    call system_clock( res )
+  end function
+
+  subroutine getTiming( descr, time_begin )
+    character(len=*) :: descr
+    integer          :: time_begin, time_end, rate
+    call system_clock( time_end )
+    call system_clock( count_rate=rate )
+    print*, descr, ': ', (time_end - time_begin)/real(rate), ' seconds'
   end subroutine
 end module
 
