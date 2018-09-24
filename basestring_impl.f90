@@ -187,6 +187,8 @@
       res = C_NULL_PTR
     else if (associated(bs%ptr) .and. bs%len > 0) then
       res = c_loc(bs%ptr(1))
+    else
+      res = C_NULL_PTR
     end if
   end subroutine
 
