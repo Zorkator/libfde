@@ -1033,6 +1033,10 @@ subroutine test_hashmap_nesting()!{{{
   if (dynamic_cast( r_array, get(scope, 'value') )) &
     print *, r_array
 
+  if (localize( getScope(), 'gcsm', item_hit )) then
+    print *, "found"
+  end if
+
   call stream( scope, fout )
 
   call set( streamer%stream, width=-15 )
@@ -1053,6 +1057,13 @@ subroutine test_hashmap_nesting()!{{{
     call c_f_pointer( transfer( arg, ptr ), scope_ptr )
     call accept( scope_ptr, streamer%super )
   end subroutine
+
+  logical &
+  function item_hit( item ) result(res)
+    type(Item_t)             :: item
+    type(HashMap_t), pointer :: ptr
+    res = dynamic_cast( ptr, item )
+  end function
 end subroutine!}}}
 
 
