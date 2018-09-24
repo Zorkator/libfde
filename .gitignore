@@ -36,3 +36,7 @@ libfortres/bin/
 libfortres/vc2010/*.user
 
 test/exe/
+
+*.u2d
+
+*.user

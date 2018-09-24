@@ -12,7 +12,7 @@ class OptionProcessor(object):
 
   @staticmethod
   def realpath( p ):
-    return path.realpath( path.expanduser( p ) )
+    return path.realpath( path.expanduser( p.strip() ) )
 
   @classmethod
   def _merge_class_attrib( _class, attrId ):
