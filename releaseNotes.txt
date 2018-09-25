@@ -1,0 +1,19 @@
+
+25-September-2018
+  e72bd9a || added initial version of scope localize || Author:Josef Scheuer
+  caab6e6 || updated version number to 2.7.1 || Author:Josef Scheuer
+
+24-September-2018
+  f9aeb99 || fixed pointer init in basestring_cptr || Author:Josef Scheuer
+  bc7a38f || make realpath more tolerant || Author:Josef Scheuer
+  3a888b5 || build jenkins tests on CFG release || Author:Josef Scheuer
+
+14-September-2018
+  28e9320 || improved test using random numbers || Author:Josef Scheuer
+  1e0d48e || improvements for using sort on large arrays || Author:Josef Scheuer
+
+13-September-2018
+  371b49b || added initial version of array sorting || Author:Josef Scheuer
+
+12-September-2018
+  8765075 || renamed / unified dirname for VS-build configurations || Author:Josef Scheuer
