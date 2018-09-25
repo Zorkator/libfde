@@ -1,0 +1,154 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<VisualStudioProject ProjectType="typeDynamicLibrary" ProjectCreator="Intel Fortran" Keyword="Dll" Version="11.0" ProjectIdGuid="{99FE2A3F-8587-4F6B-A9D9-59AD94956DCB}">
+	<Platforms>
+		<Platform Name="Win32"/>
+		<Platform Name="x64"/></Platforms>
+	<Configurations>
+		<Configuration Name="Debug|Win32" OutputDirectory="..\lib\$(ConfigurationName).$(PlatformName)" IntermediateDirectory=".work\$(ConfigurationName).$(PlatformName)" TargetName="$(ProjectName).2.7.1.$(ConfigurationName).$(PlatformName)" ConfigurationType="typeDynamicLibrary">
+				<Tool Name="VFFortranCompilerTool" SuppressStartupBanner="true" DebugInformationFormat="debugEnabled" Optimization="optimizeDisabled" Preprocess="preprocessYes" AdditionalIncludeDirectories="../libfortres/include; ../include" PreprocessorDefinitions="BUILT_TYPE=SHARED_LIB;ADT_DEBUG=ENABLED" ExternalNameInterpretation="extNameLowerCase" ExternalNameUnderscore="true" Traceback="true" BoundsCheck="true" RuntimeLibrary="rtMultiThreadedDLL"/>
+				<Tool Name="VFLinkerTool" LinkIncremental="linkIncrementalNo" SuppressStartupBanner="true" AdditionalLibraryDirectories="..\libfortres\bin\$(ConfigurationName)" GenerateManifest="false" GenerateDebugInformation="true" SubSystem="subSystemWindows" LinkDLL="true" AdditionalDependencies="libfortres.2.7.1.$(PlatformName).lib"/>
+				<Tool Name="VFResourceCompilerTool"/>
+				<Tool Name="VFMidlTool" SuppressStartupBanner="true"/>
+				<Tool Name="VFCustomBuildTool"/>
+				<Tool Name="VFPreLinkEventTool"/>
+				<Tool Name="VFPreBuildEventTool"/>
+				<Tool Name="VFPostBuildEventTool" CommandLine="&quot;$(ProjectDir)\..\copylib.bat&quot; &quot;$(OutDir)&quot; &quot;$(IntDir)\adt_*.mod&quot; &quot;$(IntDir)\libadt*&quot; &quot;..\libfortres\bin\$(ConfigurationName)\libfortres*$(PlatformName).*&quot;" Description="copy library files from $(IntDir) to $(OutDir)"/>
+				<Tool Name="VFManifestTool" SuppressStartupBanner="true"/></Configuration>
+		<Configuration Name="Release|Win32" OutputDirectory="..\lib\$(ConfigurationName).$(PlatformName)" IntermediateDirectory=".work\$(ConfigurationName).$(PlatformName)" TargetName="$(ProjectName).2.7.1.$(ConfigurationName).$(PlatformName)" ConfigurationType="typeDynamicLibrary">
+				<Tool Name="VFFortranCompilerTool" SuppressStartupBanner="true" Preprocess="preprocessYes" AdditionalIncludeDirectories="../libfortres/include; ../include" PreprocessorDefinitions="BUILT_TYPE=SHARED_LIB" ExternalNameInterpretation="extNameLowerCase" ExternalNameUnderscore="true" RuntimeLibrary="rtMultiThreadedDLL"/>
+				<Tool Name="VFLinkerTool" LinkIncremental="linkIncrementalNo" SuppressStartupBanner="true" AdditionalLibraryDirectories="..\libfortres\bin\$(ConfigurationName)" GenerateManifest="false" GenerateDebugInformation="true" SubSystem="subSystemWindows" LinkDLL="true" AdditionalDependencies="libfortres.2.7.1.$(PlatformName).lib"/>
+				<Tool Name="VFResourceCompilerTool"/>
+				<Tool Name="VFMidlTool" SuppressStartupBanner="true"/>
+				<Tool Name="VFCustomBuildTool"/>
+				<Tool Name="VFPreLinkEventTool"/>
+				<Tool Name="VFPreBuildEventTool"/>
+				<Tool Name="VFPostBuildEventTool" CommandLine="&quot;$(ProjectDir)\..\copylib.bat&quot; &quot;$(OutDir)&quot; &quot;$(IntDir)\adt_*.mod&quot; &quot;$(IntDir)\libadt*&quot; &quot;..\libfortres\bin\$(ConfigurationName)\libfortres*$(PlatformName).*&quot;" Description="copy library files from $(IntDir) to $(OutDir)"/>
+				<Tool Name="VFManifestTool" SuppressStartupBanner="true"/></Configuration>
+		<Configuration Name="Debug|x64" OutputDirectory="..\lib\$(ConfigurationName).$(PlatformName)" IntermediateDirectory=".work\$(ConfigurationName).$(PlatformName)" TargetName="$(ProjectName).2.7.1.$(ConfigurationName).$(PlatformName)" ConfigurationType="typeDynamicLibrary">
+				<Tool Name="VFFortranCompilerTool" SuppressStartupBanner="true" DebugInformationFormat="debugEnabled" Optimization="optimizeDisabled" Preprocess="preprocessYes" AdditionalIncludeDirectories="../libfortres/include; ../include" PreprocessorDefinitions="BUILT_TYPE=SHARED_LIB;ADT_DEBUG=ENABLED" ExternalNameInterpretation="extNameLowerCase" ExternalNameUnderscore="true" Traceback="true" BoundsCheck="true" RuntimeLibrary="rtMultiThreadedDLL"/>
+				<Tool Name="VFLinkerTool" LinkIncremental="linkIncrementalNo" SuppressStartupBanner="true" AdditionalLibraryDirectories="..\libfortres\bin\$(ConfigurationName)" GenerateManifest="false" GenerateDebugInformation="true" SubSystem="subSystemWindows" LinkDLL="true" AdditionalDependencies="libfortres.2.7.1.$(PlatformName).lib"/>
+				<Tool Name="VFResourceCompilerTool"/>
+				<Tool Name="VFMidlTool" SuppressStartupBanner="true" TargetEnvironment="midlTargetAMD64"/>
+				<Tool Name="VFCustomBuildTool"/>
+				<Tool Name="VFPreLinkEventTool"/>
+				<Tool Name="VFPreBuildEventTool"/>
+				<Tool Name="VFPostBuildEventTool" CommandLine="&quot;$(ProjectDir)\..\copylib.bat&quot; &quot;$(OutDir)&quot; &quot;$(IntDir)\adt_*.mod&quot; &quot;$(IntDir)\libadt*&quot; &quot;..\libfortres\bin\$(ConfigurationName)\libfortres*$(PlatformName).*&quot;" Description="copy library files from $(IntDir) to $(OutDir)"/>
+				<Tool Name="VFManifestTool" SuppressStartupBanner="true"/></Configuration>
+		<Configuration Name="Release|x64" OutputDirectory="..\lib\$(ConfigurationName).$(PlatformName)" IntermediateDirectory=".work\$(ConfigurationName).$(PlatformName)" TargetName="$(ProjectName).2.7.1.$(ConfigurationName).$(PlatformName)" ConfigurationType="typeDynamicLibrary">
+				<Tool Name="VFFortranCompilerTool" SuppressStartupBanner="true" Preprocess="preprocessYes" AdditionalIncludeDirectories="../libfortres/include; ../include" PreprocessorDefinitions="BUILT_TYPE=SHARED_LIB" ExternalNameInterpretation="extNameLowerCase" ExternalNameUnderscore="true" RuntimeLibrary="rtMultiThreadedDLL"/>
+				<Tool Name="VFLinkerTool" LinkIncremental="linkIncrementalNo" SuppressStartupBanner="true" AdditionalLibraryDirectories="..\libfortres\bin\$(ConfigurationName)" GenerateManifest="false" GenerateDebugInformation="true" SubSystem="subSystemWindows" LinkDLL="true" AdditionalDependencies="libfortres.2.7.1.$(PlatformName).lib"/>
+				<Tool Name="VFResourceCompilerTool"/>
+				<Tool Name="VFMidlTool" SuppressStartupBanner="true" TargetEnvironment="midlTargetAMD64"/>
+				<Tool Name="VFCustomBuildTool"/>
+				<Tool Name="VFPreLinkEventTool"/>
+				<Tool Name="VFPreBuildEventTool"/>
+				<Tool Name="VFPostBuildEventTool" CommandLine="&quot;$(ProjectDir)\..\copylib.bat&quot; &quot;$(OutDir)&quot; &quot;$(IntDir)\adt_*.mod&quot; &quot;$(IntDir)\libadt*&quot; &quot;..\libfortres\bin\$(ConfigurationName)\libfortres*$(PlatformName).*&quot;" Description="copy library files from $(IntDir) to $(OutDir)"/>
+				<Tool Name="VFManifestTool" SuppressStartupBanner="true"/></Configuration></Configurations>
+	<Files>
+		<Filter Name="Header Files" Filter="fi;fd"/>
+		<Filter Name="Resource Files" Filter="rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe">
+		<File RelativePath="..\basetypes.f90_tpp">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFCustomBuildTool" CommandLine="python &quot;$(ProjectDir)..\typegen.py&quot; &quot;$(InputPath)&quot; -o ../$(InputName).f90" Description="type preprocessing $(InputName)" Outputs="../$(InputName).f90"/></FileConfiguration>
+			<FileConfiguration Name="Release|x64">
+				<Tool Name="VFCustomBuildTool" CommandLine="python &quot;$(ProjectDir)..\typegen.py&quot; &quot;$(InputPath)&quot; -o ../$(InputName).f90" Description="type preprocessing $(InputName)" Outputs="../$(InputName).f90"/></FileConfiguration>
+			<FileConfiguration Name="Debug|x64">
+				<Tool Name="VFCustomBuildTool" CommandLine="python &quot;$(ProjectDir)..\typegen.py&quot; &quot;$(InputPath)&quot; -o ../$(InputName).f90" Description="type preprocessing $(InputName)" Outputs="../$(InputName).f90"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFCustomBuildTool" CommandLine="python &quot;$(ProjectDir)..\typegen.py&quot; &quot;$(InputPath)&quot; -o ../$(InputName).f90" Description="type preprocessing $(InputName)" Outputs="../$(InputName).f90"/></FileConfiguration></File>
+		<File RelativePath="..\containertypes.f90_tpp">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFCustomBuildTool" CommandLine="python &quot;$(ProjectDir)..\typegen.py&quot; &quot;$(InputPath)&quot; -o ../$(InputName).f90" Description="type preprocessing $(InputName)" Outputs="../$(InputName).f90"/></FileConfiguration>
+			<FileConfiguration Name="Release|x64">
+				<Tool Name="VFCustomBuildTool" CommandLine="python &quot;$(ProjectDir)..\typegen.py&quot; &quot;$(InputPath)&quot; -o ../$(InputName).f90" Description="type preprocessing $(InputName)" Outputs="../$(InputName).f90"/></FileConfiguration>
+			<FileConfiguration Name="Debug|x64">
+				<Tool Name="VFCustomBuildTool" CommandLine="python &quot;$(ProjectDir)..\typegen.py&quot; &quot;$(InputPath)&quot; -o ../$(InputName).f90" Description="type preprocessing $(InputName)" Outputs="../$(InputName).f90"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFCustomBuildTool" CommandLine="python &quot;$(ProjectDir)..\typegen.py&quot; &quot;$(InputPath)&quot; -o ../$(InputName).f90" Description="type preprocessing $(InputName)" Outputs="../$(InputName).f90"/></FileConfiguration></File>
+		<File RelativePath="..\hashmap.f90_tpp">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFCustomBuildTool" CommandLine="python &quot;$(ProjectDir)..\typegen.py&quot; &quot;$(InputPath)&quot; -o ../$(InputName).f90" Description="type preprocessing $(InputName)" Outputs="../$(InputName).f90"/></FileConfiguration>
+			<FileConfiguration Name="Release|x64">
+				<Tool Name="VFCustomBuildTool" CommandLine="python &quot;$(ProjectDir)..\typegen.py&quot; &quot;$(InputPath)&quot; -o ../$(InputName).f90" Description="type preprocessing $(InputName)" Outputs="../$(InputName).f90"/></FileConfiguration>
+			<FileConfiguration Name="Debug|x64">
+				<Tool Name="VFCustomBuildTool" CommandLine="python &quot;$(ProjectDir)..\typegen.py&quot; &quot;$(InputPath)&quot; -o ../$(InputName).f90" Description="type preprocessing $(InputName)" Outputs="../$(InputName).f90"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFCustomBuildTool" CommandLine="python &quot;$(ProjectDir)..\typegen.py&quot; &quot;$(InputPath)&quot; -o ../$(InputName).f90" Description="type preprocessing $(InputName)" Outputs="../$(InputName).f90"/></FileConfiguration></File>
+		<File RelativePath="..\hashmap_impl.f90_tpp">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFCustomBuildTool" CommandLine="python &quot;$(ProjectDir)..\typegen.py&quot; &quot;$(InputPath)&quot; -o ../$(InputName).f90" Description="type preprocessing $(InputName)" Outputs="../$(InputName).f90"/></FileConfiguration>
+			<FileConfiguration Name="Release|x64">
+				<Tool Name="VFCustomBuildTool" CommandLine="python &quot;$(ProjectDir)..\typegen.py&quot; &quot;$(InputPath)&quot; -o ../$(InputName).f90" Description="type preprocessing $(InputName)" Outputs="../$(InputName).f90"/></FileConfiguration>
+			<FileConfiguration Name="Debug|x64">
+				<Tool Name="VFCustomBuildTool" CommandLine="python &quot;$(ProjectDir)..\typegen.py&quot; &quot;$(InputPath)&quot; -o ../$(InputName).f90" Description="type preprocessing $(InputName)" Outputs="../$(InputName).f90"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFCustomBuildTool" CommandLine="python &quot;$(ProjectDir)..\typegen.py&quot; &quot;$(InputPath)&quot; -o ../$(InputName).f90" Description="type preprocessing $(InputName)" Outputs="../$(InputName).f90"/></FileConfiguration></File>
+		<File RelativePath="..\item.f90_tpp">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFCustomBuildTool" CommandLine="python &quot;$(ProjectDir)..\typegen.py&quot; &quot;$(InputPath)&quot; -o ../$(InputName).f90" Description="type preprocessing $(InputName)" Outputs="../$(InputName).f90"/></FileConfiguration>
+			<FileConfiguration Name="Release|x64">
+				<Tool Name="VFCustomBuildTool" CommandLine="python &quot;$(ProjectDir)..\typegen.py&quot; &quot;$(InputPath)&quot; -o ../$(InputName).f90" Description="type preprocessing $(InputName)" Outputs="../$(InputName).f90"/></FileConfiguration>
+			<FileConfiguration Name="Debug|x64">
+				<Tool Name="VFCustomBuildTool" CommandLine="python &quot;$(ProjectDir)..\typegen.py&quot; &quot;$(InputPath)&quot; -o ../$(InputName).f90" Description="type preprocessing $(InputName)" Outputs="../$(InputName).f90"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFCustomBuildTool" CommandLine="python &quot;$(ProjectDir)..\typegen.py&quot; &quot;$(InputPath)&quot; -o ../$(InputName).f90" Description="type preprocessing $(InputName)" Outputs="../$(InputName).f90"/></FileConfiguration></File>
+		<File RelativePath="..\list.f90_tpp">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFCustomBuildTool" CommandLine="python &quot;$(ProjectDir)..\typegen.py&quot; &quot;$(InputPath)&quot; -o ../$(InputName).f90" Description="type preprocessing $(InputName)" Outputs="../$(InputName).f90"/></FileConfiguration>
+			<FileConfiguration Name="Release|x64">
+				<Tool Name="VFCustomBuildTool" CommandLine="python &quot;$(ProjectDir)..\typegen.py&quot; &quot;$(InputPath)&quot; -o ../$(InputName).f90" Description="type preprocessing $(InputName)" Outputs="../$(InputName).f90"/></FileConfiguration>
+			<FileConfiguration Name="Debug|x64">
+				<Tool Name="VFCustomBuildTool" CommandLine="python &quot;$(ProjectDir)..\typegen.py&quot; &quot;$(InputPath)&quot; -o ../$(InputName).f90" Description="type preprocessing $(InputName)" Outputs="../$(InputName).f90"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFCustomBuildTool" CommandLine="python &quot;$(ProjectDir)..\typegen.py&quot; &quot;$(InputPath)&quot; -o ../$(InputName).f90" Description="type preprocessing $(InputName)" Outputs="../$(InputName).f90"/></FileConfiguration></File>
+		<File RelativePath="..\ref.f90_tpp">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFCustomBuildTool" CommandLine="python &quot;$(ProjectDir)..\typegen.py&quot; &quot;$(InputPath)&quot; -o ../$(InputName).f90" Description="type preprocessing $(InputName)" Outputs="../$(InputName).f90"/></FileConfiguration>
+			<FileConfiguration Name="Release|x64">
+				<Tool Name="VFCustomBuildTool" CommandLine="python &quot;$(ProjectDir)..\typegen.py&quot; &quot;$(InputPath)&quot; -o ../$(InputName).f90" Description="type preprocessing $(InputName)" Outputs="../$(InputName).f90"/></FileConfiguration>
+			<FileConfiguration Name="Debug|x64">
+				<Tool Name="VFCustomBuildTool" CommandLine="python &quot;$(ProjectDir)..\typegen.py&quot; &quot;$(InputPath)&quot; -o ../$(InputName).f90" Description="type preprocessing $(InputName)" Outputs="../$(InputName).f90"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFCustomBuildTool" CommandLine="python &quot;$(ProjectDir)..\typegen.py&quot; &quot;$(InputPath)&quot; -o ../$(InputName).f90" Description="type preprocessing $(InputName)" Outputs="../$(InputName).f90"/></FileConfiguration></File>
+		<File RelativePath="..\string.f90_tpp">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFCustomBuildTool" CommandLine="python &quot;$(ProjectDir)..\typegen.py&quot; &quot;$(InputPath)&quot; -o ../$(InputName).f90" Description="type preprocessing $(InputName)" Outputs="../$(InputName).f90"/></FileConfiguration>
+			<FileConfiguration Name="Release|x64">
+				<Tool Name="VFCustomBuildTool" CommandLine="python &quot;$(ProjectDir)..\typegen.py&quot; &quot;$(InputPath)&quot; -o ../$(InputName).f90" Description="type preprocessing $(InputName)" Outputs="../$(InputName).f90"/></FileConfiguration>
+			<FileConfiguration Name="Debug|x64">
+				<Tool Name="VFCustomBuildTool" CommandLine="python &quot;$(ProjectDir)..\typegen.py&quot; &quot;$(InputPath)&quot; -o ../$(InputName).f90" Description="type preprocessing $(InputName)" Outputs="../$(InputName).f90"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFCustomBuildTool" CommandLine="python &quot;$(ProjectDir)..\typegen.py&quot; &quot;$(InputPath)&quot; -o ../$(InputName).f90" Description="type preprocessing $(InputName)" Outputs="../$(InputName).f90"/></FileConfiguration></File></Filter>
+		<Filter Name="Source Files" Filter="f90;for;f;fpp;ftn;def;odl;idl">
+		<File RelativePath="..\basestring.f90"/>
+		<File RelativePath="..\basestring_impl.f90"/>
+		<File RelativePath="..\basetypes.f90"/>
+		<File RelativePath="..\bisect.f90"/>
+		<File RelativePath="..\charstacker.f90"/>
+		<File RelativePath="..\charstacker_impl.f90"/>
+		<File RelativePath="..\containertypes.f90"/>
+		<File RelativePath="..\convert.f90"/>
+		<File RelativePath="..\crc.f90"/>
+		<File RelativePath="..\crc_impl.f90"/>
+		<File RelativePath="..\file.f90"/>
+		<File RelativePath="..\fortres_modules.f90"/>
+		<File RelativePath="..\hashmap.f90"/>
+		<File RelativePath="..\hashmap_impl.f90"/>
+		<File RelativePath="..\item.f90"/>
+		<File RelativePath="..\item_impl.f90"/>
+		<File RelativePath="..\list.f90"/>
+		<File RelativePath="..\list_impl.f90"/>
+		<File RelativePath="..\memoryref.f90"/>
+		<File RelativePath="..\ostream.f90"/>
+		<File RelativePath="..\ref.f90"/>
+		<File RelativePath="..\ref_impl.f90"/>
+		<File RelativePath="..\scope.f90"/>
+		<File RelativePath="..\scope_impl.f90"/>
+		<File RelativePath="..\sort.f90"/>
+		<File RelativePath="..\streamvisitor.f90"/>
+		<File RelativePath="..\string.f90"/>
+		<File RelativePath="..\string_impl.f90"/>
+		<File RelativePath="..\typeinfo.f90"/>
+		<File RelativePath="..\typeinfo_impl.f90"/>
+		<File RelativePath="..\visitor.f90"/></Filter></Files>
+	<Globals/></VisualStudioProject>
