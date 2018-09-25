@@ -387,3 +387,41 @@ end module
     call scope_get_procedure_c( res, scope, id, raise )
   end function
 
+
+!_PROC_EXPORT(scope_localize_f)
+  logical &
+  function scope_localize_f( scope, key_, isAccepted ) result(res)
+    use impl_scope__
+    implicit none
+    type(HashMap_t)           :: scope
+    character(len=*)          :: key_
+    procedure(AcceptItem_itf) :: isAccepted
+
+    call walk_( scope )
+
+  contains
+
+    recursive &
+    subroutine walk_( level )
+      type(HashMap_t)          :: level
+      type(HashMap_t), pointer :: sub
+      type(HashMapIndex_t)     :: idx
+      type(Item_t),    pointer :: hit
+
+      ! check if key exists on this level ...
+      hit => getPtr( level, key_ )
+      res = associated( hit )
+      if (res) res = isAccepted( hit )
+      if (res) return
+
+      idx = index( level )
+      do while (is_valid( idx ))
+        if (dynamic_cast( sub, value(idx) )) then
+          call walk_( sub )
+          if (res) return
+        end if
+        call next(idx)
+      end do
+    end subroutine
+  end function
+

@@ -17,14 +17,22 @@ module adt_scope
 
   type(HashMap_t), pointer :: processScope_
 
-  public :: newScope, getScope, getItem, getRef, getCharPtr, setProcedure, getProcedure
+  public :: newScope, getScope, getItem, getRef, getCharPtr, setProcedure, getProcedure, localize
   public :: declareCallback, connectedCallbacks, connectCallback, disconnectCallback, tryCallback, invokeCallback
   public :: hook_disabled, hook_undeclared, hook_not_set, hook_set, hook_called
+  public :: AcceptItem_itf
 
   interface newScope
     function scope_create_() result(scope)
       import HashMap_t
       type(HashMap_t), pointer :: scope
+    end function
+  end interface
+
+  interface
+    logical &
+    function AcceptItem_itf( item ); import
+      type(Item_t) :: item
     end function
   end interface
 
@@ -88,6 +96,16 @@ module adt_scope
       character(len=*)  :: id
       logical, optional :: raise
       type(c_funptr)    :: res
+    end function
+  end interface
+
+  interface localize
+    logical &
+    function scope_localize_f( scope, key, isAccepted )
+      import HashMap_t, AcceptItem_itf
+      type(HashMap_t)           :: scope
+      character(len=*)          :: key
+      procedure(AcceptItem_itf) :: isAccepted
     end function
   end interface
 
