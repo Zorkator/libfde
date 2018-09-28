@@ -8,7 +8,9 @@ class Stateful(object):
   Stateful provides cashed access to certain state scope, determined by option statePath
 
   """
-  __opts__   = dict( statePath = '{rootId}' )
+  __opts__ = dict( rootPath  = '{rootId}'
+                 , statePath = '{rootId}/state'
+                 )
 
   @property
   def scopeKeyOperator( self ):
@@ -19,20 +21,27 @@ class Stateful(object):
   def scopeKeyOperator( self, op ):
     self._stock.__keyop__ = op
 
+  @property
+  def root( self ):
+    """return root scope, specified by option rootPath."""
+    try   : return self._stock._root
+    except:
+      self._stock._root = self._get_path_scope( self._rootPath )
+      return self._stock._root
 
   @property
   def state( self ):
     """return state scope, specified by option statePath."""
     try   : return self._stock._state
     except:
-      self._stock._state = self._get_state()
+      self._stock._state = self._get_path_scope( self._statePath )
       return self._stock._state
 
 
-  def _get_state( self ):
+  def _get_path_scope( self, path ):
     from adt.core import Scope
-    path = self._statePath.format( **self.about ).split('/')
-    return Scope.getProcessScope( *path )
+    pathList = path.format( **self.about ).split('/')
+    return Scope.getProcessScope( *pathList )
 
 
   def setStateData( self, dataDict ):
