@@ -2,11 +2,6 @@
 Fortran Development Extensions (libfde)
 =======================================
 
-Copyright (c) 2018 Josef Scheuer.
-All rights reserved.
-
-See the end of this file for further copyright and license information.
-
 .. contents::
 
 About
@@ -67,14 +62,13 @@ Nevertheless, **a lot** of things can be improved and some aspects need further 
 - ...
 
 
-
 Copyright and License Information
 ---------------------------------
 
-Copyright (c) 2018 Josef Scheuer
+Copyright (c) 2018 Josef Scheuer.
 All rights reserved.
 
-See the file "LICENSE" for information on the history of this software, terms &
+See the file "LICENSE" for terms &
 conditions for usage, and a DISCLAIMER OF ALL WARRANTIES.
 
 This library distribution contains **no** GNU General Public License (GPL) code,
