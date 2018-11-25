@@ -1,7 +1,7 @@
 
-#include "adt/ref_status.fpp"
+#include "fde/ref_status.fpp"
 
-module adt_basestring
+module fde_basestring
   use iso_c_binding
   implicit none
   

@@ -6,7 +6,7 @@ import sys, os, shlex
 ######################################
 class CommandProcessor(object):
 ######################################
-  """Abstract Mixin class extending Startable, Stateful, Hookable ADTController types.
+  """Abstract Mixin class extending Startable, Stateful, Hookable FDEController types.
   
   CommandProcessor provides a simple interface for executing the main loop of Startable codes
     controlled by commands.

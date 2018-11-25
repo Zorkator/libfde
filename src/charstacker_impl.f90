@@ -4,7 +4,7 @@ module charstacker_impl__
   implicit none
 
 # define _private
-# include "adt/type/charstacker.ftype"
+# include "fde/type/charstacker.ftype"
 
 end module
 

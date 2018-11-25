@@ -1,10 +1,10 @@
 
-#include "adt/itfUtil.fpp"
-#include "adt/ref_status.fpp"
+#include "fde/itfUtil.fpp"
+#include "fde/ref_status.fpp"
 
 module impl_string__
-  use adt_string
-  use adt_basestring
+  use fde_string
+  use fde_basestring
   use iso_c_binding
 
 # define String_t   String_t__impl__

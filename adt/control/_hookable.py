@@ -3,7 +3,7 @@
 ######################################
 class Hookable(object):
 ######################################
-  """Mixin class extending ADTController types.
+  """Mixin class extending FDEController types.
     
   Hookable provides cashed access to certain hook scope, determined by option hooksPath
 
@@ -20,7 +20,7 @@ class Hookable(object):
 
 
   def _get_hooks( self ):
-    from adt.core import Scope
+    from fde.core import Scope
     path = self._hooksPath.format( **self.about ).split('/')
     return Scope.getProcessScope( *path )
 

@@ -1,13 +1,13 @@
 
-#include "adt/itfUtil.fpp"
+#include "fde/itfUtil.fpp"
 
 module impl_item__
-  use adt_item
-  use adt_typeinfo
-  use adt_string
-  use adt_ref
-  use adt_basetypes
-  use adt_memoryref
+  use fde_item
+  use fde_typeinfo
+  use fde_string
+  use fde_ref
+  use fde_basetypes
+  use fde_memoryref
   use iso_c_binding
 
 # define Item_i   Item_t__impl__
@@ -642,7 +642,7 @@ end module
   recursive &
   subroutine item_accept_wrap_( wrap, itemType, vstr )
     use impl_item__
-    use adt_visitor
+    use fde_visitor
     implicit none
     type(Item_wrap_t)         :: wrap
     type(TypeInfo_t)          :: itemType
@@ -658,7 +658,7 @@ end module
   recursive &
   subroutine item_stream_wrap_( wrap, itemType, outs )
     use impl_item__
-    use adt_ostream
+    use fde_ostream
     implicit none
     type(Item_wrap_t)         :: wrap
     type(TypeInfo_t)          :: itemType

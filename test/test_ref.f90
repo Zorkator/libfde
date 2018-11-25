@@ -1,8 +1,8 @@
 
 program testinger
-  use adt_ref
+  use fde_ref
   use type_references
-  use adt_basetypes
+  use fde_basetypes
   use iso_c_binding
   implicit none
 

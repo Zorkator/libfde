@@ -1,8 +1,8 @@
 #ifndef __PROTOTYPE_CHARSTACKER_FTYPE
 #define __PROTOTYPE_CHARSTACKER_FTYPE
 
-# include "adt/type/itf.fpp"
-# include "adt/ref_status.fpp"
+# include "fde/type/itf.fpp"
+# include "fde/ref_status.fpp"
 
   type CharStacker_t
     _private

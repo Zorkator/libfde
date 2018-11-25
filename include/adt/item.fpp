@@ -1,5 +1,5 @@
-#ifndef __ADT_ITEM_FPP
-#define __ADT_ITEM_FPP
+#ifndef __FDE_ITEM_FPP
+#define __FDE_ITEM_FPP
 
 #include "fortres/ppUtil.xpp"
 

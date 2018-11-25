@@ -1,14 +1,14 @@
 
-#include "adt/itfUtil.fpp"
+#include "fde/itfUtil.fpp"
 
 module impl_typeinfo__
-  use adt_typeinfo
+  use fde_typeinfo
   implicit none
 
   contains
 
   subroutine type_accept_wrap_( wrap, ti, vstr )
-    use adt_visitor
+    use fde_visitor
     implicit none
     type(void_t)     :: wrap, dummy
     type(TypeInfo_t) :: ti
@@ -18,8 +18,8 @@ module impl_typeinfo__
   end subroutine
   
   subroutine type_stream_wrap_( wrap, ti, outs )
-    use adt_ostream
-    use adt_convert
+    use fde_ostream
+    use fde_convert
     use iso_c_binding
     implicit none
     type(void_t)     :: wrap
@@ -113,7 +113,7 @@ end module
   contains
 
     subroutine link_memref( memref, what )
-      use adt_memoryref
+      use fde_memoryref
       type(MemoryRef_t)        :: memref
       character(len=*), target :: what
 

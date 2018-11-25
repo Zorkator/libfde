@@ -1,7 +1,7 @@
-#ifndef __ADT_ALLOCATE_FPP
-#define __ADT_ALLOCATE_FPP
+#ifndef __FDE_ALLOCATE_FPP
+#define __FDE_ALLOCATE_FPP
 
-#include "adt/string.fpp"
+#include "fde/string.fpp"
 
 # define __allocate_MemoryError( sym, shape ) \
       call throw( MemoryError, 'The allocation of ' // __sym2str__(sym) // ' with shape ' // __sym2str__(shape) // ' failed' )
@@ -63,7 +63,7 @@
     _copied_REALLOCATE_st( sym, (size(tmp)*times), pad, tmp, _st )
 
 
-! The following definition might be changed by the native code using libadt.
+! The following definition might be changed by the native code using libfde.
 !  __istat__: the integer status variable used by the [DE]ALLOCATE macros below.
 
 # if !defined __istat__
@@ -95,5 +95,5 @@
     _expand_REALLOCATE_st( sym, times, pad, tmp, __istat__ )
 
 #endif 
-! ^^ __ADT_ALLOCATE_FPP
+! ^^ __FDE_ALLOCATE_FPP
 

@@ -1,5 +1,5 @@
 ###
-# makefile for building libfortres (C-core library of libadt)
+# makefile for building libfortres (C-core library of libfde)
 #
 # NOTE: for using this makefile you need some meta-makefiles bundled by another project called 'makeIt'.
 #       Please set the environment variable MAKEIT_DIR to a directory that contains a copy.

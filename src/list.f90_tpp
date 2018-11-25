@@ -1,11 +1,11 @@
 
-#include "adt/itfUtil.fpp"
+#include "fde/itfUtil.fpp"
 
-module adt_list
-  use adt_ref
-  use adt_item
-  use adt_visitor
-  use adt_ostream
+module fde_list
+  use fde_ref
+  use fde_item
+  use fde_visitor
+  use fde_ostream
   implicit none
   private
 

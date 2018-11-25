@@ -1,5 +1,5 @@
 ###
-# makefile for building libadt
+# makefile for building libfde
 #
 # NOTE: for using this makefile you need some meta-makefiles bundled by another project called 'makeIt'.
 #       Please set the environment variable MAKEIT_DIR to a directory that contains a copy.
@@ -8,16 +8,16 @@
 #       or
 #         svn co https://github.com/Zorkator/makeIt/trunk makeIt
 #
-# Type 'make' to get the help screen, or 'make built' to start building libadt.
+# Type 'make' to get the help screen, or 'make built' to start building libfde.
 #
 
-TARGET_doc      := building libadt
+TARGET_doc      := building libfde
 TPP_FILES       := $(filter-out test_%.f90_tpp,$(wildcard src/*.f90_tpp))
 TPP_SOURCE      := $(patsubst %.f90_tpp,%.f90,$(TPP_FILES))
 SOURCE_FILES    := $(filter-out test_%.f90 $(TPP_SOURCE),$(wildcard src/*.f90)) $(TPP_SOURCE)
 CLEARED_FILES   := $(TPP_SOURCE)
 OUT_TYPE        := shared
-OUT_NAME         = adt.$(mk_TAG)
+OUT_NAME         = fde.$(mk_TAG)
 MAYOR           := 2.7.2
 OUT_DIR          = lib/$(mk_TAG)
 FC_INCLUDE_DIRS := ./libfortres/include ./include

@@ -1,8 +1,8 @@
 
-module adt_charstacker
+module fde_charstacker
   implicit none
 
-# include "adt/type/charstacker.ftype"
+# include "fde/type/charstacker.ftype"
 
   interface CharStacker
     module procedure create_

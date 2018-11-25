@@ -7,7 +7,7 @@ from ..tools import makedirs, NullGuard, debug
 ########################################
 class Startable(object):
 ########################################
-  """Mixin class extending ADTController types.
+  """Mixin class extending FDEController types.
 
   Startable provides the interface for starting the main process loop of native code.
   The main loop is expected to be implemented as:

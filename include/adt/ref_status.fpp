@@ -1,5 +1,5 @@
-#ifndef __ADT_REF_STATUS_FPP
-#define __ADT_REF_STATUS_FPP
+#ifndef __FDE_REF_STATUS_FPP
+#define __FDE_REF_STATUS_FPP
 
 # define _RefStatus \
     integer*1, dimension(2)

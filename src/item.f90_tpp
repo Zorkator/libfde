@@ -1,14 +1,14 @@
 
-#include "adt/item.fpp"
-#include "adt/itfUtil.fpp"
+#include "fde/item.fpp"
+#include "fde/itfUtil.fpp"
 
-module adt_item
+module fde_item
   use iso_c_binding
-  use adt_ref
-  use adt_string
-  use adt_typeinfo
-  use adt_visitor
-  use adt_ostream
+  use fde_ref
+  use fde_string
+  use fde_typeinfo
+  use fde_visitor
+  use fde_ostream
   implicit none
   private
 
