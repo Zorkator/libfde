@@ -28,11 +28,10 @@ The library furthermore provides a python package (ctypes-based) that allows to 
 Naming
 ------
 
-The library development started with the idea of providing abstract data types in Fortran, what resulted in naming the library libfde.
-Meanwhile this focus shifted and it contains a lot more, so it really should be renamed to libfde (Fortran Development Extensions) to reflect better
+The library development started with the idea of providing abstract data types in Fortran, what resulted in naming the library **libadt**.
+Meanwhile this focus shifted and it contains a lot more, so it really should be renamed to **libfde** (Fortran Development Extensions) to reflect better
 it's purpose and contained functionality.
-While the repository already got renamed to libfde, the prefix used internally is _still_ *fde*.
-This prefix will change in one of the next releases, but it should not have a great impact on codes using the libraries.
+This prefix has changed recently and it should not have a great impact on codes using the libraries, but keep an eye on such errors.
 
 
 Basic principles and state of development
