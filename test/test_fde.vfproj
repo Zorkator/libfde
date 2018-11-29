@@ -5,7 +5,7 @@
 	<Configurations>
 		<Configuration Name="Debug|x64" OutputDirectory="./exe/$(ConfigurationName).$(PlatformName)" IntermediateDirectory=".work\$(ProjectName).$(ConfigurationName).$(PlatformName)">
 				<Tool Name="VFFortranCompilerTool" SuppressStartupBanner="true" DebugInformationFormat="debugEnabled" Optimization="optimizeDisabled" Preprocess="preprocessYes" AdditionalIncludeDirectories="../include;../lib/$(ConfigurationName).$(PlatformName)" WarnInterfaces="true" ExternalNameInterpretation="extNameLowerCase" ExternalNameUnderscore="true" Traceback="true" BoundsCheck="true" RuntimeLibrary="rtMultiThreadedDLL"/>
-				<Tool Name="VFLinkerTool" LinkIncremental="linkIncrementalNo" SuppressStartupBanner="true" AdditionalLibraryDirectories="../lib/$(ConfigurationName).$(PlatformName)" GenerateDebugInformation="true" SubSystem="subSystemConsole" AdditionalDependencies="libfde.2.7.2.$(ConfigurationName).$(PlatformName).lib"/>
+				<Tool Name="VFLinkerTool" LinkIncremental="linkIncrementalNo" SuppressStartupBanner="true" AdditionalLibraryDirectories="../lib/$(ConfigurationName).$(PlatformName)" GenerateDebugInformation="true" SubSystem="subSystemConsole" AdditionalDependencies="libfde.2.7.1.$(ConfigurationName).$(PlatformName).lib"/>
 				<Tool Name="VFResourceCompilerTool"/>
 				<Tool Name="VFMidlTool" SuppressStartupBanner="true" TargetEnvironment="midlTargetAMD64"/>
 				<Tool Name="VFCustomBuildTool" CommandLine="..\copylib.bat &quot;$(OutDir)&quot; &quot;..\lib\$(ConfigurationName).$(PlatformName)\lib*&quot;" Description="Copying external dependencies ..." Outputs="$(OutDir)\dummy"/>
@@ -15,7 +15,7 @@
 				<Tool Name="VFManifestTool" SuppressStartupBanner="true"/></Configuration>
 		<Configuration Name="Release|x64" OutputDirectory="./exe/$(ConfigurationName).$(PlatformName)" IntermediateDirectory=".work\$(ProjectName).$(ConfigurationName).$(PlatformName)">
 				<Tool Name="VFFortranCompilerTool" SuppressStartupBanner="true" Preprocess="preprocessYes" AdditionalIncludeDirectories="../include;../lib/$(ConfigurationName).$(PlatformName)" ExternalNameInterpretation="extNameLowerCase" ExternalNameUnderscore="true" RuntimeLibrary="rtMultiThreadedDLL"/>
-				<Tool Name="VFLinkerTool" LinkIncremental="linkIncrementalNo" SuppressStartupBanner="true" AdditionalLibraryDirectories="../lib/$(ConfigurationName).$(PlatformName)" SubSystem="subSystemConsole" AdditionalDependencies="libfde.2.7.2.$(ConfigurationName).$(PlatformName).lib"/>
+				<Tool Name="VFLinkerTool" LinkIncremental="linkIncrementalNo" SuppressStartupBanner="true" AdditionalLibraryDirectories="../lib/$(ConfigurationName).$(PlatformName)" SubSystem="subSystemConsole" AdditionalDependencies="libfde.2.7.1.$(ConfigurationName).$(PlatformName).lib"/>
 				<Tool Name="VFResourceCompilerTool"/>
 				<Tool Name="VFMidlTool" SuppressStartupBanner="true" TargetEnvironment="midlTargetAMD64"/>
 				<Tool Name="VFCustomBuildTool" CommandLine="..\copylib.bat &quot;$(OutDir)&quot; &quot;..\lib\$(ConfigurationName).$(PlatformName)\lib*&quot;" Description="Copying external dependencies ..." Outputs="$(OutDir)\dummy"/>

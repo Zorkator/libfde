@@ -18,7 +18,7 @@ SOURCE_FILES    := $(filter-out test_%.f90 $(TPP_SOURCE),$(wildcard src/*.f90)) 
 CLEARED_FILES   := $(TPP_SOURCE)
 OUT_TYPE        := shared
 OUT_NAME         = fde.$(mk_TAG)
-MAYOR           := 2.7.2
+MAYOR           := 2.7.1
 OUT_DIR          = lib/$(mk_TAG)
 FC_INCLUDE_DIRS := ./libfortres/include ./include
 
