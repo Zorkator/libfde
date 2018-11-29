@@ -112,7 +112,7 @@ def _array_repr( self ):
 
 
 def ARRAY_t( base, shape ):
-  shp = map( int, shape )
+  shp = list( map( int, shape ) )
   cls = reduce( _mul, shp, base )
   cls._shape_    = shp
   cls._basetype_ = base
