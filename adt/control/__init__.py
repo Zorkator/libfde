@@ -1,6 +1,6 @@
 
 __author__      = 'Josef Scheuer'
-__versioninfo__ = (0, 0, 1)
+__versioninfo__ = (2, 7, 1)
 __version__     = '.'.join( map( str, __versioninfo__ ) )
 __all__         = []
 
@@ -17,3 +17,4 @@ from ._simulator          import Simulator
 
 __all__.extend( 'NativeController ADTController ExceptionRouter Stateful cached_property'.split() )
 __all__.extend( 'Hookable Startable Verbose CommandProcessor Simulator'.split() )
+

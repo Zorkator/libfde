@@ -12,9 +12,9 @@
 #
 
 TARGET_doc      := building libadt
-TPP_FILES       := $(filter-out test_%.f90_tpp,$(wildcard *.f90_tpp))
+TPP_FILES       := $(filter-out test_%.f90_tpp,$(wildcard src/*.f90_tpp))
 TPP_SOURCE      := $(patsubst %.f90_tpp,%.f90,$(TPP_FILES))
-SOURCE_FILES    := $(filter-out test_%.f90 $(TPP_SOURCE),$(wildcard *.f90)) $(TPP_SOURCE)
+SOURCE_FILES    := $(filter-out test_%.f90 $(TPP_SOURCE),$(wildcard src/*.f90)) $(TPP_SOURCE)
 CLEARED_FILES   := $(TPP_SOURCE)
 OUT_TYPE        := shared
 OUT_NAME         = adt.$(mk_TAG)
