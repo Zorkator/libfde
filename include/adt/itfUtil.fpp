@@ -1,10 +1,10 @@
-#ifndef __ADT_ITFUTIL_FPP
-#define __ADT_ITFUTIL_FPP
+#ifndef __FDE_ITFUTIL_FPP
+#define __FDE_ITFUTIL_FPP
 
 #include "fortres/itfUtil.fpp"
 
 !---------------------------------------
-! ADT specific extensions go here ...
+! FDE specific extensions go here ...
 !---------------------------------------
 
 #define _optArg(var, arg, default)       \

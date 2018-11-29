@@ -1,8 +1,8 @@
 
-#include "adt/itfUtil.fpp"
+#include "fde/itfUtil.fpp"
 
-module adt_ostream
-  use adt_typeinfo
+module fde_ostream
+  use fde_typeinfo
   use, intrinsic :: iso_fortran_env, only : stdin  => input_unit,  &
                                             stdout => output_unit, &
                                             stderr => error_unit
@@ -153,7 +153,7 @@ module adt_ostream
   subroutine ostream_error( self, ti )
     type(ostream_t)  :: self
     type(TypeInfo_t) :: ti
-    write( self%channel, *, iostat=self%status ) ">> libadt: can't stream " // trim(ti%typeId)
+    write( self%channel, *, iostat=self%status ) ">> libfde: can't stream " // trim(ti%typeId)
   end subroutine
 
 end module

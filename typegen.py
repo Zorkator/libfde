@@ -299,7 +299,7 @@ class RefType(TypeSpec):
 !_PROC_EXPORT({typeId}_accept_)
 !_ARG_REFERENCE1(self)
     subroutine {typeId}_accept_( self, vstr )
-      use adt_visitor
+      use fde_visitor
       {baseType}{dimSpec}{valAttrib} :: self
       type(Visitor_t)                :: vstr
       type(TypeInfo_t),      pointer :: ti
@@ -315,7 +315,7 @@ class RefType(TypeSpec):
 !_ARG_REFERENCE1(wrap)
     recursive &
     subroutine {typeId}_accept_wrap( wrap, ti, vstr )
-      use adt_visitor
+      use fde_visitor
       type({typeId}Ptr_t)       :: wrap
       type(TypeInfo_t)          :: ti
       type(Visitor_t)           :: vstr{visitorGroup_beg}

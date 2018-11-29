@@ -1,7 +1,7 @@
-#ifndef __ADT_SCOPE_FPP
-#define __ADT_SCOPE_FPP
+#ifndef __FDE_SCOPE_FPP
+#define __FDE_SCOPE_FPP
 
-#include "adt/allocate.fpp"
+#include "fde/allocate.fpp"
 
 # define _get_scope( parent, scopeId ) \
     getScope( parent, _strip(scopeId) )
@@ -32,7 +32,7 @@
 
 
 !########################################################################################
-! The following definitions might be changed by the native code using libadt.
+! The following definitions might be changed by the native code using libfde.
 !  __rootLocator__: comma-separated string list identifying the root scope
 !  __hookLocator__: comma-separated string list identifying the hook scope
 !  __rootScope__  : variable or pointer identifying the code's root scope.
@@ -43,7 +43,7 @@
 !########################################################################################
 
 # if !defined __rootLocator__
-#   define __rootLocator__      "__adt_process__"
+#   define __rootLocator__      "__fde_process__"
 # endif
 
 # if !defined __hookLocator__
@@ -112,10 +112,10 @@
     call remove( parent, id )
 
 
-# if !defined _ADT_SCOPE_NO_SIMPLIFIED
+# if !defined _FDE_SCOPE_NO_SIMPLIFIED
 !##############################################################################
-! The following definitions simplify the use of adt scopes
-! In case of name clashes define _ADT_SCOPE_NO_SIMPLIFIED to avoid them.
+! The following definitions simplify the use of fde scopes
+! In case of name clashes define _FDE_SCOPE_NO_SIMPLIFIED to avoid them.
 !##############################################################################
 
 !---------------------------------------------------------
@@ -303,13 +303,13 @@
      _expand_REALLOCATE_visible_as_st( scope, sym, times, pad, tmp, __sym2str__(sym), __istat__ )
 
 # endif
- ! ^^ _ADT_SCOPE_NO_SIMPLIFIED
+ ! ^^ _FDE_SCOPE_NO_SIMPLIFIED
 
 
-# if !defined _ADT_SCOPE_NO_RETRIEVE
+# if !defined _FDE_SCOPE_NO_RETRIEVE
 !##############################################################################
-! The following definitions simplify the data retrieval from adt scopes
-! In case of name clashes define _ADT_SCOPE_NO_RETRIEVE to avoid them.
+! The following definitions simplify the data retrieval from fde scopes
+! In case of name clashes define _FDE_SCOPE_NO_RETRIEVE to avoid them.
 !##############################################################################
 
 ! define some exception messages ...
@@ -404,7 +404,7 @@
 # define _getService  _refProc
 
 # endif
- ! ^^ _ADT_SCOPE_NO_RETRIEVE
+ ! ^^ _FDE_SCOPE_NO_RETRIEVE
 #endif
-! ^^ __ADT_SCOPE_FPP
+! ^^ __FDE_SCOPE_FPP
 

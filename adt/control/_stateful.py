@@ -3,7 +3,7 @@
 ######################################
 class Stateful(object):
 ######################################
-  """Mixin class extending ADTController types.
+  """Mixin class extending FDEController types.
     
   Stateful provides cashed access to certain state scope, determined by option statePath
 
@@ -39,7 +39,7 @@ class Stateful(object):
 
 
   def _get_path_scope( self, path ):
-    from adt.core import Scope
+    from fde.core import Scope
     pathList = path.format( **self.about ).split('/')
     return Scope.getProcessScope( *pathList )
 

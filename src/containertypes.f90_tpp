@@ -1,17 +1,17 @@
 
 !                . o O (needed for generated procedure exports)
-#include "adt/itfUtil.fpp"
+#include "fde/itfUtil.fpp"
 
-module adt_containertypes
+module fde_containertypes
   use iso_c_binding
-  use adt_ref
-  use adt_list
-  use adt_item
-  use adt_string
-  use adt_hashmap
-  use adt_convert
-  use adt_basetypes
-  use adt_ostream
+  use fde_ref
+  use fde_list
+  use fde_item
+  use fde_string
+  use fde_hashmap
+  use fde_convert
+  use fde_basetypes
+  use fde_ostream
   implicit none
   private
 

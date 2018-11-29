@@ -1,10 +1,10 @@
 
-from . import Startable, Hookable, Stateful, ExceptionRouter, ADTController
+from . import Startable, Hookable, Stateful, ExceptionRouter, FDEController
 
 ###################################################################################
-class Simulator(Startable, Hookable, Stateful, ExceptionRouter, ADTController):
+class Simulator(Startable, Hookable, Stateful, ExceptionRouter, FDEController):
 ###################################################################################
-  """Convenience class preparing use of ADTController and mixin types useful for simulator codes.
+  """Convenience class preparing use of FDEController and mixin types useful for simulator codes.
 
   """
   pass

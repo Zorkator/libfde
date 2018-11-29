@@ -1,12 +1,12 @@
 
-#include "adt/item.fpp"
+#include "fde/item.fpp"
 
 program testinger
-  use adt_item
-  use adt_ref
-  use adt_typeinfo
-  use adt_basetypes
-  use adt_string
+  use fde_item
+  use fde_ref
+  use fde_typeinfo
+  use fde_basetypes
+  use fde_string
   implicit none
 
   type(Item_t)     :: v1, v2
@@ -108,10 +108,10 @@ end
 
 # define _implementTest_(_typeId, _baseType, _val, _finish) \
   subroutine _paste(test_,_typeId)()   ;\
-    use adt_item                       ;\
-    use adt_ref                        ;\
-    use adt_typeinfo                   ;\
-    use adt_string                     ;\
+    use fde_item                       ;\
+    use fde_ref                        ;\
+    use fde_typeinfo                   ;\
+    use fde_string                     ;\
     use iso_c_binding                  ;\
     implicit none                      ;\
     _baseType                 :: val   ;\

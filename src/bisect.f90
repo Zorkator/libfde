@@ -1,7 +1,7 @@
 
-#include "adt/itfUtil.fpp"
+#include "fde/itfUtil.fpp"
 
-module adt_bisect
+module fde_bisect
   implicit none
 
   interface

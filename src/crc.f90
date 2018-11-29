@@ -1,5 +1,5 @@
 
-module adt_crc
+module fde_crc
   implicit none
   private
 

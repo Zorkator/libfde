@@ -19,7 +19,7 @@ __all__.extend( 'NullHandle Wallet NullGuard LibLoader core_loader dict2obj sys_
 class debug(object):
   def __new__( _class ):
     from os import environ as env
-    for m in filter( bool, [env.get('ADT_DEBUGGER'), 'pdb'] ):
+    for m in filter( bool, [env.get('FDE_DEBUGGER'), 'pdb'] ):
       try               : start_dbg = __import__( m, globals(), locals() ).set_trace; break
       except ImportError: pass
     return start_dbg()

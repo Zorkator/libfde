@@ -1,5 +1,5 @@
-#ifndef __ADT_STRING_FPP
-#define __ADT_STRING_FPP
+#ifndef __FDE_STRING_FPP
+#define __FDE_STRING_FPP
 
 #include "fortres/ppUtil.xpp"
 
@@ -10,7 +10,7 @@
     _strip(file_basename( __FILE__ ))
 
 
-! The following definition might be changed by the native code using libadt.
+! The following definition might be changed by the native code using libfde.
 !  __sym2str__: a macro converting a symbol to a string.
 
 # if !defined __sym2str__

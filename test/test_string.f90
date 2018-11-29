@@ -1,7 +1,7 @@
 
 program testinger
-  use adt_string
-  use adt_ref
+  use fde_string
+  use fde_ref
   implicit none
 
   type(String_t)          :: tmp

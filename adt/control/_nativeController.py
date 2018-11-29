@@ -15,7 +15,7 @@ class NativeController(OptionProcessor):
   """
   __conv__  = dict( lib    = OptionProcessor.realpath )
   __opts__  = dict( lib    = LookupError('missing library specification!')
-                  , libEnv = 'ADTPATH'
+                  , libEnv = 'FDEPATH'
                   )
 
   @property
@@ -68,7 +68,7 @@ class NativeController(OptionProcessor):
 
 
   def initialize( self, **kwArgs ):
-    """triggers initialization of ADTController instance.
+    """triggers initialization of FDEController instance.
     This method is intended to be reimplemented by subclasses and is called internally.
     Usually there's no need to call this explicitly.
 

@@ -143,6 +143,6 @@ class LibLoader(object):
 
 
 
-_libPattern = ('libadt.*.so', 'libadt.*.dll')[_isWin]
-core_loader = LibLoader( fileEnv='LIBADT', prioPathEnv='ADTPATH', libPattern=_libPattern, matchExisting=True )
+_libPattern = ('libfde.*.so', 'libfde.*.dll')[_isWin]
+core_loader = LibLoader( fileEnv='LIBFDE', prioPathEnv='FDEPATH', libPattern=_libPattern, matchExisting=True )
 

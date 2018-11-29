@@ -1,6 +1,6 @@
 
 module test_charstacker
-  use adt_charstacker
+  use fde_charstacker
   implicit none
 
   character(len=255)  :: path

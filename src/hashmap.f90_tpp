@@ -1,13 +1,13 @@
 
-#include "adt/itfUtil.fpp"
+#include "fde/itfUtil.fpp"
 
-module adt_hashmap
-  use adt_string
-  use adt_list
-  use adt_item
-  use adt_ref
-  use adt_visitor
-  use adt_ostream
+module fde_hashmap
+  use fde_string
+  use fde_list
+  use fde_item
+  use fde_ref
+  use fde_visitor
+  use fde_ostream
   use iso_c_binding
   implicit none
   private

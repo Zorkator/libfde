@@ -1,10 +1,10 @@
 
-#include "adt/itfUtil.fpp"
+#include "fde/itfUtil.fpp"
 
-module adt_scope
-  use adt_hashmap
-  use adt_item
-  use adt_ref
+module fde_scope
+  use fde_hashmap
+  use fde_item
+  use fde_ref
   use iso_c_binding
   implicit none
   private

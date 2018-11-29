@@ -6,7 +6,7 @@ __all__         = []
 
 
 from ._nativeController   import NativeController
-from ._adtController      import ADTController
+from ._fdeController      import FDEController
 from ._exceptionRouter    import ExceptionRouter
 from ._stateful           import Stateful, cached_property
 from ._hookable           import Hookable
@@ -15,6 +15,6 @@ from ._verbose            import Verbose
 from ._commandProcessor   import CommandProcessor
 from ._simulator          import Simulator
 
-__all__.extend( 'NativeController ADTController ExceptionRouter Stateful cached_property'.split() )
+__all__.extend( 'NativeController FDEController ExceptionRouter Stateful cached_property'.split() )
 __all__.extend( 'Hookable Startable Verbose CommandProcessor Simulator'.split() )
 

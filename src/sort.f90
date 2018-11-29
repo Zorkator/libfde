@@ -1,7 +1,7 @@
 
-#include "adt/itfUtil.fpp"
+#include "fde/itfUtil.fpp"
 
-module adt_sort
+module fde_sort
   implicit none
 
   interface

@@ -1,11 +1,11 @@
 
-#include "adt/exception.fpp"
+#include "fde/exception.fpp"
 
 module test_dyncast
-  use adt_item
-  use adt_ref
-  use adt_hashmap
-  use adt_exception
+  use fde_item
+  use fde_ref
+  use fde_hashmap
+  use fde_exception
   implicit none
 
     type(Ref_t),       target :: ref_

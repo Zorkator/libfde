@@ -1,19 +1,19 @@
 
-#include "adt/exception.fpp"
-#include "adt/scope.fpp"
+#include "fde/exception.fpp"
+#include "fde/scope.fpp"
 
 module test_basedata
-  use adt_basetypes
-  use adt_containertypes
-  use adt_string
-  use adt_ref
-  use adt_item
-  use adt_list
-  use adt_hashmap
-  use adt_streamvisitor
-  use adt_ostream
-  use adt_scope
-  use adt_exception
+  use fde_basetypes
+  use fde_containertypes
+  use fde_string
+  use fde_ref
+  use fde_item
+  use fde_list
+  use fde_hashmap
+  use fde_streamvisitor
+  use fde_ostream
+  use fde_scope
+  use fde_exception
   use iso_c_binding
   implicit none
 
@@ -406,21 +406,21 @@ module test_basedata
 end module
 
 
-!module adt_alloc!{{{
+!module fde_alloc!{{{
 !
-!  interface adt_allocate
+!  interface fde_allocate
 !    module procedure hashmap_allocate
 !  end interface
 !
-!  interface adt_alloc_ref
+!  interface fde_alloc_ref
 !    module procedure hashmap_allocate_ref__, real8_1d_allocate_ref__
 !  end interface
 !
 !  contains
 !
 !  subroutine hashmap_allocate_ref__( ptr, reference, bind )
-!    use adt_hashmap
-!    use adt_ref, only: Ref_t
+!    use fde_hashmap
+!    use fde_ref, only: Ref_t
 !    implicit none
 !    type(HashMap_t), pointer,       intent(inout) :: ptr
 !    type(Ref_t), optional,          intent(inout) :: reference
@@ -434,8 +434,8 @@ end module
 !
 !  
 !  subroutine real8_1d_allocate_ref__( ptr, d1, reference, bind )
-!    use adt_ref, only: Ref_t
-!    use adt_basetypes
+!    use fde_ref, only: Ref_t
+!    use fde_basetypes
 !    implicit none
 !    real*8, dimension(:), pointer,  intent(inout) :: ptr
 !    integer                                       :: d1
@@ -450,8 +450,8 @@ end module
 !  
 !
 !  function hashmap_allocate_ref( ptr ) result(res)
-!    use adt_hashmap
-!    use adt_ref
+!    use fde_hashmap
+!    use fde_ref
 !    implicit none
 !    type(HashMap_t),  pointer,       intent(inout) :: ptr
 !    type(Ref_t)                                    :: res
@@ -461,8 +461,8 @@ end module
 !  end function
 !
 !  subroutine hashmap_allocate( ptr, map, id )
-!    use adt_hashmap
-!    use adt_item
+!    use fde_hashmap
+!    use fde_item
 !    implicit none
 !    type(HashMap_t),  pointer,       intent(inout) :: ptr
 !    type(HashMap_t),  optional,      intent(inout) :: map
@@ -1069,7 +1069,7 @@ end subroutine!}}}
 
 subroutine test_hashmap_cloning()!{{{
   use test_basedata
-  use adt_scope
+  use fde_scope
 
   type(HashMap_t)               :: map
   type(HashMap_t),      pointer :: mapPtr
@@ -1124,7 +1124,7 @@ end subroutine!}}}
 
 
 subroutine test_file_string()!{{{
-  use adt_string
+  use fde_string
   type(String_t) :: s
 
   s = "c:\path/test/blub.f"
@@ -1182,7 +1182,7 @@ end subroutine!}}}
 
 
 module visitor_testmod!{{{
-  use adt_visitor
+  use fde_visitor
   implicit none
 
   type node_t
@@ -1258,10 +1258,10 @@ module visitor_testmod!{{{
 end module!}}}
 
 
-module adt_binstreamvisitor
-  use adt_visitor
-  use adt_ostream
-  use adt_typeinfo
+module fde_binstreamvisitor
+  use fde_visitor
+  use fde_ostream
+  use fde_typeinfo
   implicit none
   private
 
@@ -1321,13 +1321,13 @@ end module
 
 subroutine test_write_read()
   use test_basedata
-  use adt_binstreamvisitor
+  use fde_binstreamvisitor
   type(BinStreamVisitor_t) :: fstream
   character(len=32)        :: keyBuff, valBuff
   integer                  :: stat
   type(HashMap_t), pointer :: scope
 
-  open( 10, file="test_adt.out" )
+  open( 10, file="test_fde.out" )
   fstream = BinStreamVisitor( 10 )
   call accept( getScope(), fstream%super )
   flush( 10 )
@@ -1477,10 +1477,10 @@ end module
 
 
 module debug
-  use adt_basestring
-  use adt_ref
-  use adt_item
-  use adt_basetypes
+  use fde_basestring
+  use fde_ref
+  use fde_item
+  use fde_basetypes
 
   type(Item_t)       :: it
   integer, dimension(:), allocatable, target :: buffer
@@ -1515,7 +1515,7 @@ end module
 
 
 module test_exception
-  use adt_exception
+  use fde_exception
   use iso_c_binding
 
   contains
@@ -1566,8 +1566,8 @@ end module
 
 
 module sorting
-  use adt_sort
-  use adt_exception
+  use fde_sort
+  use fde_exception
   contains
 
   subroutine test_sort()
@@ -1662,9 +1662,9 @@ module sorting
 end module
 
 
-program test_adt
+program test_fde
   use test_basedata
-  use adt_convert
+  use fde_convert
   use pointer_remapping
   use debug
   use test_exception
@@ -1694,7 +1694,7 @@ program test_adt
   contains
 
   subroutine run_tests()
-    use adt_sort
+    use fde_sort
 
     call test_sort()
     call test_pass_args()
