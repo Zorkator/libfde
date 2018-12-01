@@ -4,38 +4,69 @@
 # include "fde/type/itf.fpp"
 # include "fde/ref_status.fpp"
 
-  type CharStacker_t
+# define _MAXDEPTH  32
+
+  type, public :: CharStacker_t
     _private
     character(len=:),            pointer :: buffer => null()
     integer*4                            :: tos    = 0
+    integer*4                            :: depth  = _MAXDEPTH
     integer*4, dimension(:), allocatable :: idx
   end type
 
-  interface
+  interface initialize
+    !< Re-/initializes a CharStacker
     subroutine charstacker_create_c( self, buffer, depth ); import
-      type(CharStacker_t)       :: self
-      character(len=*),  target :: buffer
-      integer*4,       optional :: depth
+      type(CharStacker_t)       :: self   !< the CharStacker
+      character(len=*),  target :: buffer !< character buffer to use
+      integer*4,       optional :: depth  !< maximum depth
+    end subroutine
+  end interface
+
+  interface delete
+    !* Frees memory allocated by this CharStacker.
+    !  Leaves character buffer untouched!
+    subroutine charstacker_delete_c( self ); import
+      type(CharStacker_t) :: self !< the CharStacker
     end subroutine
   end interface
 
   interface push
+    !< pushes string item onto stack
     subroutine charstacker_push_c( self, what ); import
-      type(CharStacker_t) :: self
-      character(len=*)    :: what
+      type(CharStacker_t) :: self !< the CharStacker
+      character(len=*)    :: what !< string to append to associated buffer
     end subroutine
   end interface
 
   interface pop
+    !< pops latest item from stack
     subroutine charstacker_pop_c( self ); import
-      type(CharStacker_t) :: self
+      type(CharStacker_t) :: self !< the CharStacker
     end subroutine
   end interface
 
   interface get
+    !< returns the effective buffer content built up from all strings currently pushed
     function charstacker_get_c( self ) result(res); import
-      type(CharStacker_t)       :: self
+      type(CharStacker_t)       :: self !< the CharStacker
       character(len=:), pointer :: res
+    end function
+  end interface
+
+  interface size
+    !< returns the number of pushed strings
+    function charstacker_size_c( self ) result(res); import
+      type(CharStacker_t) :: self !< the CharStacker
+      integer*4           :: res
+    end function
+  end interface
+
+  interface len
+    !< returns the total length of effective buffer content
+    function charstacker_length_c( self ) result(res); import
+      type(CharStacker_t) :: self !< the CharStacker
+      integer*4           :: res
     end function
   end interface
 

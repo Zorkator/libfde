@@ -14,6 +14,7 @@
 TARGET_doc      := building libfde
 TPP_FILES       := $(filter-out test_%.f90_tpp,$(wildcard src/*.f90_tpp))
 TPP_SOURCE      := $(patsubst %.f90_tpp,%.f90,$(TPP_FILES))
+SOURCE_DIRS     := ./src
 SOURCE_FILES    := $(filter-out test_%.f90 $(TPP_SOURCE),$(wildcard src/*.f90)) $(TPP_SOURCE)
 CLEARED_FILES   := $(TPP_SOURCE)
 OUT_TYPE        := shared
