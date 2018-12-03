@@ -1,9 +1,9 @@
 
-module adt_xtype
+module fde_xtype
   use iso_c_binding
   implicit none
 
-# include "adt/type/xtype.ftype"
+# include "fde/type/xtype.ftype"
 
   interface Xtype
     module procedure create_by_xtype, create_by_chrstr

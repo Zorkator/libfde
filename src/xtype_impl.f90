@@ -4,7 +4,7 @@ module xtype_impl__
   implicit none
 
 # define _private
-# include "adt/type/xtype.ftype"
+# include "fde/type/xtype.ftype"
 
   character(len=0), target :: empty_string_ = ''
 
@@ -20,7 +20,7 @@ subroutine xtype_create_by_xtype_c( self, other )
   if (present(other)) then
     self%ptr = other%ptr
     self%len = other%len
-    self%alc = other%alc
+    !self%alc = other%alc
     !self%refstat = other%refstat
   end if
 end subroutine
@@ -34,8 +34,8 @@ subroutine xtype_create_by_chrstr_c( self, chrstr )
   type(Xtype_t)    :: self
   character(len=*) :: chrstr
 
-  self%len = len(chrstr)
-  if (self%len > 0) then
+  self%len(1) = len(chrstr)
+  if (self%len(1) > 0) then
     call clone_()
   else
     self%ptr = C_NULL_PTR
@@ -43,11 +43,11 @@ subroutine xtype_create_by_chrstr_c( self, chrstr )
 
 contains
   subroutine clone_()
-    character(len=self%len), pointer :: buff
+    character(len=self%len(1)), pointer :: buff
     allocate( buff )
     buff = chrstr
     self%ptr  = c_loc(buff)
-    self%alc  = self%len
+    !self%alc  = self%len
   end subroutine
 end subroutine
 
@@ -86,6 +86,8 @@ end function
 
 !_PROC_EXPORT(xtype_cptr_f)
 function xtype_cptr_f( self ) result(res)
+  use xtype_impl__, only: Xtype_t, c_ptr
+  implicit none
   type(Xtype_t) :: self
   type(c_ptr)   :: res
 
@@ -100,7 +102,9 @@ end function
 
 !_PROC_EXPORT(xtype_char_f)
 function xtype_char_f( self ) result(res)
-  type(Xtype_t)           :: self
-  character(len=self%len) :: res
+  use xtype_impl__, only: Xtype_t
+  implicit none
+  type(Xtype_t)              :: self
+  character(len=self%len(1)) :: res
 end function
 

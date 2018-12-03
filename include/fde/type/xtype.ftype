@@ -1,8 +1,8 @@
 #ifndef __PROTOTYPE_XTYPE_FTYPE
 #define __PROTOTYPE_XTYPE_FTYPE
 
-# include "adt/type/itf.fpp"
-!# include "adt/ref_status.fpp"
+# include "fde/type/itf.fpp"
+!# include "fde/ref_status.fpp"
 
   type Xtype_t
     _private
@@ -40,8 +40,8 @@
     end function
 
     function xtype_char_f( self ) result(res); import
-      type(Xtype_t)           :: self
-      character(len=self%len) :: res
+      type(Xtype_t)              :: self
+      character(len=self%len(1)) :: res
     end function
   end interface
 
