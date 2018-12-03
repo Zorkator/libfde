@@ -9,7 +9,7 @@
 /I../lib/Release.$(PlatformName)" SuppressStartupBanner="true" DebugInformationFormat="debugEnabled" Optimization="optimizeDisabled" AdditionalIncludeDirectories="../include" WarnInterfaces="true" ExternalNameInterpretation="extNameLowerCase" ExternalNameUnderscore="true" Traceback="true" BoundsCheck="true" RuntimeLibrary="rtMultiThreadedDLL"/>
 				<Tool Name="VFLinkerTool" AdditionalOptions="/LIBPATH:../lib/Release.$(PlatformName)
 /LIBPATH:$(ConfigurationName).$(PlatformName)
-libadt.0.Release.$(PlatformName).lib
+libfde.0.Release.$(PlatformName).lib
 TestSimulator.lib
 " LinkIncremental="linkIncrementalNo" SuppressStartupBanner="true" GenerateDebugInformation="true" SubSystem="subSystemConsole"/>
 				<Tool Name="VFResourceCompilerTool"/>
@@ -24,7 +24,7 @@ TestSimulator.lib
 /I../lib/Release.$(PlatformName)" SuppressStartupBanner="true" AdditionalIncludeDirectories="../include" ExternalNameInterpretation="extNameLowerCase" ExternalNameUnderscore="true" RuntimeLibrary="rtMultiThreadedDLL"/>
 				<Tool Name="VFLinkerTool" AdditionalOptions="/LIBPATH:../lib/Release.$(PlatformName)
 /LIBPATH:$(ConfigurationName).$(PlatformName)
-libadt.0.Release.$(PlatformName).lib
+libfde.0.Release.$(PlatformName).lib
 TestSimulator.lib
 " LinkIncremental="linkIncrementalNo" SuppressStartupBanner="true" SubSystem="subSystemConsole"/>
 				<Tool Name="VFResourceCompilerTool"/>
@@ -39,7 +39,7 @@ TestSimulator.lib
 /I../lib/Release.$(PlatformName)" SuppressStartupBanner="true" DebugInformationFormat="debugEnabled" Optimization="optimizeDisabled" AdditionalIncludeDirectories="../include" WarnInterfaces="true" ExternalNameInterpretation="extNameLowerCase" ExternalNameUnderscore="true" Traceback="true" BoundsCheck="true" RuntimeLibrary="rtMultiThreadedDLL"/>
 				<Tool Name="VFLinkerTool" AdditionalOptions="/LIBPATH:../lib/Release.$(PlatformName)
 /LIBPATH:$(ConfigurationName).$(PlatformName)
-libadt.0.Release.$(PlatformName).lib
+libfde.0.Release.$(PlatformName).lib
 TestSimulator.lib
 " LinkIncremental="linkIncrementalNo" SuppressStartupBanner="true" GenerateDebugInformation="true" SubSystem="subSystemConsole"/>
 				<Tool Name="VFResourceCompilerTool"/>
@@ -54,7 +54,7 @@ TestSimulator.lib
 /I../lib/Release.$(PlatformName)" SuppressStartupBanner="true" AdditionalIncludeDirectories="../include" ExternalNameInterpretation="extNameLowerCase" ExternalNameUnderscore="true" RuntimeLibrary="rtMultiThreadedDLL"/>
 				<Tool Name="VFLinkerTool" AdditionalOptions="/LIBPATH:../lib/Release.$(PlatformName)
 /LIBPATH:$(ConfigurationName).$(PlatformName)
-libadt.0.Release.$(PlatformName).lib
+libfde.0.Release.$(PlatformName).lib
 TestSimulator.lib
 " LinkIncremental="linkIncrementalNo" SuppressStartupBanner="true" SubSystem="subSystemConsole"/>
 				<Tool Name="VFResourceCompilerTool"/>

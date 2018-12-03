@@ -14,8 +14,8 @@ end subroutine
 
 
 subroutine test_HashMap( num, idx_min, idx_max )
-  use adt_hashmap
-  use adt_item
+  use fde_hashmap
+  use fde_item
   implicit none
 
   type (HashMap_t)       :: map
@@ -75,10 +75,10 @@ end subroutine
 
 
 program testinger
-  use adt_hashmap
-  use adt_item
-  use adt_string
-  use adt_ref
+  use fde_hashmap
+  use fde_item
+  use fde_string
+  use fde_ref
   implicit none
 
   type(HashMap_t)         :: map, map2

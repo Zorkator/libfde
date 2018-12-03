@@ -11,15 +11,15 @@ import sys
 import glob
 
 basePath = os.path.join( os.path.dirname(__file__), '..' )
-os.environ['LIBADT'] = glob.glob( basePath+'/lib/*/libadt*.so')[0]
+os.environ['LIBFDE'] = glob.glob( basePath+'/lib/*/libfde*.so')[0]
 sys.path.insert(0, basePath)
 #%%
 from ctypes import *
 
-import adt
-from adt.core import *
-from adt.control import *
-from adt.tools import *
+import fde
+from fde.core import *
+from fde.control import *
+from fde.tools import *
 #%%
 s = String('testinger')
 print("'{0}' has length {1}".format(s, len(s)))

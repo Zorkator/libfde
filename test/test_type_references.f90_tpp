@@ -1,7 +1,7 @@
 
 module type_references
-  use adt_ref
-  use adt_list
+  use fde_ref
+  use fde_list
   implicit none
   private
 

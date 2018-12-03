@@ -6,16 +6,16 @@ Created on Sat Dec 13 00:16:33 2014
 """
 
 import os, sys, operator
-import adt
+import fde
 from ctypes import *
 from extensions import Dict
 
 class Simulator(object):
   
   def __init__( self, soname, *args, **kwArgs ):
-    self._hdl = adt.LibLoader( soname ).hdl
+    self._hdl = fde.LibLoader( soname ).hdl
     self._hdl.initialize_c_()
-    self._state = adt.Scope.getProcessScope()['test_simulator']
+    self._state = fde.Scope.getProcessScope()['test_simulator']
     self._hooks = self._state['hooks']
     self._hooks.setCallback( 'start',  self.start )
     self._hooks.setCallback( 'step',   self.step )

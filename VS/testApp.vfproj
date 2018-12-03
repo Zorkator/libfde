@@ -6,45 +6,45 @@
 	<Configurations>
 		<Configuration Name="Debug|Win32" OutputDirectory="$(ProjectName).$(ConfigurationName).$(PlatformName)" IntermediateDirectory=".work\$(ProjectName).$(ConfigurationName).$(PlatformName)" TargetName="$(ProjectName).$(ConfigurationName).$(PlatformName)">
 				<Tool Name="VFFortranCompilerTool" SuppressStartupBanner="true" DebugInformationFormat="debugEnabled" Optimization="optimizeDisabled" Preprocess="preprocessYes" AdditionalIncludeDirectories="..\include;..\lib\$(ConfigurationName).$(PlatformName)" WarnInterfaces="true" ExternalNameInterpretation="extNameLowerCase" ExternalNameUnderscore="true" Traceback="true" BoundsCheck="true" RuntimeLibrary="rtMultiThreadedDLL"/>
-				<Tool Name="VFLinkerTool" AdditionalOptions="/LIBPATH:../lib/Debug.$(PlatformName)&#xA;libadt.2.6.Debug.$(PlatformName).lib" LinkIncremental="linkIncrementalNo" SuppressStartupBanner="true" GenerateDebugInformation="true" SubSystem="subSystemConsole"/>
+				<Tool Name="VFLinkerTool" AdditionalOptions="/LIBPATH:../lib/Debug.$(PlatformName)&#xA;libfde.2.6.Debug.$(PlatformName).lib" LinkIncremental="linkIncrementalNo" SuppressStartupBanner="true" GenerateDebugInformation="true" SubSystem="subSystemConsole"/>
 				<Tool Name="VFResourceCompilerTool"/>
 				<Tool Name="VFMidlTool" SuppressStartupBanner="true"/>
-				<Tool Name="VFCustomBuildTool" CommandLine="copy &quot;..\lib\$(ConfigurationName).$(PlatformName)\libadt.*&quot; &quot;$(OutDir)&quot;" Outputs="$(OutDir)libadt.2.6.$(ConfigurationName).$(PlatformName).dll"/>
+				<Tool Name="VFCustomBuildTool" CommandLine="copy &quot;..\lib\$(ConfigurationName).$(PlatformName)\libfde.*&quot; &quot;$(OutDir)&quot;" Outputs="$(OutDir)libfde.2.6.$(ConfigurationName).$(PlatformName).dll"/>
 				<Tool Name="VFPreLinkEventTool"/>
 				<Tool Name="VFPreBuildEventTool"/>
 				<Tool Name="VFPostBuildEventTool"/>
 				<Tool Name="VFManifestTool" SuppressStartupBanner="true"/></Configuration>
 		<Configuration Name="Release|Win32" OutputDirectory="$(ProjectName).$(ConfigurationName).$(PlatformName)" IntermediateDirectory=".work\$(ProjectName).$(ConfigurationName).$(PlatformName)" TargetName="$(ProjectName).$(ConfigurationName).$(PlatformName)">
 				<Tool Name="VFFortranCompilerTool" SuppressStartupBanner="true" Preprocess="preprocessYes" AdditionalIncludeDirectories="..\include;..\lib\$(ConfigurationName).$(PlatformName)" ExternalNameInterpretation="extNameLowerCase" ExternalNameUnderscore="true" RuntimeLibrary="rtMultiThreadedDLL"/>
-				<Tool Name="VFLinkerTool" AdditionalOptions="/LIBPATH:../lib/Debug.$(PlatformName)&#xA;libadt.2.6.Debug.$(PlatformName).lib" LinkIncremental="linkIncrementalNo" SuppressStartupBanner="true" SubSystem="subSystemConsole"/>
+				<Tool Name="VFLinkerTool" AdditionalOptions="/LIBPATH:../lib/Debug.$(PlatformName)&#xA;libfde.2.6.Debug.$(PlatformName).lib" LinkIncremental="linkIncrementalNo" SuppressStartupBanner="true" SubSystem="subSystemConsole"/>
 				<Tool Name="VFResourceCompilerTool"/>
 				<Tool Name="VFMidlTool" SuppressStartupBanner="true"/>
-				<Tool Name="VFCustomBuildTool" CommandLine="copy &quot;..\lib\$(ConfigurationName).$(PlatformName)\libadt.*&quot; &quot;$(OutDir)&quot;" Outputs="$(OutDir)libadt.2.6.$(ConfigurationName).$(PlatformName).dll"/>
+				<Tool Name="VFCustomBuildTool" CommandLine="copy &quot;..\lib\$(ConfigurationName).$(PlatformName)\libfde.*&quot; &quot;$(OutDir)&quot;" Outputs="$(OutDir)libfde.2.6.$(ConfigurationName).$(PlatformName).dll"/>
 				<Tool Name="VFPreLinkEventTool"/>
 				<Tool Name="VFPreBuildEventTool"/>
 				<Tool Name="VFPostBuildEventTool"/>
 				<Tool Name="VFManifestTool" SuppressStartupBanner="true"/></Configuration>
 		<Configuration Name="Debug|x64" OutputDirectory="$(ProjectName).$(ConfigurationName).$(PlatformName)" IntermediateDirectory=".work\$(ProjectName).$(ConfigurationName).$(PlatformName)" TargetName="$(ProjectName).$(ConfigurationName).$(PlatformName)">
 				<Tool Name="VFFortranCompilerTool" SuppressStartupBanner="true" DebugInformationFormat="debugEnabled" Optimization="optimizeDisabled" Preprocess="preprocessYes" AdditionalIncludeDirectories="..\include;..\lib\$(ConfigurationName).$(PlatformName)" WarnInterfaces="true" ExternalNameInterpretation="extNameLowerCase" ExternalNameUnderscore="true" Traceback="true" BoundsCheck="true" RuntimeLibrary="rtMultiThreadedDLL"/>
-				<Tool Name="VFLinkerTool" AdditionalOptions="/LIBPATH:../lib/Debug.$(PlatformName)&#xA;libadt.2.6.Debug.$(PlatformName).lib" LinkIncremental="linkIncrementalNo" SuppressStartupBanner="true" GenerateDebugInformation="true" SubSystem="subSystemConsole"/>
+				<Tool Name="VFLinkerTool" AdditionalOptions="/LIBPATH:../lib/Debug.$(PlatformName)&#xA;libfde.2.6.Debug.$(PlatformName).lib" LinkIncremental="linkIncrementalNo" SuppressStartupBanner="true" GenerateDebugInformation="true" SubSystem="subSystemConsole"/>
 				<Tool Name="VFResourceCompilerTool"/>
 				<Tool Name="VFMidlTool" SuppressStartupBanner="true" TargetEnvironment="midlTargetAMD64"/>
-				<Tool Name="VFCustomBuildTool" CommandLine="copy &quot;..\lib\$(ConfigurationName).$(PlatformName)\libadt.*&quot; &quot;$(OutDir)&quot;" Outputs="$(OutDir)libadt.2.6.$(ConfigurationName).$(PlatformName).dll"/>
+				<Tool Name="VFCustomBuildTool" CommandLine="copy &quot;..\lib\$(ConfigurationName).$(PlatformName)\libfde.*&quot; &quot;$(OutDir)&quot;" Outputs="$(OutDir)libfde.2.6.$(ConfigurationName).$(PlatformName).dll"/>
 				<Tool Name="VFPreLinkEventTool"/>
 				<Tool Name="VFPreBuildEventTool"/>
 				<Tool Name="VFPostBuildEventTool"/>
 				<Tool Name="VFManifestTool" SuppressStartupBanner="true"/></Configuration>
 		<Configuration Name="Release|x64" OutputDirectory="$(ProjectName).$(ConfigurationName).$(PlatformName)" IntermediateDirectory=".work\$(ProjectName).$(ConfigurationName).$(PlatformName)" TargetName="$(ProjectName).$(ConfigurationName).$(PlatformName)">
 				<Tool Name="VFFortranCompilerTool" SuppressStartupBanner="true" Preprocess="preprocessYes" AdditionalIncludeDirectories="..\include;..\lib\$(ConfigurationName).$(PlatformName)" ExternalNameInterpretation="extNameLowerCase" ExternalNameUnderscore="true" RuntimeLibrary="rtMultiThreadedDLL"/>
-				<Tool Name="VFLinkerTool" AdditionalOptions="/LIBPATH:../lib/Debug.$(PlatformName)&#xA;libadt.2.6.Debug.$(PlatformName).lib" LinkIncremental="linkIncrementalNo" SuppressStartupBanner="true" SubSystem="subSystemConsole"/>
+				<Tool Name="VFLinkerTool" AdditionalOptions="/LIBPATH:../lib/Debug.$(PlatformName)&#xA;libfde.2.6.Debug.$(PlatformName).lib" LinkIncremental="linkIncrementalNo" SuppressStartupBanner="true" SubSystem="subSystemConsole"/>
 				<Tool Name="VFResourceCompilerTool"/>
 				<Tool Name="VFMidlTool" SuppressStartupBanner="true" TargetEnvironment="midlTargetAMD64"/>
-				<Tool Name="VFCustomBuildTool" CommandLine="copy &quot;..\lib\$(ConfigurationName).$(PlatformName)\libadt.*&quot; &quot;$(OutDir)&quot;" Outputs="$(OutDir)libadt.2.6.$(ConfigurationName).$(PlatformName).dll"/>
+				<Tool Name="VFCustomBuildTool" CommandLine="copy &quot;..\lib\$(ConfigurationName).$(PlatformName)\libfde.*&quot; &quot;$(OutDir)&quot;" Outputs="$(OutDir)libfde.2.6.$(ConfigurationName).$(PlatformName).dll"/>
 				<Tool Name="VFPreLinkEventTool"/>
 				<Tool Name="VFPreBuildEventTool"/>
 				<Tool Name="VFPostBuildEventTool"/>
 				<Tool Name="VFManifestTool" SuppressStartupBanner="true"/></Configuration></Configurations>
 	<Files>
 		<Filter Name="Source Files" Filter="f90;for;f;fpp;ftn;def;odl;idl">
-		<File RelativePath="..\test_adt.f90"/></Filter></Files>
+		<File RelativePath="..\test_fde.f90"/></Filter></Files>
 	<Globals/></VisualStudioProject>

@@ -7,9 +7,9 @@ __version__ = ""  # get rid of warning, really import it __init__.py
 __author__ = ""
 
 # read version and author from __init__.py file ignoring a possible
-# exception if libadt cannot be loaded during package creation
+# exception if libfde cannot be loaded during package creation
 try:
-    exec(open('./adt/__init__.py').read())
+    exec(open('./fde/__init__.py').read())
 except OSError:
     pass
 except:
@@ -17,11 +17,11 @@ except:
     raise
 
 setup(
-    name='adt',
+    name='fde',
     version=__version__,
     author=__author__,
     author_email="",
-    packages=['adt'],
+    packages=['fde'],
     description='Python wrapper for hash map access to CDLL shared library',
     classifiers=[
         "Programming Language :: Python",

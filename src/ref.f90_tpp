@@ -1,0 +1,283 @@
+
+#include "fde/ref_status.fpp"
+#include "fde/itfUtil.fpp"
+
+module fde_ref
+  use fde_basestring
+  use fde_typeinfo
+  use fde_visitor
+  use fde_ostream
+  use iso_c_binding
+  implicit none
+  private
+
+
+  type, public :: Ref_t
+    private
+    type(TypeInfo_t), pointer :: typeInfo => null()
+    type(BaseString_t)        :: ref_str
+    _RefStatus                :: refstat = _ref_HardLent
+  end type
+
+
+  !_TypeGen_declare_RefType( public, ref, type(Ref_t), scalar, \
+  !     initProc   = ref_init_by_ref_c,  \
+  !     assignProc = ref_assign_ref_c,   \
+  !     deleteProc = ref_delete_c,       \
+  !     cloneMode  = _type,              \
+  !     streamProc = ref_stream_wrap_,   \
+  !     acceptProc = ref_accept_wrap_,   \
+  !     itemCast   = false  )
+
+
+  type, public :: RefEncoding_t
+    type(TypeInfo_t), pointer :: ptr
+  end type
+
+
+  type(Ref_t), parameter :: permanent_ref = Ref_t( null(), permanent_string, _ref_HardLent )
+  type(Ref_t), parameter :: temporary_ref = Ref_t( null(), temporary_string, _ref_WeakLent )
+
+
+  ! interface definitions
+
+  interface
+    subroutine ref_init_by_ref_c( self, has_proto, proto )
+      import Ref_t
+      type(Ref_t),     intent(inout) :: self
+      integer(kind=4), intent(in)    :: has_proto
+      type(Ref_t),     intent(in)    :: proto
+    end subroutine
+
+    function ref_get_typereference( self ) result(res)
+      import Ref_t, c_ptr
+      type(Ref_t), intent(in) :: self
+      type(c_ptr)             :: res
+    end function
+  end interface
+
+  interface resolve
+    function ref_resolve( self ) result(res)
+      import Ref_t
+      type(Ref_t), intent(in) :: self
+      type(Ref_t),    pointer :: res
+    end function
+  end interface
+
+  interface rank
+    pure &
+    function ref_rank_c( self ) result(res)
+      import Ref_t
+      type(Ref_t), intent(in) :: self
+      integer(kind=4)         :: res
+    end function
+  end interface
+
+  interface shape
+    pure &
+    function ref_shape( self ) result(res)
+      import Ref_t
+      type(Ref_t), intent(in) :: self
+      integer                 :: res(ref_rank_c(self))
+    end function
+  end interface
+
+  interface clone
+    function ref_clone( self ) result(res)
+      import Ref_t
+      type(Ref_t), intent(in) :: self
+      type(Ref_t)             :: res
+    end function
+
+    function ref_clone_encoding( enc ) result(res)
+      import RefEncoding_t, Ref_t
+      type(RefEncoding_t), intent(in) :: enc(:)
+      type(Ref_t)                     :: res
+    end function
+  end interface
+
+  interface cptr
+    function ref_cptr( self ) result(res)
+      import Ref_t, c_ptr
+      type(Ref_t), intent(in) :: self
+      type(c_ptr)             :: res
+    end function
+  end interface
+
+  interface delete
+    recursive &
+    subroutine ref_delete_c( self )
+      import Ref_t
+      type(Ref_t) :: self
+    end subroutine
+  end interface
+
+  interface free
+    recursive &
+    subroutine ref_free_c( self )
+      import Ref_t
+      type(Ref_t) :: self
+    end subroutine
+  end interface
+
+  interface content_type
+    function ref_content_type( self ) result(res)
+      import Ref_t, TypeInfo_t
+      type(Ref_t),   intent(in) :: self
+      type(TypeInfo_t), pointer :: res
+    end function
+  end interface
+
+  public :: dynamic_type
+  interface dynamic_type
+    function ref_dynamic_type( self ) result(res)
+      import Ref_t, TypeInfo_t
+      type(Ref_t),   intent(in) :: self
+      type(TypeInfo_t), pointer :: res
+    end function
+  end interface
+
+  interface bind
+    subroutine ref_bind_c( self, do_bind )
+      import Ref_t
+      type(Ref_t), intent(inout) :: self
+      logical                    :: do_bind
+    end subroutine
+  end interface
+
+  interface is_valid
+    pure logical &
+    function ref_is_valid_c( self ) result(res)
+      import Ref_t
+      type(Ref_t), intent(in) :: self
+    end function
+  end interface
+
+  ! assignment and operators
+
+  interface assign
+    subroutine ref_assign_ref_c( lhs, rhs )
+      import Ref_t
+      type(Ref_t), intent(inout) :: lhs
+      type(Ref_t),    intent(in) :: rhs
+    end subroutine
+
+    subroutine ref_assign_encoding( lhs, rhs )
+      import Ref_t, RefEncoding_t
+      type(Ref_t),              intent(inout) :: lhs
+      type(RefEncoding_t), target, intent(in) :: rhs(:)
+    end subroutine
+  end interface
+
+  interface assignment(=)
+    module procedure ref_assign_ref_private, ref_assign_encoding_private
+  end interface
+
+  
+  ! comparision
+
+  interface equal
+    logical &
+    function ref_equal_ref_c( lhs, rhs ) result(res)
+      import Ref_t
+      type(Ref_t), intent(in) :: lhs, rhs
+    end function
+  end interface
+
+  interface operator(==)
+    module procedure ref_eqv_ref_private
+  end interface
+
+  interface operator(/=)
+    module procedure ref_ne_ref_private
+  end interface
+
+
+  ! declare public interfaces 
+
+  public :: assign, assignment(=)
+  public :: equal, operator(==), operator(/=)
+  public :: ref_get_typereference  !< needed by generated code
+  public :: resolve
+  public :: rank
+  public :: shape
+  public :: clone
+  public :: cptr
+  public :: delete
+  public :: free
+  public :: content_type
+  public :: bind, permanent_ref, temporary_ref
+  public :: set_attribute, attribute_permanent, attribute_volatile
+  public :: is_valid
+
+  public :: mk_bounds
+
+  ! declare TypeInfo necessities public
+
+  public :: TypeInfo_t, TypeInfo_ptr_t, void_type, void_t, typeInfo_init
+
+  interface set_attribute
+    subroutine ref_set_attribute_c( self, attrib )
+      import Ref_t
+      type(Ref_t),     intent(inout) :: self
+      integer(kind=1), intent(in)    :: attrib
+    end subroutine
+  end interface
+
+!-----------------
+  contains
+!-----------------
+
+  !_TypeGen_implementAll()
+
+!_PROC_EXPORT(ref_assign_ref_private)
+!_ARG_REFERENCE2(lhs, rhs)
+  subroutine ref_assign_ref_private( lhs, rhs )
+    type(Ref_t), intent(inout) :: lhs
+    type(Ref_t),    intent(in) :: rhs
+    call assign( lhs, rhs )
+  end subroutine
+
+!_PROC_EXPORT(ref_assign_encoding_private)
+!_ARG_REFERENCE2(lhs, rhs)
+  subroutine ref_assign_encoding_private( lhs, rhs )
+    type(Ref_t),              intent(inout) :: lhs
+    type(RefEncoding_t), target, intent(in) :: rhs(:)
+    call assign( lhs, rhs )
+  end subroutine
+
+!_PROC_EXPORT(ref_eqv_ref_private)
+!_ARG_REFERENCE2(lhs, rhs)
+  logical &
+  function ref_eqv_ref_private( lhs, rhs ) result(res)
+    type(Ref_t), intent(in) :: lhs, rhs
+    res = equal( lhs, rhs )
+  end function
+
+!_PROC_EXPORT(ref_ne_ref_private)
+!_ARG_REFERENCE2(lhs, rhs)
+  logical &
+  function ref_ne_ref_private( lhs, rhs ) result(res)
+    type(Ref_t), intent(in) :: lhs, rhs
+    res = .not. equal( lhs, rhs )
+  end function
+
+!_PROC_EXPORT(mk_bounds)
+  pure &
+  function mk_bounds( shp, lb, ub ) result(res)
+    integer, dimension(:),           intent(in) :: shp
+    integer, dimension(:), optional, intent(in) :: lb, ub
+    integer                                     :: res(2,size(shp))
+
+    if     (present(lb)) then; res(1,:) = lb
+    elseif (present(ub)) then; res(1,:) = ub - shp + 1
+                         else; res(1,:) = 1
+    end if
+
+    if     (present(ub)) then; res(2,:) = ub
+                         else; res(2,:) = res(1,:) + shp - 1
+    end if
+  end function
+
+end module
+
