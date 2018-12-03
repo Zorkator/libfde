@@ -2,14 +2,17 @@
 #define __PROTOTYPE_XTYPE_FTYPE
 
 # include "adt/type/itf.fpp"
-# include "adt/ref_status.fpp"
+!# include "adt/ref_status.fpp"
 
   type Xtype_t
     _private
     type(c_ptr)             :: ptr
-    integer(kind=c_int32_t) :: len, alc
-    _RefStatus              :: refstat= _ref_HardLent
+    integer(kind=c_int32_t) :: len(2) = 0
+    !_RefStatus              :: refstat= _ref_HardLent
   end type
+
+# define _status_weak_alloc( l )  (l(1) < 0)
+# define _status_bound_tgt( l )   (l(0) < 0)
 
   interface
     subroutine xtype_create_by_xtype_c( self, other ); import
@@ -21,6 +24,25 @@
       type(Xtype_t)    :: self
       character(len=*) :: chrstr
     end subroutine
+
+    subroutine xtype_delete_c( self ); import
+      type(Xtype_t) :: self
+    end subroutine
+
+    function xtype_ptr_f( self ) result(res); import
+      type(Xtype_t)             :: self
+      character(len=:), pointer :: res
+    end function
+
+    function xtype_cptr_f( self ) result(res); import
+      type(Xtype_t) :: self
+      type(c_ptr)   :: res
+    end function
+
+    function xtype_char_f( self ) result(res); import
+      type(Xtype_t)           :: self
+      character(len=self%len) :: res
+    end function
   end interface
 
 #endif
