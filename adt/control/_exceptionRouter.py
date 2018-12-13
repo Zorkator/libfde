@@ -1,8 +1,9 @@
 
-import sys, traceback
-from thread import get_ident as threadID
+import sys, traceback, threading
 from ctypes import c_int32, c_char_p, c_size_t, byref
 
+def threadID():
+  return threading.currentThread().ident
 
 ######################################
 class ExceptionRouter(object):

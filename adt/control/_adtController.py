@@ -52,7 +52,7 @@ class ADTController(NativeController):
 
     rootId     = self._rootId.format( **self.about )
     adtlibPath = self.__initialize__( rootId )
-    if   adtlibPath != rootId: core_loader.set( filePath=adtlibPath )
+    if   adtlibPath != rootId: core_loader.set( filePath=adtlibPath.decode('utf-8') )
     elif self._verbosity > 0 : sys.stderr.write( self._adtLibPathError.format( lib=self.handle._name ) )
 
 
