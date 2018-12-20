@@ -125,7 +125,8 @@ class HashMap(Object):
     self.index_( byref(idx), byref(self) )
     while idx:
       yield idx.get()
-      idx.next()
+      try                 : idx.next()
+      except StopIteration: return
 
 
   def iterkeys( self ):

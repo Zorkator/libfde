@@ -103,7 +103,7 @@ class LibLoader(object):
     _env[_PATH] = _pathDelim.join( paths )
     self._hdl   = None
     for f in glob( libPattern ):
-      self._log.debug( "try loading " + f )
+      self._log.debug( "try loading " + str(f) )
       try   : self._hdl = CDLL_t( str(f) ); break #< break if load succeeded
       except: pass
     _env[_PATH] = envPaths
@@ -121,7 +121,7 @@ class LibLoader(object):
         prefix = ('*/', '')[_path.isabs(libPattern)]
         p = psutil.Process( _getpid() )
         for lib in p.memory_maps():
-          if fnmatch.fnmatch( lib.path, _path.normpath(prefix + libPattern) ):
+          if fnmatch.fnmatch( lib.path, _path.normpath(prefix + str(libPattern)) ):
             libPattern = lib.path
             self._log.info( "matched already loaded library {0}".format(libPattern) )
             break

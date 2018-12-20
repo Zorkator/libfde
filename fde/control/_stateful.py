@@ -64,10 +64,10 @@ def cached_property( f ):
 ######################################
   @wraps(f)
   def _wrapper( self ):
-    try  : return getattr( self._stock, '_p_' + f.func_name )
+    try  : return getattr( self._stock, '_p_' + f.__name__ )
     except AttributeError:
       val = f( self )
-      setattr( self._stock, '_p_' + f.func_name, val )
+      setattr( self._stock, '_p_' + f.__name__, val )
       return val
   return property( _wrapper )
 
