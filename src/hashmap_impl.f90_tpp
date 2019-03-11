@@ -1,17 +1,17 @@
 
-#include "adt/itfUtil.fpp"
+#include "fde/itfUtil.fpp"
 
 module impl_hashmap__
-  use adt_hashmap
-  use adt_string
-  use adt_list
-  use adt_item
-  use adt_ref
-  use adt_crc
-  use adt_memoryref
-  use adt_ostream
-  use adt_visitor
-  use adt_basetypes
+  use fde_hashmap
+  use fde_string
+  use fde_list
+  use fde_item
+  use fde_ref
+  use fde_crc
+  use fde_memoryref
+  use fde_ostream
+  use fde_visitor
+  use fde_basetypes
   use iso_c_binding
 
   type(List_t), target :: hashmap_nodeCache
@@ -203,7 +203,7 @@ end module
   recursive &
   subroutine hashnode_accept_wrap_( wrap, nodeType, vstr )
     use impl_hashmap__, only: HashNode_t, TypeInfo_t, accept
-    use adt_visitor
+    use fde_visitor
     implicit none
     type HashNode_wrap_t
        type(HashNode_t), pointer :: ptr
@@ -445,7 +445,7 @@ end module
   function hashmap_locate_item_( self, key, idx ) result(res)
     use impl_hashmap__, only: HashMap_t, HashNode_t, ListIndex_t, &
                              hashmap_get_bucketIndex_, HashNode, next, is_valid
-    use adt_string
+    use fde_string
     implicit none
     type(HashMap_t), intent(inout) :: self
     character(len=*),   intent(in) :: key
@@ -636,8 +636,8 @@ end module
 
   subroutine hashmap_reindex_( self )
     use impl_hashmap__, only: HashMap_t, HashNode_t, HashNode, hashmap_setup_index_, hashmap_get_bucketIndex_
-    use adt_string
-    use adt_list
+    use fde_string
+    use fde_list
     use iso_c_binding
     implicit none
     type(HashMap_t), intent(inout) :: self
@@ -989,7 +989,7 @@ end module
   recursive &
   subroutine hashmap_accept_wrap_( wrap, hashmapType, vstr )
     use impl_hashmap__
-    use adt_visitor
+    use fde_visitor
     implicit none
     type(HashMap_wrap_t)      :: wrap
     type(TypeInfo_t)          :: hashmapType

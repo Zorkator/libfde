@@ -1,16 +1,16 @@
 
-#include "adt/itfUtil.fpp"
-#include "adt/scope.fpp"
+#include "fde/itfUtil.fpp"
+#include "fde/scope.fpp"
 
 !--------------------
 module sim_reflection
-  use adt_hashmap
-  use adt_scope
-  use adt_item
-  use adt_ref
-  use adt_string
-  use adt_basetypes
-  use adt_streamvisitor
+  use fde_hashmap
+  use fde_scope
+  use fde_item
+  use fde_ref
+  use fde_string
+  use fde_basetypes
+  use fde_streamvisitor
   implicit none
 
   type(HashMap_t), pointer :: root_scope => null()

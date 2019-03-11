@@ -1,18 +1,18 @@
 
-#include "adt/itfUtil.fpp"
-#include "adt/scope.fpp"
+#include "fde/itfUtil.fpp"
+#include "fde/scope.fpp"
 
 module impl_scope__
-  use adt_hashmap
-  use adt_scope
-  use adt_item
-  use adt_ref
-  use adt_list
-  use adt_string
-  use adt_typeinfo
-  use adt_basetypes
-  use adt_exception
-  use adt_containertypes
+  use fde_hashmap
+  use fde_scope
+  use fde_item
+  use fde_ref
+  use fde_list
+  use fde_string
+  use fde_typeinfo
+  use fde_basetypes
+  use fde_exception
+  use fde_containertypes
 
   contains
 
@@ -51,7 +51,7 @@ end module
   subroutine scope_get_processscope_c( procScope )
     ! CAUTION: without the following use restriction gfortran
     !          screws up the c_loc assignment below!
-    use adt_scope, only: getScope
+    use fde_scope, only: getScope
     use iso_c_binding
     type(c_ptr), intent(inout) :: procScope
     procScope = c_loc( getScope() ) !< !!!
@@ -61,7 +61,7 @@ end module
 !_PROC_EXPORT(scope_get_subscope_seq_)
   function scope_get_subscope_seq_( parent_, id1, id2, id3, id4, id5, id6, id7, id8, id9 ) result(scope)
     use impl_scope__
-    use adt_scope
+    use fde_scope
     implicit none
     type(HashMap_t)            :: parent_
     character(len=*)           :: id1

@@ -1,12 +1,12 @@
 
-#include "adt/itfUtil.fpp"
-#include "adt/ref_status.fpp"
+#include "fde/itfUtil.fpp"
+#include "fde/ref_status.fpp"
 
 
 !_PROC_EXPORT(basestring_init_by_basestring_c)
 !_ARG_REFERENCE2(bs, proto)
   subroutine basestring_init_by_basestring_c( bs, has_proto, proto )
-    use adt_basestring, only: BaseString_t, basestring_assign_buf
+    use fde_basestring, only: BaseString_t, basestring_assign_buf
     implicit none
     type(BaseString_t), intent(inout) :: bs
     integer(kind=4),    intent(in)    :: has_proto
@@ -27,7 +27,7 @@
 !_PROC_EXPORT(basestring_init_by_charstring_c)
 !_ARG_REFERENCE1(bs)
   subroutine basestring_init_by_charstring_c( bs, attr, cs )
-    use adt_basestring, only: BaseString_t
+    use fde_basestring, only: BaseString_t
     use iso_c_binding
     implicit none
     type(BaseString_t)              :: bs
@@ -51,7 +51,7 @@
 !_PROC_EXPORT(basestring_init_by_buf)
 !_ARG_REFERENCE1(bs)
   subroutine basestring_init_by_buf( bs, attr, buf )
-    use adt_basestring, only: BaseString_t
+    use fde_basestring, only: BaseString_t
     implicit none
     type(BaseString_t)                         :: bs
     integer(kind=1),                intent(in) :: attr
@@ -72,7 +72,7 @@
 !_PROC_EXPORT(basestring_set_attribute)
 !_ARG_REFERENCE1(bs)
   subroutine basestring_set_attribute( bs, attr )
-    use adt_basestring, only: BaseString_t
+    use fde_basestring, only: BaseString_t
     implicit none
     type(BaseString_t)          :: bs
     integer(kind=1), intent(in) :: attr
@@ -84,7 +84,7 @@
 !_PROC_EXPORT(basestring_release_weak)
 !_ARG_REFERENCE1(bs)
   subroutine basestring_release_weak( bs )
-    use adt_basestring, only: BaseString_t
+    use fde_basestring, only: BaseString_t
     implicit none
     type(BaseString_t) :: bs
   
@@ -96,7 +96,7 @@
 !_PROC_EXPORT(basestring_delete_c)
 !_ARG_REFERENCE1(bs)
   subroutine basestring_delete_c( bs )
-    use adt_basestring, only: BaseString_t
+    use fde_basestring, only: BaseString_t
     implicit none
     type(BaseString_t) :: bs
 
@@ -113,7 +113,7 @@
 !_PROC_EXPORT(basestring_ptr)
 !_ARG_REFERENCE1(bs)
   function basestring_ptr( bs ) result(res)
-    use adt_basestring, only: BaseString_t
+    use fde_basestring, only: BaseString_t
     use iso_c_binding
     implicit none
     type(BaseString_t), intent(in) :: bs
@@ -130,7 +130,7 @@
 !_PROC_EXPORT(basestring_safeptr)
 !_ARG_REFERENCE1(bs)
   function basestring_safeptr( bs ) result(res)
-    use adt_basestring, only: BaseString_t, basestring_release_weak, empty_string_
+    use fde_basestring, only: BaseString_t, basestring_release_weak, empty_string_
     use iso_c_binding
     implicit none
     type(BaseString_t), intent(in) :: bs
@@ -153,7 +153,7 @@
 !_PROC_EXPORT(basestring_cptr)
 !_ARG_REFERENCE1(bs)
   function basestring_cptr( bs ) result(res)
-    use adt_basestring, only: BaseString_t
+    use fde_basestring, only: BaseString_t
     use iso_c_binding
     implicit none
     type(BaseString_t) :: bs
@@ -171,7 +171,7 @@
 !_PROC_EXPORT(basestring_cptr_c)
 !_ARG_REFERENCE2(res, bs)
   subroutine basestring_cptr_c( res, bs )
-    use adt_basestring, only: BaseString_t
+    use fde_basestring, only: BaseString_t
     use iso_c_binding
     implicit none
     type(c_ptr),        intent(inout) :: res
@@ -180,7 +180,7 @@
     integer                           :: stat
 
     if (_ref_isWeakMine( bs%refstat )) then
-# if ADT_DEBUG == ENABLED
+# if FDE_DEBUG == ENABLED
       write(stderr,*,iostat=stat) "WARNING: applied basestring_cptr_c on weak reference string!"
 # endif
       deallocate( bs%ptr )
@@ -196,8 +196,8 @@
 !_PROC_EXPORT(basestring_memoryref_c)
 !_ARG_REFERENCE2(res, bs)
   subroutine basestring_memoryref_c( res, bs )
-    use adt_basestring, only: BaseString_t
-    use adt_memoryref
+    use fde_basestring, only: BaseString_t
+    use fde_memoryref
     use iso_c_binding
     type(MemoryRef_t),  intent(inout) :: res
     type(BaseString_t), intent(in)    :: bs
@@ -213,7 +213,7 @@
 !_ARG_REFERENCE1(bs)
   pure &
   function basestring_len_ref( bs ) result(res)
-    use adt_basestring, only: BaseString_t
+    use fde_basestring, only: BaseString_t
     implicit none
     type(BaseString_t), intent(in) :: bs
     integer(kind=4)                :: res
@@ -227,7 +227,7 @@
 !_PROC_EXPORT(basestring_trim)
 !_ARG_REFERENCE1(bs)
   subroutine basestring_trim( bs )
-    use adt_basestring, only: BaseString_t, basestring_ptr
+    use fde_basestring, only: BaseString_t, basestring_ptr
     implicit none
     type(BaseString_t) :: bs
 
@@ -238,7 +238,7 @@
 !_PROC_EXPORT(basestring_reserve)
 !_ARG_REFERENCE1(bs)
   function basestring_reserve( bs, length ) result(res)
-    use adt_basestring, only: BaseString_t, basestring_ptr, basestring_assign_charstring_c
+    use fde_basestring, only: BaseString_t, basestring_ptr, basestring_assign_charstring_c
     use iso_c_binding
     implicit none
     type(BaseString_t)             :: bs
@@ -259,7 +259,7 @@
 !_PROC_EXPORT(basestring_assign_charstring_c)
 !_ARG_REFERENCE1(bs)
   subroutine basestring_assign_charstring_c( bs, cs )
-    use adt_basestring, only: BaseString_t
+    use fde_basestring, only: BaseString_t
     use iso_c_binding
     implicit none
     type(BaseString_t)              :: bs
@@ -289,7 +289,7 @@
 !_PROC_EXPORT(basestring_assign_buf)
 !_ARG_REFERENCE2(lhs, rhs)
   subroutine basestring_assign_buf( lhs, rhs )
-    use adt_basestring, only: BaseString_t
+    use fde_basestring, only: BaseString_t
     implicit none
     type(BaseString_t),          intent(inout) :: lhs
     character(len=1), dimension(:), intent(in) :: rhs
@@ -316,7 +316,7 @@
 !_PROC_EXPORT(basestring_assign_basestring_c)
 !_ARG_REFERENCE2(lhs, rhs)
   subroutine basestring_assign_basestring_c( lhs, rhs )
-    use adt_basestring, only: BaseString_t, basestring_ptr
+    use fde_basestring, only: BaseString_t, basestring_ptr
     implicit none
     type(BaseString_t), intent(inout) :: lhs
     type(BaseString_t),    intent(in) :: rhs

@@ -1,7 +1,7 @@
 
-#include "adt/itfUtil.fpp"
+#include "fde/itfUtil.fpp"
 
-module adt_convert
+module fde_convert
   use iso_c_binding
   implicit none
   private

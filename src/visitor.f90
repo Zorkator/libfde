@@ -1,8 +1,8 @@
 
-#include "adt/itfUtil.fpp"
+#include "fde/itfUtil.fpp"
 
-module adt_visitor
-  use adt_typeinfo
+module fde_visitor
+  use fde_typeinfo
   implicit none
   private
 

@@ -1,8 +1,8 @@
 
-#include "adt/itfUtil.fpp"
+#include "fde/itfUtil.fpp"
 
-module adt_file
-  use adt_exception
+module fde_file
+  use fde_exception
   implicit none
 
   interface fopen
@@ -39,7 +39,7 @@ module adt_file
 
 !_PROC_EXPORT(open_)
   subroutine open_( unit, file, form, status, action, iostat, descr )
-    use adt_string
+    use fde_string
     integer                                         :: unit
     character(len=*),                   intent(in)  :: file
     character(len=*), optional, target, intent(in)  :: form, status, action

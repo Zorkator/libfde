@@ -1,7 +1,7 @@
 
-#include "adt/itfUtil.fpp"
+#include "fde/itfUtil.fpp"
 
-module adt_memoryref
+module fde_memoryref
   use, intrinsic :: iso_c_binding
   implicit none
   public

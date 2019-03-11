@@ -8,10 +8,10 @@
 				<Tool Name="VFFortranCompilerTool" AdditionalOptions="/fpscomp:general /fpp:&quot;-f_com=no&quot;
 /I../lib/Release.$(PlatformName)" SuppressStartupBanner="true" DebugInformationFormat="debugEnabled" Optimization="optimizeDisabled" AdditionalIncludeDirectories="../include" PreprocessorDefinitions="BUILT_TYPE=SHARED_LIB" WarnInterfaces="true" ExternalNameInterpretation="extNameLowerCase" ExternalNameUnderscore="true" Traceback="true" BoundsCheck="true" RuntimeLibrary="rtMultiThreadedDLL"/>
 				<Tool Name="VFLinkerTool" AdditionalOptions="/LIBPATH:../lib/Release.$(PlatformName)
-../lib/Release.$(PlatformName)/libadt.0.Release.$(PlatformName).lib" LinkIncremental="linkIncrementalNo" SuppressStartupBanner="true" GenerateDebugInformation="true" SubSystem="subSystemWindows" LinkDLL="true"/>
+../lib/Release.$(PlatformName)/libfde.0.Release.$(PlatformName).lib" LinkIncremental="linkIncrementalNo" SuppressStartupBanner="true" GenerateDebugInformation="true" SubSystem="subSystemWindows" LinkDLL="true"/>
 				<Tool Name="VFResourceCompilerTool"/>
 				<Tool Name="VFMidlTool" SuppressStartupBanner="true"/>
-				<Tool Name="VFCustomBuildTool" CommandLine="copy &quot;..\lib\Release.$(PlatformName)\libadt.0.Release.$(PlatformName).dll&quot; &quot;$(OutDir)&quot;" Outputs="&quot;$(OutDir)libadt.0.Release.$(PlatformName).dll&quot;"/>
+				<Tool Name="VFCustomBuildTool" CommandLine="copy &quot;..\lib\Release.$(PlatformName)\libfde.0.Release.$(PlatformName).dll&quot; &quot;$(OutDir)&quot;" Outputs="&quot;$(OutDir)libfde.0.Release.$(PlatformName).dll&quot;"/>
 				<Tool Name="VFPreLinkEventTool"/>
 				<Tool Name="VFPreBuildEventTool"/>
 				<Tool Name="VFPostBuildEventTool"/>
@@ -20,10 +20,10 @@
 				<Tool Name="VFFortranCompilerTool" AdditionalOptions="/fpscomp:general /fpp:&quot;-f_com=no&quot;
 /I../lib/Release.$(PlatformName)" SuppressStartupBanner="true" AdditionalIncludeDirectories="../include" PreprocessorDefinitions="BUILT_TYPE=SHARED_LIB" ExternalNameInterpretation="extNameLowerCase" ExternalNameUnderscore="true" RuntimeLibrary="rtMultiThreadedDLL"/>
 				<Tool Name="VFLinkerTool" AdditionalOptions="/LIBPATH:../lib/Release.$(PlatformName)
-../lib/Release.$(PlatformName)/libadt.0.Release.$(PlatformName).lib" SuppressStartupBanner="true" SubSystem="subSystemWindows" LinkDLL="true"/>
+../lib/Release.$(PlatformName)/libfde.0.Release.$(PlatformName).lib" SuppressStartupBanner="true" SubSystem="subSystemWindows" LinkDLL="true"/>
 				<Tool Name="VFResourceCompilerTool"/>
 				<Tool Name="VFMidlTool" SuppressStartupBanner="true"/>
-				<Tool Name="VFCustomBuildTool" CommandLine="copy &quot;..\lib\Release.$(PlatformName)\libadt.0.Release.$(PlatformName).dll&quot; &quot;$(OutDir)&quot;" Outputs="&quot;$(OutDir)libadt.0.Release.$(PlatformName).dll&quot;"/>
+				<Tool Name="VFCustomBuildTool" CommandLine="copy &quot;..\lib\Release.$(PlatformName)\libfde.0.Release.$(PlatformName).dll&quot; &quot;$(OutDir)&quot;" Outputs="&quot;$(OutDir)libfde.0.Release.$(PlatformName).dll&quot;"/>
 				<Tool Name="VFPreLinkEventTool"/>
 				<Tool Name="VFPreBuildEventTool"/>
 				<Tool Name="VFPostBuildEventTool"/>
@@ -32,10 +32,10 @@
 				<Tool Name="VFFortranCompilerTool" AdditionalOptions="/fpscomp:general /fpp:&quot;-f_com=no&quot;
 /I../lib/Release.$(PlatformName)" SuppressStartupBanner="true" DebugInformationFormat="debugEnabled" Optimization="optimizeDisabled" AdditionalIncludeDirectories="../include" PreprocessorDefinitions="BUILT_TYPE=SHARED_LIB" WarnInterfaces="true" ExternalNameInterpretation="extNameLowerCase" ExternalNameUnderscore="true" Traceback="true" BoundsCheck="true" RuntimeLibrary="rtMultiThreadedDLL"/>
 				<Tool Name="VFLinkerTool" AdditionalOptions="/LIBPATH:../lib/Release.$(PlatformName)
-../lib/Release.$(PlatformName)/libadt.0.Release.$(PlatformName).lib" LinkIncremental="linkIncrementalNo" SuppressStartupBanner="true" GenerateDebugInformation="true" SubSystem="subSystemWindows" LinkDLL="true"/>
+../lib/Release.$(PlatformName)/libfde.0.Release.$(PlatformName).lib" LinkIncremental="linkIncrementalNo" SuppressStartupBanner="true" GenerateDebugInformation="true" SubSystem="subSystemWindows" LinkDLL="true"/>
 				<Tool Name="VFResourceCompilerTool"/>
 				<Tool Name="VFMidlTool" SuppressStartupBanner="true" TargetEnvironment="midlTargetAMD64"/>
-				<Tool Name="VFCustomBuildTool" CommandLine="copy &quot;..\lib\Release.$(PlatformName)\libadt.0.Release.$(PlatformName).dll&quot; &quot;$(OutDir)&quot;" Outputs="&quot;$(OutDir)libadt.0.Release.$(PlatformName).dll&quot;"/>
+				<Tool Name="VFCustomBuildTool" CommandLine="copy &quot;..\lib\Release.$(PlatformName)\libfde.0.Release.$(PlatformName).dll&quot; &quot;$(OutDir)&quot;" Outputs="&quot;$(OutDir)libfde.0.Release.$(PlatformName).dll&quot;"/>
 				<Tool Name="VFPreLinkEventTool"/>
 				<Tool Name="VFPreBuildEventTool"/>
 				<Tool Name="VFPostBuildEventTool"/>
@@ -44,10 +44,10 @@
 				<Tool Name="VFFortranCompilerTool" AdditionalOptions="/fpscomp:general /fpp:&quot;-f_com=no&quot;
 /I../lib/Release.$(PlatformName)" SuppressStartupBanner="true" AdditionalIncludeDirectories="../include" PreprocessorDefinitions="BUILT_TYPE=SHARED_LIB" ExternalNameInterpretation="extNameLowerCase" ExternalNameUnderscore="true" RuntimeLibrary="rtMultiThreadedDLL"/>
 				<Tool Name="VFLinkerTool" AdditionalOptions="/LIBPATH:../lib/Release.$(PlatformName)
-../lib/Release.$(PlatformName)/libadt.0.Release.$(PlatformName).lib" SuppressStartupBanner="true" SubSystem="subSystemWindows" LinkDLL="true"/>
+../lib/Release.$(PlatformName)/libfde.0.Release.$(PlatformName).lib" SuppressStartupBanner="true" SubSystem="subSystemWindows" LinkDLL="true"/>
 				<Tool Name="VFResourceCompilerTool"/>
 				<Tool Name="VFMidlTool" SuppressStartupBanner="true" TargetEnvironment="midlTargetAMD64"/>
-				<Tool Name="VFCustomBuildTool" CommandLine="copy &quot;..\lib\Release.$(PlatformName)\libadt.0.Release.$(PlatformName).dll&quot; &quot;$(OutDir)&quot;" Outputs="&quot;$(OutDir)libadt.0.Release.$(PlatformName).dll&quot;"/>
+				<Tool Name="VFCustomBuildTool" CommandLine="copy &quot;..\lib\Release.$(PlatformName)\libfde.0.Release.$(PlatformName).dll&quot; &quot;$(OutDir)&quot;" Outputs="&quot;$(OutDir)libfde.0.Release.$(PlatformName).dll&quot;"/>
 				<Tool Name="VFPreLinkEventTool"/>
 				<Tool Name="VFPreBuildEventTool"/>
 				<Tool Name="VFPostBuildEventTool"/>

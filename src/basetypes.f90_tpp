@@ -1,15 +1,15 @@
 
 !                . o O (needed for generated procedure exports)
-#include "adt/itfUtil.fpp"
+#include "fde/itfUtil.fpp"
 
-module adt_basetypes
+module fde_basetypes
   use iso_c_binding
-  use adt_ref
-  use adt_item
-  use adt_list
-  use adt_string
-  use adt_convert
-  use adt_ostream
+  use fde_ref
+  use fde_item
+  use fde_list
+  use fde_string
+  use fde_convert
+  use fde_ostream
   implicit none
   private
 
@@ -81,7 +81,7 @@ module adt_basetypes
   !!_TypeGen_declare_RefType( public, charString_2d, character(len=:), dimension(:,:) )
   !! FIXME: ^ these two types cause gfortran to freak out with an internal compiler error >:-(
   !! Until this gets finally fixed we've to options:
-  !!  1. build libadt using ifort ... ;-)
+  !!  1. build libfde using ifort ... ;-)
   !!  2. work around that by defining the following three types that use a fixed length.
   !!     HOWEVER: we can have only one certain length - otherwise fortran is nagging about ambiguity!
   !_TypeGen_declare_RefType( public, char10,    character(len=10), scalar, streaming=direct )
@@ -93,6 +93,7 @@ module adt_basetypes
 
   interface
     subroutine Callback_itf( arg )
+      !_ARG_REFERENCE( arg )
       import
       integer(kind=c_intptr_t) :: arg
     end subroutine

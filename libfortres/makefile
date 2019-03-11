@@ -1,5 +1,5 @@
 ###
-# makefile for building libfortres (C-core library of libadt)
+# makefile for building libfortres (C-core library of libfde)
 #
 # NOTE: for using this makefile you need some meta-makefiles bundled by another project called 'makeIt'.
 #       Please set the environment variable MAKEIT_DIR to a directory that contains a copy.
@@ -16,7 +16,7 @@ SOURCE_FILES    := fort_exception.cpp fort_plugin.cpp fort_dirent.cpp fort_trace
 OUT_TYPE        := shared
 OUT_NAME         = fortres.x$(mk_ARCH)
 OUT_DIR          = release
-MAYOR           := 2.7.1
+MAYOR           := 2.7.2
 CC_INCLUDE_DIRS := ./include ../include
 CC_LIBRARIES     = dl
 CC_FLAGS.%       = $(cc_threads) $(cc_m)$(mk_ARCH)

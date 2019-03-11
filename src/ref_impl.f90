@@ -1,11 +1,11 @@
 
-#include "adt/ref_status.fpp"
-#include "adt/itfUtil.fpp"
+#include "fde/ref_status.fpp"
+#include "fde/itfUtil.fpp"
 
 module impl_ref__
-  use adt_ref, only: RefEncoding_t
-  use adt_basestring
-  use adt_typeinfo
+  use fde_ref, only: RefEncoding_t
+  use fde_basestring
+  use fde_typeinfo
   use iso_c_binding
 
 # define Ref_t    Ref_t__impl__
@@ -30,7 +30,7 @@ module impl_ref__
 
     pure &
     function ref_shape( self ) result(res)
-      import Ref_t
+      import Ref_t, ref_rank_c
       type(Ref_t), intent(in) :: self
       integer                 :: res(ref_rank_c(self))
     end function
@@ -504,7 +504,7 @@ end module
 !_ARG_REFERENCE1(self)
   function ref_resolve( self ) result(res)
     use impl_ref__
-    use adt_ref, only: type_of, temporary_ref
+    use fde_ref, only: type_of, temporary_ref
     implicit none
     type(Ref_t),       target :: self
     type(Ref_t),      pointer :: res
@@ -526,7 +526,7 @@ end module
   recursive &
   subroutine ref_accept_wrap_( wrap, refType, vstr )
     use impl_ref__
-    use adt_visitor
+    use fde_visitor
     implicit none
     type(ref_wrap_t)          :: wrap
     type(TypeInfo_t)          :: refType
@@ -543,8 +543,8 @@ end module
   recursive &
   subroutine ref_stream_wrap_( wrap, refType, outs )
     use impl_ref__
-    use adt_convert
-    use adt_ostream
+    use fde_convert
+    use fde_ostream
     implicit none
     type(ref_wrap_t)          :: wrap
     type(ostream_t)           :: outs

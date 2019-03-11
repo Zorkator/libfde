@@ -2,13 +2,13 @@
 #define _exp(what)    print *, "exp: " // what
 
 module test_list
-  use adt_item
-  use adt_basetypes
-  use adt_containertypes
-  use adt_string
-  use adt_list
-  use adt_ref
-  use adt_exception
+  use fde_item
+  use fde_basetypes
+  use fde_containertypes
+  use fde_string
+  use fde_list
+  use fde_ref
+  use fde_exception
   use iso_c_binding
   implicit none
 

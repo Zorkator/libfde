@@ -1,13 +1,13 @@
 
-#include "adt/itfUtil.fpp"
+#include "fde/itfUtil.fpp"
 
-module adt_string
+module fde_string
   use iso_c_binding
-  use adt_ref
-  use adt_memoryref
-  use adt_basestring, only: BaseString_t, basestring_len_ref, &
+  use fde_ref
+  use fde_memoryref
+  use fde_basestring, only: BaseString_t, basestring_len_ref, &
                             attribute_permanent, attribute_volatile, permanent_string, temporary_string
-  use adt_ostream
+  use fde_ostream
   implicit none
   private
 

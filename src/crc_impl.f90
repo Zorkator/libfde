@@ -41,7 +41,7 @@
 !! CRC32 code derived from work by Gary S. Brown.
 !!
 
-#include "adt/itfUtil.fpp"
+#include "fde/itfUtil.fpp"
 
 
 !_PROC_EXPORT(crc32_bytebuffer_c)

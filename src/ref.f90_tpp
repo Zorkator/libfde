@@ -1,12 +1,12 @@
 
-#include "adt/ref_status.fpp"
-#include "adt/itfUtil.fpp"
+#include "fde/ref_status.fpp"
+#include "fde/itfUtil.fpp"
 
-module adt_ref
-  use adt_basestring
-  use adt_typeinfo
-  use adt_visitor
-  use adt_ostream
+module fde_ref
+  use fde_basestring
+  use fde_typeinfo
+  use fde_visitor
+  use fde_ostream
   use iso_c_binding
   implicit none
   private
@@ -76,7 +76,7 @@ module adt_ref
   interface shape
     pure &
     function ref_shape( self ) result(res)
-      import Ref_t
+      import Ref_t, ref_rank_c
       type(Ref_t), intent(in) :: self
       integer                 :: res(ref_rank_c(self))
     end function

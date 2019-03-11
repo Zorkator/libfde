@@ -1,8 +1,8 @@
 
-#include "adt/itfUtil.fpp"
+#include "fde/itfUtil.fpp"
 
-module adt_typeinfo
-  use adt_memoryref
+module fde_typeinfo
+  use fde_memoryref
   implicit none
   public
 

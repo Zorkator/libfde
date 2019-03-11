@@ -1,10 +1,10 @@
 
-#include "adt/itfUtil.fpp"
+#include "fde/itfUtil.fpp"
 
 module impl_list__
-  use adt_list
-  use adt_ref
-  use adt_typeinfo
+  use fde_list
+  use fde_ref
+  use fde_typeinfo
   use iso_c_binding
   implicit none
 
@@ -817,7 +817,7 @@ end module
   recursive &
   subroutine list_accept_wrap_( wrap, listType, vstr )
     use impl_list__
-    use adt_visitor
+    use fde_visitor
     implicit none
     type wrap_t
        type(List_t), pointer :: ptr
