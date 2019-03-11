@@ -29,9 +29,9 @@ Naming
 ------
 
 The library development started with the idea of providing abstract data types in Fortran, what resulted in naming the library **libadt**.
-Meanwhile this focus shifted and it contains a lot more, so it really should be renamed to **libfde** (Fortran Development Extensions) to reflect better
-it's purpose and contained functionality.
-This prefix has changed recently and it should not have a great impact on codes using the libraries, but keep an eye on such errors.
+Meanwhile this focus shifted and it contains a lot more, so it was really necessary to rename it to **libfde** (Fortran Development Extensions) to reflect better
+it's purpose and the contained functionality.
+Since this prefix has changed recently you should keep an eye on such errors when updating the library on exiting code.
 
 
 Basic principles and state of development
@@ -64,7 +64,7 @@ Nevertheless, **a lot** of things can be improved and some aspects need further 
 Copyright and License Information
 ---------------------------------
 
-Copyright (c) 2018 Josef Scheuer.
+Copyright (c) 2019 Josef Scheuer.
 All rights reserved.
 
 See the file "LICENSE" for terms &
