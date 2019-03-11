@@ -30,7 +30,7 @@ module impl_ref__
 
     pure &
     function ref_shape( self ) result(res)
-      import Ref_t
+      import Ref_t, ref_rank_c
       type(Ref_t), intent(in) :: self
       integer                 :: res(ref_rank_c(self))
     end function

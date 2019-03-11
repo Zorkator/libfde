@@ -93,6 +93,7 @@ module fde_basetypes
 
   interface
     subroutine Callback_itf( arg )
+      !_ARG_REFERENCE( arg )
       import
       integer(kind=c_intptr_t) :: arg
     end subroutine
