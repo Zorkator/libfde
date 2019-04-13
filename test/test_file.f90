@@ -20,6 +20,7 @@ contains
 
     call close( fh, status="delete" )
     print *, file_exists( files )
+    print *, file_size( __FILE__ )
   end subroutine
 
 end module
