@@ -2,6 +2,7 @@
 #include "fde/itfUtil.fpp"
 
 module fde_file
+   use iso_c_binding
    use fde_exception
    implicit none
 
@@ -10,11 +11,15 @@ module fde_file
    end interface
 
    interface fclose
-      module procedure fclose_, fclose_v
+      module procedure fclose_bool_, fclose_bool_v
    end interface
 
    interface file_exists
       module procedure file_exists_, file_exists_v
+   end interface
+
+   interface file_size
+      module procedure file_size_name, file_size_unit
    end interface
 
    interface file_opened
@@ -67,6 +72,30 @@ contains
          inquire( file=file(i), exist=res(i), iostat=iostat_ )
          if (present(iostat)) iostat = max( iostat, iostat_ )
       end do
+   end function
+
+
+!_PROC_EXPORT(file_size_name)
+   integer(c_size_t) &
+   function file_size_name( file, iostat ) result(res)
+      character(len=*),           intent(in)  :: file
+      integer,          optional, intent(out) :: iostat
+      integer                                 :: iostat_
+
+      inquire( file=file, size=res, iostat=iostat_ )
+      if (present(iostat)) iostat = iostat_
+   end function
+
+
+!_PROC_EXPORT(file_size_unit)
+   integer(c_size_t) &
+   function file_size_unit( unit, iostat ) result(res)
+      integer,                    intent(in)  :: unit
+      integer,          optional, intent(out) :: iostat
+      integer                                 :: iostat_
+
+      inquire( unit=unit, size=res, iostat=iostat_ )
+      if (present(iostat)) iostat = iostat_
    end function
 
 
@@ -236,32 +265,29 @@ contains
 
 !_PROC_EXPORT(fopen_bool_)
    logical &
-   function fopen_bool_( unit, file, _open_kwArgs_list, recl, iostat ) result(res)
+   function fopen_bool_( unit, file, _open_kwArgs_list, recl ) result(res)
       integer,                            intent(in)  :: unit
       character(len=*),                   intent(in)  :: file
       character(len=*), optional, target, intent(in)  :: _open_kwArgs_list
       integer,          optional,         intent(in)  :: recl
-      integer,          optional,         intent(out) :: iostat
+      integer                                         :: iostat_
 
-      call open_( unit, file, _open_kwArgs_list, recl, iostat ) !< might throw IOError if iostat not given!
-      if (present(iostat)) then; res = (iostat == 0) !< check for success: iostat = 0
-                           else; res = .true.        !< there was no Exception - so it has to be success!
-      end if
+      call open_( unit, file, _open_kwArgs_list, recl, iostat=iostat_ )
+      res = (iostat_ == 0) !< check for success
    end function
 
 
 !_PROC_EXPORT(fopen_bool_v)
-   function fopen_bool_v( units, files, _open_kwArgs_list, recl, iostat ) result(res)
+   function fopen_bool_v( units, files, _open_kwArgs_list, recl ) result(res)
       integer,          dimension(:),           intent(in)  :: units
       character(len=*), dimension(size(units)), intent(in)  :: files
       character(len=*), optional, target,       intent(in)  :: _open_kwArgs_list
       integer,          optional,               intent(in)  :: recl
-      integer,          optional,               intent(out) :: iostat
       logical,          dimension(size(files))              :: res
       integer                                               :: i
 
       do i = 1, size(files)
-         res(i) = fopen( units(i), files(i), _open_kwArgs_list, recl, iostat )
+         res(i) = fopen( units(i), files(i), _open_kwArgs_list, recl )
       end do
    end function
 
@@ -352,30 +378,27 @@ contains
    end subroutine
 
 
-!_PROC_EXPORT(fclose_)
+!_PROC_EXPORT(fclose_bool_)
    logical &
-   function fclose_( unit, status, descr, iostat ) result(res)
+   function fclose_bool_( unit, status, descr ) result(res)
       integer,                    intent(in)  :: unit
       character(len=*), optional, intent(in)  :: status, descr
-      integer,          optional, intent(out) :: iostat
+      integer                                 :: iostat_
 
-      call close_( unit, status, descr, iostat )     !< might throw IOError if iostat not given!
-      if (present(iostat)) then; res = (iostat == 0) !< check for success: iostat = 0
-                           else; res = .true.        !< there was no Exception - so it has to be success!
-      end if
+      call close_( unit, status, descr, iostat=iostat_ )
+      res = (iostat_ == 0) !< check for success
    end function
 
 
-!_PROC_EXPORT(fclose_v)
-   function fclose_v( units, status, descr, iostat ) result(res)
+!_PROC_EXPORT(fclose_bool_v)
+   function fclose_bool_v( units, status, descr ) result(res)
       integer,          dimension(:), intent(in)  :: units
       character(len=*), optional,     intent(in)  :: status, descr
-      integer,          optional,     intent(out) :: iostat
       logical,          dimension(size(units))    :: res
       integer                                     :: i
 
       do i = 1, size(units)
-         res(i) = fclose( units(i), status, descr, iostat )
+         res(i) = fclose( units(i), status, descr )
       end do
    end function
 
