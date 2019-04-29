@@ -5,6 +5,7 @@ module test_dyncast
   use fde_item
   use fde_ref
   use fde_hashmap
+  use fde_basetypes
   use fde_exception
   implicit none
 
