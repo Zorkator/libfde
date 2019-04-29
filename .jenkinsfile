@@ -21,13 +21,13 @@ pipeline {
                 dir('test') {
                     sh 'rm -rf exe'
                     script {
-                        def fc   = ['ifort', 'gfortran']
-                        def test = ['abstract_list', 'charstacker', 'crc', 'dyncast', 'fde', 'file', 'hash_map', 'item', 'simulator', 'string']
+                        final fc   = ['ifort', 'gfortran']
+                        final test = sh(script: 'ls -1 test_*.f90 | cut -d . -f 1', returnStdout: true).split() 
 
                         for (int i = 0; i < fc.size(); ++i) {
                             for (int j = 0; j < test.size(); ++j) {
-                                sh "make clean test_${test[j]} FC=${fc[i]} CFG=release"
-                                sh "`make -s eval,OUT_DIR FC=${fc[i]} CFG=release`/test_${test[j]}"
+                                sh "make clean ${test[j]} FC=${fc[i]} CFG=release"
+                                sh "`make -s eval,OUT_DIR FC=${fc[i]} CFG=release`/${test[j]}"
                             }
                         }
                     }
