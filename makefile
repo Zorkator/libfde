@@ -1,3 +1,4 @@
+
 ###
 # makefile for building libfde
 #
@@ -12,9 +13,9 @@
 #
 
 TARGET_doc      := building libfde
-TPP_FILES       := $(filter-out test_%.f90_tpp,$(wildcard src/*.f90_tpp))
+TPP_FILES       := $(wildcard src/*.f90_tpp)
 TPP_SOURCE      := $(patsubst %.f90_tpp,%.f90,$(TPP_FILES))
-SOURCE_FILES    := $(filter-out test_%.f90 $(TPP_SOURCE),$(wildcard src/*.f90)) $(TPP_SOURCE)
+SOURCE_FILES    := $(filter-out $(TPP_SOURCE),$(wildcard src/*.f90)) $(TPP_SOURCE)
 CLEARED_FILES   := $(TPP_SOURCE)
 OUT_TYPE        := shared
 OUT_NAME         = fde.$(mk_TAG)
@@ -25,10 +26,10 @@ FC_INCLUDE_DIRS := ./libfortres/include ./include
 SUBPACKAGES.%    = libfortres
 FC_LIBRARIES.%   = fortres.x$(mk_ARCH)
 
-FC_list = ifort gfortran
-
 FC_FLAGS.%        = $(fc_threads) $(fc_m)$(mk_ARCH)
 FC_CFLAGS.%       = $(fc_fpp) $(call fc_form,free,none) $(fc_backtrace)
+FC_LFLAGS.%       = $(fl_dynamic)
+
 crc_impl.gfortran = $(call fc_cflags_of,.f90) -fno-range-check
 crc_impl.ifort    = $(call fc_cflags_of,.f90) -assume noold_boz
 
