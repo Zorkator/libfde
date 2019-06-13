@@ -18,6 +18,7 @@ OUT_DIR          = exe/$(mk_TAG)
 FDE_DIR          = ..
 SOURCE_DIRS      = .
 FC_INCLUDE_DIRS  = ../include $(FDE_DIR)/lib/$(mk_TAG)
+src_list         = $1.f90 $(patsubst %.f90_tpp,%.f90,$(wildcard $1_types.f90_tpp))
 
 FC_LIBRARY_DIRS  = $(FDE_DIR)/lib/$(mk_TAG)
 FC_LIBRARIES.%   = fde.$(mk_TAG) fortres.x$(mk_ARCH)
@@ -30,7 +31,12 @@ FC_LFLAGS.%      = -rdynamic #< add all symbols to dynamic symbol table (=> stac
 TARGETS          = $(basename $(wildcard test_*.f90))
 
 $(TARGETS):
-	$(MAKE) SOURCE_FILES=$@.f90 OUT_NAME=$@ built
+	$(MAKE) SOURCE_FILES="$(call src_list,$@)" OUT_NAME=$@ built
+
+
+%.f90: %.f90_tpp
+	python ../typegen.py $< -o $@
+
 
 ifneq ($(MAKEIT_DIR),)
 include $(MAKEIT_DIR)/mk.fortran
