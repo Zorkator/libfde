@@ -1,0 +1,50 @@
+
+module type_references
+  use fde_item
+  use fde_ref
+  use fde_ostream
+  use fde_convert
+  use iso_c_binding
+  implicit none
+  private
+
+  abstract interface
+    function func( x )
+      real*4 :: x, func
+    end function
+  end interface
+
+  type, public :: Thing_t
+    integer*4 :: val1, val2
+    real*4    :: val3
+  end type
+
+  public :: func, sub_a, func_a
+
+  !_TypeGen_declare_RefType( public, CalcFunc, procedure(func), scalar, writeExpr="address_str(c_funloc(self%ptr))", streaming=direct )
+  !_TypeGen_declare_RefType( public, AThing, type(Thing_t),  scalar, cloneMode = _type, deleteProc = thing_clear )
+
+  contains
+
+  !_TypeGen_implementAll()
+
+  subroutine thing_clear( self )
+    type(Thing_t) :: self
+    print *, 'thing_clear'
+    self%val1 = 0
+    self%val2 = 0
+    self%val3 = 0.0
+  end subroutine
+
+  subroutine sub_a( arg )
+    integer(kind=c_intptr_t) :: arg
+    print *, "sub_a was called"
+  end subroutine
+
+  function func_a( x ) result(y)
+    real*4 :: x, y
+    y = x ** 2
+  end function
+
+end module
+

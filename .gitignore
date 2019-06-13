@@ -33,3 +33,7 @@ test/exe/
 *.u2d
 
 *.user
+
+\.svn/
+
+*.i90

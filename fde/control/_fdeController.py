@@ -62,5 +62,5 @@ class FDEController(NativeController):
     # The same buffer is also used to return the filePath of the loaded libfde.
     infoBuff = create_string_buffer( str.encode( rootId + ' ' * (1024 - len(rootId))) )
     self.handle[ self._initFunc ]( byref(infoBuff), c_size_t(len(infoBuff)-1) )
-    return infoBuff.value.strip()
+    return infoBuff.value.strip().decode('utf-8')
 

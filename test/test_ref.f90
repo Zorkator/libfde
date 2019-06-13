@@ -17,14 +17,15 @@ program testinger
   !procedure(bla), dimension(:), pointer :: procPtr #< not possible to create array of proc pointers!
   procedure(func),         pointer :: f  => null()
   procedure(Callback_itf), pointer :: sc => null()
-  type(Ding)                       :: dong
+  type(Thing_t)                    :: something
   integer*4                        :: i, j
+  integer(kind=c_intptr_t)         :: intptr
   type(TypeInfo_t),        pointer :: ti
 
   type(c_ptr)         :: cpointer
   type(Ref_t)         :: ref1, ref2, ref3, ref4
-  complex*32          :: cplx
-  complex*32, pointer :: cplx_ptr
+  complex*16          :: cplx
+  complex*16, pointer :: cplx_ptr
 
   i = 0; j = 1
 
@@ -85,7 +86,7 @@ program testinger
 
   ref1 = ref_of(cplx)
 
-  cplx_ptr => complex32(ref1)
+  cplx_ptr => complex16(ref1)
   cplx_ptr = (1.0, -3)
 
 
@@ -113,7 +114,7 @@ program testinger
   ref1 = clone(ref2)
   call free(ref1)
 
-  ref1 = ref_of(dong)
+  ref1 = ref_of(something)
   ref2 = clone(ref1)
   call free(ref2)
 
@@ -133,7 +134,7 @@ program testinger
   ref2 = clone(ref2)
 
   sc => CallBack_from_ref( ref2 )
-  call sc()
+  call sc( transfer( c_loc(sc), intptr ) )
 
   ref2 = ref_from_CalcFunc( func_a )
 
