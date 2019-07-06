@@ -9,10 +9,10 @@ def threadID():
 class ExceptionRouter(object):
 ######################################
   """Mixin class extending NativeController types.
-    
+
   ExceptionRouter tries to forward python exceptions to controlled native code.
   The native code must provide an C-compatible function for throwing exceptions, with the following signature:
-  
+
   void throw_c_( int32_t *typeCode, const char *message, size_t length )
 
   The explicit call to this function is wrapped by the method
@@ -48,7 +48,7 @@ class ExceptionRouter(object):
         if stack: stack[-1]( *args, **kwArgs )
         else    : self._stdhook( *args, **kwArgs )
 
-    
+
       def push( self, hook ):
         stack = self._hooks.setdefault( threadID(), [] )
         stack.append( hook )
@@ -72,7 +72,7 @@ class ExceptionRouter(object):
     def __exit__( self, *args ):
       if self._hook:
         self._ExceptDispatch().pop()
-      
+
 
 
   def __except__( self, _type, _value, _traceback ):

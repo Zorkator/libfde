@@ -4,7 +4,7 @@
 class Stateful(object):
 ######################################
   """Mixin class extending FDEController types.
-    
+
   Stateful provides cashed access to certain state scope, determined by option statePath
 
   """
@@ -13,13 +13,13 @@ class Stateful(object):
                  )
 
   @property
-  def scopeKeyOperator( self ):
-    return getattr( self._stock, '__keyop__', None )
+  def keyTokenizer( self ):
+    return getattr( self._stock, '__keyTok__', None )
 
 
-  @scopeKeyOperator.setter
-  def scopeKeyOperator( self, op ):
-    self._stock.__keyop__ = op
+  @keyTokenizer.setter
+  def keyTokenizer( self, op ):
+    self._stock.__keyTok__ = op
 
   @property
   def root( self ):
@@ -39,21 +39,42 @@ class Stateful(object):
 
 
   def _get_path_scope( self, path ):
+    """return nested scope specified by given path."""
     from fde.core import Scope
     pathList = path.format( **self.about ).split('/')
     return Scope.getProcessScope( *pathList )
 
 
-  def setStateData( self, dataDict ):
-    self.state.updateDomain( dataDict, self.scopeKeyOperator )
+  def _make_key_tokenizer( self, sep = None, conv = [] ):
+    """create key tokenizer for given string separator sep and optional type converters conv."""
+    if   sep is None: return  lambda k: k         #< null tokenizer, keep as is
+    elif sep != ''  : tokOp = lambda k: filter( bool, map( type(k).strip, k.split(sep) ) )
+    else            : tokOp = lambda k: k.split() #< for empty separator split at whitespaces
+
+    if conv:
+      # if there's at least one conversion ...
+      def _convert( k ):
+        for c in conv:
+          try   : return c(k)
+          except: pass
+        return k
+      return lambda k: map( _convert, tokOp(k) ) #< ... wrap tokenizer by converter
+    else:
+      return tokOp
+
+
+  def setData( self, dataDict, keyTok = None ):
+    """set rootPath-based data given by dataDict."""
+    self.root.updateDomain( dataDict, keyTok or self.keyTokenizer )
     return True
 
 
-  def getStateData( self, keyList = [] ):
+  def getData( self, keyList = [], keyTok = None ):
+    """get data references for given rootPath-based keyList."""
     if keyList:
-      pairs = zip( *self.state.iterDomain( keyList, self.scopeKeyOperator ) )
-      self._stock._stateData = pairs and pairs[1] or []
-    return getattr( self._stock, '_stateData', [] )
+      pairs = zip( *self.root.iterDomain( keyList, keyTok or self.keyTokenizer ) )
+      self._stock._req_data = pairs and pairs[1] or []
+    return getattr( self._stock, '_req_data', [] )
 
 
 
