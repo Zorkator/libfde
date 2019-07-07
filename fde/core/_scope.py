@@ -2,8 +2,8 @@
 from ._hashmap import HashMap
 from ._ref     import Ref
 from ._ftypes  import mappedType, _mapType, CALLBACK, CALLBACK_t, CFUNCTION_t, POINTER_t, VOID_Ptr
-from ..tools  import dict2obj, _arg, auto_raise
-from ctypes   import byref, c_char_p, c_int, POINTER, sizeof, Array
+from ..tools   import dict2obj, _arg, auto_raise
+from ctypes    import byref, c_char_p, c_int, POINTER, sizeof, Array
 
 try:
   from functools import reduce
@@ -12,7 +12,9 @@ except ImportError:
 
 
 @mappedType( 'hashmap', 'type(HashMap_t)' )
+######################################
 class Scope(HashMap):
+######################################
 
   class Index(HashMap.Index):
 
@@ -121,7 +123,7 @@ class Scope(HashMap):
       try:
         yield p, self[p] if p else None
       except (TypeError, KeyError, AttributeError) as e:
-        yield p, auto_raise( default, 'invalid path %s' % p )
+        yield p, auto_raise( default, 'invalid scope path ' + str(p) )
 
 
   def extractDomain( self, paths, keyOp=str.split, default=LookupError ):
@@ -143,11 +145,14 @@ class Scope(HashMap):
 
   def __getitem__( self, ident ):
     if isinstance( ident, (tuple, list) ):
-      base = reduce( lambda d,k: d[k], ident[:-1], self )
-      if type(type(base)) is type(Array): #< try on Scopes is expensive, so check for ctypes-Array!
-        return base._type_.from_buffer( base, ident[-1] * sizeof(base._type_) )
-      else:
-        return base[ident[-1]]
+      try:
+        base = reduce( lambda d,k: d[k], ident[:-1], self )
+        if type(type(base)) is type(Array): #< try on Scopes is expensive, so check for ctypes-Array!
+          return base._type_.from_buffer( base, ident[-1] * sizeof(base._type_) )
+        else:
+          return base[ident[-1]]
+      except (TypeError, KeyError, AttributeError) as e:
+        raise KeyError( 'invalid scope path ' + str(ident) )
     else:
       return super(Scope, self).__getitem__( ident )
 
