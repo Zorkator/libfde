@@ -1,4 +1,6 @@
 
+from ._variable import Variable
+
 
 ######################################
 class Stateful(object):
@@ -12,6 +14,24 @@ class Stateful(object):
                  , statePath = '{rootId}/state'
                  )
 
+  @classmethod
+  def makeKeyTokenizer( _class, sep = None, conv = [] ):
+    """create key tokenizer for given string separator sep and optional type converters conv."""
+    if   sep is None: return  lambda k: k                #< null tokenizer, keep as is
+    elif sep != ''  : tokOp = lambda k: tuple(filter( bool, map( type(k).strip, k.split(sep) ) ))
+    else            : tokOp = lambda k: tuple(k.split()) #< for empty separator split at whitespaces
+
+    if conv:
+      # if there's at least one conversion ...
+      def _convert( k ):
+        for c in conv:
+          try   : return c(k)
+          except: pass
+        return k
+      return lambda k: tuple(map( _convert, tokOp(k) )) #< ... wrap tokenizer by converter
+    else:
+      return tokOp
+
   @property
   def keyTokenizer( self ):
     return getattr( self._stock, '__keyTok__', None )
@@ -20,6 +40,11 @@ class Stateful(object):
   @keyTokenizer.setter
   def keyTokenizer( self, op ):
     self._stock.__keyTok__ = op
+
+
+  def setKeyTokenizer( self, sep = None, conv = [] ):
+    self.keyTokenizer = self.makeKeyTokenizer( sep, conv )
+
 
   @property
   def root( self ):
@@ -43,24 +68,6 @@ class Stateful(object):
     from fde.core import Scope
     pathList = path.format( **self.about ).split('/')
     return Scope.getProcessScope( *pathList )
-
-
-  def _make_key_tokenizer( self, sep = None, conv = [] ):
-    """create key tokenizer for given string separator sep and optional type converters conv."""
-    if   sep is None: return  lambda k: k         #< null tokenizer, keep as is
-    elif sep != ''  : tokOp = lambda k: filter( bool, map( type(k).strip, k.split(sep) ) )
-    else            : tokOp = lambda k: k.split() #< for empty separator split at whitespaces
-
-    if conv:
-      # if there's at least one conversion ...
-      def _convert( k ):
-        for c in conv:
-          try   : return c(k)
-          except: pass
-        return k
-      return lambda k: map( _convert, tokOp(k) ) #< ... wrap tokenizer by converter
-    else:
-      return tokOp
 
 
   def setData( self, dataDict, keyTok = None ):

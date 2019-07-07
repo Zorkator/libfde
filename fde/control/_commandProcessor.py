@@ -54,7 +54,7 @@ class CommandProcessor(object):
   #
 
   def cmd_setKeyOp( self, sep = None ):
-    self.keyTokenizer = self._make_key_tokenizer( sep )
+    self.keyTokenizer = self.makeKeyTokenizer( sep )
     return True
 
   # Some default commands for Simulators.
