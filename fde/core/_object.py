@@ -11,7 +11,7 @@ class Object(Compound):
 
   @property
   def value( self ):
-    return self._data
+    return self
 
   @value.setter
   def value( self, val ):
