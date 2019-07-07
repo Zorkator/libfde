@@ -77,11 +77,25 @@ class Stateful(object):
 
 
   def getData( self, keyList = [], keyTok = None ):
-    """get data references for given rootPath-based keyList."""
+    """get data references for given rootPath-based keyList.
+    getData caches the result of the latest requested keyList and returns it if keyList is empty.
+    """
     if keyList:
       pairs = zip( *self.root.iterDomain( keyList, keyTok or self.keyTokenizer ) )
       self._stock._req_data = pairs and pairs[1] or []
     return getattr( self._stock, '_req_data', [] )
+
+
+  def makeVariableFactory( self, rootScope = None, keyTok = None, varType = Variable ):
+    """ """
+    from ..tools import ObjectFactory
+    rootScope = rootScope or self.root
+    keyTok    = keyTok    or self.keyTokenizer
+
+    def _createVar( ident, *args, **kwArgs ):
+      return varType( rootScope[ident] )
+
+    return ObjectFactory( _createVar, keyTok )
 
 
 
