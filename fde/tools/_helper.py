@@ -29,7 +29,7 @@ class NullGuard(object):
     return self
 
   def __exit__( self, *args ):
-    return 
+    return
 
 
 ######################################

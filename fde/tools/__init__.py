@@ -13,8 +13,10 @@ from ._libLoader        import LibLoader, core_loader
 from ._convert          import dict2obj
 from ._files            import sys_channel, openFile, makedirs
 from ._optionProcessor  import OptionProcessor
+from ._objectFactory    import ObjectFactory
 
-__all__.extend( 'NullHandle Wallet NullGuard LibLoader core_loader dict2obj sys_channel openFile makedirs OptionProcessor'.split() )
+__all__.extend( 'NullHandle Wallet NullGuard LibLoader core_loader dict2obj sys_channel openFile makedirs'.split() )
+__all__.extend( 'OptionProcessor ObjectFactory'.split() )
 
 class debug(object):
   def __new__( _class ):
