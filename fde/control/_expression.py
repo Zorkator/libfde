@@ -38,7 +38,7 @@ class Expression(object):
 
 
 ##########################################
-class ExpressionFactory(object):
+class ExpressionContext(object):
 ##########################################
 
     @property
@@ -49,18 +49,23 @@ class ExpressionFactory(object):
     def locals( self ):
         return self._locals
 
-    def __init__( self, varLookup, globals = None, locals = None ):
-        self._globals    = dict( __builtins__ = None ) if (globals is None) else globals
-        self._locals     = dict()                      if (locals  is None) else locals
-        self._globals['__lookup__'] = varLookup
+    def __init__( self, exprType = Expression, varLookup = None, globals = None, locals = None ):
+        self._globals = dict( __builtins__ = None ) if (globals is None) else globals
+        self._locals  = dict()                      if (locals  is None) else locals
+        self._globals['__lookup__'] = varLookup or (lambda i : i)
 
-        class _Expression(Expression):
+        class _Expression(exprType):
             _globals = self._globals
             _locals  = self._locals
 
         self.create = _Expression
+        self.lookup = self.globals['__lookup__']
 
 
     def __call__( self, *args, **kwArgs ):
         return self.create( *args, **kwArgs )
+
+
+    def execute( self, code ):
+        exec( code, self._globals, self._locals )
 
