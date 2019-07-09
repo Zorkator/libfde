@@ -86,16 +86,25 @@ class Stateful(object):
     return getattr( self._stock, '_req_data', [] )
 
 
-  def makeVariableFactory( self, rootScope = None, keyTok = None, varType = Variable ):
+  def makeVariableLookup( self, rootScope = None, keyTok = None, varType = Variable ):
     """ """
-    from ..tools import ObjectFactory
+    from ..tools import UniqueObjectFactory
     rootScope = rootScope or self.root
     keyTok    = keyTok    or self.keyTokenizer
 
     def _createVar( ident, *args, **kwArgs ):
       return varType( rootScope[ident] )
 
-    return ObjectFactory( _createVar, keyTok )
+    return UniqueObjectFactory( _createVar, keyTok )
+
+
+  def makeExpressionContext( self, exprType = None, varLookup = None ):
+    """ """
+    from . import Expression, ExpressionContext
+    exprType  = exprType or Expression
+    varLookup = varLookup or self.makeVariableLookup()
+    return ExpressionContext( exprType, varLookup )
+
 
 
 
