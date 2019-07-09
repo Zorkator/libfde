@@ -83,6 +83,8 @@ class Variable(object):
     def __int__( self )           : return int(self.value)
     def __long__( self )          : return long(self.value)
     def __float__( self )         : return float(self.value)
+    def __bool__( self )          : return bool(self.value)
+    __nonzero__ = __bool__        #< py2 compatibility
 
     # string representations
     def __str__( self )           : return str(self.value)
