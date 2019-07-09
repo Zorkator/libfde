@@ -1,12 +1,48 @@
 
-#####################################
+##############################################
 class ObjectFactory(object):
-#####################################
+##############################################
 
   def __init__( self, objCreator, identOp = None ):
     self._objCreator = objCreator
-    self._identOp    = identOp or (lambda i: i)
     self._instances  = dict()
+    self._identOp    = identOp or id
+
+
+  def __call__( self, *args, **kwArgs ):
+    obj = self._objCreator( *args, **kwArgs )
+    self._instances[ self._identOp(obj) ] = obj
+    return obj
+
+
+  def delete( self, item ):
+    del self._instances[ self._identOp(item) ]
+
+
+  def clear( self ):
+    self._instances.clear()
+
+
+  @property
+  def count( self ):
+    return len(self._instances)
+
+  @property
+  def vars( self ):
+    return self._instances.values()
+
+  @property
+  def create( self ):
+    return self
+
+
+
+##############################################
+class UniqueObjectFactory(ObjectFactory):
+##############################################
+
+  def __init__( self, objCreator, identOp = None ):
+    super(UniqueObjectFactory, self).__init__( objCreator, identOp or (lambda i: i) )
 
 
   def __call__( self, ident, *args, **kwArgs ):
@@ -21,31 +57,11 @@ class ObjectFactory(object):
     return self._instances[ self._identOp( ident ) ]
 
 
-  def delete( self, ident ):
-      try   : del self._instances[ self._identOp( ident ) ]
-      except: raise KeyError("there is no %s variable with name %s" % (self._objType.__name__, ident) )
-
-  @property
-  def count( self ):
-    return len(self._instances)
-
   @property
   def pairs( self ):
     return self._instances.items()
 
-
   @property
   def names( self ):
     return self._instances.keys()
-
-
-  @property
-  def vars( self ):
-    return self._instances.values()
-
-
-  @property
-  def create( self ):
-    return self
-
 
