@@ -14,10 +14,11 @@ from ._startable          import Startable
 from ._verbose            import Verbose
 from ._commandProcessor   import CommandProcessor
 from ._simulator          import Simulator
-from ._expression         import Expression, ExpressionContext
+from ._expression         import Expression
+from ._actionContext      import ActionContext
 from ._variable           import Variable
 
 __all__.extend( 'NativeController FDEController ExceptionRouter Stateful cached_property'.split() )
 __all__.extend( 'Hookable Startable Verbose CommandProcessor Simulator'.split() )
-__all__.extend( 'Variable Expression ExpressionContext'.split() )
+__all__.extend( 'Variable Expression ActionContext'.split() )
 

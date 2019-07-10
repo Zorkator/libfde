@@ -98,13 +98,11 @@ class Stateful(object):
     return UniqueObjectFactory( _createVar, keyTok )
 
 
-  def makeExpressionContext( self, exprType = None, varLookup = None ):
+  def makeActionContext( self, actionType = None, triggerType = None, varLookup = None ):
     """ """
-    from . import Expression, ExpressionContext
-    exprType  = exprType or Expression
+    from . import ActionContext
     varLookup = varLookup or self.makeVariableLookup()
-    return ExpressionContext( exprType, varLookup )
-
+    return ActionContext( actionType, triggerType, varLookup )
 
 
 
