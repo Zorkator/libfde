@@ -53,3 +53,8 @@ def auto_raise( obj, what = None ):
   if isinstance( obj, Exception )                            : raise obj
   return obj
 
+
+def _decorate( kvPairs ):
+  for k,v in kvPairs:
+    yield ('_' + k, v)
+

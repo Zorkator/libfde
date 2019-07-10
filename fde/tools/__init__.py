@@ -8,7 +8,7 @@ import logging
 logging.basicConfig( level = logging.ERROR )
 
 
-from ._helper           import NullHandle, Wallet, NullGuard, _arg, auto_raise
+from ._helper           import NullHandle, Wallet, NullGuard, _arg, auto_raise, _decorate
 from ._libLoader        import LibLoader, core_loader
 from ._convert          import dict2obj
 from ._files            import sys_channel, openFile, makedirs
@@ -16,6 +16,7 @@ from ._optionProcessor  import OptionProcessor
 from ._objectFactory    import ObjectFactory, UniqueObjectFactory
 
 __all__.extend( 'NullHandle Wallet NullGuard LibLoader core_loader dict2obj sys_channel openFile makedirs'.split() )
+__all__.extend( '_arg auto_raise _decorate'.split() )
 __all__.extend( 'OptionProcessor ObjectFactory UniqueObjectFactory'.split() )
 
 class debug(object):
