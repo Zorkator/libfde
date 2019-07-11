@@ -2,7 +2,6 @@
 from traceback import format_exception
 import sys, os, shlex
 
-
 ######################################
 class CommandProcessor(object):
 ######################################

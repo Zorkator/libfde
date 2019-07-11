@@ -5,10 +5,10 @@ __version__     = '.'.join( map( str, __versioninfo__ ) )
 __all__         = []
 
 
-from ._nativeController   import NativeController
+from ._nativeController   import NativeController, cached_property
 from ._fdeController      import FDEController
 from ._exceptionRouter    import ExceptionRouter
-from ._stateful           import Stateful, cached_property
+from ._stateful           import Stateful
 from ._hookable           import Hookable
 from ._startable          import Startable
 from ._verbose            import Verbose

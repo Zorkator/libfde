@@ -2,6 +2,21 @@
 import os
 from ..tools import OptionProcessor, LibLoader, Wallet, debug
 
+from functools import wraps
+
+######################################
+def cached_property( f ):
+######################################
+  @wraps(f)
+  def _wrapper( self ):
+    try  : return getattr( self._stock, '_p_' + f.__name__ )
+    except AttributeError:
+      val = f( self )
+      setattr( self._stock, '_p_' + f.__name__, val )
+      return val
+  return property( _wrapper )
+
+
 
 ##############################################
 class NativeController(OptionProcessor):
@@ -18,29 +33,23 @@ class NativeController(OptionProcessor):
                   , libEnv = 'FDEPATH'
                   )
 
-  @property
+  @cached_property
   def about( self ):
     """return dictionary of instance information."""
-    try   : return self._stock._about
-    except:
-      self._stock._about = self._get_about()
-      return self._stock._about
+    return self._get_about()
 
-  
+  # keep this routine overridable!
   def _get_about( self ):
     return dict( pid     = os.getpid()
                , id      = self._id
                , classId = type(self).__name__ )
 
 
-  @property
+  @cached_property
   def handle( self ):
     """lazy-load property returning handle of loaded library."""
-    try   : return self._stock._handle
-    except:
-      opts = { '--debug': self._debug > 2, '--verbose': self._verbosity > 2 }
-      self._stock._handle = LibLoader( filePath=self._lib, prioPathEnv=self._libEnv, **opts ).handle
-      return self._stock._handle
+    opts = { '--debug': self._debug > 2, '--verbose': self._verbosity > 2 }
+    return LibLoader( filePath=self._lib, prioPathEnv=self._libEnv, **opts ).handle
 
 
   def __init__( self, **kwArgs ):
@@ -74,5 +83,4 @@ class NativeController(OptionProcessor):
 
     """
     pass
-
 

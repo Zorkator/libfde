@@ -1,6 +1,6 @@
 
-from ._variable import Variable
-
+from ._nativeController import cached_property
+from ._variable         import Variable
 
 ######################################
 class Stateful(object):
@@ -46,21 +46,16 @@ class Stateful(object):
     self.keyTokenizer = self.makeKeyTokenizer( sep, conv )
 
 
-  @property
+  @cached_property
   def root( self ):
     """return root scope, specified by option rootPath."""
-    try   : return self._stock._root
-    except:
-      self._stock._root = self._get_path_scope( self._rootPath )
-      return self._stock._root
+    return self._get_path_scope( self._rootPath )
 
-  @property
+
+  @cached_property
   def state( self ):
     """return state scope, specified by option statePath."""
-    try   : return self._stock._state
-    except:
-      self._stock._state = self._get_path_scope( self._statePath )
-      return self._stock._state
+    return self._get_path_scope( self._statePath )
 
 
   def _get_path_scope( self, path ):
@@ -86,37 +81,27 @@ class Stateful(object):
     return getattr( self._stock, '_req_data', [] )
 
 
+  @cached_property
+  def Var( self ):
+    """return root-Scope based variable lookup object."""
+    return self.makeVariableLookup()
+
+
   def makeVariableLookup( self, rootScope = None, keyTok = None, varType = Variable ):
-    """ """
+    """return new variable factory that does <rootScope>-based path lookups and creates <varType> from the result.
+    The optional argument keyTok allows specifying a special keyTokenizer different from that currently set.
+    """
     from ..tools import UniqueObjectFactory
     rootScope = rootScope or self.root
     keyTok    = keyTok    or self.keyTokenizer
 
     def _createVar( ident, *args, **kwArgs ):
       return varType( rootScope[ident] )
-
     return UniqueObjectFactory( _createVar, keyTok )
 
 
   def makeActionContext( self, actionType = None, triggerType = None, varLookup = None ):
     """ """
     from . import ActionContext
-    varLookup = varLookup or self.makeVariableLookup()
-    return ActionContext( actionType, triggerType, varLookup )
-
-
-
-from functools import wraps
-
-######################################
-def cached_property( f ):
-######################################
-  @wraps(f)
-  def _wrapper( self ):
-    try  : return getattr( self._stock, '_p_' + f.__name__ )
-    except AttributeError:
-      val = f( self )
-      setattr( self._stock, '_p_' + f.__name__, val )
-      return val
-  return property( _wrapper )
+    return ActionContext( actionType, triggerType, varLookup or self.Var )
 

@@ -1,7 +1,6 @@
 
-from .       import Expression
-from ..tools import _decorate
-
+from ._expression import Expression
+from ..tools      import _decorate
 
 ##########################################
 class Trigger(Expression):
