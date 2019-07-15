@@ -26,12 +26,16 @@ class Expression(object):
 
     @property
     def value( self ):
+        return self.__value__()
+
+    def __value__( self ):
         return eval( self._code, self._globals, self._locals )
 
-    def __bool__( self ):
+
+    def __bool__( self ):  #< CAUTION: if you override this in a subclass ...
         return bool( self.value )
 
-    __nonzero__ = __bool__
+    __nonzero__ = __bool__ #< ... you've to redefine this as well!
 
     def __str__( self ):
         return self._expr

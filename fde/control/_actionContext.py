@@ -22,7 +22,9 @@ class Action(object):
         try                  : self._tgt = self._varLookup( tgt.strip() ) #< try tgt given as string
         except AttributeError: self._tgt = tgt                            #< else assume reference
 
-        assert callable(func), "Action argument 3 must be callable, got %s instead!" % type(func)
+        if not callable(func):
+            raise AssertionError( "Action argument 3 must be callable, got %s instead!" % type(func) )
+
         self._cause  = cause
         self._func   = func
         self._args   = args
@@ -33,7 +35,7 @@ class Action(object):
 
     def evaluate( self ):
         if self._cause:
-            self._tgt.value = self._func( *self._args, **self._kwArgs )
+            self._tgt.value = self._func( self, *self._args, **self._kwArgs )
 
 
     @classmethod
