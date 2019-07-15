@@ -34,7 +34,7 @@ class Object(Compound):
 
 
   def __new__( _class, *args, **kwArgs ):
-    self = super(Compound, _class).__new__( _class, *args, **kwArgs )
+    self = super(Object, _class).__new__( _class, *args, **kwArgs )
     self._needs_delete = True
     return self
 
