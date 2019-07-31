@@ -1,5 +1,6 @@
 
 import re
+import math
 
 #####################################
 class Expression(object):
@@ -33,7 +34,11 @@ class Expression(object):
 
 
     def __bool__( self ):  #< CAUTION: if you override this in a subclass ...
-        return bool( self.value )
+        """return bool-conversion of Expression-value.
+        CAUTION: in contrast to normal bool-conversion NaN is considered False.
+        """
+        v = self.value
+        return bool(v) and not math.isnan(v)
 
     __nonzero__ = __bool__ #< ... you've to redefine this as well!
 
