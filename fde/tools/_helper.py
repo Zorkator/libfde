@@ -54,7 +54,7 @@ def auto_raise( obj, what = None ):
   return obj
 
 
-def _decorate( kvPairs ):
-  for k,v in kvPairs:
+def _decorate( kvPairs, **kwArgs ):
+  for k,v in dict( kvPairs, **kwArgs ).items():
     yield ('_' + k, v)
 

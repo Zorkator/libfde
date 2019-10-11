@@ -3,24 +3,25 @@ from ._expression import Expression
 from ..tools      import _decorate
 
 ##########################################
-class Trigger(Expression):
+class _Trigger(Expression):
 ##########################################
+    context = None #< set by ActionContext
 
-  def __init__( self, expr, **kwArgs ):
-    super(Trigger,self).__init__( expr )
-    self.__dict__.update( _decorate( kwArgs.items() ) )
+    def __init__( self, expr, **kwArgs ):
+        super(_Trigger,self).__init__( expr )
+        self.__dict__.update( _decorate( kwArgs.items() ) )
 
 
 
 ##########################################
-class Action(object):
+class _Action(object):
 ##########################################
-    _varLookup = lambda i: i
     _instances = []
+    context    = None #< set by ActionContext
 
     def __init__( self, tgt, cause, func, *args, **kwArgs ):
-        try                  : self._tgt = self._varLookup( tgt.strip() ) #< try tgt given as string
-        except AttributeError: self._tgt = tgt                            #< else assume reference
+        try                  : self._tgt = self.context.lookup( tgt.strip() ) #< try tgt given as string
+        except AttributeError: self._tgt = tgt                                #< else assume reference
 
         if not callable(func):
             raise AssertionError( "Action argument 3 must be callable, got %s instead!" % type(func) )
@@ -48,8 +49,8 @@ class Action(object):
 ##########################################
 class ActionContext(object):
 ##########################################
-    Trigger = Trigger
-    Action  = Action
+    Trigger = _Trigger
+    Action  = _Action
 
     @property
     def globals( self ):
@@ -71,18 +72,20 @@ class ActionContext(object):
         #---------------------------------------------
         class Action(actionType or self.Action):
         #---------------------------------------------
-            _varLookup = varLookup
             _instances = []
+            context    = self
 
         #---------------------------------------------
         class Trigger(triggerType or self.Trigger):
         #---------------------------------------------
             _globals = self._globals
             _locals  = self._locals
+            context  = self
 
         self.lookup  = varLookup
         self.trigger = Trigger
         self.action  = Action
+        self._globals.update( Trigger = Trigger, Action = Action )
 
 
     def __call__( self, *args, **kwArgs ):

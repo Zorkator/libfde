@@ -1,4 +1,6 @@
 
+from ..tools import _decorate
+
 #####################################
 class Variable(object):
 #####################################
@@ -12,8 +14,9 @@ class Variable(object):
     def value( self, val ):
         self._ref.value = val
 
-    def __init__( self, ref ):
+    def __init__( self, ref, *args, **kwArgs ):
         self._ref = ref
+        self.__dict__.update( _decorate( kwArgs ) )
 
     # rich comparison methods
     def __lt__( self, other )     : return self.value <  other

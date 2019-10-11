@@ -1,6 +1,5 @@
 
 from ._nativeController import cached_property
-from ._variable         import Variable
 
 ######################################
 class Stateful(object):
@@ -13,6 +12,9 @@ class Stateful(object):
   __opts__ = dict( rootPath  = '{rootId}'
                  , statePath = '{rootId}/state'
                  )
+
+  from ._actionContext import ActionContext
+  from ._variable      import Variable
 
   @classmethod
   def makeKeyTokenizer( _class, sep = None, conv = [] ):
@@ -87,21 +89,27 @@ class Stateful(object):
     return self.makeVariableLookup()
 
 
-  def makeVariableLookup( self, rootScope = None, keyTok = None, varType = Variable ):
+  def makeVariableLookup( self, rootScope = None, keyTok = None, varType = None ):
     """return new variable factory that does <rootScope>-based path lookups and creates <varType> from the result.
     The optional argument keyTok allows specifying a special keyTokenizer different from that currently set.
     """
-    from ..tools import UniqueObjectFactory
+    from ..tools import UniqueObjectFactory, _decorate
     rootScope = rootScope or self.root
     keyTok    = keyTok    or self.keyTokenizer
+    varType   = varType   or self.Variable
 
     def _createVar( ident, *args, **kwArgs ):
-      return varType( rootScope[ident] )
+      return varType( rootScope[ident], *args, **kwArgs )
     return UniqueObjectFactory( _createVar, keyTok )
 
 
+  @cached_property
+  def actionContext( self ):
+    """return default ActionContext object, using class types for Action, Trigger and VariableLookup."""
+    return self.makeActionContext()
+
+
   def makeActionContext( self, actionType = None, triggerType = None, varLookup = None ):
-    """ """
-    from . import ActionContext
-    return ActionContext( actionType, triggerType, varLookup or self.Var )
+    """return new action context, using custom types for Action, Trigger, or VariableLookup."""
+    return self.ActionContext( actionType, triggerType, varLookup or self.Var )
 
