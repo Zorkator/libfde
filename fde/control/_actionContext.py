@@ -60,9 +60,14 @@ class ActionContext(object):
     def locals( self ):
         return self._locals
 
-    def __init__( self, actionType = None, triggerType = None, varLookup = None, globals = None, locals = None ):
+    @property
+    def host( self ):
+        return self._host
+
+    def __init__( self, host, actionType = None, triggerType = None, varLookup = None, globals = None, locals = None ):
         varLookup = varLookup or (lambda i : i)
 
+        self._host    = host
         self._locals  = dict()                      if (locals  is None) else locals
         self._globals = dict( __builtins__ = None ) if (globals is None) else globals
         self._globals['__lookup__'] = varLookup

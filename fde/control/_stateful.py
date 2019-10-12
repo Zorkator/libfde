@@ -111,5 +111,5 @@ class Stateful(object):
 
   def makeActionContext( self, actionType = None, triggerType = None, varLookup = None ):
     """return new action context, using custom types for Action, Trigger, or VariableLookup."""
-    return self.ActionContext( actionType, triggerType, varLookup or self.Var )
+    return self.ActionContext( self, actionType, triggerType, varLookup or self.Var )
 
