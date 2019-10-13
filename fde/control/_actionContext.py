@@ -20,8 +20,8 @@ class _Action(object):
     context    = None #< set by ActionContext
 
     def __init__( self, tgt, cause, func, *args, **kwArgs ):
-        try                  : self._tgt = self.context.lookup( tgt.strip() ) #< try tgt given as string
-        except AttributeError: self._tgt = tgt                                #< else assume reference
+        if hasattr( tgt, 'value' ): self._tgt = tgt                        #< assume variable reference
+        else                      : self._tgt = self.context.lookup( tgt ) #< assume tgt given as identifier
 
         if not callable(func):
             raise AssertionError( "Action argument 3 must be callable, got %s instead!" % type(func) )
