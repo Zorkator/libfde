@@ -24,6 +24,7 @@ class TypeInfo(Compound):
 ######################################
     _fields_    = [('_spec', TypeSpecs)]
     _anonymous_ = ['_spec']
+    __slots__   = Compound.__slots__
 
     @property
     def ctype( self ):
@@ -47,12 +48,13 @@ class TypedObject(Object):
 ######################################
     __typeprocs__ = [] #< no native methods for TypedObject
     _fields_      = [('_typeInfo', TypeInfoPtr)]
+    __slots__     = Object.__slots__
 
-    @pyData_property
+    @property
     def ftype( self ):
         if self._typeInfo: return self._typeInfo.contents
 
-    @pyData_property
+    @property
     def ctype( self ):
         if self._typeInfo: return self._typeInfo.contents.ctype
 

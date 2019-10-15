@@ -77,10 +77,10 @@ class Compound(Union):
 
     @property
     def pyData( self ):
-        try   : return self.__getattribute__('_py_data')
-        except:
-            self._py_data = Compound.__py_cache__.setdefault( addressof(self), dict() )
-            return self._py_data
+        d = getattr( self, '_py_data', None )
+        if d is None:
+            self._py_data = d = Compound.__py_cache__.setdefault( addressof(self), dict() )
+        return d
 
 
     def __new__( _class, *args, **kwArgs ):
