@@ -1,5 +1,5 @@
 
-from ctypes  import Union, sizeof, Structure, c_int8
+from ctypes  import Union, sizeof, addressof, Structure, c_int8
 from six     import add_metaclass
 from ..tools import core_loader
 
@@ -56,6 +56,8 @@ class Compound(Union):
 ######################################
     __typeprocs__ = [] #< no procedures for Compound
     __abstract__  = [] #< no abstract bases
+    __slots__     = ['_needs_delete', '_py_data']
+    __py_cache__  = dict()
 
     @classmethod
     def __getattr__( _class, name ):
@@ -73,6 +75,44 @@ class Compound(Union):
         return attr
 
 
+    @property
+    def pyData( self ):
+        d = getattr( self, '_py_data', None )
+        if d is None:
+            self._py_data = d = Compound.__py_cache__.setdefault( addressof(self), dict() )
+        return d
+
+
+    def __new__( _class, *args, **kwArgs ):
+        self = super(Compound, _class).__new__( _class, *args, **kwArgs )
+        self._needs_delete = True
+        return self
+
+
+    def __del__( self ):
+        if self._needs_delete:
+            Compound.__py_cache__.pop( addressof(self), None )
+            self.delete()
+
+
     def __hash__( self ):
-      return hash( tuple(self._data) )
+        return hash( tuple(self._data) )
+
+
+    def delete( self ): #< reimplemented in Object
+        pass
+
+
+from functools import wraps
+
+######################################
+def pyData_property( f ):
+######################################
+    @wraps( f )
+    def _wrapper( self ):
+        try  : return self.pyData['.' + f.__name__]
+        except KeyError:
+            self.pyData['.' + f.__name__] = val = f( self )
+            return val
+    return property( _wrapper )
 

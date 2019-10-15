@@ -1,6 +1,6 @@
 
 from ctypes  import *
-from ._base   import Compound
+from ._base   import Compound, pyData_property
 from ._object import Object
 from ._ftypes import MemoryRef, _typeMap_ft2ct
 
@@ -8,7 +8,7 @@ from ._ftypes import MemoryRef, _typeMap_ft2ct
 ######################################
 class TypeSpecs(Structure):
 ######################################
-  pass
+    pass
 
 TypeSpecsPtr       = POINTER(TypeSpecs)
 TypeSpecs._fields_ = [('typeId',   MemoryRef),
@@ -24,6 +24,7 @@ class TypeInfo(Compound):
 ######################################
     _fields_    = [('_spec', TypeSpecs)]
     _anonymous_ = ['_spec']
+    __slots__   = Compound.__slots__
 
     @property
     def ctype( self ):
@@ -47,19 +48,18 @@ class TypedObject(Object):
 ######################################
     __typeprocs__ = [] #< no native methods for TypedObject
     _fields_      = [('_typeInfo', TypeInfoPtr)]
+    __slots__     = Object.__slots__
 
     @property
     def ftype( self ):
-        if self._typeInfo:
-            return self._typeInfo.contents
+        if self._typeInfo: return self._typeInfo.contents
 
     @property
     def ctype( self ):
-        if self._typeInfo:
-            return self._typeInfo.contents.ctype
+        if self._typeInfo: return self._typeInfo.contents.ctype
 
-    def __nonzero__( self ):
+    def __bool__( self ):
         return bool(self._typeInfo)
 
-    __bool__ = __nonzero__ #< py3 compatibility
+    __nonzero__ = __bool__ #< py2 compatibility
 
