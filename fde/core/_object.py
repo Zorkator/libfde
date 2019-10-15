@@ -8,6 +8,7 @@ from ._ftypes import _typeMap_py2id as _id_map, _typeMap_py2ct as _ct_map
 class Object(Compound):
 ######################################
     __typeprocs__ = [] #< no native methods for object
+    __slots__     = Compound.__slots__
 
     @property
     def value( self ):
