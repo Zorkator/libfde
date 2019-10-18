@@ -1,5 +1,5 @@
 
-from ctypes   import c_int32
+from ctypes   import c_int32, byref
 from ._base   import Compound
 from ._ftypes import _typeMap_py2id as _id_map, _typeMap_py2ct as _ct_map
 
