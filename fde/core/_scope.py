@@ -164,6 +164,13 @@ class Scope(HashMap):
       return super(Scope, self).__setitem__( ident, val )
 
 
+  def getSubScope( self, *path ):
+    ptr = POINTER(type(self))(self)
+    for ident in path:
+        self.get_subscope_( byref(ptr), ptr, c_char_p(ident), c_int(len(ident)) )
+    return ptr.contents
+
+
   @classmethod
   def getProcessScope( _class, *path ):
     ptr = POINTER(_class)()

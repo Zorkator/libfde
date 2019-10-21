@@ -37,3 +37,5 @@ test/exe/
 \.svn/
 
 *.i90
+
+libfortres/release/

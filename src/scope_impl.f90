@@ -24,9 +24,9 @@ end module
 
 module impl_scope_itf__
   use impl_scope__
-  implicit none 
+  implicit none
 
-  interface 
+  interface
     subroutine scope_get_procedure_c( res, scope, id, raise )
       import
       type(c_funptr)         :: res
@@ -103,6 +103,21 @@ end module
       endif
     end function
   end function
+
+
+!_PROC_EXPORT(scope_get_subscope_c)
+  subroutine scope_get_subscope_c( res, scope, id )
+    ! CAUTION: without the following use restriction gfortran
+    !          screws up the c_loc assignment below!
+    use fde_scope,    only: getScope
+    use impl_scope__, only: HashMap_t
+    use iso_c_binding
+    implicit none
+    type(c_ptr), intent(inout) :: res
+    type(HashMap_t)            :: scope
+    character(len=*)           :: id
+    res = c_loc( getScope( scope, id ) ) !< !!!
+  end subroutine
 
 
 !_PROC_EXPORT(scope_declare_callback_c)
@@ -344,7 +359,7 @@ end module
     character(len=*) :: id
     procedure()      :: proc_
     type(c_ptr)      :: fptr
-  
+
     fptr = transfer( c_funloc(proc_), fptr )
     call set( scope, id, Item_of(fptr) )
   end subroutine
