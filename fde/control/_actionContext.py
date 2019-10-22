@@ -19,10 +19,12 @@ class _Action(object):
     _instances = []
     context    = None #< set by ActionContext
 
-    def __init__( self, tgt, cause, func, *args, **kwArgs ):
-        if hasattr( tgt, 'value' ): self._tgt = tgt                        #< assume variable reference
-        else                      : self._tgt = self.context.lookup( tgt ) #< assume tgt given as identifier
+    @property
+    def cause( self ):
+        return self._cause
 
+
+    def __init__( self, cause, func, *args, **kwArgs ):
         if not callable(func):
             raise AssertionError( "Action argument 3 must be callable, got %s instead!" % type(func) )
 
@@ -36,7 +38,11 @@ class _Action(object):
 
     def evaluate( self ):
         if self._cause:
-            self._tgt.value = self._func( self, *self._args, **self._kwArgs )
+            self.execute()
+
+
+    def execute( self ):
+        return self._func( self, *self._args, **self._kwArgs )
 
 
     @classmethod
@@ -64,7 +70,7 @@ class ActionContext(object):
     def host( self ):
         return self._host
 
-    def __init__( self, host, actionType = None, triggerType = None, varLookup = None, globals = None, locals = None ):
+    def __init__( self, host, varLookup = None, globals = None, locals = None ):
         varLookup = varLookup or (lambda i : i)
 
         self._host    = host
@@ -74,15 +80,15 @@ class ActionContext(object):
 
         # Derive given classes to make own ones for the newly created ActionContext
 
-        #---------------------------------------------
-        class Action(actionType or self.Action):
-        #---------------------------------------------
+        #----------------------------------
+        class Action(self.Action):
+        #----------------------------------
             _instances = []
             context    = self
 
-        #---------------------------------------------
-        class Trigger(triggerType or self.Trigger):
-        #---------------------------------------------
+        #----------------------------------
+        class Trigger(self.Trigger):
+        #----------------------------------
             _globals = self._globals
             _locals  = self._locals
             context  = self
