@@ -176,7 +176,7 @@
       function crc32_file_channel( chnl, len, seed, iostat )
         use iso_c_binding
         integer(kind=c_int32_t), intent(in) :: chnl
-        integer(kind=c_size_t)              :: len
+        integer(kind=c_size_t),  intent(in) :: len
         integer(kind=c_int32_t),   optional :: seed, iostat
       end function
     end interface
