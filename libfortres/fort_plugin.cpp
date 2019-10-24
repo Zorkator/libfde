@@ -146,12 +146,12 @@ class PluginBroker
         : filePath( realpath_of(filePath_) )
         , handle(handle_)
         , state(state_)
-          {
-              /* use original path if realpath conversion failed */
-              if (filePath.empty() && strlen( filePath_ ) > 0) {
-                  filePath = filePath_;
-              }
-          }
+        {
+            /* use original path if realpath conversion failed */
+            if (filePath_ && filePath.empty()) {
+                filePath = filePath_;
+            }
+        }
 
         String            filePath;
         SharedLib::Handle handle;
