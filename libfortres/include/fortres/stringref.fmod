@@ -82,8 +82,8 @@
 
 !_PROC_EXPORT(stringref_of_buf)
         function stringref_of_buf( fstrBuf ) result(strRef)
-          character(len=*),  intent(out) :: fstrBuf
-          type (StringRef_t)             :: strRef
+          character(len=*),  intent(inout) :: fstrBuf
+          type (StringRef_t)               :: strRef
           strRef = stringref_of_str_trim( fstrBuf, .false. )
         end function
 
