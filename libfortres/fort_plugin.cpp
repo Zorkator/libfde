@@ -98,6 +98,19 @@ class SharedLib
 class PluginBroker
 /*******************/
 {
+  public:
+    typedef enum
+    {
+      State_invalid  = -1,
+      State_disabled =  0,
+      State_enabled  =  1,
+      State_located  =  2
+    /*******************/
+    } PluginState;
+    /*******************/
+
+
+  private:
     /*******************/
     class Predicate
     /*******************/
@@ -125,14 +138,6 @@ class PluginBroker
     };
 
 
-    typedef enum
-    {
-      State_invalid  = -1,
-      State_disabled =  0,
-      State_enabled  =  1
-    } PluginState;
-
-    
     /*******************/
     class PluginRef
     /*******************/
@@ -143,14 +148,22 @@ class PluginBroker
           { /* nothing to do here */ }
 
         PluginRef( const char *filePath_, const SharedLib::Handle &handle_, PluginState state_ = State_disabled )
-        : filePath( realpath_of(filePath_) )
-        , handle(handle_)
-        , state(state_)
+        : handle(handle_)
         {
+          if (state_ == State_located)
+          {
+            /* use original filePath if shared library should be located by OS (PATH / LD_LIBRARY_PATH) */
+            state    = State_enabled;
+            filePath = filePath_;
+          }
+          else
+          {
             /* use original path if realpath conversion failed */
-            if (filePath_ && filePath.empty()) {
-                filePath = filePath_;
-            }
+            state    = state_;
+            filePath = realpath_of( filePath_ );
+            if (filePath.empty())
+              { filePath = filePath_; }
+          }
         }
 
         String            filePath;
@@ -255,13 +268,10 @@ class PluginBroker
         _libPath << LIB_PATH_SEP;
       }
 
-    
+
     void
-      registerPlugin( const StringRef *filePath, const StringRef *id, bool isEnabled = true )
-      {
-        PluginState state = (isEnabled)? State_enabled : State_disabled;
-        _pluginMap.insertPlugin( _ref_str(filePath), _ref_str(id), NULL, state );
-      }
+      registerPlugin( const StringRef *filePath, const StringRef *id, PluginState state = State_enabled )
+        { _pluginMap.insertPlugin( _ref_str(filePath), _ref_str(id), NULL, state ); }
 
 
     bool
@@ -273,7 +283,7 @@ class PluginBroker
           { itr->second.state = (isEnabled)? State_enabled : State_disabled; }
         return isOk;
       }
-    
+
 
     void
       scanPlugins( const StringRef *predSym )
@@ -311,7 +321,7 @@ class PluginBroker
           { sym = lib->getSymbol( _ref_cstr(symId) ); }
         return sym;
       }
-    
+
 
     bool
       isAvailable( const StringRef *pluginId, const StringRef *symId = NULL )
@@ -356,7 +366,7 @@ class PluginBroker
         id_end = (id_end == String::npos)? libFile.length() : id_end;
         return libFile.substr( id_beg, id_end - id_beg );
       }
-      
+
   private:
     Map    _pluginMap;
     String _pluginDir;
@@ -390,7 +400,15 @@ void
 f_plugin_register( StringRef *filePath, StringRef *id, int *isEnabled )
 {
   bool enabled = isEnabled == NULL || *isEnabled != 0; //< default: true!
-  getBroker()->registerPlugin( filePath, id, enabled );
+  getBroker()->registerPlugin( filePath, id, PluginBroker::PluginState(enabled) );
+}
+
+
+_dllExport_C
+void
+f_plugin_register_so( StringRef *fileName, StringRef *id )
+{
+  getBroker()->registerPlugin( fileName, id, PluginBroker::State_located );
 }
 
 

@@ -13,7 +13,8 @@
         implicit none
         private
 
-        public :: plugin_set_path, plugin_register, plugin_set_enabled
+        public :: plugin_set_path, plugin_set_enabled
+        public :: plugin_register, plugin_register_so
         public :: plugin_iterate, plugin_filePath_to_id
         public :: plugin_available, plugin_sym, plugin_proc, plugin_call
         public :: plugin_try_sym, plugin_try_proc, plugin_try_call
@@ -37,6 +38,12 @@
             type(StringRef_t), intent(in) :: f !< plugin filePath
             type(StringRef_t), intent(in) :: i !< plugin id
             integer                       :: e !< plugin enabled?
+          end subroutine
+
+          subroutine plugin_reg_so_( f, i ) _cID(f_plugin_register_so)
+            import StringRef_t
+            type(StringRef_t), intent(in) :: f !< plugin fileName
+            type(StringRef_t), intent(in) :: i !< plugin id
           end subroutine
 
           function plugin_set_ebl_( id, ebl ) _cID(f_plugin_set_enabled)
@@ -129,6 +136,13 @@
                                   else; enabled_ = 1
             end if
             call plugin_register_( str(filePath), str(id), enabled_ )
+          end subroutine
+
+!_PROC_EXPORT(plugin_register_so)
+          subroutine plugin_register_so( fileName, id )
+            character(len=*)           :: fileName
+            character(len=*), optional :: id
+            call plugin_reg_so_( str(fileName), str(id) )
           end subroutine
 
 !_PROC_EXPORT(plugin_set_enabled)

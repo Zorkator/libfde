@@ -13,6 +13,9 @@ _dllExport_C
 void f_plugin_register( StringRef *pluginId, StringRef *id, int *isEnabled );
 
 _dllExport_C
+void f_plugin_register_so( StringRef *fileName, StringRef *id );
+
+_dllExport_C
 int  f_plugin_set_enabled( StringRef *pluginId, int *isEnabled );
 
 _dllExport_C
@@ -20,6 +23,9 @@ void f_plugin_iterate( PluginInfoHandler handler );
 
 _dllExport_C
 void f_plugin_filePath_to_id( StringRef *filePath, StringRef *id );
+
+_dllExport_C
+int f_plugin_available( StringRef *pluginId, StringRef *symId );
 
 _dllExport_C
 void * f_plugin_sym( StringRef *pluginId, StringRef *symId );
