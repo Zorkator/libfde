@@ -9,7 +9,9 @@ class Hookable(object):
     Hookable provides cashed access to certain hook scope, determined by option hooksPath
 
     """
-    __opts__ = dict( hooksPath = '{rootId}/hooks' )
+    __opts__      = dict( hooksPath = '{rootId}/hooks' )
+    __hookAlias__ = dict()
+
 
     @cached_property
     def hooks( self ):
@@ -32,16 +34,17 @@ class Hookable(object):
         #
         hooks = self.hooks
         # first, connect methods implemented directly in class ...
-        for h in hooks.keys():
-            try   : hooks.setCallback( h, getattr( self, h ) )
+        for hookId in hooks.keys():
+            try   : hooks.setCallback( hookId, getattr( self, hookId ) )
             except: pass
 
         # then, connect methods decorated with hookIds ...
-        Ctrl = type(self)
+        Ctrl  = type(self)
+        mapId = self.__hookAlias__.get
         # NOTE: get Controller-methods from class, to prevent triggering property evaluation!
         for method in filter( callable, [ getattr( Ctrl, m ) for m in dir(Ctrl) ] ):
-            for h in getattr( method, '_hookIds', [] ):
-                hooks.connectCallback( h, method.__get__( self ) )
+            for hookId in getattr( method, '_hookIds', [] ):
+                hooks.connectCallback( mapId( hookId, hookId ), method.__get__( self ) )
         #
         # THUS, methods get called in this order!
 
