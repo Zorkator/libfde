@@ -44,7 +44,7 @@ class Hookable(object):
         # NOTE: get Controller-methods from class, to prevent triggering property evaluation!
         for method in filter( callable, [ getattr( Ctrl, m ) for m in dir(Ctrl) ] ):
             for hookId in getattr( method, '_hookIds', [] ):
-                hooks.connectCallback( mapId( hookId, hookId ), method.__get__( self ) )
+                hooks.connectCallback( mapId( hookId ) or hookId, method.__get__( self ) )
         #
         # THUS, methods get called in this order!
 
