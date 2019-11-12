@@ -1,13 +1,6 @@
 #ifndef __FORTRES_EXCEPTION_FMOD
 #define __FORTRES_EXCEPTION_FMOD
 
-#if !defined _MODULENAME_try_interface
-# define _MODULENAME_exception  try_interface
-#endif
-
-#if !defined _MODULENAME_exception
-# define _MODULENAME_exception  exception
-#endif
 
 #include "fortres/itfUtil.fpp"
 #include "fortres/exception.fpp"
@@ -25,7 +18,7 @@
 !_PROC_EXPORT(try__)
       subroutine try__( res, catch, tp, what, tgt, _enum_20(arg) )
         use, intrinsic :: iso_c_binding
-        use _MODULENAME_stringref
+        use fde_stringref
         integer(kind=c_int)       :: res
         integer                   :: catch(*)
         type(StringRef_t), target :: what
@@ -35,7 +28,7 @@
         interface
           function c_try_( c, w, tp, tgt, _enum_20(arg), x_ )_cID(f_try)
             use, intrinsic :: iso_c_binding
-            use _MODULENAME_stringref
+            use fde_stringref
             integer(kind=c_int),   intent(in) :: c(*) !< catch-list
             type(c_ptr),    value             :: w    !< what-buffer
             type(c_funptr), value, intent(in) :: tp   !< trace procedure
@@ -56,8 +49,8 @@
       end subroutine
 
 
-      module _MODULENAME_try_interface
-        use _MODULENAME_stringref
+      module fde_try_interface
+        use fde_stringref
         use iso_c_binding
 
         ! Using the try-catch mechanism requires an interface definition
@@ -159,10 +152,10 @@
       end module
 
 
-      module _MODULENAME_exception
-        use _MODULENAME_stringref
-        use _MODULENAME_tracestack
-        use _MODULENAME_try_interface
+      module fde_exception
+        use fde_stringref
+        use fde_tracestack
+        use fde_try_interface
         implicit none
         private
 

@@ -1,14 +1,10 @@
 #ifndef __FORTRES_DIRENT_FMOD
 #define __FORTRES_DIRENT_FMOD
 
-#if !defined _MODULENAME_dirent
-# define _MODULENAME_dirent  dirent
-#endif
-
 #include "fortres/itfUtil.fpp"
 
-      module _MODULENAME_dirent
-        use _MODULENAME_stringref
+      module fde_dirent
+        use fde_stringref
         use, intrinsic :: iso_c_binding
         implicit none
         private

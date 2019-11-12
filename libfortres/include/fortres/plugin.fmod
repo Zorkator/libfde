@@ -1,14 +1,10 @@
 #ifndef __FORTRES_PLUGIN_FMOD
 #define __FORTRES_PLUGIN_FMOD
 
-#if !defined _MODULENAME_plugin
-# define _MODULENAME_plugin  plugin
-#endif
-
 #include "fortres/itfUtil.fpp"
 
-      module _MODULENAME_plugin
-        use _MODULENAME_stringref
+      module fde_plugin
+        use fde_stringref
         use, intrinsic :: iso_c_binding
         implicit none
         private
