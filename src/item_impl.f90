@@ -4,6 +4,7 @@
 module impl_item__
   use fde_item
   use fde_typeinfo
+  use fde_basestring, only: temporary_string
   use fde_string
   use fde_ref
   use fde_basetypes

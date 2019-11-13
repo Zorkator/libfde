@@ -6,7 +6,7 @@ module fde_string
   use fde_ref
   use fde_memoryref
   use fde_basestring, only: BaseString_t, basestring_len_ref, &
-                            attribute_permanent, attribute_volatile, permanent_string, temporary_string
+                            attribute_permanent, attribute_volatile
   use fde_ostream
   implicit none
   private
@@ -35,7 +35,6 @@ module fde_string
   public :: char
   public :: delete
   public :: set_attribute, attribute_permanent, attribute_volatile
-  public :: permanent_string, temporary_string
   public :: basestring_memoryref_c
 
   public :: lower, to_lower
