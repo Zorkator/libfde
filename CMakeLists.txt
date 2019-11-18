@@ -1,16 +1,17 @@
 cmake_minimum_required(VERSION 2.8.12)
 project(fde Fortran)
 
-if(WIN32)
-
+if(MSVC)
 else()
-  set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -cpp")
   if("${CMAKE_Fortran_COMPILER_ID}" STREQUAL "GNU")
+    set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -cpp")
     set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -fbacktrace")
-    set_source_files_properties(src/crc_impl.f90 APPEND PROPERTIES COMPILE_FLAGS "-ffree-line-length-none")
+    set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -ffree-line-length-none")
     set_source_files_properties(src/crc_impl.f90 APPEND PROPERTIES COMPILE_FLAGS "-fno-range-check")
   elseif("${CMAKE_Fortran_COMPILER_ID}" STREQUAL "Intel")
+    set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -fpp")
     set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -traceback")
+    set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -threads -m64 -allow nofpp-comments -nofixed -noextend-source")
     set_source_files_properties(src/crc_impl.f90 APPEND PROPERTIES COMPILE_FLAGS "-assume noold_boz")
   endif()
 endif()
@@ -25,17 +26,12 @@ function(generateFiles)
     add_custom_command(
       OUTPUT "${outFile}"
       COMMAND "${CMAKE_COMMAND}" -E make_directory "${outDir}"
-      COMMAND python "${CMAKE_CURRENT_SOURCE_DIR}/typegen.py"
-      "${inFile}"
-      -o "${outFile}"
+      COMMAND python "${CMAKE_CURRENT_SOURCE_DIR}/typegen.py" "${inFile}" -o "${outFile}"
       DEPENDS "${inFile}"
     )
     list(APPEND OutputFileList "${outFile}")
   endforeach()
-  add_custom_target(
-    fde_gen
-    DEPENDS ${OutputFileList}
-  )
+  add_custom_target(fde_gen DEPENDS ${OutputFileLis})
 endfunction()
 
 generateFiles(
@@ -49,7 +45,6 @@ generateFiles(
   src/string.f90_tpp
 )
 
-# External Libs
 include_directories(include)
 add_subdirectory(libfortres)
 add_library(fde SHARED
@@ -90,8 +85,10 @@ add_library(fde SHARED
 add_dependencies(fde fde_gen)
 target_link_libraries(fde PRIVATE fortres)
 target_include_directories(fde PUBLIC include)
+if(MSVC)
+  target_compile_definitions(fde PRIVATE BUILT_TYPE=SHARED_LIB)
+else()
+endif()
 
-target_compile_definitions(fde PRIVATE BUILT_TYPE=SHARED_LIB)
-
-set(CMAKE_Fortran_MODULE_DIRECTORY ${CMAKE_BINARY_DIR}/modules)
-set_property(TARGET fortres PROPERTY POSITION_INDEPENDENT_CODE ON)
+#set_property(TARGET fortres PROPERTY POSITION_INDEPENDENT_CODE ON)
+#set_property(TARGET fde PROPERTY LINKER_LANGUAGE CXX)
