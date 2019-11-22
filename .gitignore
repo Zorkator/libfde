@@ -39,3 +39,5 @@ test/exe/
 *.i90
 
 libfortres/release/
+
+/_*/
