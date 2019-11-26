@@ -26,8 +26,8 @@ class CommandProcessor(object):
           from ..tools import debug; debug()
 
         if   isinstance( cmd, basestring ): res = self._dispatchCommand( cmd )
-        elif hasattr( cmd, 'keys' )       : res = self.setStateData( cmd )
-        elif hasattr( cmd, '__iter__' )   : res = self.getStateData( cmd )
+        elif hasattr( cmd, 'keys' )       : res = self.setData( cmd )
+        elif hasattr( cmd, '__iter__' )   : res = self.getData( cmd )
         else                              : res = "unknown command"
 
       except StopIteration:
