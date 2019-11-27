@@ -5,13 +5,18 @@ if(MSVC)
   set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} /fpp")
 else()
   if("${CMAKE_Fortran_COMPILER_ID}" STREQUAL "GNU")
-    set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -cpp")
+    set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -cpp -ffree-line-length-none")
     set_source_files_properties(src/crc_impl.f90 APPEND PROPERTIES COMPILE_FLAGS "-fno-range-check")
   elseif("${CMAKE_Fortran_COMPILER_ID}" STREQUAL "Intel")
     set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -fpp")
     set_source_files_properties(src/crc_impl.f90 APPEND PROPERTIES COMPILE_FLAGS "-assume noold_boz")
   endif()
 endif()
+
+if(NOT CMAKE_Fortran_MODULE_DIRECTORY)
+  set(CMAKE_Fortran_MODULE_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/modulefiles")
+endif()
+
 
 function(generateFiles)
   set(OutputFileList "")
@@ -82,6 +87,8 @@ add_library(fde SHARED
 add_dependencies(fde fde_gen)
 target_link_libraries(fde PRIVATE fortres)
 target_include_directories(fde PUBLIC include)
+target_include_directories(fde PUBLIC "${CMAKE_Fortran_MODULE_DIRECTORY}")
+
 if(MSVC)
   target_compile_definitions(fde PRIVATE BUILT_TYPE=SHARED_LIB)
 else()
