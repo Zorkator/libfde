@@ -1,6 +1,7 @@
 cmake_minimum_required(VERSION 2.8.12)
 project(fde Fortran)
 
+# Set compiler flags
 if(MSVC)
   set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} /fpp")
 else()
@@ -16,8 +17,10 @@ endif()
 # Path for Fortran modules
 set(CMAKE_Fortran_MODULE_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/include")
 
+# Find python package for source file generator
 find_package (Python REQUIRED Interpreter)
 
+# Custom rule for source code generator
 function(generateFiles)
   set(OutputFileList "")
   foreach(inFile IN LISTS ARGN)
@@ -36,6 +39,7 @@ function(generateFiles)
   add_custom_target(fde_gen DEPENDS ${OutputFileList} SOURCES ${ARGN})
 endfunction()
 
+# input files for generator
 generateFiles(
   src/basetypes.f90_tpp
   src/containertypes.f90_tpp
@@ -47,8 +51,13 @@ generateFiles(
   src/string.f90_tpp
 )
 
+# include path for this and all subprojects
 include_directories(include)
+
+# fortres
 add_subdirectory(libfortres)
+
+# fde
 add_library(fde SHARED
   src/basetypes.f90
   src/containertypes.f90
