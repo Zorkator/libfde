@@ -31,12 +31,14 @@ function(generateFiles)
     add_custom_command(
       OUTPUT "${outFile}"
       COMMAND "${CMAKE_COMMAND}" -E make_directory "${outDir}"
-      COMMAND "${Python_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/typegen.py" "${inFile}" -o "${outFile}"
+      COMMAND "${Python_EXECUTABLE}" "${CMAKE_SOURCE_DIR}/typegen.py" "${inFile}" -o "${outFile}"
       DEPENDS "${inFile}"
     )
     list(APPEND OutputFileList "${outFile}")
   endforeach()
-  add_custom_target(fde_gen DEPENDS ${OutputFileList} SOURCES ${ARGN})
+  if(NOT TARGET fde_gen)
+    add_custom_target(fde_gen DEPENDS ${OutputFileList} SOURCES ${ARGN})
+  endif()
 endfunction()
 
 # input files for generator
@@ -105,3 +107,9 @@ endif()
 
 #set_property(TARGET fortres PROPERTY POSITION_INDEPENDENT_CODE ON)
 #set_property(TARGET fde PROPERTY LINKER_LANGUAGE CXX)
+
+# tests
+enable_testing()
+add_subdirectory(test)
+
+
