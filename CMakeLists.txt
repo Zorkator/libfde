@@ -17,6 +17,7 @@ if(NOT CMAKE_Fortran_MODULE_DIRECTORY)
   set(CMAKE_Fortran_MODULE_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/modulefiles")
 endif()
 
+find_package (Python REQUIRED Interpreter)
 
 function(generateFiles)
   set(OutputFileList "")
@@ -28,7 +29,7 @@ function(generateFiles)
     add_custom_command(
       OUTPUT "${outFile}"
       COMMAND "${CMAKE_COMMAND}" -E make_directory "${outDir}"
-      COMMAND python "${CMAKE_CURRENT_SOURCE_DIR}/typegen.py" "${inFile}" -o "${outFile}"
+      COMMAND "${Python_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/typegen.py" "${inFile}" -o "${outFile}"
       DEPENDS "${inFile}"
     )
     list(APPEND OutputFileList "${outFile}")
