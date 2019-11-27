@@ -13,9 +13,8 @@ else()
   endif()
 endif()
 
-if(NOT CMAKE_Fortran_MODULE_DIRECTORY)
-  set(CMAKE_Fortran_MODULE_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/modulefiles")
-endif()
+# Path for Fortran modules
+set(CMAKE_Fortran_MODULE_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/include")
 
 find_package (Python REQUIRED Interpreter)
 
