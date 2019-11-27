@@ -1,4 +1,5 @@
 
+#include "fde/itfUtil.fpp"
 #include "fde/ref_status.fpp"
 
 module fde_basestring
@@ -13,7 +14,9 @@ module fde_basestring
 
   ! parameter definitions
 
+  !_SYM_EXPORT(temporary_string)
   type(BaseString_t), parameter :: temporary_string    = BaseString_t( null(), 0, _ref_WeakLent )
+  !_SYM_EXPORT(permanent_string)
   type(BaseString_t), parameter :: permanent_string    = BaseString_t( null(), 0, _ref_HardLent )
   integer(kind=1),    parameter :: attribute_volatile  = 0
   integer(kind=1),    parameter :: attribute_permanent = 1
