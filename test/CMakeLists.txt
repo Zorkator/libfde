@@ -6,17 +6,28 @@ function(new_test)
     add_executable(${name} ${source})
     target_link_libraries(${name} PRIVATE fde)
     add_test(NAME test.${name} COMMAND $<TARGET_FILE:${name}>)
-    list(APPEND OutputFileList "${outFile}")
   endforeach()
-  #add_custom_command(
-  #  TARGET test_fde POST_BUILD
-  #  COMMAND "${CMAKE_COMMAND}" -E copy "$<TARGET_FILE:fde>" "$<TARGET_FILE_DIR:test_fde>/$<TARGET_FILE_NAME:fde>"
-  #)
-  #add_custom_command(
-  #  TARGET test_fde POST_BUILD
-  #  COMMAND "${CMAKE_COMMAND}" -E copy "$<TARGET_FILE:fortres>" "$<TARGET_FILE_DIR:test_fde>/$<TARGET_FILE_NAME:fortres>"
-  #)
-  #add_custom_target(fde_gen DEPENDS ${OutputFileList} SOURCES ${ARGN})
+  if(WIN32)
+    # copy dynamic libraries when rpath is not available
+    get_target_property(fde_type fde TYPE)
+    if(fde_type STREQUAL "SHARED_LIBRARY")
+      add_custom_command(
+        TARGET ${name} POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy
+                "$<TARGET_FILE:fde>"
+                "$<TARGET_FILE_DIR:${name}>/$<TARGET_FILE_NAME:fde>"
+      )
+    endif()
+    get_target_property(fortres_type fortres TYPE)
+    if(fortres_type STREQUAL "SHARED_LIBRARY")
+      add_custom_command(
+        TARGET ${name} POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy
+                "$<TARGET_FILE:fortres>"
+                "$<TARGET_FILE_DIR:${name}>/$<TARGET_FILE_NAME:fortres>"
+      )
+    endif()
+  endif()
 endfunction()
 
 # input files for generator
