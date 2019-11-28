@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 2.8.12)
-project(fde Fortran)
+project(fde Fortran CXX)
 
 # Set compiler flags
 if(MSVC)
@@ -105,9 +105,10 @@ if(MSVC)
 else()
 endif()
 
-#set_property(TARGET fortres PROPERTY POSITION_INDEPENDENT_CODE ON)
-#set_property(TARGET fde PROPERTY LINKER_LANGUAGE CXX)
-
+set_property(TARGET fortres PROPERTY POSITION_INDEPENDENT_CODE ON)
+if(NOT MSVC)
+  set_property(TARGET fde PROPERTY LINKER_LANGUAGE CXX)
+endif()
 # tests
 enable_testing()
 add_subdirectory(test)

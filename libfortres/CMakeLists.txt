@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 2.8.12)
 project(fortres C CXX)
 
-add_library(fortres SHARED
+add_library(fortres
   ./dirent.c
   ./fort_dirent.cpp
   ./fort_exception.cpp
