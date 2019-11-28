@@ -2,7 +2,7 @@
 function(new_test)
   set(OutputFileList "")
   foreach(source IN LISTS ARGN)
-    get_filename_component(name "${source}" NAME_WLE)
+    get_filename_component(name "${source}" NAME_WE)
     add_executable(${name} ${source})
     target_link_libraries(${name} PRIVATE fde)
     add_test(NAME test.${name} COMMAND $<TARGET_FILE:${name}>)
