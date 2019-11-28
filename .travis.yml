@@ -1,0 +1,9 @@
+language: c
+install:
+  - mkdir _build
+  - cd _build
+  - CC=gcc CXX=g++ FC=gfortran cmake ../
+  - make
+script:
+  - make test
+
