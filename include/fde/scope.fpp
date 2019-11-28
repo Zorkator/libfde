@@ -33,10 +33,12 @@
 
 !########################################################################################
 ! The following definitions might be changed by the native code using libfde.
-!  __rootLocator__: comma-separated string list identifying the root scope
-!  __hookLocator__: comma-separated string list identifying the hook scope
-!  __rootScope__  : variable or pointer identifying the code's root scope.
-!  __hookScope__  : variable or pointer identifying the code's hook scope.
+!  __rootLocator__ : comma-separated string list identifying the root scope
+!  __hookLocator__ : comma-separated string list identifying the hook scope
+!  __otherLocator__: comma-separated string list identifying the other scope
+!  __rootScope__   : variable or pointer identifying the code's root scope.
+!  __hookScope__   : variable or pointer identifying the code's hook scope.
+!  __otherScope__  : variable or pointer identifying the code's other scope.
 !
 ! It should be ok to use the default configuration.
 ! For customizing these, remember to predefine the macros BEFORE including this file!
@@ -50,12 +52,20 @@
 #   define __hookLocator__      __rootLocator__, "hooks"
 # endif
 
+# if !defined __otherLocator__
+#   define __otherLocator__      __rootLocator__, "other"
+# endif
+
 # if !defined __rootScope__
 #   define __rootScope__        getScope( __rootLocator__ )
 # endif
 
 # if !defined __hookScope__
 #   define __hookScope__        getScope( __hookLocator__ )
+# endif
+
+# if !defined __otherScope__
+#   define __otherScope__       getScope( __otherLocator__ )
 # endif
 
 # define _file_scopeId() \
@@ -308,8 +318,74 @@
 # define _expand_REALLOCATE_visible( scope, sym, times, pad, tmp ) \
      _expand_REALLOCATE_visible_as_st( scope, sym, times, pad, tmp, __sym2str__(sym), __istat__ )
 
+
+# if defined _FDE_ALLOCATE_ALL_VISIBLE
+!   redefine normal ALLOCATION macros for adding symbols to __otherScope__
+#   undef _ALLOCATE
+#   undef _checked_ALLOCATE
+#   undef _assert_ALLOCATE
+#   undef _assert_checked_ALLOCATE
+#   undef _DEALLOCATE
+#   undef _REALLOCATE
+#   undef _copied_REALLOCATE
+#   undef _expand_REALLOCATE
+
+
+#   define _ALLOCATE( sym, shape ) \
+      _ALLOCATE_visible_st( __otherScope__, sym, shape, __istat__ )
+
+#   define _checked_ALLOCATE( sym, shape ) \
+      _checked_ALLOCATE_visible_st( __otherScope__, sym, shape, __istat__ )
+
+#   define _assert_ALLOCATE( sym, shape ) \
+      _assert_ALLOCATE_visible_st( __otherScope__, sym, shape, __istat__ )
+
+#   define _assert_checked_ALLOCATE( sym, shape ) \
+      _assert_checked_ALLOCATE_visible_st( __otherScope__, sym, shape, __istat__ )
+
+#   define _DEALLOCATE( sym ) \
+      _DEALLOCATE_visible_st( __otherScope__, sym, __istat__ )
+
+#   define _REALLOCATE( sym, shape ) \
+      _REALLOCATE_visible_st( __otherScope__, sym, shape, __istat__ )
+
+#   define _copied_REALLOCATE( sym, shape, pad, tmp ) \
+      _copied_REALLOCATE_visible_st( __otherScope__, sym, shape, pad, tmp, __istat__ )
+
+#   define _expand_REALLOCATE( sym, times, pad, tmp ) \
+      _expand_REALLOCATE_visible_st( __otherScope__, sym, times, pad, tmp, __istat__ )
+
+!    . o O (_FDE_ALLOCATE_ALL_VISIBLE)
 # endif
- ! ^^ _FDE_SCOPE_NO_SIMPLIFIED
+
+
+! define macros for explicitly NOT showing allocations ...
+# define _ALLOCATE_hidden( sym, shape ) \
+    _ALLOCATE_st( sym, shape, __istat__ )
+
+# define _checked_ALLOCATE_hidden( sym, shape ) \
+    _checked_ALLOCATE_st( sym, shape, __istat__ )
+
+# define _assert_ALLOCATE_hidden( sym, shape ) \
+    _assert_ALLOCATE_st( sym, shape, __istat__ )
+
+# define _assert_checked_ALLOCATE_hidden( sym, shape ) \
+    _assert_checked_ALLOCATE_st( sym, shape, __istat__ )
+
+# define _DEALLOCATE_hidden( sym ) \
+    _DEALLOCATE_st( sym, __istat__ )
+
+# define _REALLOCATE_hidden( sym, shape ) \
+    _REALLOCATE_st( sym, shape, __istat__ )
+
+# define _copied_REALLOCATE_hidden( sym, shape, pad, tmp ) \
+    _copied_REALLOCATE_st( sym, shape, pad, tmp, __istat__ )
+
+# define _expand_REALLOCATE_hidden( sym, times, pad, tmp ) \
+    _expand_REALLOCATE_st( sym, times, pad, tmp, __istat__ )
+
+!    . o O (_FDE_SCOPE_NO_SIMPLIFIED)
+# endif
 
 
 # if !defined _FDE_SCOPE_NO_RETRIEVE
@@ -341,7 +417,7 @@
 !   signals a type mismatch by returning .false.
 ! In such case an exception is thrown.
 !
-! In ATHLET there are TWO types of data items:
+! There are TWO types of data items:
 !   * global module data objects (arrays, variables, etc.)
 !   * temporary values stored within the scope and that might get
 !       updated during the simulation
@@ -409,8 +485,9 @@
 ! deprecated - just for compatibility
 # define _getService  _refProc
 
+!    . o O (_FDE_SCOPE_NO_RETRIEVE)
 # endif
- ! ^^ _FDE_SCOPE_NO_RETRIEVE
+
+!   . o O (__FDE_SCOPE_FPP)
 #endif
-! ^^ __FDE_SCOPE_FPP
 
