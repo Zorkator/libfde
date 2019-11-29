@@ -1,14 +1,11 @@
 #ifndef __FORTRES_TRACESTACK_FMOD
 #define __FORTRES_TRACESTACK_FMOD
 
-#if !defined _MODULENAME_tracestack
-# define _MODULENAME_tracestack  tracestack
-#endif
 
 #include "fortres/itfUtil.fpp"
 
-      module _MODULENAME_tracestack
-        use _MODULENAME_stringref
+      module fde_tracestack
+        use fde_stringref
         use, intrinsic :: iso_c_binding
         implicit none
         private

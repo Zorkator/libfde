@@ -1,13 +1,9 @@
 #ifndef __FORTRES_STRINGREF_FMOD
 #define __FORTRES_STRINGREF_FMOD
 
-#if !defined _MODULENAME_stringref
-# define _MODULENAME_stringref  stringref
-#endif
-
 #include "fortres/itfUtil.fpp"
 
-      module _MODULENAME_stringref
+      module fde_stringref
         use, intrinsic :: iso_c_binding
         implicit none
         private
