@@ -1,0 +1,12 @@
+language: c
+before_install:
+  - sudo apt-get install gfortran
+  - sudo pip install docopt
+install:
+  - mkdir _build
+  - cd _build
+  - CC=gcc CXX=g++ FC=gfortran cmake ../
+  - make
+script:
+  - make test
+
