@@ -6,6 +6,7 @@ function(new_test)
     add_executable(${name} ${source})
     target_link_libraries(${name} PRIVATE fde)
     add_test(NAME test.${name} COMMAND $<TARGET_FILE:${name}>)
+    set_target_properties (${name} PROPERTIES FOLDER tests)
   endforeach()
   if(WIN32)
     # copy dynamic libraries when rpath is not available
@@ -34,6 +35,8 @@ endfunction()
 #generateFiles(
 #./test_ref_types.f90_tpp
 #)
+
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 
 new_test(
 ./test_abstract_list.f90

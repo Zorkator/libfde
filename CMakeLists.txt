@@ -1,6 +1,7 @@
 cmake_minimum_required(VERSION 2.8.12)
 project(fde Fortran CXX)
 
+set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
 # Find python package for source file generator
 if(${CMAKE_VERSION} VERSION_LESS "3.12.0")
@@ -24,9 +25,6 @@ else()
     set_source_files_properties(src/crc_impl.f90 APPEND PROPERTIES COMPILE_FLAGS "-assume noold_boz")
   endif()
 endif()
-
-# Path for Fortran modules
-set(CMAKE_Fortran_MODULE_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/include")
 
 
 # Custom rule for source code generator
@@ -64,6 +62,9 @@ generateFiles(
 
 # include path for this and all subprojects
 include_directories(include)
+
+# Path for Fortran modules
+set(CMAKE_Fortran_MODULE_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/include")
 
 # fortres
 add_subdirectory(libfortres)
