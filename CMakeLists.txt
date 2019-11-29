@@ -1,6 +1,17 @@
 cmake_minimum_required(VERSION 2.8.12)
 project(fde Fortran CXX)
 
+
+# Find python package for source file generator
+if(${CMAKE_VERSION} VERSION_LESS "3.12.0")
+# Backwards compatibility
+  find_package(PythonInterp REQUIRED)
+  set(Python_EXECUTABLE "${PYTHON_EXECUTABLE}")
+else()
+  find_package(Python REQUIRED Interpreter)
+endif()
+
+
 # Set compiler flags
 if(MSVC)
   set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} /fpp")
@@ -17,8 +28,6 @@ endif()
 # Path for Fortran modules
 set(CMAKE_Fortran_MODULE_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/include")
 
-# Find python package for source file generator
-find_package (Python REQUIRED Interpreter)
 
 # Custom rule for source code generator
 function(generateFiles)
