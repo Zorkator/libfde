@@ -1,19 +1,22 @@
 cmake_minimum_required(VERSION 2.8.12)
-project(fde Fortran CXX)
+project(fde Fortran)
 
-set_property(GLOBAL PROPERTY USE_FOLDERS ON)
+# cmake test module
+enable_testing()
 
 # Find python package for source file generator
-if(${CMAKE_VERSION} VERSION_LESS "3.12.0")
-# Backwards compatibility
+if(${CMAKE_VERSION} VERSION_GREATER_EQUAL "3.12.0")
+  find_package(Python REQUIRED Interpreter)
+else()
+  # Backwards compatibility
   find_package(PythonInterp REQUIRED)
   set(Python_EXECUTABLE "${PYTHON_EXECUTABLE}")
-else()
-  find_package(Python REQUIRED Interpreter)
 endif()
 
+# Global options
+set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
-# Set compiler flags
+# Compiler flags
 if(MSVC)
   set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} /fpp")
 else()
@@ -27,7 +30,7 @@ else()
 endif()
 
 
-# Custom rule for source code generator
+# Custom rules for source code generator
 function(generateFiles)
   set(OutputFileList "")
   foreach(inFile IN LISTS ARGN)
@@ -43,12 +46,22 @@ function(generateFiles)
     )
     list(APPEND OutputFileList "${outFile}")
   endforeach()
-  if(NOT TARGET fde_gen)
-    add_custom_target(fde_gen DEPENDS ${OutputFileList} SOURCES ${ARGN})
-  endif()
+  add_custom_target(fde_gen DEPENDS ${OutputFileList} SOURCES ${ARGN})
 endfunction()
 
-# input files for generator
+
+
+# include path for this and all subprojects
+include_directories(include)
+
+# fortres
+add_subdirectory(libfortres)
+
+# path to store Fortran modules
+set(CMAKE_Fortran_MODULE_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/include")
+
+
+# fde input files for generator
 generateFiles(
   src/basetypes.f90_tpp
   src/containertypes.f90_tpp
@@ -59,15 +72,6 @@ generateFiles(
   src/ref.f90_tpp
   src/string.f90_tpp
 )
-
-# include path for this and all subprojects
-include_directories(include)
-
-# Path for Fortran modules
-set(CMAKE_Fortran_MODULE_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/include")
-
-# fortres
-add_subdirectory(libfortres)
 
 # fde
 add_library(fde SHARED
@@ -104,8 +108,9 @@ add_library(fde SHARED
   src/typeinfo_impl.f90
   src/visitor.f90
 )
-
+# generate source files
 add_dependencies(fde fde_gen)
+
 target_link_libraries(fde PRIVATE fortres)
 target_include_directories(fde PUBLIC include)
 target_include_directories(fde PUBLIC "${CMAKE_Fortran_MODULE_DIRECTORY}")
@@ -115,14 +120,24 @@ if(MSVC)
 else()
 endif()
 
-if(NOT WIN32)
+
+# Shared/static library options
+get_target_property(fde_type fde TYPE)
+get_target_property(fortres_type fortres TYPE)
+if(fde_type STREQUAL "SHARED_LIBRARY")
   set_property(TARGET fortres PROPERTY POSITION_INDEPENDENT_CODE ON)
+  if(NOT MSVC)
+    include(CheckLanguage)
+    check_language(CXX)
+    if(CMAKE_CXX_COMPILER)
+      enable_language(CXX)
+    else ()
+      message(WARNING "No CXX support. Linking might fail.")
+    endif ()
+    set_property(TARGET fde PROPERTY LINKER_LANGUAGE CXX)
+  endif()
 endif()
-if(NOT MSVC)
-  set_property(TARGET fde PROPERTY LINKER_LANGUAGE CXX)
-endif()
+
 # tests
 enable_testing()
 add_subdirectory(test)
-
-

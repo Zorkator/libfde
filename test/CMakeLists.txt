@@ -3,32 +3,34 @@ function(new_test)
   set(OutputFileList "")
   foreach(source IN LISTS ARGN)
     get_filename_component(name "${source}" NAME_WE)
-    add_executable(${name} ${source})
-    target_link_libraries(${name} PRIVATE fde)
-    add_test(NAME test.${name} COMMAND $<TARGET_FILE:${name}>)
-    set_target_properties (${name} PROPERTIES FOLDER tests)
+    add_executable(fde.${name} ${source})
+    target_link_libraries(fde.${name} PRIVATE fde)
+    set_target_properties(fde.${name} PROPERTIES FOLDER tests)
+    
+    add_test(NAME fde.${name} COMMAND fde.${name})
+    
+    # Todo: collect all folders where to put runtime libs
+    if(WIN32)
+      # copy dynamic libraries when rpath is not available
+      if(fde_type STREQUAL "SHARED_LIBRARY")
+        add_custom_command(
+          TARGET fde.${name} POST_BUILD
+          COMMAND ${CMAKE_COMMAND} -E copy_if_different
+                  "$<TARGET_FILE:fde>"
+                  "$<TARGET_FILE_DIR:fde.${name}>/$<TARGET_FILE_NAME:fde>"
+        )
+      endif()
+      if(fortres_type STREQUAL "SHARED_LIBRARY")
+        add_custom_command(
+          TARGET fde.${name} POST_BUILD
+          COMMAND ${CMAKE_COMMAND} -E copy_if_different
+                  "$<TARGET_FILE:fortres>"
+                  "$<TARGET_FILE_DIR:fde.${name}>/$<TARGET_FILE_NAME:fortres>"
+        )
+      endif()
+    endif()
   endforeach()
-  if(WIN32)
-    # copy dynamic libraries when rpath is not available
-    get_target_property(fde_type fde TYPE)
-    if(fde_type STREQUAL "SHARED_LIBRARY")
-      add_custom_command(
-        TARGET ${name} POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E copy
-                "$<TARGET_FILE:fde>"
-                "$<TARGET_FILE_DIR:${name}>/$<TARGET_FILE_NAME:fde>"
-      )
-    endif()
-    get_target_property(fortres_type fortres TYPE)
-    if(fortres_type STREQUAL "SHARED_LIBRARY")
-      add_custom_command(
-        TARGET ${name} POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E copy
-                "$<TARGET_FILE:fortres>"
-                "$<TARGET_FILE_DIR:${name}>/$<TARGET_FILE_NAME:fortres>"
-      )
-    endif()
-  endif()
+
 endfunction()
 
 # input files for generator
