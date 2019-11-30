@@ -5,7 +5,7 @@ project(fde Fortran)
 enable_testing()
 
 # Find python package for source file generator
-if(${CMAKE_VERSION} VERSION_GREATER_EQUAL "3.12.0")
+if(NOT ${CMAKE_VERSION} VERSION_LESS "3.12.0")
   find_package(Python REQUIRED Interpreter)
 else()
   # Backwards compatibility
