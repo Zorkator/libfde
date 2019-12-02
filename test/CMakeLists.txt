@@ -10,7 +10,7 @@ function(new_test)
     add_test(NAME fde.${name} COMMAND fde.${name})
     
     # Todo: collect all folders where to put runtime libs
-    if(WIN32)
+    if(WIN32 OR CYGWIN)
       # copy dynamic libraries when rpath is not available
       if(fde_type STREQUAL "SHARED_LIBRARY")
         add_custom_command(

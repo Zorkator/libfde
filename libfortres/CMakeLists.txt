@@ -9,8 +9,8 @@ add_library(fortres
   ./fort_tracestack.cpp
 )
 
-if (MSVC)
-  target_link_libraries(fortres PRIVATE Dbghelp.lib)
+if (WIN32 OR CYGWIN)
+  target_link_libraries(fortres PRIVATE Dbghelp)
 else ()
   target_link_libraries(fortres PRIVATE dl)
   set_source_files_properties(./dirent.c PROPERTIES HEADER_FILE_ONLY YES)
