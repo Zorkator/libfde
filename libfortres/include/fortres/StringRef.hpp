@@ -18,7 +18,7 @@ class StringRef
       StringRef( void ): _ref(NULL), _len(0)    { /* empty */ }
       StringRef( const char *cstr, size_t len ) { referTo( cstr, len ); }
       StringRef( const char *cstr )             { referTo( cstr ); }
-      StringRef( std::string &str )             { referTo( str ); }
+      StringRef( const std::string &str )       { referTo( str ); }
       StringRef( const StringRef &str )         { referTo( str ); }
 
     const StringRef &
