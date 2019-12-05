@@ -1,3 +1,4 @@
+#include "config.h"
 
 #include <sys/stat.h>
 #include <errno.h>
@@ -26,8 +27,8 @@
 # include <dlfcn.h>
 #endif
 
-static const char _pathDelim[] = PATH_DELIM;
-static const char _pathSep[]   = PATH_DELIM other_PATH_DELIM;
+static const char _pathDelim[] = PATH_SEP;
+static const char _pathSep[]   = PATH_SEP PATH_SEP_OTHER;
 
 
 void
@@ -158,7 +159,7 @@ so_filepath_of( const void *addr, char buff[], size_t len )
 {
   size_t res = 0;
 
-#if defined HAVE_WINDOWS_H
+#if defined HAVE_LIBLOADERAPI_H
   HMODULE hdl = NULL;
   if (GetModuleHandleExA( GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS | GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT, (LPCSTR)addr, &hdl ))
     { res = GetModuleFileNameA( hdl, buff, (DWORD)len ); }

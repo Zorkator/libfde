@@ -9,16 +9,11 @@
   /* assume POSIX compatible compiler */
 # include <dirent.h>
 
-# define PATH_DELIM         "/"
-# define other_PATH_DELIM   "\\"
-
 #else
   /* sorry, it's M$ ... */
 # include <windows.h>
 # include "fortres/dirent.h"
 
-# define PATH_DELIM         "\\"
-# define other_PATH_DELIM   "/"
 # define stat               _stat
 #endif
 

@@ -1,3 +1,4 @@
+#include <config.h>
 
 #if defined HAVE_DBGHELP_H
 # define _CRT_SECURE_NO_WARNINGS
@@ -7,8 +8,14 @@
 # include <execinfo.h>
 #endif
 
-#if defined HAVE_DLFCN_H
+
+#if defined HAVE_LIBLOADERAPI_H
+# include <windows.h>
+# include <libloaderapi.h>
+#elif defined HAVE_DLFCN_H
 # include <dlfcn.h>
+#else
+  #error "Neither HAVE_LIBLOADERAPI_H nor HAVE_DLFCN_H"
 #endif
 
 #include <stdio.h>
