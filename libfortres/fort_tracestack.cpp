@@ -1,4 +1,4 @@
-#include <config.h>
+#include <fortres_config.h>
 
 #if defined HAVE_DBGHELP_H
 # define _CRT_SECURE_NO_WARNINGS

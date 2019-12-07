@@ -1,4 +1,4 @@
-#include "config.h"
+#include <fortres_config.h>
 
 #include <sys/stat.h>
 #include <errno.h>

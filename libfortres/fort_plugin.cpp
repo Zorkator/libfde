@@ -1,4 +1,4 @@
-#include <config.h>
+#include <fortres_config.h>
 
 # define _CRT_SECURE_NO_WARNINGS
 #include <map>
