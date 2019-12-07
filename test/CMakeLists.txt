@@ -35,23 +35,23 @@ endfunction()
 
 # input files for generator
 #generateFiles(
-#./test_ref_types.f90_tpp
+#./test_ref_types.F90_tpp
 #)
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 
 new_test(
-./test_abstract_list.f90
-./test_charstacker.f90
-#./test_crc.f90
-./test_dyncast.f90
-./test_fde.f90
-./test_file.f90
-./test_hash_map.f90
-./test_item.f90
-#./test_ref.f90
-#./test_ref_types.f90
-#./test_simulator.f90
-#./test_simulator_driver.f90
-./test_string.f90
+./test_abstract_list.F90
+./test_charstacker.F90
+#./test_crc.F90
+./test_dyncast.F90
+./test_fde.F90
+./test_file.F90
+./test_hash_map.F90
+./test_item.F90
+#./test_ref.F90
+#./test_ref_types.F90
+#./test_simulator.F90
+#./test_simulator_driver.F90
+./test_string.F90
 )
