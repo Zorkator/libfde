@@ -46,15 +46,17 @@ module fde_typeinfo
 
   interface
     subroutine typeinfo_init( self, typeId, baseType, bitSize, rank, subtype, &
-                              acceptProc, assignProc, cloneObjProc, cloneRefProc, deleteProc, initProc, shapeProc, streamProc, tryStreamProc )
+                              acceptProc, assignProc, cloneObjProc, cloneRefProc, &
+                              deleteProc, initProc, shapeProc, streamProc, tryStreamProc )
       import TypeInfo_t
       type(TypeInfo_t),    intent(inout) :: self
       character(len=*),       intent(in) :: typeId, baseType
       integer*4,              intent(in) :: bitSize
       integer*4,              intent(in) :: rank
       type(TypeInfo_t), target, optional :: subtype
-      procedure(),              optional :: acceptProc, assignProc, cloneObjProc, cloneRefProc, deleteProc, initProc, shapeProc &
-                                          , streamProc, tryStreamProc
+      procedure(),              optional :: acceptProc, assignProc, cloneObjProc, cloneRefProc, &
+                                            deleteProc, initProc, shapeProc, &
+                                            streamProc, tryStreamProc
     end subroutine
   end interface
 

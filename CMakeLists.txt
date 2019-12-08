@@ -17,15 +17,13 @@ endif()
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
 # Compiler flags
-if(MSVC)
-  set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} /fpp")
+if(WIN32)
 else()
   if("${CMAKE_Fortran_COMPILER_ID}" STREQUAL "GNU")
-    set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -cpp -ffree-line-length-none")
-    set_source_files_properties(src/crc_impl.f90 APPEND PROPERTIES COMPILE_FLAGS "-fno-range-check")
+    set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -ffree-line-length-none")
+    set_source_files_properties(src/crc_impl.F90 APPEND PROPERTIES COMPILE_FLAGS "-fno-range-check")
   elseif("${CMAKE_Fortran_COMPILER_ID}" STREQUAL "Intel")
-    set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -fpp")
-    set_source_files_properties(src/crc_impl.f90 APPEND PROPERTIES COMPILE_FLAGS "-assume noold_boz")
+    set_source_files_properties(src/crc_impl.F90 APPEND PROPERTIES COMPILE_FLAGS "-assume noold_boz")
   endif()
 endif()
 
@@ -63,50 +61,50 @@ set(CMAKE_Fortran_MODULE_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/include")
 
 # fde input files for generator
 generateFiles(
-  src/basetypes.f90_tpp
-  src/containertypes.f90_tpp
-  src/hashmap.f90_tpp
-  src/hashmap_impl.f90_tpp
-  src/item.f90_tpp
-  src/list.f90_tpp
-  src/ref.f90_tpp
-  src/string.f90_tpp
+  src/basetypes.F90_tpp
+  src/containertypes.F90_tpp
+  src/hashmap.F90_tpp
+  src/hashmap_impl.F90_tpp
+  src/item.F90_tpp
+  src/list.F90_tpp
+  src/ref.F90_tpp
+  src/string.F90_tpp
 )
 
 # fde
 add_library(fde SHARED
-  src/basetypes.f90
-  src/containertypes.f90
-  src/hashmap.f90
-  src/hashmap_impl.f90
-  src/item.f90
-  src/list.f90
-  src/ref.f90
-  src/string.f90
+  src/basetypes.F90
+  src/containertypes.F90
+  src/hashmap.F90
+  src/hashmap_impl.F90
+  src/item.F90
+  src/list.F90
+  src/ref.F90
+  src/string.F90
 
-  src/basestring.f90
-  src/basestring_impl.f90
-  src/bisect.f90
-  src/charstacker.f90
-  src/charstacker_impl.f90
-  src/convert.f90
-  src/crc.f90
-  src/crc_impl.f90
-  src/file.f90
-  src/fortres_modules.f90
-  src/item_impl.f90
-  src/list_impl.f90
-  src/memoryref.f90
-  src/ostream.f90
-  src/ref_impl.f90
-  src/scope.f90
-  src/scope_impl.f90
-  src/sort.f90
-  src/streamvisitor.f90
-  src/string_impl.f90
-  src/typeinfo.f90
-  src/typeinfo_impl.f90
-  src/visitor.f90
+  src/basestring.F90
+  src/basestring_impl.F90
+  src/bisect.F90
+  src/charstacker.F90
+  src/charstacker_impl.F90
+  src/convert.F90
+  src/crc.F90
+  src/crc_impl.F90
+  src/file.F90
+  src/fortres_modules.F90
+  src/item_impl.F90
+  src/list_impl.F90
+  src/memoryref.F90
+  src/ostream.F90
+  src/ref_impl.F90
+  src/scope.F90
+  src/scope_impl.F90
+  src/sort.F90
+  src/streamvisitor.F90
+  src/string_impl.F90
+  src/typeinfo.F90
+  src/typeinfo_impl.F90
+  src/visitor.F90
 )
 # generate source files
 add_dependencies(fde fde_gen)
@@ -126,7 +124,7 @@ get_target_property(fde_type fde TYPE)
 get_target_property(fortres_type fortres TYPE)
 if(fde_type STREQUAL "SHARED_LIBRARY")
   set_property(TARGET fortres PROPERTY POSITION_INDEPENDENT_CODE ON)
-  if(NOT MSVC)
+  if(NOT WIN32)
     include(CheckLanguage)
     check_language(CXX)
     if(CMAKE_CXX_COMPILER)

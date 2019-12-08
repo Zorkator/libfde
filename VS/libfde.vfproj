@@ -47,108 +47,108 @@
 	<Files>
 		<Filter Name="Header Files" Filter="fi;fd"/>
 		<Filter Name="Resource Files" Filter="rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe">
-		<File RelativePath="..\src\basetypes.f90_tpp">
+		<File RelativePath="..\src\basetypes.F90_tpp">
 			<FileConfiguration Name="Debug|Win32">
-        <Tool Name="VFCustomBuildTool" CommandLine="python &quot;$(ProjectDir)..\typegen.py&quot; &quot;$(InputPath)&quot; -o ../src/$(InputName).f90" Description="type preprocessing $(InputName)" Outputs="../src/$(InputName).f90"/></FileConfiguration>
+        <Tool Name="VFCustomBuildTool" CommandLine="python &quot;$(ProjectDir)..\typegen.py&quot; &quot;$(InputPath)&quot; -o ../src/$(InputName).F90" Description="type preprocessing $(InputName)" Outputs="../src/$(InputName).F90"/></FileConfiguration>
 			<FileConfiguration Name="Release|x64">
-				<Tool Name="VFCustomBuildTool" CommandLine="python &quot;$(ProjectDir)..\typegen.py&quot; &quot;$(InputPath)&quot; -o ../src/$(InputName).f90" Description="type preprocessing $(InputName)" Outputs="../src/$(InputName).f90"/></FileConfiguration>
+				<Tool Name="VFCustomBuildTool" CommandLine="python &quot;$(ProjectDir)..\typegen.py&quot; &quot;$(InputPath)&quot; -o ../src/$(InputName).F90" Description="type preprocessing $(InputName)" Outputs="../src/$(InputName).F90"/></FileConfiguration>
 			<FileConfiguration Name="Debug|x64">
-				<Tool Name="VFCustomBuildTool" CommandLine="python &quot;$(ProjectDir)..\typegen.py&quot; &quot;$(InputPath)&quot; -o ../src/$(InputName).f90" Description="type preprocessing $(InputName)" Outputs="../src/$(InputName).f90"/></FileConfiguration>
+				<Tool Name="VFCustomBuildTool" CommandLine="python &quot;$(ProjectDir)..\typegen.py&quot; &quot;$(InputPath)&quot; -o ../src/$(InputName).F90" Description="type preprocessing $(InputName)" Outputs="../src/$(InputName).F90"/></FileConfiguration>
 			<FileConfiguration Name="Release|Win32">
-				<Tool Name="VFCustomBuildTool" CommandLine="python &quot;$(ProjectDir)..\typegen.py&quot; &quot;$(InputPath)&quot; -o ../src/$(InputName).f90" Description="type preprocessing $(InputName)" Outputs="../src/$(InputName).f90"/></FileConfiguration></File>
-		<File RelativePath="..\src\containertypes.f90_tpp">
+				<Tool Name="VFCustomBuildTool" CommandLine="python &quot;$(ProjectDir)..\typegen.py&quot; &quot;$(InputPath)&quot; -o ../src/$(InputName).F90" Description="type preprocessing $(InputName)" Outputs="../src/$(InputName).F90"/></FileConfiguration></File>
+		<File RelativePath="..\src\containertypes.F90_tpp">
 			<FileConfiguration Name="Debug|Win32">
-				<Tool Name="VFCustomBuildTool" CommandLine="python &quot;$(ProjectDir)..\typegen.py&quot; &quot;$(InputPath)&quot; -o ../src/$(InputName).f90" Description="type preprocessing $(InputName)" Outputs="../src/$(InputName).f90"/></FileConfiguration>
+				<Tool Name="VFCustomBuildTool" CommandLine="python &quot;$(ProjectDir)..\typegen.py&quot; &quot;$(InputPath)&quot; -o ../src/$(InputName).F90" Description="type preprocessing $(InputName)" Outputs="../src/$(InputName).F90"/></FileConfiguration>
 			<FileConfiguration Name="Release|x64">
-				<Tool Name="VFCustomBuildTool" CommandLine="python &quot;$(ProjectDir)..\typegen.py&quot; &quot;$(InputPath)&quot; -o ../src/$(InputName).f90" Description="type preprocessing $(InputName)" Outputs="../src/$(InputName).f90"/></FileConfiguration>
+				<Tool Name="VFCustomBuildTool" CommandLine="python &quot;$(ProjectDir)..\typegen.py&quot; &quot;$(InputPath)&quot; -o ../src/$(InputName).F90" Description="type preprocessing $(InputName)" Outputs="../src/$(InputName).F90"/></FileConfiguration>
 			<FileConfiguration Name="Debug|x64">
-				<Tool Name="VFCustomBuildTool" CommandLine="python &quot;$(ProjectDir)..\typegen.py&quot; &quot;$(InputPath)&quot; -o ../src/$(InputName).f90" Description="type preprocessing $(InputName)" Outputs="../src/$(InputName).f90"/></FileConfiguration>
+				<Tool Name="VFCustomBuildTool" CommandLine="python &quot;$(ProjectDir)..\typegen.py&quot; &quot;$(InputPath)&quot; -o ../src/$(InputName).F90" Description="type preprocessing $(InputName)" Outputs="../src/$(InputName).F90"/></FileConfiguration>
 			<FileConfiguration Name="Release|Win32">
-				<Tool Name="VFCustomBuildTool" CommandLine="python &quot;$(ProjectDir)..\typegen.py&quot; &quot;$(InputPath)&quot; -o ../src/$(InputName).f90" Description="type preprocessing $(InputName)" Outputs="../src/$(InputName).f90"/></FileConfiguration></File>
-		<File RelativePath="..\src\hashmap.f90_tpp">
+				<Tool Name="VFCustomBuildTool" CommandLine="python &quot;$(ProjectDir)..\typegen.py&quot; &quot;$(InputPath)&quot; -o ../src/$(InputName).F90" Description="type preprocessing $(InputName)" Outputs="../src/$(InputName).F90"/></FileConfiguration></File>
+		<File RelativePath="..\src\hashmap.F90_tpp">
 			<FileConfiguration Name="Debug|Win32">
-				<Tool Name="VFCustomBuildTool" CommandLine="python &quot;$(ProjectDir)..\typegen.py&quot; &quot;$(InputPath)&quot; -o ../src/$(InputName).f90" Description="type preprocessing $(InputName)" Outputs="../src/$(InputName).f90"/></FileConfiguration>
+				<Tool Name="VFCustomBuildTool" CommandLine="python &quot;$(ProjectDir)..\typegen.py&quot; &quot;$(InputPath)&quot; -o ../src/$(InputName).F90" Description="type preprocessing $(InputName)" Outputs="../src/$(InputName).F90"/></FileConfiguration>
 			<FileConfiguration Name="Release|x64">
-				<Tool Name="VFCustomBuildTool" CommandLine="python &quot;$(ProjectDir)..\typegen.py&quot; &quot;$(InputPath)&quot; -o ../src/$(InputName).f90" Description="type preprocessing $(InputName)" Outputs="../src/$(InputName).f90"/></FileConfiguration>
+				<Tool Name="VFCustomBuildTool" CommandLine="python &quot;$(ProjectDir)..\typegen.py&quot; &quot;$(InputPath)&quot; -o ../src/$(InputName).F90" Description="type preprocessing $(InputName)" Outputs="../src/$(InputName).F90"/></FileConfiguration>
 			<FileConfiguration Name="Debug|x64">
-				<Tool Name="VFCustomBuildTool" CommandLine="python &quot;$(ProjectDir)..\typegen.py&quot; &quot;$(InputPath)&quot; -o ../src/$(InputName).f90" Description="type preprocessing $(InputName)" Outputs="../src/$(InputName).f90"/></FileConfiguration>
+				<Tool Name="VFCustomBuildTool" CommandLine="python &quot;$(ProjectDir)..\typegen.py&quot; &quot;$(InputPath)&quot; -o ../src/$(InputName).F90" Description="type preprocessing $(InputName)" Outputs="../src/$(InputName).F90"/></FileConfiguration>
 			<FileConfiguration Name="Release|Win32">
-				<Tool Name="VFCustomBuildTool" CommandLine="python &quot;$(ProjectDir)..\typegen.py&quot; &quot;$(InputPath)&quot; -o ../src/$(InputName).f90" Description="type preprocessing $(InputName)" Outputs="../src/$(InputName).f90"/></FileConfiguration></File>
-		<File RelativePath="..\src\hashmap_impl.f90_tpp">
+				<Tool Name="VFCustomBuildTool" CommandLine="python &quot;$(ProjectDir)..\typegen.py&quot; &quot;$(InputPath)&quot; -o ../src/$(InputName).F90" Description="type preprocessing $(InputName)" Outputs="../src/$(InputName).F90"/></FileConfiguration></File>
+		<File RelativePath="..\src\hashmap_impl.F90_tpp">
 			<FileConfiguration Name="Debug|Win32">
-				<Tool Name="VFCustomBuildTool" CommandLine="python &quot;$(ProjectDir)..\typegen.py&quot; &quot;$(InputPath)&quot; -o ../src/$(InputName).f90" Description="type preprocessing $(InputName)" Outputs="../src/$(InputName).f90"/></FileConfiguration>
+				<Tool Name="VFCustomBuildTool" CommandLine="python &quot;$(ProjectDir)..\typegen.py&quot; &quot;$(InputPath)&quot; -o ../src/$(InputName).F90" Description="type preprocessing $(InputName)" Outputs="../src/$(InputName).F90"/></FileConfiguration>
 			<FileConfiguration Name="Release|x64">
-				<Tool Name="VFCustomBuildTool" CommandLine="python &quot;$(ProjectDir)..\typegen.py&quot; &quot;$(InputPath)&quot; -o ../src/$(InputName).f90" Description="type preprocessing $(InputName)" Outputs="../src/$(InputName).f90"/></FileConfiguration>
+				<Tool Name="VFCustomBuildTool" CommandLine="python &quot;$(ProjectDir)..\typegen.py&quot; &quot;$(InputPath)&quot; -o ../src/$(InputName).F90" Description="type preprocessing $(InputName)" Outputs="../src/$(InputName).F90"/></FileConfiguration>
 			<FileConfiguration Name="Debug|x64">
-				<Tool Name="VFCustomBuildTool" CommandLine="python &quot;$(ProjectDir)..\typegen.py&quot; &quot;$(InputPath)&quot; -o ../src/$(InputName).f90" Description="type preprocessing $(InputName)" Outputs="../src/$(InputName).f90"/></FileConfiguration>
+				<Tool Name="VFCustomBuildTool" CommandLine="python &quot;$(ProjectDir)..\typegen.py&quot; &quot;$(InputPath)&quot; -o ../src/$(InputName).F90" Description="type preprocessing $(InputName)" Outputs="../src/$(InputName).F90"/></FileConfiguration>
 			<FileConfiguration Name="Release|Win32">
-				<Tool Name="VFCustomBuildTool" CommandLine="python &quot;$(ProjectDir)..\typegen.py&quot; &quot;$(InputPath)&quot; -o ../src/$(InputName).f90" Description="type preprocessing $(InputName)" Outputs="../src/$(InputName).f90"/></FileConfiguration></File>
-		<File RelativePath="..\src\item.f90_tpp">
+				<Tool Name="VFCustomBuildTool" CommandLine="python &quot;$(ProjectDir)..\typegen.py&quot; &quot;$(InputPath)&quot; -o ../src/$(InputName).F90" Description="type preprocessing $(InputName)" Outputs="../src/$(InputName).F90"/></FileConfiguration></File>
+		<File RelativePath="..\src\item.F90_tpp">
 			<FileConfiguration Name="Debug|Win32">
-				<Tool Name="VFCustomBuildTool" CommandLine="python &quot;$(ProjectDir)..\typegen.py&quot; &quot;$(InputPath)&quot; -o ../src/$(InputName).f90" Description="type preprocessing $(InputName)" Outputs="../src/$(InputName).f90"/></FileConfiguration>
+				<Tool Name="VFCustomBuildTool" CommandLine="python &quot;$(ProjectDir)..\typegen.py&quot; &quot;$(InputPath)&quot; -o ../src/$(InputName).F90" Description="type preprocessing $(InputName)" Outputs="../src/$(InputName).F90"/></FileConfiguration>
 			<FileConfiguration Name="Release|x64">
-				<Tool Name="VFCustomBuildTool" CommandLine="python &quot;$(ProjectDir)..\typegen.py&quot; &quot;$(InputPath)&quot; -o ../src/$(InputName).f90" Description="type preprocessing $(InputName)" Outputs="../src/$(InputName).f90"/></FileConfiguration>
+				<Tool Name="VFCustomBuildTool" CommandLine="python &quot;$(ProjectDir)..\typegen.py&quot; &quot;$(InputPath)&quot; -o ../src/$(InputName).F90" Description="type preprocessing $(InputName)" Outputs="../src/$(InputName).F90"/></FileConfiguration>
 			<FileConfiguration Name="Debug|x64">
-				<Tool Name="VFCustomBuildTool" CommandLine="python &quot;$(ProjectDir)..\typegen.py&quot; &quot;$(InputPath)&quot; -o ../src/$(InputName).f90" Description="type preprocessing $(InputName)" Outputs="../src/$(InputName).f90"/></FileConfiguration>
+				<Tool Name="VFCustomBuildTool" CommandLine="python &quot;$(ProjectDir)..\typegen.py&quot; &quot;$(InputPath)&quot; -o ../src/$(InputName).F90" Description="type preprocessing $(InputName)" Outputs="../src/$(InputName).F90"/></FileConfiguration>
 			<FileConfiguration Name="Release|Win32">
-				<Tool Name="VFCustomBuildTool" CommandLine="python &quot;$(ProjectDir)..\typegen.py&quot; &quot;$(InputPath)&quot; -o ../src/$(InputName).f90" Description="type preprocessing $(InputName)" Outputs="../src/$(InputName).f90"/></FileConfiguration></File>
-		<File RelativePath="..\src\list.f90_tpp">
+				<Tool Name="VFCustomBuildTool" CommandLine="python &quot;$(ProjectDir)..\typegen.py&quot; &quot;$(InputPath)&quot; -o ../src/$(InputName).F90" Description="type preprocessing $(InputName)" Outputs="../src/$(InputName).F90"/></FileConfiguration></File>
+		<File RelativePath="..\src\list.F90_tpp">
 			<FileConfiguration Name="Debug|Win32">
-				<Tool Name="VFCustomBuildTool" CommandLine="python &quot;$(ProjectDir)..\typegen.py&quot; &quot;$(InputPath)&quot; -o ../src/$(InputName).f90" Description="type preprocessing $(InputName)" Outputs="../src/$(InputName).f90"/></FileConfiguration>
+				<Tool Name="VFCustomBuildTool" CommandLine="python &quot;$(ProjectDir)..\typegen.py&quot; &quot;$(InputPath)&quot; -o ../src/$(InputName).F90" Description="type preprocessing $(InputName)" Outputs="../src/$(InputName).F90"/></FileConfiguration>
 			<FileConfiguration Name="Release|x64">
-				<Tool Name="VFCustomBuildTool" CommandLine="python &quot;$(ProjectDir)..\typegen.py&quot; &quot;$(InputPath)&quot; -o ../src/$(InputName).f90" Description="type preprocessing $(InputName)" Outputs="../src/$(InputName).f90"/></FileConfiguration>
+				<Tool Name="VFCustomBuildTool" CommandLine="python &quot;$(ProjectDir)..\typegen.py&quot; &quot;$(InputPath)&quot; -o ../src/$(InputName).F90" Description="type preprocessing $(InputName)" Outputs="../src/$(InputName).F90"/></FileConfiguration>
 			<FileConfiguration Name="Debug|x64">
-				<Tool Name="VFCustomBuildTool" CommandLine="python &quot;$(ProjectDir)..\typegen.py&quot; &quot;$(InputPath)&quot; -o ../src/$(InputName).f90" Description="type preprocessing $(InputName)" Outputs="../src/$(InputName).f90"/></FileConfiguration>
+				<Tool Name="VFCustomBuildTool" CommandLine="python &quot;$(ProjectDir)..\typegen.py&quot; &quot;$(InputPath)&quot; -o ../src/$(InputName).F90" Description="type preprocessing $(InputName)" Outputs="../src/$(InputName).F90"/></FileConfiguration>
 			<FileConfiguration Name="Release|Win32">
-				<Tool Name="VFCustomBuildTool" CommandLine="python &quot;$(ProjectDir)..\typegen.py&quot; &quot;$(InputPath)&quot; -o ../src/$(InputName).f90" Description="type preprocessing $(InputName)" Outputs="../src/$(InputName).f90"/></FileConfiguration></File>
-		<File RelativePath="..\src\ref.f90_tpp">
+				<Tool Name="VFCustomBuildTool" CommandLine="python &quot;$(ProjectDir)..\typegen.py&quot; &quot;$(InputPath)&quot; -o ../src/$(InputName).F90" Description="type preprocessing $(InputName)" Outputs="../src/$(InputName).F90"/></FileConfiguration></File>
+		<File RelativePath="..\src\ref.F90_tpp">
 			<FileConfiguration Name="Debug|Win32">
-				<Tool Name="VFCustomBuildTool" CommandLine="python &quot;$(ProjectDir)..\typegen.py&quot; &quot;$(InputPath)&quot; -o ../src/$(InputName).f90" Description="type preprocessing $(InputName)" Outputs="../src/$(InputName).f90"/></FileConfiguration>
+				<Tool Name="VFCustomBuildTool" CommandLine="python &quot;$(ProjectDir)..\typegen.py&quot; &quot;$(InputPath)&quot; -o ../src/$(InputName).F90" Description="type preprocessing $(InputName)" Outputs="../src/$(InputName).F90"/></FileConfiguration>
 			<FileConfiguration Name="Release|x64">
-				<Tool Name="VFCustomBuildTool" CommandLine="python &quot;$(ProjectDir)..\typegen.py&quot; &quot;$(InputPath)&quot; -o ../src/$(InputName).f90" Description="type preprocessing $(InputName)" Outputs="../src/$(InputName).f90"/></FileConfiguration>
+				<Tool Name="VFCustomBuildTool" CommandLine="python &quot;$(ProjectDir)..\typegen.py&quot; &quot;$(InputPath)&quot; -o ../src/$(InputName).F90" Description="type preprocessing $(InputName)" Outputs="../src/$(InputName).F90"/></FileConfiguration>
 			<FileConfiguration Name="Debug|x64">
-				<Tool Name="VFCustomBuildTool" CommandLine="python &quot;$(ProjectDir)..\typegen.py&quot; &quot;$(InputPath)&quot; -o ../src/$(InputName).f90" Description="type preprocessing $(InputName)" Outputs="../src/$(InputName).f90"/></FileConfiguration>
+				<Tool Name="VFCustomBuildTool" CommandLine="python &quot;$(ProjectDir)..\typegen.py&quot; &quot;$(InputPath)&quot; -o ../src/$(InputName).F90" Description="type preprocessing $(InputName)" Outputs="../src/$(InputName).F90"/></FileConfiguration>
 			<FileConfiguration Name="Release|Win32">
-				<Tool Name="VFCustomBuildTool" CommandLine="python &quot;$(ProjectDir)..\typegen.py&quot; &quot;$(InputPath)&quot; -o ../src/$(InputName).f90" Description="type preprocessing $(InputName)" Outputs="../src/$(InputName).f90"/></FileConfiguration></File>
-		<File RelativePath="..\src\string.f90_tpp">
+				<Tool Name="VFCustomBuildTool" CommandLine="python &quot;$(ProjectDir)..\typegen.py&quot; &quot;$(InputPath)&quot; -o ../src/$(InputName).F90" Description="type preprocessing $(InputName)" Outputs="../src/$(InputName).F90"/></FileConfiguration></File>
+		<File RelativePath="..\src\string.F90_tpp">
 			<FileConfiguration Name="Debug|Win32">
-				<Tool Name="VFCustomBuildTool" CommandLine="python &quot;$(ProjectDir)..\typegen.py&quot; &quot;$(InputPath)&quot; -o ../src/$(InputName).f90" Description="type preprocessing $(InputName)" Outputs="../src/$(InputName).f90"/></FileConfiguration>
+				<Tool Name="VFCustomBuildTool" CommandLine="python &quot;$(ProjectDir)..\typegen.py&quot; &quot;$(InputPath)&quot; -o ../src/$(InputName).F90" Description="type preprocessing $(InputName)" Outputs="../src/$(InputName).F90"/></FileConfiguration>
 			<FileConfiguration Name="Release|x64">
-				<Tool Name="VFCustomBuildTool" CommandLine="python &quot;$(ProjectDir)..\typegen.py&quot; &quot;$(InputPath)&quot; -o ../src/$(InputName).f90" Description="type preprocessing $(InputName)" Outputs="../src/$(InputName).f90"/></FileConfiguration>
+				<Tool Name="VFCustomBuildTool" CommandLine="python &quot;$(ProjectDir)..\typegen.py&quot; &quot;$(InputPath)&quot; -o ../src/$(InputName).F90" Description="type preprocessing $(InputName)" Outputs="../src/$(InputName).F90"/></FileConfiguration>
 			<FileConfiguration Name="Debug|x64">
-				<Tool Name="VFCustomBuildTool" CommandLine="python &quot;$(ProjectDir)..\typegen.py&quot; &quot;$(InputPath)&quot; -o ../src/$(InputName).f90" Description="type preprocessing $(InputName)" Outputs="../src/$(InputName).f90"/></FileConfiguration>
+				<Tool Name="VFCustomBuildTool" CommandLine="python &quot;$(ProjectDir)..\typegen.py&quot; &quot;$(InputPath)&quot; -o ../src/$(InputName).F90" Description="type preprocessing $(InputName)" Outputs="../src/$(InputName).F90"/></FileConfiguration>
 			<FileConfiguration Name="Release|Win32">
-				<Tool Name="VFCustomBuildTool" CommandLine="python &quot;$(ProjectDir)..\typegen.py&quot; &quot;$(InputPath)&quot; -o ../src/$(InputName).f90" Description="type preprocessing $(InputName)" Outputs="../src/$(InputName).f90"/></FileConfiguration></File></Filter>
-		<Filter Name="Source Files" Filter="f90;for;f;fpp;ftn;def;odl;idl">
-		<File RelativePath="..\src\basestring.f90"/>
-		<File RelativePath="..\src\basestring_impl.f90"/>
-		<File RelativePath="..\src\basetypes.f90"/>
-		<File RelativePath="..\src\bisect.f90"/>
-		<File RelativePath="..\src\charstacker.f90"/>
-		<File RelativePath="..\src\charstacker_impl.f90"/>
-		<File RelativePath="..\src\containertypes.f90"/>
-		<File RelativePath="..\src\convert.f90"/>
-		<File RelativePath="..\src\crc.f90"/>
-		<File RelativePath="..\src\crc_impl.f90"/>
-		<File RelativePath="..\src\file.f90"/>
-		<File RelativePath="..\src\fortres_modules.f90"/>
-		<File RelativePath="..\src\hashmap.f90"/>
-		<File RelativePath="..\src\hashmap_impl.f90"/>
-		<File RelativePath="..\src\item.f90"/>
-		<File RelativePath="..\src\item_impl.f90"/>
-		<File RelativePath="..\src\list.f90"/>
-		<File RelativePath="..\src\list_impl.f90"/>
-		<File RelativePath="..\src\memoryref.f90"/>
-		<File RelativePath="..\src\ostream.f90"/>
-		<File RelativePath="..\src\ref.f90"/>
-		<File RelativePath="..\src\ref_impl.f90"/>
-		<File RelativePath="..\src\scope.f90"/>
-		<File RelativePath="..\src\scope_impl.f90"/>
-		<File RelativePath="..\src\sort.f90"/>
-		<File RelativePath="..\src\streamvisitor.f90"/>
-		<File RelativePath="..\src\string.f90"/>
-		<File RelativePath="..\src\string_impl.f90"/>
-		<File RelativePath="..\src\typeinfo.f90"/>
-		<File RelativePath="..\src\typeinfo_impl.f90"/>
-		<File RelativePath="..\src\visitor.f90"/></Filter></Files>
+				<Tool Name="VFCustomBuildTool" CommandLine="python &quot;$(ProjectDir)..\typegen.py&quot; &quot;$(InputPath)&quot; -o ../src/$(InputName).F90" Description="type preprocessing $(InputName)" Outputs="../src/$(InputName).F90"/></FileConfiguration></File></Filter>
+		<Filter Name="Source Files" Filter="F90;f90;for;f;fpp;ftn;def;odl;idl">
+		<File RelativePath="..\src\basestring.F90"/>
+		<File RelativePath="..\src\basestring_impl.F90"/>
+		<File RelativePath="..\src\basetypes.F90"/>
+		<File RelativePath="..\src\bisect.F90"/>
+		<File RelativePath="..\src\charstacker.F90"/>
+		<File RelativePath="..\src\charstacker_impl.F90"/>
+		<File RelativePath="..\src\containertypes.F90"/>
+		<File RelativePath="..\src\convert.F90"/>
+		<File RelativePath="..\src\crc.F90"/>
+		<File RelativePath="..\src\crc_impl.F90"/>
+		<File RelativePath="..\src\file.F90"/>
+		<File RelativePath="..\src\fortres_modules.F90"/>
+		<File RelativePath="..\src\hashmap.F90"/>
+		<File RelativePath="..\src\hashmap_impl.F90"/>
+		<File RelativePath="..\src\item.F90"/>
+		<File RelativePath="..\src\item_impl.F90"/>
+		<File RelativePath="..\src\list.F90"/>
+		<File RelativePath="..\src\list_impl.F90"/>
+		<File RelativePath="..\src\memoryref.F90"/>
+		<File RelativePath="..\src\ostream.F90"/>
+		<File RelativePath="..\src\ref.F90"/>
+		<File RelativePath="..\src\ref_impl.F90"/>
+		<File RelativePath="..\src\scope.F90"/>
+		<File RelativePath="..\src\scope_impl.F90"/>
+		<File RelativePath="..\src\sort.F90"/>
+		<File RelativePath="..\src\streamvisitor.F90"/>
+		<File RelativePath="..\src\string.F90"/>
+		<File RelativePath="..\src\string_impl.F90"/>
+		<File RelativePath="..\src\typeinfo.F90"/>
+		<File RelativePath="..\src\typeinfo_impl.F90"/>
+		<File RelativePath="..\src\visitor.F90"/></Filter></Files>
 	<Globals/></VisualStudioProject>

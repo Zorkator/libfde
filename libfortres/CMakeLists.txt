@@ -9,24 +9,47 @@ add_library(fortres
   ./fort_tracestack.cpp
 )
 
-if (MSVC)
-  target_link_libraries(fortres PRIVATE Dbghelp.lib)
-else ()
-  target_link_libraries(fortres PRIVATE dl)
-  set_source_files_properties(./dirent.c PROPERTIES HEADER_FILE_ONLY YES)
-endif ()
-
 target_include_directories(fortres PUBLIC include)
+target_include_directories(fortres PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
 
-#include(CheckIncludeFiles)
-#set(CMAKE_REQUIRED_DEFINITIONS -D_CRT_SECURE_NO_WARNINGS=1)
-#check_include_files(dirent.h HAVE_DIRENT_H)
-#check_include_files("windows.h;DbgHelp.h" HAVE_DBGHELP_H)
+include(CheckIncludeFiles)
+include(CheckFunctionExists)
+include(CheckSymbolExists)
+include(CheckCSourceCompiles)
 
-#if(HAVE_DIRENT_H)
-#  set_source_files_properties(./dirent.c PROPERTIES HEADER_FILE_ONLY YES)
-#endif()
-#if(HAVE_DBGHELP_H)
- # target_link_libraries(fortres PRIVATE Dbghelp.lib)
-#endif()
+check_include_files("windows.h" HAVE_WINDOWS_H)
+if(HAVE_WINDOWS_H)
+  check_symbol_exists("strtok_s" "string.h" HAVE_STRING_SECURE)
+  check_include_files("windows.h;DbgHelp.h" HAVE_DBGHELP_H)
+  check_include_files("windows.h;libloaderapi.h" HAVE_LIBLOADERAPI_H)
+endif()
+
+check_include_files("dirent.h" HAVE_DIRENT_H)
+check_include_files("dlfcn.h" HAVE_DLFCN_H)
+
+if(HAVE_DBGHELP_H)
+  target_link_libraries(fortres PRIVATE Dbghelp)
+endif()
+
+if(HAVE_DIRENT_H)
+  set_source_files_properties(./dirent.c PROPERTIES HEADER_FILE_ONLY YES)
+endif()
+
+if(HAVE_DLFCN_H)
+  target_link_libraries(fortres PRIVATE dl)
+endif()
+
+#file(TO_NATIVE_PATH "/" LIB_DIR_SEP)
+set(PATH_SEP "/" CACHE STRING "")
+set(PATH_SEP_OTHER "\\\\" CACHE STRING "")
+
+if(WIN32)
+  set(LIB_PATH_VAR "PATH" CACHE STRING "")
+  set(LIB_PATH_SEP ";" CACHE STRING "")
+else()
+  set(LIB_PATH_VAR "LD_LIBRARY_PATH" CACHE STRING "")
+  set(LIB_PATH_SEP ":" CACHE STRING "")
+endif()
+
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/fortres_config.h.in ${CMAKE_CURRENT_BINARY_DIR}/fortres_config.h)
 

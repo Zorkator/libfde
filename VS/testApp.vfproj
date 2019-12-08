@@ -45,6 +45,6 @@
 				<Tool Name="VFPostBuildEventTool"/>
 				<Tool Name="VFManifestTool" SuppressStartupBanner="true"/></Configuration></Configurations>
 	<Files>
-		<Filter Name="Source Files" Filter="f90;for;f;fpp;ftn;def;odl;idl">
-		<File RelativePath="..\test_fde.f90"/></Filter></Files>
+		<Filter Name="Source Files" Filter="F90;f90;for;f;fpp;ftn;def;odl;idl">
+		<File RelativePath="..\test_fde.F90"/></Filter></Files>
 	<Globals/></VisualStudioProject>

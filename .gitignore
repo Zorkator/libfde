@@ -11,14 +11,14 @@
 
 */*/\.work/
 
-src/basetypes\.f90
-src/containertypes\.f90
-src/hashmap_impl\.f90
-src/hashmap\.f90
-src/item\.f90
-src/list\.f90
-src/ref\.f90
-src/string\.f90
+src/basetypes\.F90
+src/containertypes\.F90
+src/hashmap_impl\.F90
+src/hashmap\.F90
+src/item\.F90
+src/list\.F90
+src/ref\.F90
+src/string\.F90
 
 lib/
 

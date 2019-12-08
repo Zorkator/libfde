@@ -17,7 +17,7 @@ OUT_TYPE        := shared
 OUT_NAME         = fortres.x$(mk_ARCH)
 OUT_DIR          = release
 MAYOR           := 2.7.2
-CC_INCLUDE_DIRS := ./include ../include
+CC_INCLUDE_DIRS := ./include ../include ./config
 CC_LIBRARIES     = dl
 CC_FLAGS.%       = $(cc_threads) $(cc_m)$(mk_ARCH)
 
