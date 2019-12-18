@@ -3,8 +3,6 @@
 
 #include "fortres/itfUtil.fpp"
 
-# define _noArg   c_null_ptr
-
 #define _catch_1(a)                [a, 0]
 #define _catch_2(a,b)              [a,b, 0]
 #define _catch_3(a,b,c)            [a,b,c, 0]
@@ -17,6 +15,24 @@
 #define _catch                     _catch_1
 #define _catchAny                  [0]
 
+#if HANDLE_SIGNALS != DISABLED
+!   --------------------------------------------------------
+!   configure signals to handle them via exceptions ...
+!   --------------------------------------------------------
+#   ifdef _WIN32
+#       define _poll_SIGINT   .true.
+!                               ^-- Windows delivers SIGINT asynchronously (by another thread): true => we MUST poll!
+#   else
+#       define _poll_SIGINT
+!                               ^-- Linux delivers SIGINT synchronously (by trap): empty => handle it by exception!
+#   endif
+
+#   define _setup_standardExceptions() \
+        call setup_standardExceptions( _poll_SIGINT )
+#else
+#   define _setup_standardExceptions()
+!       setup_standardExceptions disabled!
+# endif
 
 !--------------------------------------------------------------------
 ! The macros below allow implementing try-interfaces like this ...
@@ -27,6 +43,8 @@
 !     call try__( _tryPass(res), c_loc(arg1), _list_19(_noArg) )
 !   end function
 !--------------------------------------------------------------------
+#define _noArg   c_null_ptr
+
 ! --- try-interfaces for tracing exceptions by set stacktracer
 #define _tryArgs        catch, what, tgt
 #define _tryPass(id)    id, catch, c_null_funptr, strBuf(what), c_funloc(tgt)
