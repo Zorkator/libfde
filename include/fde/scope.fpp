@@ -150,6 +150,12 @@
 #   define _setSymbol( scope, sym ) \
       _setSymbol_as( scope, sym, __sym2str__(sym) )
 
+#   define _setSymbolClone( scope, sym ) \
+      _setSymbol_as( scope, clone( ref_of(sym) ), __sym2str__(sym) )
+
+#   define _setSymbolClone_as( scope, sym, id ) \
+      _setSymbol_as( scope, clone( ref_of(sym) ), id )
+
 
 !---------------------------------------------------------
 ! link and bind macros specialized for arrays ...
