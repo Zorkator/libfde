@@ -1,6 +1,12 @@
 cmake_minimum_required(VERSION 2.8.12)
 project(fde Fortran)
 
+# Set name and version.
+set(FDE_NAME "fde")
+set(FDE_VERSION_MAJOR 2)
+set(FDE_VERSION_MINOR 7)
+set(FDE_VERSION_PATCH 3)
+set(FDE_VERSION       "${FDE_VERSION_MAJOR}.${FDE_VERSION_MINOR}.${FDE_VERSION_PATCH}")
 # cmake test module
 enable_testing()
 
@@ -113,11 +119,12 @@ target_link_libraries(fde PRIVATE fortres)
 target_include_directories(fde PUBLIC include)
 target_include_directories(fde PUBLIC "${CMAKE_Fortran_MODULE_DIRECTORY}")
 
-if(MSVC)
+if(WIN32)
   target_compile_definitions(fde PRIVATE BUILT_TYPE=SHARED_LIB)
+  set_property(TARGET fde PROPERTY OUTPUT_NAME ${FDE_NAME}.${FDE_VERSION})
 else()
+  set_property(TARGET fde PROPERTY OUTPUT_NAME ${FDE_NAME})
 endif()
-
 
 # Shared/static library options
 get_target_property(fde_type fde TYPE)
