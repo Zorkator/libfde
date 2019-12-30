@@ -54,4 +54,5 @@ new_test(
 #./test_simulator.F90
 #./test_simulator_driver.F90
 ./test_string.F90
+./test_plugin.F90
 )

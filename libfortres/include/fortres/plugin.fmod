@@ -14,6 +14,7 @@
         public :: plugin_iterate, plugin_filePath_to_id
         public :: plugin_available, plugin_sym, plugin_proc, plugin_call
         public :: plugin_try_sym, plugin_try_proc, plugin_try_call
+        public :: plugin_iterate_so
 
         interface
           subroutine PluginInfoHandler( id, fp, st )
@@ -22,6 +23,12 @@
             integer           :: st
           end subroutine
       
+          subroutine SOInfoHandler( id, addr )
+            import StringRef_t
+            type(StringRef_t) :: id
+            integer           :: addr
+          end subroutine
+
           subroutine plugin_set_path_( p, l, c ) _cID(f_plugin_set_path)
             import StringRef_t
             type(StringRef_t), intent(in) :: p !< plugin path
@@ -111,6 +118,11 @@
             type(StringRef_t), intent(in) :: sId !< symbolId
             integer(kind=c_int)           :: plugin_try_call_
           end function
+
+          subroutine plugin_iterate_so_( op ) _cID(f_plugin_iterate_so)
+            import c_funptr
+            type(c_funptr), value, intent(in) :: op
+          end subroutine
         end interface
 
       contains
@@ -221,6 +233,12 @@
             logical          :: res
             res = (plugin_try_call_( str(pluginId), str(symId) ) /= 0)
           end function
+
+!_PROC_EXPORT(plugin_iterate_so)
+          subroutine plugin_iterate_so( op )
+            procedure(SOInfoHandler) :: op
+            call plugin_iterate_so_( c_funloc(op) )
+          end subroutine
 
       end module
 

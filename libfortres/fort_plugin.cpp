@@ -15,6 +15,7 @@
 
 #if defined HAVE_DLFCN_H
 # include <dlfcn.h>
+# include <link.h>
 
 # define dlOpen(lib)        dlopen( lib, RTLD_NOW | RTLD_GLOBAL )
 # define dlClose(hdl)       dlclose( hdl )
@@ -25,6 +26,7 @@
 #elif defined HAVE_LIBLOADERAPI_H
 # include <windows.h>
 # include <libloaderapi.h>
+# include <psapi.h>
 
 # define dlOpen(lib)        LoadLibraryA( (LPCSTR)lib )
 # define dlClose(hdl)       FreeLibrary( (HMODULE)hdl )
@@ -482,5 +484,57 @@ f_plugin_try_call( StringRef *pluginId, StringRef *symId )
   if (func != NULL)
     { reinterpret_cast<SharedLib::Function>(func)(); }
   return (func != NULL);
+}
+
+
+_dllExport_C
+void
+f_plugin_iterate_so( SOInfoHandler handler )
+{
+  StringRef moduleId;
+
+#if defined HAVE_WINDOWS_H
+  HMODULE      handles[1024];
+  HANDLE       procHandle;
+  DWORD        numBytes;
+  std::wstring idBuffer;
+  idBuffer.reserve( MAX_PATH );
+
+
+  procHandle = GetCurrentProcess();
+  if (EnumProcessModules( procHandle, handles, sizeof(handles), &numBytes ))
+  {
+    for (unsigned int i = 0; i < (numBytes / sizeof(HMODULE)); ++i)
+    {
+      if (GetModuleFileNameEx( procHandle, handles[i], (TCHAR *)&idBuffer[0], idBuffer.capacity() ))
+      {
+        moduleId.referTo( (const char *)idBuffer.data(), idBuffer.length() );
+        handler( &moduleId, handles[i] );
+      }
+    }
+  }
+  CloseHandle( procHandle );
+
+#else
+  struct CB_Data
+  {
+    StringRef     &_moduleId;
+    SOInfoHandler &_handler;
+  } DATA = {moduleId, handler};
+
+  struct CB_Code
+  {
+    static int
+    callback( struct dl_phdr_info *info, size_t size, void *_data )
+    {
+      CB_Data &data = *static_cast<CB_Data *>(_data);
+      data._moduleId.referTo( info->dlpi_name );
+      data._handler( &data._moduleId, (void *)&info->dlpi_addr );
+      return 0;
+    }
+  };
+
+  dl_iterate_phdr( CB_Code::callback, &DATA );
+#endif
 }
 

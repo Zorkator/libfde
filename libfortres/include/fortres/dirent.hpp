@@ -9,6 +9,10 @@
   /* assume POSIX compatible compiler */
 # include <dirent.h>
 
+# ifndef MAX_PATH
+#   define MAX_PATH    4096
+# endif
+
 #else
   /* sorry, it's M$ ... */
 # include <windows.h>

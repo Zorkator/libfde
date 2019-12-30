@@ -18,9 +18,6 @@
   /* assume POSIX compatible compiler */
 # include <stdlib.h>
 # include <unistd.h>
-# ifndef MAX_PATH
-#   define MAX_PATH   4096
-# endif
 #endif
 
 #if defined HAVE_DLFCN_H

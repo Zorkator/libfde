@@ -5,6 +5,7 @@
 #include "fortres/portdef.h"
 
 typedef void (*PluginInfoHandler)( StringRef *id, StringRef *filePath, int *state );
+typedef void (*SOInfoHandler)( StringRef *id, const void *handle );
 
 _dllExport_C
 void f_plugin_set_path( StringRef *path, StringRef *libPath, StringRef *chkSym );
@@ -38,6 +39,9 @@ void * f_plugin_try_sym( StringRef *pluginId, StringRef *symId );
 
 _dllExport_C
 int f_plugin_try_call( StringRef *pluginId, StringRef *symId );
+
+_dllExport_C
+void f_plugin_iterate_so( SOInfoHandler handler );
 
 #endif /* __FORTRES_SHAREDLIB__HPP */
 
