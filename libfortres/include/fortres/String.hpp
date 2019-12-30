@@ -26,6 +26,10 @@ namespace fortres
         : std::string( other )
           { /* nothing to do here */ }
 
+        String( size_t n, char ch )
+        : std::string( n, ch )
+          { /* nothing to do here */ }
+
       template <typename TYPE>
         explicit
         String( const TYPE &val )

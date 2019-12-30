@@ -56,7 +56,7 @@ make_relPath_from_to( std::string *res, char *src, char *tgt )
       t1 = strtok_r( NULL, _pathSep, &t1n );
       t2 = strtok_r( NULL, _pathSep, &t2n );
     }
-    
+
     // make way up starting from src ...
     while (t1 != NULL)
     {
@@ -160,6 +160,7 @@ so_filepath_of( const void *addr, char buff[], size_t len )
   HMODULE hdl = NULL;
   if (GetModuleHandleExA( GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS | GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT, (LPCSTR)addr, &hdl ))
     { res = GetModuleFileNameA( hdl, buff, (DWORD)len ); }
+
 #elif defined HAVE_DLFCN_H
   Dl_info info;
   if (dladdr( const_cast<void *>(addr), &info ))
@@ -171,6 +172,7 @@ so_filepath_of( const void *addr, char buff[], size_t len )
       buff[res] = '\0'; //< make sure string is terminated!
     }
   }
+
 #else
   #error "Neither HAVE_WINDOWS_H nor HAVE_DLFCN_H"
 #endif
@@ -183,8 +185,7 @@ size_t
 f_so_filepath_of( const void *addr, StringRef *filePath )
 {
   size_t len = so_filepath_of( addr, filePath->buffer(), filePath->length() );
-  if (len < filePath->length())
-    { memset( filePath->buffer() + len, ' ', filePath->length() - len ); }
+  filePath->pad( len );
   return len;
 }
 

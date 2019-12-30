@@ -494,21 +494,21 @@ f_plugin_iterate_so( SOInfoHandler handler )
   StringRef moduleId;
 
 #if defined HAVE_WINDOWS_H
-  HMODULE      handles[1024];
-  HANDLE       procHandle;
-  DWORD        numBytes;
-  std::wstring idBuffer;
-  idBuffer.reserve( MAX_PATH );
-
+  HMODULE  handles[1024];
+  HANDLE   procHandle;
+  DWORD    numBytes;
+  wchar_t  idBuffer[MAX_PATH];
+  size_t   len;
 
   procHandle = GetCurrentProcess();
   if (EnumProcessModules( procHandle, handles, sizeof(handles), &numBytes ))
   {
     for (unsigned int i = 0; i < (numBytes / sizeof(HMODULE)); ++i)
     {
-      if (GetModuleFileNameEx( procHandle, handles[i], (TCHAR *)&idBuffer[0], idBuffer.capacity() ))
+      len = GetModuleFileNameEx( procHandle, handles[i], (LPSTR)idBuffer, sizeof(idBuffer) / sizeof(idBuffer[0]) );
+      if (len > 0)
       {
-        moduleId.referTo( (const char *)idBuffer.data(), idBuffer.length() );
+        moduleId.referTo( (const char *)idBuffer, len );
         handler( &moduleId, handles[i] );
       }
     }
@@ -529,7 +529,8 @@ f_plugin_iterate_so( SOInfoHandler handler )
     {
       CB_Data &data = *static_cast<CB_Data *>(_data);
       data._moduleId.referTo( info->dlpi_name );
-      data._handler( &data._moduleId, (void *)&info->dlpi_addr );
+      if (data._moduleId.length() > 0)
+        { data._handler( &data._moduleId, (void *)&info->dlpi_addr ); }
       return 0;
     }
   };
