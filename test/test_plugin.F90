@@ -8,14 +8,16 @@ module test_plugin
   contains
 
   subroutine test_list_so()
-    call plugin_iterate_so( printSO )
+    print *, plugin_iterate_so( printSO )
   end subroutine
 
-  subroutine printSO( id, addr )
+  function printSO( id, addr ) result(res)
     type(StringRef_t) :: id
     integer           :: addr
+    integer           :: res
     print*, hex(addr), ": ", str(id)
-  end subroutine
+    res = 0
+  end function
 
 end module
 

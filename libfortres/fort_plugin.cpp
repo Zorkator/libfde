@@ -488,10 +488,11 @@ f_plugin_try_call( StringRef *pluginId, StringRef *symId )
 
 
 _dllExport_C
-void
+int
 f_plugin_iterate_so( SOInfoHandler handler )
 {
   StringRef moduleId;
+  int       status = 0;
 
 #if defined HAVE_WINDOWS_H
   HMODULE  handles[1024];
@@ -509,7 +510,9 @@ f_plugin_iterate_so( SOInfoHandler handler )
       if (len > 0)
       {
         moduleId.referTo( (const char *)idBuffer, len );
-        handler( &moduleId, handles[i] );
+        status = handler( &moduleId, handles[i] );
+        if (status != 0)
+          { break; }
       }
     }
   }
@@ -530,12 +533,13 @@ f_plugin_iterate_so( SOInfoHandler handler )
       CB_Data &data = *static_cast<CB_Data *>(_data);
       data._moduleId.referTo( info->dlpi_name );
       if (data._moduleId.length() > 0)
-        { data._handler( &data._moduleId, (void *)&info->dlpi_addr ); }
+        { return data._handler( &data._moduleId, (void *)&info->dlpi_addr ); }
       return 0;
     }
   };
 
-  dl_iterate_phdr( CB_Code::callback, &DATA );
+  status = dl_iterate_phdr( CB_Code::callback, &DATA );
 #endif
+  return status;
 }
 

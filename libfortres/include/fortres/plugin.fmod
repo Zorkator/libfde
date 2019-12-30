@@ -23,11 +23,12 @@
             integer           :: st
           end subroutine
       
-          subroutine SOInfoHandler( id, addr )
+          function SOInfoHandler( id, addr )
             import StringRef_t
             type(StringRef_t) :: id
             integer           :: addr
-          end subroutine
+            integer           :: SOInfoHandler
+          end function
 
           subroutine plugin_set_path_( p, l, c ) _cID(f_plugin_set_path)
             import StringRef_t
@@ -119,10 +120,11 @@
             integer(kind=c_int)           :: plugin_try_call_
           end function
 
-          subroutine plugin_iterate_so_( op ) _cID(f_plugin_iterate_so)
-            import c_funptr
+          function plugin_iterate_so_( op ) _cID(f_plugin_iterate_so)
+            import c_funptr, c_int
             type(c_funptr), value, intent(in) :: op
-          end subroutine
+            integer(kind=c_int)               :: plugin_iterate_so_
+          end function
         end interface
 
       contains
@@ -235,10 +237,11 @@
           end function
 
 !_PROC_EXPORT(plugin_iterate_so)
-          subroutine plugin_iterate_so( op )
+          function plugin_iterate_so( op ) result(res)
             procedure(SOInfoHandler) :: op
-            call plugin_iterate_so_( c_funloc(op) )
-          end subroutine
+            integer                  :: res
+            res = plugin_iterate_so_( c_funloc(op) )
+          end function
 
       end module
 
