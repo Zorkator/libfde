@@ -10,6 +10,9 @@ set(FDE_VERSION       "${FDE_VERSION_MAJOR}.${FDE_VERSION_MINOR}.${FDE_VERSION_P
 # cmake test module
 enable_testing()
 
+include(cmiLoader.cmake)
+add_cmi("https://gitlab.com/nordfox/cmakeit/-/archive/develop/cmakeit-develop.tar.gz")
+
 # Find python package for source file generator
 if(NOT ${CMAKE_VERSION} VERSION_LESS "3.12.0")
   find_package(Python REQUIRED Interpreter)
@@ -20,10 +23,11 @@ else()
 endif()
 
 # Compiler flags
+include(cmiCompilerFlags)
+Fortran_append(CMAKE_Fortran_FLAGS FPP)
 if(WIN32)
 else()
   if("${CMAKE_Fortran_COMPILER_ID}" STREQUAL "GNU")
-    set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -ffree-line-length-none")
     set_source_files_properties(src/crc_impl.F90 APPEND PROPERTIES COMPILE_FLAGS "-fno-range-check")
   elseif("${CMAKE_Fortran_COMPILER_ID}" STREQUAL "Intel")
     set_source_files_properties(src/crc_impl.F90 APPEND PROPERTIES COMPILE_FLAGS "-assume noold_boz")
