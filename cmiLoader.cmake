@@ -59,7 +59,10 @@ function(cmi_add_loader cmi_URL)
   if(cmi_POPULATED)
     return()
   endif()
+  # mark root project as populated
+  set_property(GLOBAL PROPERTY ${CMAKE_PROJECT_NAME}_POPULATED "TRUE")
   cmi_add_archive_url("cmi" "${cmi_URL}")
+  
   if(cmi_UPDATE_LOADER)
     get_property(cmi_LOADER_FILE GLOBAL PROPERTY cmi_LOADER_FILE)
     get_filename_component(cmi_LOADER_NAME "${cmi_LOADER_FILE}" NAME)
