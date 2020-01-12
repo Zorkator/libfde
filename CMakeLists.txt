@@ -13,14 +13,8 @@ enable_testing()
 include(cmiLoader.cmake)
 add_cmi("https://gitlab.com/nordfox/cmakeit/-/archive/develop/cmakeit-develop.tar.gz")
 
-# Find python package for source file generator
-if(NOT ${CMAKE_VERSION} VERSION_LESS "3.12.0")
-  find_package(Python REQUIRED Interpreter)
-else()
-  # Backwards compatibility
-  find_package(PythonInterp REQUIRED)
-  set(Python_EXECUTABLE "${PYTHON_EXECUTABLE}")
-endif()
+include(cmiPython)
+python_check_packages(docopt string)
 
 # Compiler flags
 include(cmiCompilerFlags)
