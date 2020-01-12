@@ -11,14 +11,14 @@ set(FDE_VERSION       "${FDE_VERSION_MAJOR}.${FDE_VERSION_MINOR}.${FDE_VERSION_P
 enable_testing()
 
 include(cmiLoader.cmake)
-add_cmi("https://gitlab.com/nordfox/cmakeit/-/archive/develop/cmakeit-develop.tar.gz")
+cmi_add_loader("https://gitlab.com/nordfox/cmakeit/-/archive/ac0b9d5a886679a3f8265f86c41a2b07b68492fc/cmakeit-ac0b9d5a886679a3f8265f86c41a2b07b68492fc.tar.gz")
 
 include(cmiPython)
-python_check_packages(docopt string)
+cmi_python_check_packages(docopt string)
 
 # Compiler flags
 include(cmiCompilerFlags)
-Fortran_append(CMAKE_Fortran_FLAGS FPP)
+cmi_Fortran_append(CMAKE_Fortran_FLAGS FPP)
 if(WIN32)
 else()
   if("${CMAKE_Fortran_COMPILER_ID}" STREQUAL "GNU")
