@@ -2,9 +2,11 @@
 #cmakedefine HAVE_STRING_SECURE 1
 #cmakedefine HAVE_DBGHELP_H 1
 #cmakedefine HAVE_LIBLOADERAPI_H 1
+#cmakedefine HAVE_PSAPI_H 1
 
 #cmakedefine HAVE_DIRENT_H 1
 #cmakedefine HAVE_DLFCN_H 1
+#cmakedefine HAVE_LINK_H 1
 
 
 #define LIB_PREFIX      "@CMAKE_SHARED_LIBRARY_PREFIX@"

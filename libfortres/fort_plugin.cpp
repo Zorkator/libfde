@@ -13,9 +13,12 @@
 #include "fortres/String.hpp"
 #include "fortres/stdlib.h"
 
+#if defined HAVE_WINDOWS_H
+# include <windows.h>
+#endif
+
 #if defined HAVE_DLFCN_H
 # include <dlfcn.h>
-# include <link.h>
 
 # define dlOpen(lib)        dlopen( lib, RTLD_NOW | RTLD_GLOBAL )
 # define dlClose(hdl)       dlclose( hdl )
@@ -24,9 +27,7 @@
 # define dlErrorCode()      errno
 
 #elif defined HAVE_LIBLOADERAPI_H
-# include <windows.h>
 # include <libloaderapi.h>
-# include <psapi.h>
 
 # define dlOpen(lib)        LoadLibraryA( (LPCSTR)lib )
 # define dlClose(hdl)       FreeLibrary( (HMODULE)hdl )
@@ -36,6 +37,14 @@
 
 #else
   #error "Neither HAVE_LIBLOADERAPI_H nor HAVE_DLFCN_H"
+#endif
+
+#if defined HAVE_LINK_H
+# include <link.h>
+#endif
+
+#if defined HAVE_PSAPI_H
+# include <psapi.h>
 #endif
 
 # define _ref_str(strRef)       strRef->str()

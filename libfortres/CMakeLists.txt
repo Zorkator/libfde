@@ -20,10 +20,13 @@ if(HAVE_WINDOWS_H)
   check_symbol_exists("strtok_s" "string.h" HAVE_STRING_SECURE)
   check_include_files("windows.h;DbgHelp.h" HAVE_DBGHELP_H)
   check_include_files("windows.h;libloaderapi.h" HAVE_LIBLOADERAPI_H)
+  check_include_files("windows.h;psapi.h" HAVE_PSAPI_H)
 endif()
 
 check_include_files("dirent.h" HAVE_DIRENT_H)
 check_include_files("dlfcn.h" HAVE_DLFCN_H)
+check_include_files("link.h" HAVE_LINK_H)
+
 
 if(HAVE_DBGHELP_H)
   target_link_libraries(fortres PRIVATE Dbghelp)
@@ -35,6 +38,10 @@ endif()
 
 if(HAVE_DLFCN_H)
   target_link_libraries(fortres PRIVATE dl)
+endif()
+
+if(HAVE_PSAPI_H)
+  target_link_libraries(fortres PRIVATE psapi)
 endif()
 
 #file(TO_NATIVE_PATH "/" LIB_DIR_SEP)
