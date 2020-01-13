@@ -25,7 +25,7 @@
 #endif
 
 static const char _pathDelim[] = PATH_SEP;
-static const char _pathSep[]   = PATH_SEP PATH_SEP_OTHER;
+static const char _pathSep[]   = PATH_SEP_WINDOWS PATH_SEP_UNIX;
 
 
 void

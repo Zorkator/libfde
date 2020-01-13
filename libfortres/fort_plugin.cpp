@@ -361,7 +361,7 @@ class PluginBroker
       {
         size_t id_beg, id_end;
 
-        id_beg = libFile.find_last_of( PATH_SEP PATH_SEP_OTHER );
+        id_beg = libFile.find_last_of( PATH_SEP_WINDOWS PATH_SEP_UNIX );
         id_beg = (id_beg == String::npos)? 0 : id_beg + 1; //< skip DIR_SEP
         if (libFile.find( _libPrefix, id_beg ) == id_beg)  //< skip optional LIB_PREFIX 'lib'
           { id_beg += _libPrefix.length(); }

@@ -44,16 +44,18 @@ if(HAVE_PSAPI_H)
   target_link_libraries(fortres PRIVATE psapi)
 endif()
 
-#file(TO_NATIVE_PATH "/" LIB_DIR_SEP)
-set(PATH_SEP "/" CACHE INTERNAL "")
-set(PATH_SEP_OTHER "\\\\" CACHE INTERNAL "")
-
+file(TO_NATIVE_PATH "/" PATH_SEP)
+# escaping native path
+string(REPLACE "\\" "\\\\" PATH_SEP "${PATH_SEP}")
+set(PATH_SEP_UNIX "/")
+set(PATH_SEP_WINDOWS "\\\\")
+ 
 if(WIN32)
-  set(LIB_PATH_VAR "PATH" CACHE INTERNAL "")
-  set(LIB_PATH_SEP ";" CACHE  INTERNAL "")
+  set(LIB_PATH_VAR "PATH")
+  set(LIB_PATH_SEP ";")
 else()
-  set(LIB_PATH_VAR "LD_LIBRARY_PATH" CACHE INTERNAL "")
-  set(LIB_PATH_SEP ":" CACHE INTERNAL "")
+  set(LIB_PATH_VAR "LD_LIBRARY_PATH")
+  set(LIB_PATH_SEP ":")
 endif()
 
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/fortres_config.h.in ${CMAKE_CURRENT_BINARY_DIR}/fortres_config.h)

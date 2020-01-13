@@ -9,10 +9,11 @@
 #cmakedefine HAVE_LINK_H 1
 
 
-#define LIB_PREFIX      "@CMAKE_SHARED_LIBRARY_PREFIX@"
-#define LIB_SUFFIX      "@CMAKE_SHARED_LIBRARY_SUFFIX@"
-#define LIB_PATH_VAR    "@LIB_PATH_VAR@"
-#define LIB_PATH_SEP    "@LIB_PATH_SEP@"
-#define PATH_SEP        "@PATH_SEP@"
-#define PATH_SEP_OTHER  "@PATH_SEP_OTHER@"
+#define LIB_PREFIX        "@CMAKE_SHARED_LIBRARY_PREFIX@"
+#define LIB_SUFFIX        "@CMAKE_SHARED_LIBRARY_SUFFIX@"
+#define LIB_PATH_VAR      "@LIB_PATH_VAR@"
+#define LIB_PATH_SEP      "@LIB_PATH_SEP@"
+#define PATH_SEP          "@PATH_SEP@"
+#define PATH_SEP_UNIX     "@PATH_SEP_UNIX@"
+#define PATH_SEP_WINDOWS  "@PATH_SEP_WINDOWS@"
 
