@@ -11,7 +11,7 @@ set(FDE_VERSION       "${FDE_VERSION_MAJOR}.${FDE_VERSION_MINOR}.${FDE_VERSION_P
 enable_testing()
 
 include(cmiLoader.cmake)
-set(cmi_tag 2fda2ccccb42259155ed756d179bb742a4576a07)
+set(cmi_tag 3b4f2c3a785898fb3de24e15f884538a10336cc3)
 cmi_add_loader("https://gitlab.com/nordfox/cmakeit/-/archive/${cmi_tag}/cmakeit-${cmi_tag}.tar.gz")
 
 include(cmiPython)
