@@ -11,7 +11,7 @@ set(FDE_VERSION       "${FDE_VERSION_MAJOR}.${FDE_VERSION_MINOR}.${FDE_VERSION_P
 enable_testing()
 
 include(cmiLoader.cmake)
-set(cmi_tag 3b4f2c3a785898fb3de24e15f884538a10336cc3)
+set(cmi_tag d62aecd3e3b427fa7baf5b7682c6d000b59cef6c)
 cmi_add_loader("https://gitlab.com/nordfox/cmakeit/-/archive/${cmi_tag}/cmakeit-${cmi_tag}.tar.gz")
 
 include(cmiPython)
@@ -19,6 +19,7 @@ cmi_python_check_packages(docopt)
 
 # Compiler flags
 include(cmiCompilerFlags)
+cmi_disable_vs_debug_runtime()
 cmi_Fortran_append(CMAKE_Fortran_FLAGS FPP)
 if(WIN32)
 else()
