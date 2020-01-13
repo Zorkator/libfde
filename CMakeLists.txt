@@ -19,9 +19,6 @@ else()
   set(Python_EXECUTABLE "${PYTHON_EXECUTABLE}")
 endif()
 
-# Global options
-set_property(GLOBAL PROPERTY USE_FOLDERS ON)
-
 # Compiler flags
 if(WIN32)
 else()
@@ -146,3 +143,9 @@ endif()
 # tests
 enable_testing()
 add_subdirectory(test)
+
+# IDE settings
+set_property(GLOBAL PROPERTY USE_FOLDERS ON)
+set_target_properties(fde PROPERTIES FOLDER libraries)
+set_target_properties(fde_gen PROPERTIES FOLDER libraries)
+set_target_properties(fortres PROPERTIES FOLDER libraries)
