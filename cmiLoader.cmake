@@ -1,3 +1,5 @@
+cmake_minimum_required(VERSION 3.8)
+
 get_property(cmi_LOADER_FILE GLOBAL PROPERTY cmi_LOADER_FILE)
 if(NOT cmi_LOADER_FILE)
   set_property(GLOBAL PROPERTY cmi_LOADER_FILE "${CMAKE_CURRENT_LIST_FILE}")
@@ -13,34 +15,24 @@ function(cmi_add_archive_url PROJECT_NAME PROJECT_URL)
   endif()
   set_property(GLOBAL PROPERTY ${PROJECT_NAME}_POPULATED "TRUE")
   
+  if(DEFINED ${PROJECT_NAME}_URL_CURRENT AND NOT ("${PROJECT_URL}" STREQUAL "${${PROJECT_NAME}_URL_CURRENT}"))
+    unset(${PROJECT_NAME}_DIR CACHE)
+  endif()
   get_filename_component(${PROJECT_NAME}_ARCHIVE "${PROJECT_URL}" NAME)
   set(${PROJECT_NAME}_ARCHIVE_PATH "${cmi_EXTERNALS_DIR}/${${PROJECT_NAME}_ARCHIVE}")
   get_filename_component(${PROJECT_NAME}_ARCHIVE_TAG "${${PROJECT_NAME}_ARCHIVE_PATH}" NAME_WE) 
   set(${PROJECT_NAME}_DIR "${cmi_EXTERNALS_DIR}/${${PROJECT_NAME}_ARCHIVE_TAG}" CACHE PATH "")
   
-  macro(cmi_download_archive_)
-    message(STATUS "Downloading ${PROJECT_NAME}")
-    file(DOWNLOAD "${PROJECT_URL}" "${${PROJECT_NAME}_ARCHIVE_PATH}" SHOW_PROGRESS)
-  endmacro()
-  
-  macro(cmi_extract_archive_)
+  if(NOT EXISTS "${${PROJECT_NAME}_DIR}")
+    if(NOT EXISTS "${${PROJECT_NAME}_ARCHIVE_PATH}")
+      message(STATUS "Downloading ${PROJECT_NAME}")
+      file(DOWNLOAD "${PROJECT_URL}" "${${PROJECT_NAME}_ARCHIVE_PATH}" SHOW_PROGRESS)
+    endif()
     message(STATUS "Extracting ${PROJECT_NAME}")
     execute_process(
       COMMAND "${CMAKE_COMMAND}" -E tar -xf "${${PROJECT_NAME}_ARCHIVE_PATH}"
       WORKING_DIRECTORY "${cmi_EXTERNALS_DIR}"
     )
-  endmacro()
-  
-  if(NOT EXISTS "${${PROJECT_NAME}_DIR}")
-    if(NOT EXISTS "${${PROJECT_NAME}_ARCHIVE_PATH}")
-      cmi_download_archive_()
-    endif()
-    cmi_extract_archive_()
-  endif()
-  
-  if(DEFINED ${PROJECT_NAME}_URL_CURRENT AND NOT ("${PROJECT_URL}" STREQUAL "${${PROJECT_NAME}_URL_CURRENT}"))
-    cmi_download_archive_()
-    cmi_extract_archive_()
   endif()
   
   set(${PROJECT_NAME}_URL_CURRENT "${PROJECT_URL}" CACHE INTERNAL "")

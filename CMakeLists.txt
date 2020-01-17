@@ -1,5 +1,6 @@
-cmake_minimum_required(VERSION 3.2)
+cmake_minimum_required(VERSION 3.8)
 project(fde Fortran)
+enable_testing()
 
 # Set name and version.
 set(FDE_NAME "fde")
@@ -7,11 +8,9 @@ set(FDE_VERSION_MAJOR 2)
 set(FDE_VERSION_MINOR 7)
 set(FDE_VERSION_PATCH 3)
 set(FDE_VERSION       "${FDE_VERSION_MAJOR}.${FDE_VERSION_MINOR}.${FDE_VERSION_PATCH}")
-# cmake test module
-enable_testing()
 
 include(cmiLoader.cmake)
-set(cmi_tag d62aecd3e3b427fa7baf5b7682c6d000b59cef6c)
+set(cmi_tag df9c9837)
 cmi_add_loader("https://gitlab.com/nordfox/cmakeit/-/archive/${cmi_tag}/cmakeit-${cmi_tag}.tar.gz")
 
 include(cmiPython)
@@ -141,11 +140,10 @@ if(fde_type STREQUAL "SHARED_LIBRARY")
 endif()
 
 # tests
-enable_testing()
 add_subdirectory(test)
 
 # IDE settings
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
-set_target_properties(fde PROPERTIES FOLDER libraries)
-set_target_properties(fde_gen PROPERTIES FOLDER libraries)
-set_target_properties(fortres PROPERTIES FOLDER libraries)
+set_target_properties(fde PROPERTIES FOLDER "${PROJECT_NAME}")
+set_target_properties(fde_gen PROPERTIES FOLDER "${PROJECT_NAME}")
+set_target_properties(fortres PROPERTIES FOLDER "${PROJECT_NAME}")
