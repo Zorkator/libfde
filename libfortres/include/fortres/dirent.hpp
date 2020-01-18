@@ -24,6 +24,7 @@
 _dllExport_C
 void make_cwd( std::string *cwd );
 
+
 /**
  * relpath functions
  */
@@ -97,8 +98,24 @@ int isdir( const T &path )
 extern
 size_t so_filepath_of( const void *addr, char buff[], size_t len );
 
-extern
-size_t so_filepath_of( const void *addr, std::string *pathBuff );
+inline
+size_t so_filepath_of( const void *addr, std::string *pathBuff )
+{
+	pathBuff->resize( MAX_PATH );
+	size_t len = so_filepath_of( addr, &(*pathBuff)[0], pathBuff->capacity() );
+	pathBuff->resize( len );
+	return len;
+}
+
+inline
+std::string
+so_filepath_of( const void *addr )
+{
+	std::string buff;
+	so_filepath_of( addr, &buff );
+	return buff;
+}
+
 
 /** fortran callable wrapper for so_filepath_of ... **/
 _dllExport_C

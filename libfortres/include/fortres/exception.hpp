@@ -43,6 +43,14 @@ void f_throw( int code, const StringRef *what );
 extern
 void f_throw_str( int code, std::string **msg );
 
+inline
+void f_throw( int code, const char *msg )
+{
+  StringRef ref( msg );
+  f_throw( code, &ref );
+}
+
+
 _dllExport_C
 void f_push_cleanup( Procedure proc );
 

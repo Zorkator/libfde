@@ -33,6 +33,7 @@ make_cwd( std::string *cwd )
 {
   cwd->resize( MAX_PATH );
   getcwd( &(*cwd)[0], cwd->capacity() );
+  cwd->resize( strnlen( &(*cwd)[0], cwd->capacity() ) );
 }
 
 
