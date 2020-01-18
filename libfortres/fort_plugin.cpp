@@ -65,6 +65,7 @@ class SharedLib
       typedef void (*Function)( void );
 
       SharedLib( const char *libFile )
+      : _hdl(NULL), _initialized(false)
       {
         _hdl = dlOpen( libFile );
         if (!_hdl && _dbg_info)
@@ -75,7 +76,32 @@ class SharedLib
       ~SharedLib( void )
       {
         if (_hdl != NULL)
-          { dlClose( _hdl ); }
+        {
+          this->finalize();
+          dlClose( _hdl );
+        }
+      }
+
+    void
+      initialize( void )
+      {
+        Function init = (Function)this->getSymbol( "initialize_c_" );
+        if (init != NULL)
+        {
+          init();
+          _initialized = true;
+        }
+      }
+
+    void
+      finalize( void )
+      {
+        if (_initialized)
+        {
+          Function fin = (Function)this->getSymbol( "finalize_c_" );
+          if (fin != NULL)
+            { fin(); }
+        }
       }
 
     void *
@@ -95,6 +121,7 @@ class SharedLib
 
   private:
     void *_hdl;
+    bool  _initialized;
 };
 
 
@@ -183,7 +210,6 @@ class PluginBroker
     {
       public:
         typedef std::map<String, PluginRef>::iterator  Iterator;
-        typedef SharedLib::Function                    Initializer;
 
         static SharedLib *
           tryLoad( const String &filePath, const Predicate &pred = Predicate() )
@@ -221,12 +247,7 @@ class PluginBroker
 
                   ref.handle.reset( lib );
                   if (lib)
-                  {
-                    /* if implemented, call initialize function */
-                    Initializer init = (Initializer)lib->getSymbol("initialize_c_");
-                    if (init)
-                      { init(); }
-                  }
+                    { lib->initialize(); }
                 }
               }
             }
@@ -353,6 +374,20 @@ class PluginBroker
           PluginRef &ref   = itr->second;
           handler( &id.referTo( itr->first ), &filePath.referTo( ref.filePath ), (int *)&ref.state );
         }
+      }
+
+
+    bool
+      unload( const StringRef *pluginId )
+        { return (_pluginMap.erase( _ref_str(pluginId) ) != 0); }
+
+
+    void
+      clear( void )
+      {
+        _pluginMap.clear();
+        _pluginDir.clear();
+        _libPath.clear();
       }
 
 
@@ -550,5 +585,21 @@ f_plugin_iterate_so( SOInfoHandler handler )
   status = dl_iterate_phdr( CB_Code::callback, &DATA );
 #endif
   return status;
+}
+
+
+_dllExport_C
+int
+f_plugin_unload( StringRef *pluginId )
+{
+  if (pluginId == NULL)
+  {
+    getBroker()->clear();
+    return 1;
+  }
+  else
+  {
+    return getBroker()->unload( pluginId );
+  }
 }
 

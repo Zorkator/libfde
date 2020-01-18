@@ -14,7 +14,7 @@
         public :: plugin_iterate, plugin_filePath_to_id
         public :: plugin_available, plugin_sym, plugin_proc, plugin_call
         public :: plugin_try_sym, plugin_try_proc, plugin_try_call
-        public :: plugin_iterate_so
+        public :: plugin_iterate_so, plugin_unload
 
         interface
           subroutine PluginInfoHandler( id, fp, st )
@@ -120,10 +120,18 @@
             integer(kind=c_int)           :: plugin_try_call_
           end function
 
+          ! others ...
+
           function plugin_iterate_so_( op ) _cID(f_plugin_iterate_so)
             import c_funptr, c_int
             type(c_funptr), value, intent(in) :: op
             integer(kind=c_int)               :: plugin_iterate_so_
+          end function
+
+          function plugin_unload_( pId ) _cID(f_plugin_unload)
+            import
+            type(StringRef_t), intent(in) :: pId !< pluginId
+            integer(kind=c_int)           :: plugin_unload_
           end function
         end interface
 
@@ -243,6 +251,12 @@
             res = plugin_iterate_so_( c_funloc(op) )
           end function
 
+!_PROC_EXPORT(plugin_unload)
+          function plugin_unload( pluginId ) result(res)
+            character(len=*), optional :: pluginId
+            logical                    :: res
+            res = (plugin_unload_( str(pluginId) ) /= 0)
+          end function
       end module
 
 #endif
