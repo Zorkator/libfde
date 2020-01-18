@@ -9,9 +9,11 @@ set(FDE_VERSION_MINOR 7)
 set(FDE_VERSION_PATCH 3)
 set(FDE_VERSION       "${FDE_VERSION_MAJOR}.${FDE_VERSION_MINOR}.${FDE_VERSION_PATCH}")
 
+set(cmi_DOWNLOAD_TAG "95a141e3d245d22de463bab7a516c0ff456b29f9")
 include(cmiLoader.cmake)
-set(cmi_tag df9c9837)
-cmi_add_loader("https://gitlab.com/nordfox/cmakeit/-/archive/${cmi_tag}/cmakeit-${cmi_tag}.tar.gz")
+cmi_add_archive_url(cmi
+  "https://gitlab.com/nordfox/cmakeit/-/archive/${cmi_DOWNLOAD_TAG}/cmakeit-${cmi_DOWNLOAD_TAG}.tar.gz"
+)
 
 include(cmiPython)
 cmi_python_check_packages(docopt)

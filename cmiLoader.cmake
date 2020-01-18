@@ -1,11 +1,34 @@
 cmake_minimum_required(VERSION 3.8)
 
+set(cmi_TAG "95a141e3d245d22de463bab7a516c0ff456b29f9")
+
 get_property(cmi_LOADER_FILE GLOBAL PROPERTY cmi_LOADER_FILE)
 if(NOT cmi_LOADER_FILE)
   set_property(GLOBAL PROPERTY cmi_LOADER_FILE "${CMAKE_CURRENT_LIST_FILE}")
+  if(DEFINED cmi_DOWNLOAD_TAG AND NOT ("${cmi_DOWNLOAD_TAG}" STREQUAL "${cmi_TAG}"))
+    message(STATUS "Update ${CMAKE_CURRENT_LIST_FILE} to ${cmi_DOWNLOAD_TAG}")
+    set(cmi_LOADER_TMP "${CMAKE_BINARY_DIR}/cmiLoader.cmake")
+    file(
+      DOWNLOAD "https://gitlab.com/nordfox/cmakeit/raw/${cmi_DOWNLOAD_TAG}/cmiLoader.cmake"
+      "${cmi_LOADER_TMP}.in"
+      SHOW_PROGRESS
+    )
+    configure_file("${cmi_LOADER_TMP}.in" "${cmi_LOADER_TMP}" @ONLY NEWLINE_STYLE UNIX)
+    execute_process(
+      COMMAND "${CMAKE_COMMAND}" -E copy_if_different "${cmi_LOADER_TMP}" "${CMAKE_CURRENT_LIST_FILE}"
+    )
+    include("${cmi_LOADER_TMP}")
+    file(REMOVE "${cmi_LOADER_TMP}.in" "${cmi_LOADER_TMP}")
+    return()
+  endif()
 endif()
 
-set(cmi_LOADER_REVISION 1 CACHE INTERNAL "")
+get_property(cmi_LOADER_INCLUDED GLOBAL PROPERTY cmi_LOADER_INCLUDED)
+if(cmi_LOADER_INCLUDED)
+  return()
+endif()
+set_property(GLOBAL PROPERTY cmi_LOADER_INCLUDED "TRUE")
+
 set(cmi_EXTERNALS_DIR "${CMAKE_SOURCE_DIR}/_externals/" CACHE PATH "")
 
 function(cmi_add_archive_url PROJECT_NAME PROJECT_URL)
@@ -20,15 +43,15 @@ function(cmi_add_archive_url PROJECT_NAME PROJECT_URL)
   endif()
   get_filename_component(${PROJECT_NAME}_ARCHIVE "${PROJECT_URL}" NAME)
   set(${PROJECT_NAME}_ARCHIVE_PATH "${cmi_EXTERNALS_DIR}/${${PROJECT_NAME}_ARCHIVE}")
-  get_filename_component(${PROJECT_NAME}_ARCHIVE_TAG "${${PROJECT_NAME}_ARCHIVE_PATH}" NAME_WE) 
+  get_filename_component(${PROJECT_NAME}_ARCHIVE_TAG "${${PROJECT_NAME}_ARCHIVE_PATH}" NAME_WE)
   set(${PROJECT_NAME}_DIR "${cmi_EXTERNALS_DIR}/${${PROJECT_NAME}_ARCHIVE_TAG}" CACHE PATH "")
   
   if(NOT EXISTS "${${PROJECT_NAME}_DIR}")
     if(NOT EXISTS "${${PROJECT_NAME}_ARCHIVE_PATH}")
-      message(STATUS "Downloading ${PROJECT_NAME}")
+      message(STATUS "Downloading ${PROJECT_NAME} ${PROJECT_URL}")
       file(DOWNLOAD "${PROJECT_URL}" "${${PROJECT_NAME}_ARCHIVE_PATH}" SHOW_PROGRESS)
     endif()
-    message(STATUS "Extracting ${PROJECT_NAME}")
+    message(STATUS "Extracting ${PROJECT_NAME} ${${PROJECT_NAME}_ARCHIVE_PATH}")
     execute_process(
       COMMAND "${CMAKE_COMMAND}" -E tar -xf "${${PROJECT_NAME}_ARCHIVE_PATH}"
       WORKING_DIRECTORY "${cmi_EXTERNALS_DIR}"
@@ -37,46 +60,7 @@ function(cmi_add_archive_url PROJECT_NAME PROJECT_URL)
   
   set(${PROJECT_NAME}_URL_CURRENT "${PROJECT_URL}" CACHE INTERNAL "")
   
-  add_subdirectory("${${PROJECT_NAME}_DIR}" "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}")
-endfunction()
-
-get_property(cmi_LOADER_INCLUDED GLOBAL PROPERTY cmi_LOADER_INCLUDED)
-if(cmi_LOADER_INCLUDED)
-  return()
-endif()
-set_property(GLOBAL PROPERTY cmi_LOADER_INCLUDED "TRUE")
-
-function(cmi_add_loader cmi_URL)
-  get_property(cmi_POPULATED GLOBAL PROPERTY cmi_POPULATED)
-  if(cmi_POPULATED)
-    return()
+  if(EXISTS "${${PROJECT_NAME}_DIR}/cmake")
+    set(CMAKE_MODULE_PATH "${${PROJECT_NAME}_DIR}/cmake" "${CMAKE_MODULE_PATH}" CACHE INTERNAL "")
   endif()
-  # mark root project as populated
-  set_property(GLOBAL PROPERTY ${CMAKE_PROJECT_NAME}_POPULATED "TRUE")
-  cmi_add_archive_url("cmi" "${cmi_URL}")
-  
-  if(cmi_UPDATE_LOADER)
-    get_property(cmi_LOADER_FILE GLOBAL PROPERTY cmi_LOADER_FILE)
-    get_filename_component(cmi_LOADER_NAME "${cmi_LOADER_FILE}" NAME)
-    get_filename_component(cmi_LOADER_DIR "${cmi_LOADER_FILE}" DIRECTORY)
-    if(NOT ("${cmi_LOADER_DIR}" STREQUAL "${cmi_DIR}"))
-      message(STATUS "cmi: Updating ${cmi_LOADER_NAME}")
-      set(cmi_BACKUP "${cmi_LOADER_FILE}")
-      while(EXISTS "${cmi_BACKUP}")
-        set(cmi_BACKUP "${cmi_BACKUP}.bak")
-      endwhile()
-      file(SHA1 "${cmi_DIR}/${cmi_LOADER_NAME}" HASH_DOWNLOAD)
-      file(SHA1 "${cmi_LOADER_FILE}" HASH_CURRENT)
-      if("${HASH_DOWNLOAD}" STREQUAL "${HASH_CURRENT}")
-        message(STATUS "cmi: Already up to date")
-      else()
-        message(STATUS "cmi: Createing backup ${cmi_BACKUP}")
-        file(RENAME "${cmi_LOADER_FILE}" "${cmi_BACKUP}")
-        file(COPY "${cmi_DIR}/${cmi_LOADER_NAME}" DESTINATION "${cmi_LOADER_DIR}")
-      endif()
-      message(STATUS "cmi: Update done")
-    endif()
-  endif()
-  
-  set(CMAKE_MODULE_PATH "${cmi_DIR}/modules" "${CMAKE_MODULE_PATH}" CACHE INTERNAL "")
 endfunction()
