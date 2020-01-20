@@ -1,5 +1,6 @@
-cmake_minimum_required(VERSION 3.2)
+cmake_minimum_required(VERSION 3.8)
 project(fde Fortran)
+enable_testing()
 
 # Set name and version.
 set(FDE_NAME "fde")
@@ -7,23 +8,23 @@ set(FDE_VERSION_MAJOR 2)
 set(FDE_VERSION_MINOR 7)
 set(FDE_VERSION_PATCH 3)
 set(FDE_VERSION       "${FDE_VERSION_MAJOR}.${FDE_VERSION_MINOR}.${FDE_VERSION_PATCH}")
-# cmake test module
-enable_testing()
 
-# Find python package for source file generator
-if(NOT ${CMAKE_VERSION} VERSION_LESS "3.12.0")
-  find_package(Python REQUIRED Interpreter)
-else()
-  # Backwards compatibility
-  find_package(PythonInterp REQUIRED)
-  set(Python_EXECUTABLE "${PYTHON_EXECUTABLE}")
-endif()
+set(cmi_DOWNLOAD_TAG "95a141e3d245d22de463bab7a516c0ff456b29f9")
+include(cmiLoader.cmake)
+cmi_add_archive_url(cmi
+  "https://gitlab.com/nordfox/cmakeit/-/archive/${cmi_DOWNLOAD_TAG}/cmakeit-${cmi_DOWNLOAD_TAG}.tar.gz"
+)
+
+include(cmiPython)
+cmi_python_check_packages(docopt)
 
 # Compiler flags
+include(cmiCompilerFlags)
+cmi_disable_vs_debug_runtime()
+cmi_Fortran_append(CMAKE_Fortran_FLAGS FPP)
 if(WIN32)
 else()
   if("${CMAKE_Fortran_COMPILER_ID}" STREQUAL "GNU")
-    set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -ffree-line-length-none")
     set_source_files_properties(src/crc_impl.F90 APPEND PROPERTIES COMPILE_FLAGS "-fno-range-check")
   elseif("${CMAKE_Fortran_COMPILER_ID}" STREQUAL "Intel")
     set_source_files_properties(src/crc_impl.F90 APPEND PROPERTIES COMPILE_FLAGS "-assume noold_boz")
@@ -141,11 +142,10 @@ if(fde_type STREQUAL "SHARED_LIBRARY")
 endif()
 
 # tests
-enable_testing()
 add_subdirectory(test)
 
 # IDE settings
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
-set_target_properties(fde PROPERTIES FOLDER libraries)
-set_target_properties(fde_gen PROPERTIES FOLDER libraries)
-set_target_properties(fortres PROPERTIES FOLDER libraries)
+set_target_properties(fde PROPERTIES FOLDER "${PROJECT_NAME}")
+set_target_properties(fde_gen PROPERTIES FOLDER "${PROJECT_NAME}")
+set_target_properties(fortres PROPERTIES FOLDER "${PROJECT_NAME}")

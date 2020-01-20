@@ -5,7 +5,7 @@ function(new_test)
     get_filename_component(name "${source}" NAME_WE)
     add_executable(fde.${name} ${source})
     target_link_libraries(fde.${name} PRIVATE fde)
-    set_target_properties(fde.${name} PROPERTIES FOLDER tests)
+    set_target_properties(fde.${name} PROPERTIES FOLDER "${PROJECT_NAME}/tests")
     
     add_test(NAME fde.${name} COMMAND fde.${name})
     

@@ -1,6 +1,9 @@
 cmake_minimum_required(VERSION 3.8)
 project(fortres C CXX)
 
+include(cmiCompilerFlags)
+cmi_disable_vs_debug_runtime()
+
 add_library(fortres
   ./dirent.c
   ./fort_dirent.cpp
