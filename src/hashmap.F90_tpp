@@ -118,7 +118,7 @@ module fde_hashmap
       import HashMap_t
       type(HashMap_t), intent(inout) :: lhs
       type(HashMap_t),    intent(in) :: rhs
-    end subroutine  
+    end subroutine
   end interface
 
   interface assignment(=)
@@ -205,7 +205,7 @@ module fde_hashmap
       type(Item_t),              pointer :: res
     end function
   end interface
-  
+
   interface hasKey
     logical &
     function hashmap_has_key_c( self, key )
@@ -230,7 +230,7 @@ module fde_hashmap
     end function
   end interface
 
-  interface index       
+  interface index
     function hashmap_index( self ) result(res)
       import HashMap_t, HashMapIndex_t
       type(HashMap_t), target, intent(in) :: self
@@ -238,7 +238,7 @@ module fde_hashmap
     end function
   end interface
 
-  interface next        
+  interface next
     subroutine hashmapindex_next_c( self )
       import HashMapIndex_t
       type(HashMapIndex_t), intent(inout) :: self
@@ -291,7 +291,7 @@ contains
     type(HashMap_t), intent(inout) :: lhs
     type(HashMap_t),    intent(in) :: rhs
     call assign( lhs, rhs )
-  end subroutine  
+  end subroutine
 
 end module
 

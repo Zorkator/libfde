@@ -173,7 +173,7 @@ module fde_ref
     module procedure ref_assign_ref_private, ref_assign_encoding_private
   end interface
 
-  
+
   ! comparision
 
   interface equal
@@ -193,7 +193,7 @@ module fde_ref
   end interface
 
 
-  ! declare public interfaces 
+  ! declare public interfaces
 
   public :: assign, assignment(=)
   public :: equal, operator(==), operator(/=)

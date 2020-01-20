@@ -113,7 +113,7 @@ end module
     res(limit+1:) = ' '
     _release_weak( self )
   end function
-  
+
 
   ! achar
 !_PROC_EXPORT(string_achar)
@@ -153,7 +153,7 @@ end module
   end subroutine
 
 !##################################
-  
+
 !_PROC_EXPORT(string_trim)
   function string_trim( self ) result(res)
     use impl_string__; implicit none
@@ -309,7 +309,7 @@ end module
     _release_weak( self )
   end function
 
-  
+
   ! ichar
 !_PROC_EXPORT(string_ichar)
   function string_ichar( self ) result(res)

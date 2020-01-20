@@ -5,7 +5,7 @@ module fde_memoryref
   use, intrinsic :: iso_c_binding
   implicit none
   public
-  
+
   type, bind(c) :: MemoryRef_t
     type (c_ptr)           :: loc = C_NULL_PTR
     integer(kind=c_size_t) :: len = 0

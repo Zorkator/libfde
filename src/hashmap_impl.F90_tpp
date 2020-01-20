@@ -192,7 +192,7 @@ contains
   subroutine hashnode_delete( self )
     implicit none
     type(HashNode_t), intent(inout) :: self
-    
+
     call delete( self%key )
     call delete( self%value )
   end subroutine
@@ -328,7 +328,7 @@ end module
     end if
   end subroutine
 
-  
+
   subroutine hashmap_flush_( self, tgtList, delIndex )
     use impl_hashmap__, only: HashMap_t, List_t, append
     implicit none
@@ -337,7 +337,7 @@ end module
     logical                        :: delIndex
     type(List_t),          pointer :: tgt
     integer(kind=4)                :: i
-    
+
     if (associated( self%indexVector )) then
       do i = 0, size( self%indexVector ) - 1
         call append( tgtList, self%indexVector(i) )
@@ -377,7 +377,7 @@ end module
     type(ListIndex_t)                      :: l_idx, r_idx
     type(HashNode_t),              pointer :: l_node, r_node
     integer(kind=4)                        :: i, bucket_len
-   
+
     if (.not. associated( lhs%indexVector, rhs%indexVector )) then
       lhs%indexLimits = rhs%indexLimits
       call hashmap_flush_( lhs, hashmap_nodeCache, .false. )
@@ -401,7 +401,7 @@ end module
       end do
       lhs%items = rhs%items
     end if
-  end subroutine  
+  end subroutine
 
 
 !_PROC_EXPORT(hashmap_clear_cache_c)
@@ -420,7 +420,7 @@ end module
     character(len=*), intent(in) :: key
     type(ListIndex_t)            :: res
     integer                      :: idx, n
-    
+
     n = size( self%indexVector )
     idx = mod( crc32(key), n )
     ! have to fix negativ indices since fortran doesn't know unsigned integers >:(
@@ -451,7 +451,7 @@ end module
     character(len=*),   intent(in) :: key
     type(ListIndex_t), intent(out) :: idx
     type(HashNode_t),      pointer :: node
-    
+
     idx = hashmap_get_bucketIndex_( self, key )
     do while (is_valid(idx))
       node => HashNode(idx)
@@ -515,7 +515,7 @@ end module
     type(Item_t),        pointer :: res
     type(HashNode_t),    pointer :: mapItem
     type(ListIndex_t)            :: bucket, idx
-  
+
     created = .not. hashmap_locate_item_( self, key, bucket )
     if (created) then
       ! need to add new hash node
@@ -547,7 +547,7 @@ end module
     type(Item_t),        pointer :: res
     type(HashNode_t),    pointer :: mapItem
     type(ListIndex_t)            :: bucket
-  
+
     if (hashmap_locate_item_( self, key, bucket )) then
       mapItem => HashNode( bucket )
       res => mapItem%value
@@ -649,7 +649,7 @@ end module
 
     cur_size = size( self%indexVector )
     fract    = real(self%items - cur_size) / cur_size
-    
+
     if (abs(fract) > 0.8) then
       new_size = ishft( cur_size, merge( 1, -1, fract > 0 ) )
       new_size = max( new_size, self%indexLimits(1) )
@@ -659,7 +659,7 @@ end module
         items = self%items
         call initialize( bufList )
         call hashmap_setup_index_( self, new_size, bufList )
-      
+
         do while (.not. is_empty( bufList ))
           idx    =  index( bufList, first, 0 )
           node   => HashNode( idx )
@@ -695,7 +695,7 @@ end module
     end do
   end subroutine
 
-  
+
   subroutine hashmap_pre_cache( numItems )
     use impl_hashmap__, only: HashNode_t, len, hashmap_nodeCache, append, new_ListNode
     implicit none
@@ -721,7 +721,7 @@ end module
     ignored = hashmap_unset_( self, key )
   end subroutine
 
-  
+
 !_PROC_EXPORT(hashmap_unset_key_c)
   logical &
   function hashmap_unset_key_c( self, key ) result(res)
@@ -890,7 +890,7 @@ end module
     use impl_hashmap__, only: HashMapIndex_t, index, is_valid
     implicit none
     type(HashMapIndex_t) :: self
-  
+
     res      = .false.
     self%idx = self%idx + 1
     do while (self%idx < size(self%host%indexVector))
@@ -903,7 +903,7 @@ end module
     end do
   end function
 
-  
+
 !_PROC_EXPORT(hashmapindex_next_c)
   subroutine hashmapindex_next_c( self )
     use impl_hashmap__, only: HashMapIndex_t, hashmapindex_set_next_c
@@ -914,14 +914,14 @@ end module
     ok = hashmapindex_set_next_c( self )
   end subroutine
 
-  
+
 !_PROC_EXPORT(hashmapindex_set_next_c)
   logical &
   function hashmapindex_set_next_c( self ) result(res)
     use impl_hashmap__, only: HashMapIndex_t, next, is_valid, hashmapindex_next_bucket
     implicit none
     type(HashMapIndex_t), intent(inout) :: self
-  
+
     call next( self%bucket )
     res = is_valid( self%bucket )
     if (.not. res) &
@@ -979,13 +979,13 @@ end module
     type(c_ptr),       intent(inout) :: val
     type(HashMapIndex_t), intent(in) :: self
     type(HashNode_t),        pointer :: node
-    
+
     node => HashNode( self%bucket )
     call basestring_memoryref_c( key, node%key )
     val = c_loc( node%value )
   end subroutine
 
-  
+
   recursive &
   subroutine hashmap_accept_wrap_( wrap, hashmapType, vstr )
     use impl_hashmap__

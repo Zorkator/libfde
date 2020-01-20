@@ -88,7 +88,7 @@ f_tracestack( FrameInfoOp infoOp, const int *skippedFrames, StringRef *info )
       free( strings );
   }
 #endif
-  
+
   if (info && info->length())
     { infoOp( info ); }
 }

@@ -39,7 +39,7 @@ module fde_streamvisitor
     type(TypeInfo_t)      :: ti
     call ti%streamProc( obj, ti, vstr%stream )
   end subroutine
- 
+
   subroutine streamvisitor_enter_( self )
     type(StreamVisitor_t) :: self
     call indent( self%stream, self%super%level )

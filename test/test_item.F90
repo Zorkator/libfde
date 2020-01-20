@@ -28,7 +28,7 @@ program testinger
   print *, real4(v1)
 
   realVal = v1
-  
+
 
   print *, is_valid(v1)
   print *, is_real4(v1)

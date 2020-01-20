@@ -58,7 +58,7 @@ module fde_item
   !     streamProc = item_stream_wrap_,   \
   !     acceptProc = item_accept_wrap_ )
 
-  
+
   ! declare Item_of(<type>) interface ...
   ! NOTE: It's named Item_of to avoid ambiguity with Item-interface for type deref.
   public :: Item_of
@@ -341,7 +341,7 @@ module fde_item
 !-----------------
 
   !_TypeGen_implementAll()
-  
+
 !_PROC_EXPORT(item_assign_item_private)
   subroutine item_assign_item_private( lhs, rhs )
     type(Item_t), intent(inout) :: lhs
