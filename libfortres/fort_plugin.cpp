@@ -592,7 +592,7 @@ _dllExport_C
 int
 f_plugin_unload( StringRef *pluginId )
 {
-  if (pluginId == NULL)
+  if (pluginId == NULL || pluginId->length() == 0)
   {
     getBroker()->clear();
     return 1;
