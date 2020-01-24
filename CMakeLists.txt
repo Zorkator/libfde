@@ -4,17 +4,18 @@ enable_testing()
 
 # Set name and version.
 set(FDE_NAME "fde")
+set(FDE_VERSION_SO 1)
 set(FDE_VERSION_MAJOR 2)
 set(FDE_VERSION_MINOR 7)
 set(FDE_VERSION_PATCH 3)
 set(FDE_VERSION       "${FDE_VERSION_MAJOR}.${FDE_VERSION_MINOR}.${FDE_VERSION_PATCH}")
 
-set(cmi_DOWNLOAD_TAG "95a141e3d245d22de463bab7a516c0ff456b29f9")
+set(cmi_DOWNLOAD_TAG "73f93afce78cb9d6fcb8cefc212ac482d73378e7")
 include(cmiLoader.cmake)
 cmi_add_archive_url(cmi
   "https://gitlab.com/nordfox/cmakeit/-/archive/${cmi_DOWNLOAD_TAG}/cmakeit-${cmi_DOWNLOAD_TAG}.tar.gz"
 )
-
+include(cmiBuild)
 include(cmiPython)
 cmi_python_check_packages(docopt)
 
@@ -50,7 +51,6 @@ function(generateFiles)
   endforeach()
   add_custom_target(fde_gen DEPENDS ${OutputFileList} SOURCES ${ARGN})
 endfunction()
-
 
 
 # include path for this and all subprojects
@@ -117,6 +117,9 @@ target_link_libraries(fde PRIVATE fortres)
 target_include_directories(fde PUBLIC include)
 target_include_directories(fde PUBLIC "${CMAKE_Fortran_MODULE_DIRECTORY}")
 
+set_property(TARGET fde PROPERTY VERSION ${FDE_VERSION})
+set_property(TARGET fde PROPERTY SOVERSION ${FDE_VERSION_SO})
+
 if(WIN32)
   target_compile_definitions(fde PRIVATE BUILT_TYPE=SHARED_LIB)
   set_property(TARGET fde PROPERTY OUTPUT_NAME ${FDE_NAME}.${FDE_VERSION})
@@ -144,8 +147,6 @@ endif()
 # tests
 add_subdirectory(test)
 
-# IDE settings
-set_property(GLOBAL PROPERTY USE_FOLDERS ON)
-set_target_properties(fde PROPERTIES FOLDER "${PROJECT_NAME}")
-set_target_properties(fde_gen PROPERTIES FOLDER "${PROJECT_NAME}")
-set_target_properties(fortres PROPERTIES FOLDER "${PROJECT_NAME}")
+cmi_set_output_directory(fde "${cmi_BIN_DIR}" "")
+cmi_set_output_directory(fde_gen "${cmi_BIN_DIR}" "")
+cmi_set_output_directory(fortres "${cmi_BIN_DIR}" "")
