@@ -4,7 +4,7 @@ project(fortres C CXX)
 include(cmiCompilerFlags)
 cmi_disable_vs_debug_runtime()
 
-add_library(fortres
+add_library(fortres STATIC
   ./dirent.c
   ./fort_dirent.cpp
   ./fort_exception.cpp
@@ -53,7 +53,7 @@ file(TO_NATIVE_PATH "/" PATH_SEP)
 string(REPLACE "\\" "\\\\" PATH_SEP "${PATH_SEP}")
 set(PATH_SEP_UNIX "/")
 set(PATH_SEP_WINDOWS "\\\\")
- 
+
 if(WIN32)
   set(LIB_PATH_VAR "PATH")
   set(LIB_PATH_SEP ";")

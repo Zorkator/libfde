@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.8)
 
-set(cmi_TAG "73f93afce78cb9d6fcb8cefc212ac482d73378e7")
+set(cmi_TAG "360d2cbfe1a55974023e0e8df680dc337369729a")
 
 get_property(cmi_LOADER_FILE GLOBAL PROPERTY cmi_LOADER_FILE)
 if(NOT cmi_LOADER_FILE)

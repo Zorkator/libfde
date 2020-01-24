@@ -10,7 +10,7 @@ set(FDE_VERSION_MINOR 7)
 set(FDE_VERSION_PATCH 3)
 set(FDE_VERSION       "${FDE_VERSION_MAJOR}.${FDE_VERSION_MINOR}.${FDE_VERSION_PATCH}")
 
-set(cmi_DOWNLOAD_TAG "73f93afce78cb9d6fcb8cefc212ac482d73378e7")
+set(cmi_DOWNLOAD_TAG "360d2cbfe1a55974023e0e8df680dc337369729a")
 include(cmiLoader.cmake)
 cmi_add_archive_url(cmi
   "https://gitlab.com/nordfox/cmakeit/-/archive/${cmi_DOWNLOAD_TAG}/cmakeit-${cmi_DOWNLOAD_TAG}.tar.gz"
@@ -22,7 +22,8 @@ cmi_python_check_packages(docopt)
 # Compiler flags
 include(cmiCompilerFlags)
 cmi_disable_vs_debug_runtime()
-cmi_Fortran_append(CMAKE_Fortran_FLAGS FPP)
+cmi_fortran_default_mangling()
+cmi_fortran_append(CMAKE_Fortran_FLAGS FPP)
 if(WIN32)
 else()
   if("${CMAKE_Fortran_COMPILER_ID}" STREQUAL "GNU")
