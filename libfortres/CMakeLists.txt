@@ -1,8 +1,6 @@
 cmake_minimum_required(VERSION 3.8)
 project(fortres C CXX)
 
-cmi_load_build_environment()
-
 add_library(fortres STATIC
   ./dirent.c
   ./fort_dirent.cpp
@@ -14,6 +12,7 @@ add_library(fortres STATIC
 target_include_directories(fortres PUBLIC include)
 target_include_directories(fortres PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
 target_compile_features(fortres PRIVATE cxx_std_11)
+set_property(TARGET fortres PROPERTY POSITION_INDEPENDENT_CODE ON)
 
 include(CheckIncludeFiles)
 include(CheckSymbolExists)
@@ -53,7 +52,7 @@ string(REPLACE "\\" "\\\\" PATH_SEP "${PATH_SEP}")
 set(PATH_SEP_UNIX "/")
 set(PATH_SEP_WINDOWS "\\\\")
 
-if(WIN32)
+if(MSVC)
   set(LIB_PATH_VAR "PATH")
   set(LIB_PATH_SEP ";")
 else()

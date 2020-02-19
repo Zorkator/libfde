@@ -5,7 +5,7 @@
 
 cmake_minimum_required(VERSION 3.8)
 
-set(CMI_TAG "103bdcbd2d52cf0993873d4a58c72cf4944d18f2")
+set(CMI_TAG "00e8a89148a6db0bbcc16c42fe3ba207fde12a25")
 
 get_property(CMI_LOADER_FILE GLOBAL PROPERTY CMI_LOADER_FILE)
 # First include
@@ -21,16 +21,22 @@ if(NOT CMI_LOADER_FILE)
       "${CMI_LOADER_TMP_}.in"
       SHOW_PROGRESS
     )
-    configure_file("${CMI_LOADER_TMP_}.in" "${CMI_LOADER_TMP_}" @ONLY NEWLINE_STYLE UNIX)
-    execute_process(
-      COMMAND "${CMAKE_COMMAND}" -E copy_if_different "${CMI_LOADER_TMP_}" "${CMAKE_CURRENT_LIST_FILE}"
-    )
-    include("${CMI_LOADER_TMP_}")
-    file(REMOVE "${CMI_LOADER_TMP_}.in" "${CMI_LOADER_TMP_}")
+    file(SIZE "${CMI_LOADER_TMP_}.in" CMI_LOADER_FILESIZE_)
+    if(NOT CMI_LOADER_FILESIZE_ STREQUAL 0)
+      configure_file("${CMI_LOADER_TMP_}.in" "${CMI_LOADER_TMP_}" @ONLY NEWLINE_STYLE UNIX)
+      execute_process(
+        COMMAND "${CMAKE_COMMAND}" -E copy_if_different "${CMI_LOADER_TMP_}" "${CMAKE_CURRENT_LIST_FILE}"
+      )
+      include("${CMI_LOADER_TMP_}")
+      file(REMOVE "${CMI_LOADER_TMP_}.in" "${CMI_LOADER_TMP_}")
 
-    unset(CMI_FILENAME_)
-    unset(CMI_LOADER_TMP_)
-    return()
+      unset(CMI_FILENAME_)
+      unset(CMI_LOADER_TMP_)
+      return()
+    else()
+      message(WARNING "Updating CMI failed! Using existing version.")
+    endif()
+
   endif()
 endif()
 

@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.8)
-project(fde Fortran)
+project(fde Fortran CXX)
 enable_testing()
 
 # Set name and version.
@@ -10,14 +10,14 @@ set(FDE_VERSION_MINOR 7)
 set(FDE_VERSION_PATCH 3)
 set(FDE_VERSION       "${FDE_VERSION_MAJOR}.${FDE_VERSION_MINOR}.${FDE_VERSION_PATCH}")
 
-set(CMI_DOWNLOAD_TAG "103bdcbd2d52cf0993873d4a58c72cf4944d18f2")
+set(CMI_DOWNLOAD_TAG "00e8a89148a6db0bbcc16c42fe3ba207fde12a25")
 include(cmi.cmake)
 cmi_load_build_environment()
 cmi_find_python(PACKAGES docopt)
 
 # Compiler flags
 cmi_fortran_append(CMAKE_Fortran_FLAGS FPP)
-if(WIN32)
+if(MSVC)
 else()
   if("${CMAKE_Fortran_COMPILER_ID}" STREQUAL "GNU")
     set_source_files_properties(src/crc_impl.F90 APPEND PROPERTIES COMPILE_FLAGS "-fno-range-check")
@@ -114,28 +114,15 @@ target_include_directories(fde PUBLIC "${CMAKE_Fortran_MODULE_DIRECTORY}")
 set_property(TARGET fde PROPERTY VERSION ${FDE_VERSION})
 set_property(TARGET fde PROPERTY SOVERSION ${FDE_VERSION_SO})
 
-if(WIN32)
+if(MSVC)
   target_compile_definitions(fde PRIVATE BUILT_TYPE=SHARED_LIB)
   set_property(TARGET fde PROPERTY OUTPUT_NAME ${FDE_NAME}.${FDE_VERSION})
 else()
   set_property(TARGET fde PROPERTY OUTPUT_NAME ${FDE_NAME})
 endif()
 
-# Shared/static library options
-get_target_property(fde_type fde TYPE)
-get_target_property(fortres_type fortres TYPE)
-if(fde_type STREQUAL "SHARED_LIBRARY")
-  set_property(TARGET fortres PROPERTY POSITION_INDEPENDENT_CODE ON)
-  if(NOT WIN32)
-    include(CheckLanguage)
-    check_language(CXX)
-    if(CMAKE_CXX_COMPILER)
-      enable_language(CXX)
-    else ()
-      message(WARNING "No CXX support. Linking might fail.")
-    endif ()
-    set_property(TARGET fde PROPERTY LINKER_LANGUAGE CXX)
-  endif()
+if(NOT MSVC)
+  set_property(TARGET fde PROPERTY LINKER_LANGUAGE CXX)
 endif()
 
 # tests
