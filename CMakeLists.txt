@@ -10,19 +10,12 @@ set(FDE_VERSION_MINOR 7)
 set(FDE_VERSION_PATCH 3)
 set(FDE_VERSION       "${FDE_VERSION_MAJOR}.${FDE_VERSION_MINOR}.${FDE_VERSION_PATCH}")
 
-set(cmi_DOWNLOAD_TAG "360d2cbfe1a55974023e0e8df680dc337369729a")
-include(cmiLoader.cmake)
-cmi_add_archive_url(cmi
-  "https://gitlab.com/nordfox/cmakeit/-/archive/${cmi_DOWNLOAD_TAG}/cmakeit-${cmi_DOWNLOAD_TAG}.tar.gz"
-)
-include(cmiBuild)
-include(cmiPython)
-cmi_python_check_packages(docopt)
+set(CMI_DOWNLOAD_TAG "103bdcbd2d52cf0993873d4a58c72cf4944d18f2")
+include(cmi.cmake)
+cmi_load_build_environment()
+cmi_find_python(PACKAGES docopt)
 
 # Compiler flags
-include(cmiCompilerFlags)
-cmi_disable_vs_debug_runtime()
-cmi_fortran_default_mangling()
 cmi_fortran_append(CMAKE_Fortran_FLAGS FPP)
 if(WIN32)
 else()
@@ -148,6 +141,6 @@ endif()
 # tests
 add_subdirectory(test)
 
-cmi_set_output_directory(fde "${cmi_BIN_DIR}" "")
-cmi_set_output_directory(fde_gen "${cmi_BIN_DIR}" "")
-cmi_set_output_directory(fortres "${cmi_BIN_DIR}" "")
+cmi_set_directory(fde)
+cmi_set_directory(fde_gen)
+cmi_set_directory(fortres)

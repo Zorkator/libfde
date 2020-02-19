@@ -5,7 +5,7 @@ function(new_test)
     get_filename_component(name "${source}" NAME_WE)
     add_executable(fde.${name} ${source})
     target_link_libraries(fde.${name} PRIVATE fde)
-    cmi_set_output_directory(fde.${name} "${cmi_BIN_DIR}" "tests")
+    cmi_set_directory(fde.${name} IDE "tests")
 
     add_test(NAME fde.${name} COMMAND fde.${name})
   endforeach()

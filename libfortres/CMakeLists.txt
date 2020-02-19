@@ -1,8 +1,7 @@
 cmake_minimum_required(VERSION 3.8)
 project(fortres C CXX)
 
-include(cmiCompilerFlags)
-cmi_disable_vs_debug_runtime()
+cmi_load_build_environment()
 
 add_library(fortres STATIC
   ./dirent.c
