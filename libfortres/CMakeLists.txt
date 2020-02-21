@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 3.8)
 project(fortres C CXX)
 
+cmi_set_build_environment()
+
 add_library(fortres STATIC
   ./dirent.c
   ./fort_dirent.cpp

@@ -10,9 +10,9 @@ set(FDE_VERSION_MINOR 7)
 set(FDE_VERSION_PATCH 3)
 set(FDE_VERSION       "${FDE_VERSION_MAJOR}.${FDE_VERSION_MINOR}.${FDE_VERSION_PATCH}")
 
-set(CMI_DOWNLOAD_TAG "00e8a89148a6db0bbcc16c42fe3ba207fde12a25")
+set(CMI_DOWNLOAD_TAG "5346dc2806e39ff86d53a28406c49d7693505dac")
 include(cmi.cmake)
-cmi_load_build_environment()
+cmi_set_build_environment()
 cmi_find_python(PACKAGES docopt)
 
 # Compiler flags
