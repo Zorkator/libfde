@@ -11,7 +11,7 @@
 !                      . o O (need value != 0 for detecting user IDs)
 # define DISABLED    -1
 # define ENABLED      1
-# define APPLICATION  2 
+# define APPLICATION  2
 # define STATIC_LIB   3
 # define SHARED_LIB   4
 

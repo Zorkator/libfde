@@ -173,12 +173,12 @@
     goto _paste(label,00) ;\
     _paste(label,03) continue
 
-!-- early exit 
+!-- early exit
 !   RESTRICTIONS:
 !    -> breaks only the most inner try-loop
 !    -> works only within catch block
 # define _exitLoop(label)  \
     goto _paste(label,03)
 
-#endif 
+#endif
 
