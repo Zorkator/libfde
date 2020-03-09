@@ -5,7 +5,7 @@
 
 cmake_minimum_required(VERSION 3.8)
 
-set(CMI_TAG "5346dc2806e39ff86d53a28406c49d7693505dac")
+set(CMI_TAG "9c25622e967068fc515bfccc4917149af60c047f")
 
 get_property(CMI_LOADER_FILE GLOBAL PROPERTY CMI_LOADER_FILE)
 # First include
@@ -21,7 +21,23 @@ if(NOT CMI_LOADER_FILE)
       "${CMI_LOADER_TMP_}.in"
       SHOW_PROGRESS
     )
-    file(SIZE "${CMI_LOADER_TMP_}.in" CMI_LOADER_FILESIZE_)
+
+    #Check filesize of download
+    set(INPUT_FILE_ "${CMI_LOADER_TMP_}.in")
+    if(${CMAKE_VERSION} VERSION_LESS "3.12.0")
+      set(CMI_LOADER_FILESIZE_ "0")
+      if(EXISTS "${INPUT_FILE_}")
+        file(READ "${INPUT_FILE_}" FILE_CONTENT_ LIMIT 1 HEX)
+        string(LENGTH "${FILE_CONTENT_}" CMI_LOADER_FILESIZE_)
+        math(EXPR CMI_LOADER_FILESIZE_ "${CMI_LOADER_FILESIZE_} / 2")
+      endif()
+      unset(FILE_CONTENT_)
+    else()
+      file(SIZE "${INPUT_FILE_}" CMI_LOADER_FILESIZE_)
+    endif()
+    unset(INPUT_FILE_)
+    ###
+
     if(NOT CMI_LOADER_FILESIZE_ STREQUAL 0)
       configure_file("${CMI_LOADER_TMP_}.in" "${CMI_LOADER_TMP_}" @ONLY NEWLINE_STYLE UNIX)
       execute_process(
@@ -53,6 +69,10 @@ if(NOT (CMI_LOADER_FILE STREQUAL CMAKE_CURRENT_LIST_FILE))
 endif()
 unset(CMI_LOADER_FILE)
 
+######################################
+# ACTUAL CMI FILE BEGINS
+######################################
+
 set(CMI_LOADED TRUE)
 
 # Consider root project as populated and included
@@ -61,8 +81,37 @@ set_property(GLOBAL PROPERTY ${PROJECT_NAME_UPPER_}_INCLUDED "TRUE")
 unset(PROJECT_NAME_UPPER_)
 
 set(CMI_EXTERNALS_DIR "${CMAKE_SOURCE_DIR}/_externals" CACHE PATH "")
+set(CMI_IDE_PRESETS "_targets" CACHE PATH "")
+set(CMI_IDE_EXTERNALS "_externals" CACHE PATH "")
+
 mark_as_advanced(CMI_EXTERNALS_DIR)
-set(CMI_ENABLE_PREFIX "CMI_ENABLE_")
+mark_as_advanced(CMI_IDE_PRESETS)
+mark_as_advanced(CMI_IDE_EXTERNALS)
+
+######################################
+# HELPER FUNCTIONS
+######################################
+
+function(cmi_file)
+  cmake_parse_arguments(_FILE "" "" "SIZE" ${ARGN})
+  list(LENGTH _FILE_SIZE _FILE_LENGTH)
+  if (_FILE_LENGTH STREQUAL 2)
+    list(GET _FILE_SIZE 0 INPUT_FILE)
+    list(GET _FILE_SIZE 1 FILE_SIZE)
+    if(${CMAKE_VERSION} VERSION_LESS "3.12.0")
+      set(FILE_SIZE_ "0")
+      if(EXISTS "${INPUT_FILE}")
+        file(READ "${INPUT_FILE}" FILE_CONTENT_ HEX)
+        string(LENGTH "${FILE_CONTENT_}" FILE_SIZE_)
+        math(EXPR FILE_SIZE_ "${FILE_SIZE_} / 2")
+      endif()
+    else()
+      file(SIZE "${INPUT_FILE}" FILE_SIZE_)
+    endif()
+    set(${FILE_SIZE} ${FILE_SIZE_} PARENT_SCOPE)
+  endif()
+endfunction()
+
 
 ######################################
 # FETCHING
@@ -90,7 +139,7 @@ function(cmi_add_subdirectory PROJECT_NAME_)
   if(NOT RESULT_ STREQUAL -1)
     set(CMI_ADD_SUBDIRECTORY_OPTIONAL OFF)
   endif()
-
+  set(CMI_ENABLE_PREFIX "CMI_ENABLE_")
   if(DEFINED CMI_ADD_SUBDIRECTORY_OPTIONAL)
     # optional => add to options
     if(NOT DEFINED ${CMI_ENABLE_PREFIX}${PROJECT_NAME_UPPER_})
@@ -104,6 +153,9 @@ function(cmi_add_subdirectory PROJECT_NAME_)
   if(${CMI_ENABLE_PREFIX}${PROJECT_NAME_UPPER_})
     get_property(${PROJECT_NAME_UPPER_}_POPULATED_ GLOBAL PROPERTY ${PROJECT_NAME_UPPER_}_POPULATED)
     if(NOT ${PROJECT_NAME_UPPER_}_POPULATED_)
+      get_property(CMI_${PROJECT_NAME_UPPER_}_EXTERNAL_TYPE GLOBAL PROPERTY CMI_${PROJECT_NAME_UPPER_}_EXTERNAL_TYPE)
+      get_property(CMI_${PROJECT_NAME_UPPER_}_EXTERNAL_URL GLOBAL PROPERTY CMI_${PROJECT_NAME_UPPER_}_EXTERNAL_URL)
+      get_property(CMI_${PROJECT_NAME_UPPER_}_EXTERNAL_REV GLOBAL PROPERTY CMI_${PROJECT_NAME_UPPER_}_EXTERNAL_REV)
       if(CMI_${PROJECT_NAME_UPPER_}_EXTERNAL_TYPE STREQUAL "archive")
         cmi_add_archive_(${PROJECT_NAME_UPPER_} ${CMI_${PROJECT_NAME_UPPER_}_EXTERNAL_URL})
       elseif(CMI_${PROJECT_NAME_UPPER_}_EXTERNAL_TYPE STREQUAL "git")
@@ -130,6 +182,13 @@ function(cmi_add_subdirectory PROJECT_NAME_)
   endif()
 endfunction()
 
+# Only set property if it hasnt been set before
+macro(cmi_set_new_property_ PROPERTY_NAME_ PROPERTY_VALUE_)
+  get_property(OLD_VALUE_ GLOBAL PROPERTY ${PROPERTY_NAME_})
+  if("${OLD_VALUE_}" STREQUAL "")
+    set_property(GLOBAL PROPERTY ${PROPERTY_NAME_} ${PROPERTY_VALUE_})
+  endif()
+endmacro()
 
 function(cmi_add_archive PROJECT_NAME_ PROJECT_URL_)
   string(TOUPPER "${PROJECT_NAME_}" PROJECT_NAME_UPPER_)
@@ -141,22 +200,16 @@ endfunction()
 
 function(cmi_add_git PROJECT_NAME_ PROJECT_URL_ PROJECT_REV_)
   string(TOUPPER "${PROJECT_NAME_}" PROJECT_NAME_UPPER_)
-  set(CMI_${PROJECT_NAME_UPPER_}_EXTERNAL_TYPE "git" CACHE STRING "")
-  set(CMI_${PROJECT_NAME_UPPER_}_EXTERNAL_URL "${PROJECT_URL_}" CACHE STRING "")
-  set(CMI_${PROJECT_NAME_UPPER_}_EXTERNAL_REV "${PROJECT_REV_}" CACHE STRING "")
-  mark_as_advanced(CMI_${PROJECT_NAME_UPPER_}_EXTERNAL_TYPE)
-  mark_as_advanced(CMI_${PROJECT_NAME_UPPER_}_EXTERNAL_URL)
-  mark_as_advanced(CMI_${PROJECT_NAME_UPPER_}_EXTERNAL_REV)
+  cmi_set_new_property_(CMI_${PROJECT_NAME_UPPER_}_EXTERNAL_TYPE "git")
+  cmi_set_new_property_(CMI_${PROJECT_NAME_UPPER_}_EXTERNAL_URL "${PROJECT_URL_}")
+  cmi_set_new_property_(CMI_${PROJECT_NAME_UPPER_}_EXTERNAL_REV "${PROJECT_REV_}")
 endfunction()
 
 function(cmi_add_svn PROJECT_NAME_ PROJECT_URL_ PROJECT_REV_)
   string(TOUPPER "${PROJECT_NAME_}" PROJECT_NAME_UPPER_)
-  set(CMI_${PROJECT_NAME_UPPER_}_EXTERNAL_TYPE "svn" CACHE STRING "")
-  set(CMI_${PROJECT_NAME_UPPER_}_EXTERNAL_URL "${PROJECT_URL_}" CACHE STRING "")
-  set(CMI_${PROJECT_NAME_UPPER_}_EXTERNAL_REV "${PROJECT_REV_}" CACHE STRING "")
-  mark_as_advanced(CMI_${PROJECT_NAME_UPPER_}_EXTERNAL_TYPE)
-  mark_as_advanced(CMI_${PROJECT_NAME_UPPER_}_EXTERNAL_URL)
-  mark_as_advanced(CMI_${PROJECT_NAME_UPPER_}_EXTERNAL_REV)
+  cmi_set_new_property_(CMI_${PROJECT_NAME_UPPER_}_EXTERNAL_TYPE "svn")
+  cmi_set_new_property_(CMI_${PROJECT_NAME_UPPER_}_EXTERNAL_URL "${PROJECT_URL_}")
+  cmi_set_new_property_(CMI_${PROJECT_NAME_UPPER_}_EXTERNAL_REV "${PROJECT_REV_}")
 endfunction()
 
 function(cmi_add_archive_ PROJECT_NAME_ PROJECT_URL_)
@@ -179,7 +232,7 @@ function(cmi_add_archive_ PROJECT_NAME_ PROJECT_URL_)
     if(NOT EXISTS "${${PROJECT_NAME_UPPER_}_ARCHIVE_PATH}")
       message(STATUS "Downloading ${PROJECT_NAME_UPPER_} ${PROJECT_URL_}")
       file(DOWNLOAD "${PROJECT_URL_}" "${${PROJECT_NAME_UPPER_}_ARCHIVE_PATH}" SHOW_PROGRESS)
-      file(SIZE "${${PROJECT_NAME_UPPER_}_ARCHIVE_PATH}" ARCHIVE_FILESIZE_)
+      cmi_file(SIZE "${${PROJECT_NAME_UPPER_}_ARCHIVE_PATH}" ARCHIVE_FILESIZE_)
       if(ARCHIVE_FILESIZE_ STREQUAL 0)
         file(REMOVE "${${PROJECT_NAME_UPPER_}_ARCHIVE_PATH}")
         message(WARNING "Can not download ${PROJECT_URL_}")
@@ -197,68 +250,6 @@ function(cmi_add_archive_ PROJECT_NAME_ PROJECT_URL_)
 endfunction()
 
 
-macro(cmi_git_clone_)
-  foreach(try RANGE 2)
-    message(STATUS "${PROJECT_NAME_UPPER_}: Clone ${PROJECT_URL_}")
-    execute_process(
-      COMMAND ${GIT_EXECUTABLE} clone ${PROJECT_URL_} "${${PROJECT_NAME_UPPER_}_DIR}"
-      RESULT_VARIABLE ${PROJECT_NAME_UPPER_}_RESULT
-    )
-    if(${PROJECT_NAME_UPPER_}_RESULT STREQUAL 0)
-      break()
-    endif()
-    message(STATUS "${PROJECT_NAME_UPPER_}: Git clone failed.")
-  endforeach()
-endmacro()
-
-macro(cmi_git_fetch_)
-  foreach(try RANGE 2)
-    message(STATUS "${PROJECT_NAME_UPPER_}: Fetch ${PROJECT_URL_}")
-    execute_process(
-      COMMAND ${GIT_EXECUTABLE} remote set-url origin ${PROJECT_URL_}
-      COMMAND ${GIT_EXECUTABLE} fetch
-      WORKING_DIRECTORY "${${PROJECT_NAME_UPPER_}_DIR}"
-      RESULT_VARIABLE ${PROJECT_NAME_UPPER_}_RESULT
-    )
-    if(${PROJECT_NAME_UPPER_}_RESULT STREQUAL 0)
-      break()
-    endif()
-    message(STATUS "${PROJECT_NAME_UPPER_}: Git fetch failed.")
-  endforeach()
-endmacro()
-
-macro(cmi_git_checkout_)
-  foreach(try RANGE 1)
-    if(NOT (try STREQUAL 0))
-      cmi_git_fetch_()
-    endif()
-    message(STATUS "${PROJECT_NAME_UPPER_}: Checkout ${PROJECT_REV_}")
-    execute_process(
-      COMMAND ${GIT_EXECUTABLE} -c advice.detachedHead=false checkout ${PROJECT_REV_}
-      WORKING_DIRECTORY "${${PROJECT_NAME_UPPER_}_DIR}"
-      RESULT_VARIABLE ${PROJECT_NAME_UPPER_}_RESULT
-    )
-    if(${PROJECT_NAME_UPPER_}_RESULT STREQUAL 0)
-      break()
-    endif()
-    message(STATUS "${PROJECT_NAME_UPPER_}: Git checkout failed.")
-  endforeach()
-endmacro()
-
-macro(cmi_svn_clone_)
-  foreach(try RANGE 2)
-    message(STATUS "${PROJECT_NAME_UPPER_}: Clone ${PROJECT_URL_}")
-    execute_process(
-      COMMAND "${Subversion_SVN_EXECUTABLE}" "checkout" "${PROJECT_URL_}@${PROJECT_REV_}" "${${PROJECT_NAME_UPPER_}_DIR}"
-      RESULT_VARIABLE ${PROJECT_NAME_UPPER_}_RESULT
-    )
-    if(${PROJECT_NAME_UPPER_}_RESULT STREQUAL 0)
-      break()
-    endif()
-    message(STATUS "${PROJECT_NAME_UPPER_}: SVN clone failed.")
-  endforeach()
-endmacro()
-
 function(cmi_add_git_ PROJECT_NAME_ PROJECT_URL_ PROJECT_REV_)
   string(TOUPPER "${PROJECT_NAME_}" PROJECT_NAME_UPPER_)
   string(TOLOWER "${PROJECT_NAME_}" PROJECT_NAME_LOWER_)
@@ -270,26 +261,88 @@ function(cmi_add_git_ PROJECT_NAME_ PROJECT_URL_ PROJECT_REV_)
 
   find_package(Git REQUIRED)
   set(${PROJECT_NAME_UPPER_}_DIR "${CMI_EXTERNALS_DIR}/${PROJECT_NAME_LOWER_}" CACHE PATH "")
+  set(UPDATER_ "${CMI_EXTERNALS_DIR}/${PROJECT_NAME_LOWER_}.update.cmake")
 
-  # Clone repo
+  # Generate copy script
+  file(WRITE "${UPDATER_}" "
+    set(GIT_EXECUTABLE \"${GIT_EXECUTABLE}\")
+    set(GIT_DIR \"${${PROJECT_NAME_UPPER_}_DIR}\")
+    set(GIT_URL \"${PROJECT_URL_}\")
+    set(GIT_REV \"${PROJECT_REV_}\")
+
+
+    macro(git_checkout)
+      # Git Checkout
+      message(STATUS \"Checkout \${GIT_REV}\")
+      execute_process(
+        COMMAND \${GIT_EXECUTABLE} -c advice.detachedHead=false checkout \${GIT_REV}
+        WORKING_DIRECTORY \"\${GIT_DIR}\"
+        RESULT_VARIABLE RESULT_
+      )
+    endmacro()
+
+    if(NOT (\${GIT_REV} MATCHES \"^origin/.+\"))
+      if(EXISTS \"\${GIT_DIR}\")
+        git_checkout()
+        if(RESULT_ STREQUAL \"0\")
+          return()
+        endif()
+      endif()
+    endif()
+
+    # Clone repo
+    if(NOT EXISTS \"\${GIT_DIR}\")
+      foreach(try RANGE 2)
+        message(STATUS \"Clone \${GIT_DIR} \${GIT_URL} \${GIT_REV}\")
+        set(TMP_DIR \"\${GIT_DIR}.tmp\")
+        if(EXISTS \"\${TMP_DIR}\")
+          message(STATUS \"Removing \${TMP_DIR}\")
+          file(REMOVE_RECURSE \"\${TMP_DIR}\")
+        endif()
+        execute_process(
+          COMMAND \${GIT_EXECUTABLE} clone \${GIT_URL} \"\${TMP_DIR}\"
+          RESULT_VARIABLE RESULT_
+        )
+        if(RESULT_ STREQUAL 0)
+          file(RENAME \"\${TMP_DIR}\" \"\${GIT_DIR}\")
+          break()
+        endif()
+        # Cloning failed. Delete directory.
+        message(SEND_ERROR \"Git clone failed.\")
+        file(REMOVE_RECURSE \"\${TMP_DIR}\")
+      endforeach()
+    else()
+      # Git Fetch
+      foreach(try RANGE 2)
+        message(STATUS \"Fetch \${GIT_DIR} \${GIT_URL} \${GIT_REV}\")
+        execute_process(
+          COMMAND \${GIT_EXECUTABLE} fetch \${GIT_URL}
+          WORKING_DIRECTORY \"\${GIT_DIR}\"
+          RESULT_VARIABLE RESULT_
+        )
+        if(RESULT_ STREQUAL 0)
+          break()
+        endif()
+        message(SEND_ERROR \"Git fetch failed.\")
+      endforeach()
+    endif()
+
+    git_checkout()
+    if(NOT (RESULT_ STREQUAL 0))
+      message(SEND_ERROR \"Git checkout failed.\")
+    endif()
+  ")
+  set(COMMAND_ ${CMAKE_COMMAND} -P "${UPDATER_}")
+  add_custom_target(checkout_${PROJECT_NAME_LOWER_} ${COMMAND_})
+  set_property(TARGET checkout_${PROJECT_NAME_LOWER_} PROPERTY FOLDER "${CMI_IDE_EXTERNALS}")
+  if(NOT TARGET checkout)
+    add_custom_target(checkout)
+    set_property(TARGET checkout PROPERTY FOLDER "${CMI_IDE_EXTERNALS}")
+  endif()
+  add_dependencies(checkout checkout_${PROJECT_NAME_LOWER_})
   if(NOT EXISTS "${${PROJECT_NAME_UPPER_}_DIR}")
-    cmi_git_clone_()
-    cmi_git_checkout_()
+    execute_process(COMMAND ${COMMAND_})
   endif()
-
-  # Update repo
-  if(CMI_UPDATE OR (DEFINED ${PROJECT_NAME_UPPER_}_REPO_CURRENT AND NOT ("${${PROJECT_NAME_UPPER_}_REPO_CURRENT}" STREQUAL "${PROJECT_URL_}")))
-    cmi_git_fetch_()
-  endif()
-
-  # Update repo tag
-  if(CMI_UPDATE OR (DEFINED ${PROJECT_NAME_UPPER_}_REV_CURRENT AND NOT ("${${PROJECT_NAME_UPPER_}_REV_CURRENT}" STREQUAL "${PROJECT_REV_}")))
-    cmi_git_checkout_()
-  endif()
-
-  set(${PROJECT_NAME_UPPER_}_REPO_CURRENT "${PROJECT_URL_}" CACHE INTERNAL "")
-  set(${PROJECT_NAME_UPPER_}_REV_CURRENT "${PROJECT_REV_}" CACHE INTERNAL "")
-
 endfunction()
 
 function(cmi_add_svn_ PROJECT_NAME_ PROJECT_URL_ PROJECT_REV_)
@@ -304,24 +357,64 @@ function(cmi_add_svn_ PROJECT_NAME_ PROJECT_URL_ PROJECT_REV_)
   find_package(Subversion REQUIRED)
   set(${PROJECT_NAME_UPPER_}_DIR "${CMI_EXTERNALS_DIR}/${PROJECT_NAME_LOWER_}" CACHE PATH "")
 
-  # clone repo
+
+  set(UPDATER_ "${CMI_EXTERNALS_DIR}/${PROJECT_NAME_LOWER_}.update.cmake")
+
+  # Generate copy script
+  file(WRITE "${UPDATER_}" "
+    set(SVN_EXECUTABLE \"${Subversion_SVN_EXECUTABLE}\")
+    set(SVN_DIR \"${${PROJECT_NAME_UPPER_}_DIR}\")
+    set(SVN_URL \"${PROJECT_URL_}\")
+    set(SVN_REV \"${PROJECT_REV_}\")
+
+
+    if(NOT EXISTS \"\${SVN_DIR}\")
+      foreach(try RANGE 2)
+        message(STATUS \"Checkout \${SVN_DIR} \${SVN_URL} \${SVN_REV}\")
+        set(TMP_DIR \"\${SVN_DIR}.tmp\")
+        if(EXISTS \"\${TMP_DIR}\")
+          message(STATUS \"Removing \${TMP_DIR}\")
+          file(REMOVE_RECURSE \"\${TMP_DIR}\")
+        endif()
+        execute_process(
+          COMMAND \"\${SVN_EXECUTABLE}\" \"checkout\" \"\${SVN_URL}@\${SVN_REV}\" \"\${TMP_DIR}\"
+          RESULT_VARIABLE RESULT_
+        )
+        if(RESULT_ STREQUAL 0)
+          file(RENAME \"\${TMP_DIR}\" \"\${SVN_DIR}\")
+          break()
+        endif()
+        # Cloning failed. Delete directory.
+        message(SEND_ERROR \"SVN checkout failed.\")
+        file(REMOVE_RECURSE \"\${TMP_DIR}\")
+      endforeach()
+    else()
+      # SVN Switch
+      foreach(try RANGE 2)
+        message(STATUS \"Switch \${SVN_DIR} \${SVN_URL} \${SVN_REV}\")
+        execute_process(
+          COMMAND \"\${SVN_EXECUTABLE}\" \"switch\" \"\${SVN_URL}@\${SVN_REV}\" \"\${SVN_DIR}\"
+          RESULT_VARIABLE RESULT_
+        )
+        if(RESULT_ STREQUAL 0)
+          break()
+        endif()
+        message(SEND_ERROR \"SVN switch failed.\")
+      endforeach()
+    endif()
+  ")
+
+  set(COMMAND_ ${CMAKE_COMMAND} -P "${UPDATER_}")
+  add_custom_target(checkout_${PROJECT_NAME_LOWER_} ${COMMAND_})
+  set_property(TARGET checkout_${PROJECT_NAME_LOWER_} PROPERTY FOLDER "${CMI_IDE_EXTERNALS}")
+  if(NOT TARGET checkout)
+    add_custom_target(checkout)
+    set_property(TARGET checkout PROPERTY FOLDER "${CMI_IDE_EXTERNALS}")
+  endif()
+  add_dependencies(checkout checkout_${PROJECT_NAME_LOWER_})
   if(NOT EXISTS "${${PROJECT_NAME_UPPER_}_DIR}")
-    cmi_svn_clone_()
+    execute_process(COMMAND ${COMMAND_})
   endif()
-
-  # update repository
-  if(CMI_UPDATE OR
-    DEFINED ${PROJECT_NAME_UPPER_}_REPO_CURRENT AND DEFINED ${PROJECT_NAME_UPPER_}_REV_CURRENT AND
-    (NOT ("${PROJECT_URL_}" STREQUAL "${${PROJECT_NAME_UPPER_}_REPO_CURRENT}") OR
-    NOT ("${PROJECT_REV_}" STREQUAL "${${PROJECT_NAME_UPPER_}_REV_CURRENT}"))
-  )
-    message(STATUS "Switch ${PROJECT_NAME_UPPER_}")
-    execute_process(COMMAND "${Subversion_SVN_EXECUTABLE}" "switch" "${PROJECT_URL_}@${PROJECT_REV_}" "${${PROJECT_NAME_UPPER_}_DIR}")
-  endif()
-
-  set(${PROJECT_NAME_UPPER_}_REPO_CURRENT "${PROJECT_URL_}" CACHE INTERNAL "")
-  set(${PROJECT_NAME_UPPER_}_REV_CURRENT "${PROJECT_REV_}" CACHE INTERNAL "")
-
 endfunction()
 
 
@@ -331,24 +424,29 @@ endfunction()
 
 # Set default path variables
 macro(cmi_load_build_environment)
+  message(AUTHOR_WARNING "cmi_load_build_environment() deprecated. Use cmi_set_build_environment() instead.")
   cmi_set_build_environment(${ARGV})
 endmacro()
 macro(cmi_set_build_environment)
-  set(CMI_PRESET_FOLDER "_targets" CACHE PATH "")
   set(CMI_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/package/$<CONFIG>" CACHE PATH "")
   set(CMI_BINARAY_OUTPUT_DIRECTORY "${CMI_OUTPUT_DIRECTORY}/bin" CACHE PATH "")
   set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${CMI_BINARAY_OUTPUT_DIRECTORY}" CACHE INTERNAL "")
   set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMI_BINARAY_OUTPUT_DIRECTORY}" CACHE INTERNAL "")
   set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMI_BINARAY_OUTPUT_DIRECTORY}" CACHE INTERNAL "")
 
-  mark_as_advanced(CMI_PRESET_FOLDER)
   mark_as_advanced(CMI_OUTPUT_DIRECTORY)
   mark_as_advanced(CMI_BINARAY_OUTPUT_DIRECTORY)
   mark_as_advanced(CMAKE_ARCHIVE_OUTPUT_DIRECTORY)
   mark_as_advanced(CMAKE_LIBRARY_OUTPUT_DIRECTORY)
   mark_as_advanced(CMAKE_RUNTIME_OUTPUT_DIRECTORY)
 
-  set_property(GLOBAL PROPERTY PREDEFINED_TARGETS_FOLDER "${CMI_PRESET_FOLDER}")
+  set_property(GLOBAL PROPERTY PREDEFINED_TARGETS_FOLDER "${CMI_IDE_PRESETS}")
+
+  # Enabled testing by default
+  option(BUILD_TESTING "" ON)
+  if(BUILD_TESTING)
+    enable_testing()
+  endif()
 
   # Set a default build type if none was specified
   set(DEFAULT_BUILD_TYPE_ "Release")
@@ -582,6 +680,8 @@ macro(cmi_find_mpi)
         set(MPI_INCLUDE "${CMPI_ROOT}/intel64/include" CACHE PATH "")
         set(MPI_LIB "${CMPI_ROOT}/intel64/lib/release/impi.lib" CACHE PATH "")
         set(MPIEXEC "${CMPI_ROOT}/intel64/bin/mpiexec.exe" CACHE PATH "")
+        mark_as_advanced(MPI_LIB)
+        mark_as_advanced(MPI_INCLUDE)
         message(STATUS " I_MPI_ROOT: " "${CMPI_ROOT}")
 
         if(NOT EXISTS "${MPI_INCLUDE}")
@@ -759,14 +859,15 @@ endmacro()
 
 
 function(cmi_find_omp)
-  set(OMP_DIRECTIVE_ "_OMP")
   cmi_Fortran_append(OMP_FLAGS_ OMP)
   string(STRIP "${OMP_FLAGS_}" OMP_FLAGS_)
-  if(NOT TARGET OpenMP_Fortran)
-    add_library(OpenMP_Fortran IMPORTED INTERFACE)
-    set_property(TARGET OpenMP_Fortran PROPERTY INTERFACE_COMPILE_OPTIONS ${OMP_FLAGS_})
-    set_property(TARGET OpenMP_Fortran PROPERTY INTERFACE_COMPILE_DEFINITIONS ${OMP_DIRECTIVE_})
-    set_property(TARGET OpenMP_Fortran PROPERTY INTERFACE_LINK_LIBRARIES ${OMP_FLAGS_})
+  if(NOT TARGET cmi_OpenMP_Fortran)
+    add_library(cmi_OpenMP_Fortran INTERFACE)
+    set_property(TARGET cmi_OpenMP_Fortran PROPERTY INTERFACE_COMPILE_OPTIONS ${OMP_FLAGS_})
+    if(NOT MSVC)
+      target_link_libraries(cmi_OpenMP_Fortran INTERFACE ${OMP_FLAGS_})
+    endif()
+    target_compile_definitions(cmi_OpenMP_Fortran INTERFACE _OMP)
+    add_library(cmi::OpenMP_Fortran ALIAS cmi_OpenMP_Fortran)
   endif()
 endfunction()
-

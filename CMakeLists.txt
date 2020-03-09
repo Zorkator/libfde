@@ -1,6 +1,5 @@
 cmake_minimum_required(VERSION 3.8)
 project(fde Fortran CXX)
-enable_testing()
 
 # Set name and version.
 set(FDE_NAME "fde")
@@ -10,8 +9,9 @@ set(FDE_VERSION_MINOR 7)
 set(FDE_VERSION_PATCH 3)
 set(FDE_VERSION       "${FDE_VERSION_MAJOR}.${FDE_VERSION_MINOR}.${FDE_VERSION_PATCH}")
 
-set(CMI_DOWNLOAD_TAG "5346dc2806e39ff86d53a28406c49d7693505dac")
+set(CMI_DOWNLOAD_TAG 9c25622e967068fc515bfccc4917149af60c047f)
 include(cmi.cmake)
+
 cmi_set_build_environment()
 cmi_find_python(PACKAGES docopt)
 
@@ -25,7 +25,6 @@ else()
     set_source_files_properties(src/crc_impl.F90 APPEND PROPERTIES COMPILE_FLAGS "-assume noold_boz")
   endif()
 endif()
-
 
 # Custom rules for source code generator
 function(generateFiles)
@@ -126,7 +125,9 @@ if(NOT MSVC)
 endif()
 
 # tests
-add_subdirectory(test)
+if(BUILD_TESTING)
+  add_subdirectory(test)
+endif()
 
 cmi_set_directory(fde)
 cmi_set_directory(fde_gen)
