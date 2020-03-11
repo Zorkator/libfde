@@ -8,7 +8,11 @@ module test_plugin
   contains
 
   subroutine test_list_so()
-    print *, plugin_iterate_so( printSO )
+    integer           :: res
+    ! dont print result of plugin_iterate_so() directly,
+    ! as 'print' will end up in a deadlock when -pthread is used.
+    res = plugin_iterate_so( printSO )
+    print *, res
   end subroutine
 
   function printSO( id, addr ) result(res)
@@ -22,7 +26,7 @@ module test_plugin
 end module
 
 program plugintest
-  use test_plugin 
+  use test_plugin
 
   call test_list_so()
 end program
