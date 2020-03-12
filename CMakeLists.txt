@@ -17,7 +17,6 @@ cmi_find_python(PACKAGES docopt)
 
 # Compiler flags
 cmi_fortran_append(CMAKE_Fortran_FLAGS FPP)
-cmi_fortran_append(CMAKE_Fortran_FLAGS THREADS)
 if(MSVC)
 else()
   if("${CMAKE_Fortran_COMPILER_ID}" STREQUAL "GNU")
