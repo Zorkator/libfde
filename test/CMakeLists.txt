@@ -19,6 +19,7 @@ foreach(inFile IN LISTS generate_files)
   list(APPEND OutputFileList "${outFile}")
 endforeach()
 add_custom_target(fde_test_gen DEPENDS ${OutputFileList} SOURCES ${generate_files})
+cmi_set_directory(fde_test_gen)
 
 set(tests
   ./test_abstract_list.F90

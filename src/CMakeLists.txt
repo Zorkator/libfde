@@ -35,6 +35,7 @@ foreach(inFile IN LISTS generate_files)
   list(APPEND OutputFileList "${outFile}")
 endforeach()
 add_custom_target(fde_gen DEPENDS ${OutputFileList} SOURCES ${generate_files})
+cmi_set_directory(fde_gen)
 
 # path to store Fortran modules
 set(CMAKE_Fortran_MODULE_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}")
@@ -96,4 +97,3 @@ if(NOT MSVC)
 endif()
 
 cmi_set_directory(fde)
-cmi_set_directory(fde_gen)
