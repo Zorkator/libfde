@@ -9,8 +9,6 @@ else()
   endif()
 endif()
 
-# Generating files
-cmi_find_python(PACKAGES docopt)
 # fde input files for generator
 set(generate_files
   ./basetypes.F90_tpp

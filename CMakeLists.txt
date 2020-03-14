@@ -13,6 +13,9 @@ set(CMI_DOWNLOAD_TAG 9c25622e967068fc515bfccc4917149af60c047f)
 include(cmi.cmake)
 cmi_set_build_environment()
 
+# Generating files
+cmi_find_python(PACKAGES docopt)
+
 # fortres
 add_subdirectory(libfortres)
 add_subdirectory(src)
