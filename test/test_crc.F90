@@ -16,7 +16,7 @@ program f_test
       integer(kind=c_int32_t)             :: crc_
     end function
   end interface
-  
+
   type(TypeInfo_t), pointer :: ti
   integer(kind=4)           :: i, j, code
   character(len=32), target :: msg
@@ -27,9 +27,9 @@ program f_test
 
   print *, hex( crc32( 0, msg(1:1), int(len_trim(msg), c_size_t) ) )           == "0x1225D297"
   print *, hex( f_crc32( msg ) )                                               == "0x1225D297"
-!  print *, hex( f_crc32( c_loc(msg), 0 ) )                                     == "0x00000000"
- ! print *, hex( f_crc32( c_loc(msg), len_trim(msg) ) )                         == "0x1225D297"
- ! print *, hex( f_crc32( c_loc(ti), storage_size(ti)/8 ) ) !< variable result
+  print *, hex( f_crc32( c_loc(msg), 0 ) )                                     == "0x00000000"
+  print *, hex( f_crc32( c_loc(msg), len_trim(msg) ) )                         == "0x1225D297"
+  print *, hex( f_crc32( c_loc(ti), storage_size(ti)/8 ) ) !< variable result
 
 # define _FILE      'crc_test_file.txt~'
   i = fopen( _FILE )

@@ -1,3 +1,4 @@
+#include "fde/itfUtil.fpp"
 
 module fde_crc
     use iso_c_binding
@@ -50,7 +51,7 @@ module fde_crc
     public :: crc32, crc32_file
 
 contains
-
+!_PROC_EXPORT(crc32_c_ptr_i32)
     function crc32_c_ptr_i32( cptr, size ) result(res)
         type (c_ptr),            intent(in) :: cptr
         integer(kind=c_int32_t), intent(in) :: size
