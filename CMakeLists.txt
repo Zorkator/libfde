@@ -11,124 +11,13 @@ set(FDE_VERSION       "${FDE_VERSION_MAJOR}.${FDE_VERSION_MINOR}.${FDE_VERSION_P
 
 set(CMI_DOWNLOAD_TAG 9c25622e967068fc515bfccc4917149af60c047f)
 include(cmi.cmake)
-
 cmi_set_build_environment()
-cmi_find_python(PACKAGES docopt)
-
-# Compiler flags
-cmi_fortran_append(CMAKE_Fortran_FLAGS FPP)
-if(MSVC)
-else()
-  if("${CMAKE_Fortran_COMPILER_ID}" STREQUAL "GNU")
-    set_source_files_properties(src/crc_impl.F90 APPEND PROPERTIES COMPILE_FLAGS "-fno-range-check")
-  elseif("${CMAKE_Fortran_COMPILER_ID}" STREQUAL "Intel")
-    set_source_files_properties(src/crc_impl.F90 APPEND PROPERTIES COMPILE_FLAGS "-assume noold_boz")
-  endif()
-endif()
-
-# Custom rules for source code generator
-function(generateFiles)
-  set(OutputFileList "")
-  foreach(inFile IN LISTS ARGN)
-    string(REPLACE "_tpp" "" outFile "${inFile}")
-    set(inFile "${CMAKE_CURRENT_SOURCE_DIR}/${inFile}")
-    set(outFile "${CMAKE_CURRENT_BINARY_DIR}/${outFile}")
-    get_filename_component(outDir "${outFile}" DIRECTORY)
-    add_custom_command(
-      OUTPUT "${outFile}"
-      COMMAND "${CMAKE_COMMAND}" -E make_directory "${outDir}"
-      COMMAND "${Python_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/typegen.py" "${inFile}" -o "${outFile}"
-      DEPENDS "${inFile}"
-    )
-    list(APPEND OutputFileList "${outFile}")
-  endforeach()
-  add_custom_target(fde_gen DEPENDS ${OutputFileList} SOURCES ${ARGN})
-endfunction()
-
-
-# include path for this and all subprojects
-include_directories(include)
 
 # fortres
 add_subdirectory(libfortres)
-
-# path to store Fortran modules
-set(CMAKE_Fortran_MODULE_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/include")
-
-
-# fde input files for generator
-generateFiles(
-  src/basetypes.F90_tpp
-  src/containertypes.F90_tpp
-  src/hashmap.F90_tpp
-  src/hashmap_impl.F90_tpp
-  src/item.F90_tpp
-  src/list.F90_tpp
-  src/ref.F90_tpp
-  src/string.F90_tpp
-)
-
-# fde
-add_library(fde SHARED
-  src/basetypes.F90
-  src/containertypes.F90
-  src/hashmap.F90
-  src/hashmap_impl.F90
-  src/item.F90
-  src/list.F90
-  src/ref.F90
-  src/string.F90
-
-  src/basestring.F90
-  src/basestring_impl.F90
-  src/bisect.F90
-  src/charstacker.F90
-  src/charstacker_impl.F90
-  src/convert.F90
-  src/crc.F90
-  src/crc_impl.F90
-  src/file.F90
-  src/fortres_modules.F90
-  src/item_impl.F90
-  src/list_impl.F90
-  src/memoryref.F90
-  src/ostream.F90
-  src/ref_impl.F90
-  src/scope.F90
-  src/scope_impl.F90
-  src/sort.F90
-  src/streamvisitor.F90
-  src/string_impl.F90
-  src/typeinfo.F90
-  src/typeinfo_impl.F90
-  src/visitor.F90
-)
-# generate source files
-add_dependencies(fde fde_gen)
-
-target_link_libraries(fde PRIVATE fortres)
-target_include_directories(fde PUBLIC include)
-target_include_directories(fde PUBLIC "${CMAKE_Fortran_MODULE_DIRECTORY}")
-
-set_property(TARGET fde PROPERTY VERSION ${FDE_VERSION})
-set_property(TARGET fde PROPERTY SOVERSION ${FDE_VERSION_SO})
-
-if(MSVC)
-  target_compile_definitions(fde PRIVATE BUILT_TYPE=SHARED_LIB)
-  set_property(TARGET fde PROPERTY OUTPUT_NAME ${FDE_NAME}.${FDE_VERSION})
-else()
-  set_property(TARGET fde PROPERTY OUTPUT_NAME ${FDE_NAME})
-endif()
-
-if(NOT MSVC)
-  set_property(TARGET fde PROPERTY LINKER_LANGUAGE CXX)
-endif()
+add_subdirectory(src)
 
 # tests
 if(BUILD_TESTING)
   add_subdirectory(test)
 endif()
-
-cmi_set_directory(fde)
-cmi_set_directory(fde_gen)
-cmi_set_directory(fortres)

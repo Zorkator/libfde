@@ -1,4 +1,3 @@
-cmake_minimum_required(VERSION 3.8)
 project(fortres C CXX)
 
 cmi_set_build_environment()
@@ -12,6 +11,7 @@ add_library(fortres STATIC
 )
 
 target_include_directories(fortres PUBLIC include)
+target_include_directories(fortres PRIVATE ../include)
 target_include_directories(fortres PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
 target_compile_features(fortres PRIVATE cxx_std_11)
 set_property(TARGET fortres PROPERTY POSITION_INDEPENDENT_CODE ON)
@@ -64,3 +64,4 @@ endif()
 
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/fortres_config.h.in ${CMAKE_CURRENT_BINARY_DIR}/fortres_config.h)
 
+cmi_set_directory(fortres)
