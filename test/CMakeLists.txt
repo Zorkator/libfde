@@ -3,7 +3,7 @@ cmi_fortran_append(CMAKE_Fortran_FLAGS FPP)
 set(tests
   ./test_abstract_list.F90
   ./test_charstacker.F90
-  #./test_crc.F90
+  ./test_crc.F90
   ./test_dyncast.F90
   ./test_fde.F90
   ./test_file.F90
