@@ -100,7 +100,7 @@
 
     crc_ = ieor( seed, z'ffffffff' )
     do idx = 1, size
-      tabIdx = iand( ieor( crc_, buf(idx) ), z'000000ff' )
+      tabIdx = iand( ieor( crc_, int(buf(idx)) ), z'000000ff' )
       crc_   = ieor( crc32_tab(tabIdx), ishft( crc_, -8 ) )
     end do
     crc_ = ieor( crc_, z'ffffffff' )
