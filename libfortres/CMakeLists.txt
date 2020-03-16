@@ -1,4 +1,5 @@
-project(fortres C CXX)
+include(CheckLanguage)
+enable_language(C CXX)
 
 cmi_set_build_environment()
 
