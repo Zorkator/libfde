@@ -106,7 +106,7 @@ class SharedLib
 
     void *
       getSymbol( const char *funcID )
-        { return dlSym( _hdl, funcID ); }
+        { return (void *) dlSym( _hdl, funcID ); }
 
     const char *
       getError( void ) const
