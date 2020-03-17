@@ -32,6 +32,7 @@ check_include_files("dirent.h" HAVE_DIRENT_H)
 check_include_files("dlfcn.h" HAVE_DLFCN_H)
 check_include_files("link.h" HAVE_LINK_H)
 
+check_symbol_exists("setenv" "stdlib.h" HAVE_SETENV)
 
 if(HAVE_DBGHELP_H)
   target_link_libraries(fortres PRIVATE Dbghelp)

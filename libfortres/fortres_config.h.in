@@ -1,5 +1,6 @@
 #cmakedefine HAVE_WINDOWS_H 1
 #cmakedefine HAVE_STRING_SECURE 1
+#cmakedefine HAVE_SETENV 1
 #cmakedefine HAVE_DBGHELP_H 1
 #cmakedefine HAVE_LIBLOADERAPI_H 1
 #cmakedefine HAVE_PSAPI_H 1

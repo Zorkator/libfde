@@ -3,7 +3,9 @@
 
 #include <stdlib.h>
 
-#if defined _MSC_VER
+#include <fortres_config.h>
+
+#if !defined HAVE_SETENV
   /* once again ... do the work M$ is not willing to do */
 # define setenv( name, value, override )    (override || getenv(name) == NULL)? _putenv_s( name, value ) : 0
 # define unsetenv( name )                   _putenv_s( name, "" )
