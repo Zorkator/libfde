@@ -1,6 +1,7 @@
 #if defined _MSC_VER
 #define HAVE_WINDOWS_H 1
 #define HAVE_STRING_SECURE 1
+/* #undef HAVE_SETENV */
 #define HAVE_DBGHELP_H 1
 #define HAVE_LIBLOADERAPI_H 1
 #define HAVE_PSAPI_H 1
@@ -24,6 +25,7 @@
 
 /* #undef HAVE_WINDOWS_H */
 /* #undef HAVE_STRING_SECURE */
+#define HAVE_SETENV 1
 /* #undef HAVE_DBGHELP_H */
 /* #undef HAVE_LIBLOADERAPI_H */
 /* #undef HAVE_PSAPI_H */
