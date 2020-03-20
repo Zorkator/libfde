@@ -1,4 +1,5 @@
 # Compiler flags
+cmi_Fortran_append(CMAKE_Fortran_FLAGS TRACEBACK)
 cmi_fortran_append(CMAKE_Fortran_FLAGS FPP)
 if(MSVC)
 else()

@@ -5,7 +5,7 @@
 
 cmake_minimum_required(VERSION 3.8)
 
-set(CMI_TAG "282a4869b253d3a52ca4a57c70124eae0af7873a")
+set(CMI_TAG "3004010cdd38a7d5bf2aa32bc18e5579d62a9714")
 
 get_property(CMI_LOADER_FILE GLOBAL PROPERTY CMI_LOADER_FILE)
 # First include
@@ -441,86 +441,6 @@ function(cmi_add_svn_ PROJECT_NAME_ PROJECT_URL_ PROJECT_REV_)
 endfunction()
 
 
-######################################
-# BUILD SETTINGS
-######################################
-
-# Set default path variables
-macro(cmi_load_build_environment)
-  message(AUTHOR_WARNING "cmi_load_build_environment() deprecated. Use cmi_set_build_environment() instead.")
-  cmi_set_build_environment(${ARGV})
-endmacro()
-macro(cmi_set_build_environment)
-  set(CMI_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/package/$<CONFIG>" CACHE PATH "")
-  set(CMI_BINARAY_OUTPUT_DIRECTORY "${CMI_OUTPUT_DIRECTORY}/bin" CACHE PATH "")
-  set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${CMI_BINARAY_OUTPUT_DIRECTORY}" CACHE INTERNAL "")
-  set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMI_BINARAY_OUTPUT_DIRECTORY}" CACHE INTERNAL "")
-  set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMI_BINARAY_OUTPUT_DIRECTORY}" CACHE INTERNAL "")
-
-  mark_as_advanced(CMI_OUTPUT_DIRECTORY)
-  mark_as_advanced(CMI_BINARAY_OUTPUT_DIRECTORY)
-  mark_as_advanced(CMAKE_ARCHIVE_OUTPUT_DIRECTORY)
-  mark_as_advanced(CMAKE_LIBRARY_OUTPUT_DIRECTORY)
-  mark_as_advanced(CMAKE_RUNTIME_OUTPUT_DIRECTORY)
-
-  set_property(GLOBAL PROPERTY PREDEFINED_TARGETS_FOLDER "${CMI_IDE_PRESETS}")
-
-  # Enabled testing by default
-  option(BUILD_TESTING "" ON)
-  if(BUILD_TESTING)
-    enable_testing()
-  endif()
-
-  # Set a default build type if none was specified
-  set(DEFAULT_BUILD_TYPE_ "Release")
-  if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
-    message(STATUS "Setting build type to '${DEFAULT_BUILD_TYPE_}' as none was specified.")
-    set(CMAKE_BUILD_TYPE "${DEFAULT_BUILD_TYPE_}" CACHE
-        STRING "Choose the type of build." FORCE)
-    # Set the possible values of build type for cmake-gui
-    set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS
-      "Debug" "Release" "MinSizeRel" "RelWithDebInfo")
-  endif()
-  unset(DEFAULT_BUILD_TYPE_)
-
-  cmi_disable_vs_debug_runtime()
-  cmi_fortran_default_mangling()
-  #cmi_mingw_allow_multiple_defintion()
-endmacro()
-
-function(cmi_set_directory TARGET_)
-  set(OPTIONS_ OUTPUT IDE)
-  cmake_parse_arguments("" "" "${OPTIONS_}" "" ${ARGN})
-
-  if(NOT DEFINED _OUTPUT OR NOT IS_ABSOLUTE "${_OUTPUT}")
-    set(_OUTPUT "${CMI_BINARAY_OUTPUT_DIRECTORY}/${_OUTPUT}")
-  endif()
-
-  get_filename_component(_OUTPUT "${_OUTPUT}" REALPATH)
-  get_filename_component(BINARY_DIR "${CMI_BINARAY_OUTPUT_DIRECTORY}" REALPATH)
-  file(RELATIVE_PATH PATH_TO_BIN "${_OUTPUT}" "${BINARY_DIR}")
-  if(TARGET ${TARGET_})
-    set_property(TARGET ${TARGET_} PROPERTY BUILD_WITH_INSTALL_RPATH TRUE)
-    set_property(TARGET ${TARGET_} PROPERTY INSTALL_RPATH "$ORIGIN/${PATH_TO_BIN}")
-    set_property(TARGET ${TARGET_} PROPERTY ARCHIVE_OUTPUT_DIRECTORY "${_OUTPUT}")
-    set_property(TARGET ${TARGET_} PROPERTY LIBRARY_OUTPUT_DIRECTORY "${_OUTPUT}")
-    set_property(TARGET ${TARGET_} PROPERTY RUNTIME_OUTPUT_DIRECTORY "${_OUTPUT}")
-    set_property(TARGET ${TARGET_} PROPERTY FOLDER "${PROJECT_NAME}/${_IDE}")
-    set_property(GLOBAL PROPERTY USE_FOLDERS ON)
-  else()
-    message(WARNING "Can not set directoy for unknown target ${TARGET_}")
-  endif()
-endfunction()
-
-function(cmi_copy TARGET_ SOURCE_ DESTINATION_)
-  get_filename_component(SOURCE_DIRECTORY_ "${SOURCE_}" DIRECTORY)
-  get_filename_component(SOURCE_NAME_WE_ "${SOURCE_}" NAME_WE)
-  get_filename_component(SOURCE_NAME_ "${SOURCE_}" NAME)
-  add_custom_target(${TARGET_}
-    COMMAND ${CMAKE_COMMAND} -DFILE_PATTERN="${SOURCE_DIRECTORY_}/${SOURCE_NAME_WE_}*" -DDESTINATION="${DESTINATION_}" -P "${CMAKE_CURRENT_LIST_DIR}/cmi_copy.txt"
-  )
-endfunction()
-
 
 ######################################
 # COMPILER FLAGS
@@ -626,18 +546,40 @@ function(cmi_fortran_default_mangling)
   endif()
 endfunction()
 
+macro(cmi_disable_vs_incremental_linker_ FLAG_)
+  if(DEFINED ${FLAG_})
+    string(REGEX REPLACE "/INCREMENTAL(:YES)? " "/INCREMENTAL:NO " ${FLAG_} "${${FLAG_}} ")
+    string(STRIP ${${FLAG_}} ${FLAG_})
+    set(${FLAG_} ${${FLAG_}} CACHE STRING "" FORCE)
+  endif()
+endmacro()
+
+function(cmi_disable_vs_incremental_linker)
+  if(MSVC)
+    foreach(CONFIGURATION IN LISTS CMAKE_CONFIGURATION_TYPES)
+      string(TOUPPER ${CONFIGURATION} CONFIGURATION)
+      cmi_disable_vs_incremental_linker_(CMAKE_EXE_LINKER_FLAGS_${CONFIGURATION})
+      cmi_disable_vs_incremental_linker_(CMAKE_SHARED_LINKER_FLAGS_${CONFIGURATION})
+      cmi_disable_vs_incremental_linker_(CMAKE_MODULE_LINKER_FLAGS_${CONFIGURATION})
+    endforeach()
+  endif()
+endfunction()
+
 function(cmi_disable_vs_debug_runtime)
-  set(LANGUAGES "C" "CXX" "Fortran")
-  foreach(LANGUAGE IN LISTS LANGUAGES)
-    set(TARGET_FLAG "CMAKE_${LANGUAGE}_FLAGS_DEBUG")
-    if(DEFINED ${TARGET_FLAG})
-      set(FLAGS "${${TARGET_FLAG}}")
-      string(REPLACE "/dbglibs" "" FLAGS "${FLAGS}")
-      string(REPLACE "/MDd" "/MD" FLAGS "${FLAGS}")
-      string(REPLACE "/MTd" "/MT" FLAGS "${FLAGS}")
-      set(${TARGET_FLAG} "${FLAGS}" PARENT_SCOPE)
-    endif()
-  endforeach()
+  if(MSVC)
+    set(LANGUAGES "C" "CXX" "Fortran")
+    foreach(LANGUAGE IN LISTS LANGUAGES)
+      set(TARGET_FLAG "CMAKE_${LANGUAGE}_FLAGS_DEBUG")
+      if(DEFINED ${TARGET_FLAG})
+        set(FLAGS "${${TARGET_FLAG}}")
+        string(REPLACE "/dbglibs " " " FLAGS "${FLAGS} ")
+        string(REPLACE "/MDd " "/MD " FLAGS "${FLAGS} ")
+        string(REPLACE "/MTd " "/MT " FLAGS "${FLAGS} ")
+        string(STRIP ${FLAGS} FLAGS)
+        set(${TARGET_FLAG} "${FLAGS}" CACHE STRING "" FORCE)
+      endif()
+    endforeach()
+  endif()
 endfunction()
 
 function(cmi_mingw_allow_multiple_defintion)
@@ -651,6 +593,90 @@ function(cmi_mingw_allow_multiple_defintion)
     endif()
   endif()
 endfunction()
+
+
+######################################
+# BUILD SETTINGS
+######################################
+
+# Set default path variables
+macro(cmi_load_build_environment)
+  message(AUTHOR_WARNING "cmi_load_build_environment() deprecated. Use cmi_set_build_environment() instead.")
+  cmi_set_build_environment(${ARGV})
+endmacro()
+macro(cmi_set_build_environment)
+  set(CMI_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/package/$<CONFIG>" CACHE PATH "")
+  set(CMI_BINARAY_OUTPUT_DIRECTORY "${CMI_OUTPUT_DIRECTORY}/bin" CACHE PATH "")
+  set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${CMI_BINARAY_OUTPUT_DIRECTORY}" CACHE INTERNAL "")
+  set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMI_BINARAY_OUTPUT_DIRECTORY}" CACHE INTERNAL "")
+  set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMI_BINARAY_OUTPUT_DIRECTORY}" CACHE INTERNAL "")
+
+  mark_as_advanced(CMI_OUTPUT_DIRECTORY)
+  mark_as_advanced(CMI_BINARAY_OUTPUT_DIRECTORY)
+  mark_as_advanced(CMAKE_ARCHIVE_OUTPUT_DIRECTORY)
+  mark_as_advanced(CMAKE_LIBRARY_OUTPUT_DIRECTORY)
+  mark_as_advanced(CMAKE_RUNTIME_OUTPUT_DIRECTORY)
+
+  set_property(GLOBAL PROPERTY PREDEFINED_TARGETS_FOLDER "${CMI_IDE_PRESETS}")
+
+  # Enabled testing by default
+  option(BUILD_TESTING "" ON)
+  if(BUILD_TESTING)
+    enable_testing()
+  endif()
+
+  # Set a default build type if none was specified
+  set(DEFAULT_BUILD_TYPE_ "Release")
+  if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
+    message(STATUS "Setting build type to '${DEFAULT_BUILD_TYPE_}' as none was specified.")
+    set(CMAKE_BUILD_TYPE "${DEFAULT_BUILD_TYPE_}" CACHE
+        STRING "Choose the type of build." FORCE)
+    # Set the possible values of build type for cmake-gui
+    set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS
+      "Debug" "Release" "MinSizeRel" "RelWithDebInfo")
+  endif()
+  unset(DEFAULT_BUILD_TYPE_)
+
+  cmi_disable_vs_incremental_linker()
+  cmi_disable_vs_debug_runtime()
+  cmi_fortran_default_mangling()
+endmacro()
+
+function(cmi_set_directory TARGET_)
+  set(OPTIONS_ OUTPUT IDE)
+  cmake_parse_arguments("" "" "${OPTIONS_}" "" ${ARGN})
+
+  if(NOT DEFINED _OUTPUT OR NOT IS_ABSOLUTE "${_OUTPUT}")
+    set(_OUTPUT "${CMI_BINARAY_OUTPUT_DIRECTORY}/${_OUTPUT}")
+  endif()
+
+  get_filename_component(_OUTPUT "${_OUTPUT}" REALPATH)
+  get_filename_component(BINARY_DIR "${CMI_BINARAY_OUTPUT_DIRECTORY}" REALPATH)
+  file(RELATIVE_PATH PATH_TO_BIN "${_OUTPUT}" "${BINARY_DIR}")
+  if(TARGET ${TARGET_})
+    set_property(TARGET ${TARGET_} PROPERTY BUILD_WITH_INSTALL_RPATH TRUE)
+    set_property(TARGET ${TARGET_} PROPERTY INSTALL_RPATH "$ORIGIN/${PATH_TO_BIN}")
+    set_property(TARGET ${TARGET_} PROPERTY ARCHIVE_OUTPUT_DIRECTORY "${_OUTPUT}")
+    set_property(TARGET ${TARGET_} PROPERTY LIBRARY_OUTPUT_DIRECTORY "${_OUTPUT}")
+    set_property(TARGET ${TARGET_} PROPERTY RUNTIME_OUTPUT_DIRECTORY "${_OUTPUT}")
+    set_property(TARGET ${TARGET_} PROPERTY FOLDER "${PROJECT_NAME}/${_IDE}")
+    set_property(GLOBAL PROPERTY USE_FOLDERS ON)
+  else()
+    message(WARNING "Can not set directoy for unknown target ${TARGET_}")
+  endif()
+endfunction()
+
+function(cmi_copy TARGET_ SOURCE_ DESTINATION_)
+  get_filename_component(SOURCE_DIRECTORY_ "${SOURCE_}" DIRECTORY)
+  get_filename_component(SOURCE_NAME_WE_ "${SOURCE_}" NAME_WE)
+  get_filename_component(SOURCE_NAME_ "${SOURCE_}" NAME)
+  add_custom_target(${TARGET_}
+    COMMAND ${CMAKE_COMMAND} -DFILE_PATTERN="${SOURCE_DIRECTORY_}/${SOURCE_NAME_WE_}*" -DDESTINATION="${DESTINATION_}" -P "${CMAKE_CURRENT_LIST_DIR}/cmi_copy.txt"
+  )
+endfunction()
+
+
+
 
 ######################################
 # IMPORT
