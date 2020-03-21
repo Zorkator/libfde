@@ -1,3 +1,8 @@
+#define ASSERT(x) \
+  if(.not. (x)) then ;\
+    write(*,*) "Assertion failed in " // __FILE__ // ":", __LINE__ ;\
+    call exit(1) ;\
+  end if ;
 
 program f_test
   use fde_basetypes
@@ -22,28 +27,32 @@ program f_test
   character(len=32), target :: msg
 
   msg = "this is a test-string" // char(10)
-  ti  => type_of( len_trim(msg) )
-  print *, ti%typeId
 
-  print *, hex( crc32( 0, msg(1:1), int(len_trim(msg), c_size_t) ) )           == "0x1225D297"
-  print *, hex( f_crc32( msg ) )                                               == "0x1225D297"
-  print *, hex( f_crc32( c_loc(msg), 0 ) )                                     == "0x00000000"
-  print *, hex( f_crc32( c_loc(msg), len_trim(msg) ) )                         == "0x1225D297"
-  print *, hex( f_crc32( c_loc(ti), storage_size(ti)/8 ) ) !< variable result
+  ASSERT(hex( crc32( 0, msg(1:1), int(len_trim(msg), c_size_t) ) ) == "0x1225D297")
+  ASSERT(hex( f_crc32( msg ) )                                     == "0x1225D297")
+  ASSERT(hex( f_crc32( c_loc(msg), 0 ) )                           == "0x00000000")
+  ASSERT(hex( f_crc32( c_loc(msg), len_trim(msg) ) )               == "0x1225D297")
 
-# define _FILE      'crc_test_file.txt~'
-  i = fopen( _FILE )
-  write(i, '(A)') msg(:len_trim(msg)-1)
-  call close(i)
+! TODO: Will not work as fortran insists on using platform dependend line endings (CRLF/LF)
+!# define _FILE      'crc_test_file.txt~'
+!  i = fopen( _FILE )
+!  write(i, '(A)') msg(:len_trim(msg)-1)
+!  call close(i)
+!  ASSERT(hex( crc32_file( _FILE ) )                                == "0x1225D297")
+!  call close( fopen( _FILE ), status="delete" )
 
-  print *, hex( crc32_file( _FILE ) )                                          == "0x1225D297"
-  call close( fopen( _FILE ), status="delete" )
+!?
+!  ti  => type_of( len_trim(msg) )
+!  print *, ti%typeId
+!  print *, hex( f_crc32( c_loc(ti), storage_size(ti)/8 ) ) !< variable result
 
-  do i = 1, 4000
-    do j = 1, 4000
-      code = f_crc32( msg )
-    end do
-  end do
+
+!?
+!  do i = 1, 4000
+!    do j = 1, 4000
+!      code = f_crc32( msg )
+!    end do
+!  end do
 
 end
 
