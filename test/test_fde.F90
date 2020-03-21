@@ -115,10 +115,10 @@ module test_basedata
   logical*2       , pointer :: p_bool2
   logical*4       , pointer :: p_bool4
   logical*8       , pointer :: p_bool8
-  integer*1       , pointer :: p_int1 
-  integer*2       , pointer :: p_int2 
-  integer*4       , pointer :: p_int4 
-  integer*8       , pointer :: p_int8 
+  integer*1       , pointer :: p_int1
+  integer*2       , pointer :: p_int2
+  integer*4       , pointer :: p_int4
+  integer*8       , pointer :: p_int8
   real*4          , pointer :: p_real4
   real*8          , pointer :: p_real8
   !real*16        , pointer  :: p_real16
@@ -221,10 +221,10 @@ module test_basedata
     allocate( v_int8_1d(5) );         v_int8_1d       = 4
     allocate( v_real4_1d(5) );        v_real4_1d      = 0.1
     allocate( v_real8_1d(5) );        v_real8_1d      = 0.2
-    !allocate( v_real16_1d(5) );       v_real16_1d     = 0.3        
-    allocate( v_complex8_1d(5) );     v_complex8_1d   = (1.0,-2.0)   
-    allocate( v_complex16_1d(5) );    v_complex16_1d  = (2.0,-2.0)    
-    !allocate( v_complex32_1d(5) );    v_complex32_1d  = (3.0,-2.0)    
+    !allocate( v_real16_1d(5) );       v_real16_1d     = 0.3
+    allocate( v_complex8_1d(5) );     v_complex8_1d   = (1.0,-2.0)
+    allocate( v_complex16_1d(5) );    v_complex16_1d  = (2.0,-2.0)
+    !allocate( v_complex32_1d(5) );    v_complex32_1d  = (3.0,-2.0)
     allocate( v_c_void_ptr_1d(5) );
     allocate( v_char10_1d(5) );       v_char10_1d     = "abcde"
     allocate( v_string_1d(5) );
@@ -248,10 +248,10 @@ module test_basedata
     allocate( v_int8_2d(2,2) );       v_int8_2d       = 4
     allocate( v_real4_2d(2,2) );      v_real4_2d      = 0.1
     allocate( v_real8_2d(2,2) );      v_real8_2d      = 0.2
-    !allocate( v_real16_2d(2,2) );     v_real16_2d     = 0.3             
-    allocate( v_complex8_2d(2,2) );   v_complex8_2d   = (1.0,-2.0)        
-    allocate( v_complex16_2d(2,2) );  v_complex16_2d  = (2.0,-2.0)         
-    !allocate( v_complex32_2d(2,2) );  v_complex32_2d  = (3.0,-2.0)         
+    !allocate( v_real16_2d(2,2) );     v_real16_2d     = 0.3
+    allocate( v_complex8_2d(2,2) );   v_complex8_2d   = (1.0,-2.0)
+    allocate( v_complex16_2d(2,2) );  v_complex16_2d  = (2.0,-2.0)
+    !allocate( v_complex32_2d(2,2) );  v_complex32_2d  = (3.0,-2.0)
     allocate( v_c_void_ptr_2d(2,2) ); v_c_void_ptr_2d = C_NULL_PTR
     allocate( v_char10_2d(2,2) );     v_char10_2d     = "abcde"
     allocate( v_string_2d(2,2) );
@@ -266,7 +266,7 @@ module test_basedata
         call initialize( v_hashmap_2d(i,j) )
       end do
     end do
-    
+
     allocate( v_bool1_3d(2,2,2) );      v_bool1_3d      = .true.
     allocate( v_bool2_3d(2,2,2) );      v_bool2_3d      = .true.
     allocate( v_bool4_3d(2,2,2) );      v_bool4_3d      = .true.
@@ -277,10 +277,10 @@ module test_basedata
     allocate( v_int8_3d(2,2,2) );       v_int8_3d       = 4
     allocate( v_real4_3d(2,2,2) );      v_real4_3d      = 0.1
     allocate( v_real8_3d(2,2,2) );      v_real8_3d      = 0.2
-    !allocate( v_real16_3d(2,2,2) );     v_real16_3d     = 0.3             
-    allocate( v_complex8_3d(2,2,2) );   v_complex8_3d   = (1.0,-2.0)        
-    allocate( v_complex16_3d(2,2,2) );  v_complex16_3d  = (2.0,-2.0)         
-    !allocate( v_complex32_3d(2,2,2) );  v_complex32_3d  = (3.0,-2.0)         
+    !allocate( v_real16_3d(2,2,2) );     v_real16_3d     = 0.3
+    allocate( v_complex8_3d(2,2,2) );   v_complex8_3d   = (1.0,-2.0)
+    allocate( v_complex16_3d(2,2,2) );  v_complex16_3d  = (2.0,-2.0)
+    !allocate( v_complex32_3d(2,2,2) );  v_complex32_3d  = (3.0,-2.0)
     allocate( v_c_void_ptr_3d(2,2,2) ); v_c_void_ptr_3d = C_NULL_PTR
     allocate( v_char10_3d(2,2,2) );     v_char10_3d     = "abcde"
     allocate( v_string_3d(2,2,2) );
@@ -297,7 +297,7 @@ module test_basedata
         end do
       end do
     end do
-    
+
     streamer = StreamVisitor( 6 )
     fout     = ostream( 6 )
   end subroutine!}}}
@@ -432,7 +432,7 @@ end module
 !    end if
 !  end subroutine
 !
-!  
+!
 !  subroutine real8_1d_allocate_ref__( ptr, d1, reference, bind )
 !    use fde_ref, only: Ref_t
 !    use fde_basetypes
@@ -447,7 +447,7 @@ end module
 !      reference = ref_of( ptr, bind )
 !    end if
 !  end subroutine
-!  
+!
 !
 !  function hashmap_allocate_ref( ptr ) result(res)
 !    use fde_hashmap
@@ -674,7 +674,7 @@ subroutine test_dyntype()!{{{
   !_chk_dyntype(string_3d,)
   !_chk_dyntype(ref_3d,)
   !_chk_dyntype(item_3d,)
-  
+
   call delete( item_ )
   call delete( ref_ )
 end subroutine!}}}
@@ -688,7 +688,7 @@ subroutine test_dyncast()!{{{
   type(c_ptr)  :: cp
 
   ref_ = ref_of(item_)
-  
+
 # define _chk_dyn_cast( typeId )                     ;\
   item_ = ref_of(_paste(v_,typeId))                  ;\
   if (dynamic_cast( _paste(p_,typeId), item_ )) then ;\
@@ -791,10 +791,10 @@ subroutine test_list()!{{{
   !list_array(1:) = v_list_1d(1:) !< shallow copy! fortran can't do proper array assignment with derived types!!!
 # define _list_append( typeId ) \
     call append( v_list, new_ListNode_of( _paste(v_,typeId) ) )
-  
+
 # define _list_append_ref( typeId ) \
     call append( v_list, new_ListNode_of( ref_of(_paste(v_,typeId)) ) )
-  
+
   _list_append(bool1)
   _list_append(bool2)
   _list_append(bool4)
@@ -880,7 +880,7 @@ subroutine test_list()!{{{
   !_list_append_ref(string_3d)
   !_list_append_ref(ref_3d)
   !_list_append_ref(item_3d)
-  
+
   idx = index( v_list )
   do while (is_valid(idx))
     ti => content_type( idx )
@@ -979,7 +979,7 @@ subroutine test_hashmap()!{{{
     print *, str(key(idx)), ' => ', trim(ti%baseType)
     call next( idx )
   end do
-  
+
   call delete( ref_1 )
   call accept( get( v_hashmap, 'initial matrix-clone' ), streamer%super )
 
@@ -1005,7 +1005,7 @@ subroutine test_hashmap_nesting()!{{{
 
   scope => _file_scope_in( scope )
   do i = 1,3
-    write(buff,'(A7,I1)'), 'submap_', i
+    write(buff,'(A7,I1)') 'submap_', i
     call set( scope, trim(buff), Item_of( ref_of( newScope(), bind = .true. ) ) )
   end do
 
@@ -1029,7 +1029,7 @@ subroutine test_hashmap_nesting()!{{{
   call declareCallback( scope, 'myCB' )
   print *, connectCallback( scope, 'myCB', callback_proc )
   call invokeCallback( scope, 'myCB', c_loc(scope) )
-  
+
   if (dynamic_cast( r_array, get(scope, 'value') )) &
     print *, r_array
 
@@ -1083,10 +1083,10 @@ subroutine test_hashmap_cloning()!{{{
   call set( HashMap(r), "array", Item_of( ref_of( r_array, bind = .true. ) ) )
   ! python: r_array = [1,1,1,1,1,1,1,1,1,1]
   ! python: r = dict( array = r_array )
-  
+
   map = HashMap(r) !< python: map = dict( **r )
   ! python: both dicts refer to r_array !!!
-  
+
   r_ptr => real8_1d( ref( get( map, 'array' ) ) )
   ! python: r_ptr = map['array']
   ! CAUTION: r_ptr and r_array refer to same array!
@@ -1094,7 +1094,7 @@ subroutine test_hashmap_cloning()!{{{
   call delete( map )
   call delete( r )
   ! CAUTION: r_array invalid here!
-  
+
   call initialize( map )
   allocate( r_array(10) ); r_array = 1
   call set( map, "array", Item_of( ref_of( r_array, bind=.true. ) ) )
@@ -1177,7 +1177,7 @@ subroutine test_visitor()!{{{
   call accept( v_ref, streamer%super )
   v_item = Item_of( ref_of( v_real8 ) )
   call accept( v_item, streamer%super )
-  
+
 end subroutine!}}}
 
 
@@ -1213,12 +1213,12 @@ module visitor_testmod!{{{
     res%super%visit => CountVisitor_step
     res%visit       => func
   end function
-  
+
 
   subroutine init_list()
     type(node_t), pointer :: ptr
     integer               :: i
-    
+
     ptr => list
     do i = 1, 5
       allocate(ptr%next)
@@ -1251,7 +1251,7 @@ module visitor_testmod!{{{
     subroutine blub( v, n )
       type(visitor_t) :: v
       type(node_t)    :: n
-      print *, 'blub', n%value 
+      print *, 'blub', n%value
     end subroutine
   end subroutine
 
@@ -1296,7 +1296,7 @@ module fde_binstreamvisitor
     type(TypeInfo_t)      :: ti
     call ti%streamProc( obj, ti, vstr%stream )
   end subroutine
- 
+
   subroutine streamvisitor_enter_( self )
     type(BinStreamVisitor_t) :: self
     call indent( self%stream, self%super%level )
@@ -1402,7 +1402,7 @@ module pointer_remapping
     m_ref = ref_of( matrix(-4:-3,9,3:4) )
     m_ref = ref_of( matrix(-4:-3,9,3:4), lb=lbound(matrix) )
     m_ref = ref_of( matrix(:,:,3), lb=lbound(matrix) )
-    
+
     if (dynamic_cast( ptr, m_ref )) then
       print *, ptr
       print *, shape(ptr)
@@ -1576,7 +1576,7 @@ module sorting
 
     allocate( array(10000) )
     cmp = 0; swp = 0
-    
+
 #   define _sortArrayBy( sort, msg )             \
       timing = startTimer()                     ;\
       call sort( is_lower_, swap_, size(array) );\

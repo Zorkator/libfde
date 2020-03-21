@@ -15,10 +15,10 @@ module sim_reflection
 
   type(HashMap_t), pointer :: root_scope => null()
   type(HashMap_t), pointer :: hook_scope => null()
-
+# undef _callHook
 # define _callHook(id) \
     call invokeCallback( hook_scope, id )
-
+# undef _ALLOCATE
 # define _ALLOCATE( scope, sym, dim )  \
     allocate( sym dim )               ;\
     _set_scopeSymbol( scope, sym )
@@ -27,7 +27,7 @@ module sim_reflection
 
   subroutine init_reflection()
     type(StreamVisitor_t) :: streamer
-  
+
     if (.not. associated(root_scope)) then
       root_scope => getScope('test_simulator')
       hook_scope => getScope( root_scope, 'hooks' )
@@ -80,11 +80,11 @@ module sim_data
     _ALLOCATE( scope, name_array,   (20) );    name_array   = ' ' !<< FIXME: id_array and name_array share the same typeinfo, whose byteSize
                                                                   !           is set to the size of the first ref'ed table ...
     do i = 1,size(id_array)
-      write( id_array(i), '(i10)' ), i
+      write( id_array(i), '(i10)' ) i
     end do
 
     do i = 1,size(name_array)
-      write( name_array(i), '(A4I5)' ), 'name', i
+      write( name_array(i), '(A4I5)' ) 'name', i
     end do
   end subroutine
 end module
@@ -95,7 +95,7 @@ subroutine run_c()
   use sim_data
   use sim_reflection
   implicit none
-  
+
   call init_reflection()
   call init_sim_data()
 
@@ -104,7 +104,7 @@ subroutine run_c()
   ! main loop
   do while (t <= te)
     _callHook('step')
-    write(6,*,iostat=ios) "t: ", t 
+    write(6,*,iostat=ios) "t: ", t
     cnt = cnt + 1
     real4_array(mod(cnt, size(real4_array)) + 1) = cnt
     t = t + dt
@@ -116,7 +116,7 @@ end subroutine
 
 program simulator
   call run_c()
-end 
+end
 
 
 !_PROC_EXPORT(initialize_c)
