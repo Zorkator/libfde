@@ -36,8 +36,8 @@ module fde_file
 
    private :: fopen_bool_, fopen_autounit_
 
-   character(12), private, target :: form_opts(3)     = ['FORMATTED  ', 'UNFORMATED ', 'BINARY     ']
-   character(12), private, target :: status_opts(5)   = ['UNKNOWN', 'NEW    ', 'REPLACE', 'SCRATCH', 'OLD    ']
+   character(12), private, target :: form_opts(3)     = ['FORMATTED  ', 'UNFORMATTED', 'BINARY     ']
+   character(12), private, target :: status_opts(5)   = ['UNKNOWN    ', 'NEW        ', 'REPLACE    ', 'SCRATCH    ', 'OLD        ']
    character(12), private, target :: action_opts(3)   = ['READWRITE  ', 'READ       ', 'WRITE      ']
    character(12), private, target :: access_opts(3)   = ['SEQUENTIAL ', 'DIRECT     ', 'TRANSPARENT']
    character(12), private, target :: position_opts(3) = ['ASIS       ', 'REWIND     ', 'APPEND     ']
