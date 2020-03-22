@@ -1,8 +1,5 @@
-#define ASSERT(x) \
-  if(.not. (x)) then ;\
-    write(*,*) "Assertion failed in " // __FILE__ // ":", __LINE__ ;\
-    call exit(1) ;\
-  end if ;
+
+#include "fde/exception.fpp"
 
 program f_test
   use fde_basetypes
@@ -22,37 +19,27 @@ program f_test
     end function
   end interface
 
-  type(TypeInfo_t), pointer :: ti
-  integer(kind=4)           :: i, j, code
-  character(len=32), target :: msg
+  integer(kind=4)           :: i
+  character(len=32), target :: msg, tagged
+  character(len=4), pointer :: tag
+  integer(kind=4),   target :: msgLen
 
-  msg = "this is a test-string" // char(10)
+  msg    = "this is a test-message"
+  msgLen = len_trim(msg)
+  call c_f_pointer( c_loc(msgLen), tag )
+  tagged = tag // trim(msg) // tag  !< add length tags fortran writes to UNFORMATTED file 
 
-  ASSERT(hex( crc32( 0, msg(1:1), int(len_trim(msg), c_size_t) ) ) == "0x1225D297")
-  ASSERT(hex( f_crc32( msg ) )                                     == "0x1225D297")
-  ASSERT(hex( f_crc32( c_loc(msg), 0 ) )                           == "0x00000000")
-  ASSERT(hex( f_crc32( c_loc(msg), len_trim(msg) ) )               == "0x1225D297")
+  _assert( hex( crc32( 0, tagged(1:1), int(len_trim(tagged), c_size_t) ) ) == '0x946614C8' )
+  _assert( hex( f_crc32( tagged ) )                                        == '0x946614C8' )
+  _assert( hex( f_crc32( c_loc(tagged), 0 ) )                              == '0x00000000' )
+  _assert( hex( f_crc32( c_loc(tagged), len_trim(tagged) ) )               == '0x946614C8' )
 
-! TODO: Will not work as fortran insists on using platform dependend line endings (CRLF/LF)
-!# define _FILE      'crc_test_file.txt~'
-!  i = fopen( _FILE )
-!  write(i, '(A)') msg(:len_trim(msg)-1)
-!  call close(i)
-!  ASSERT(hex( crc32_file( _FILE ) )                                == "0x1225D297")
-!  call close( fopen( _FILE ), status="delete" )
-
-!?
-!  ti  => type_of( len_trim(msg) )
-!  print *, ti%typeId
-!  print *, hex( f_crc32( c_loc(ti), storage_size(ti)/8 ) ) !< variable result
-
-
-!?
-!  do i = 1, 4000
-!    do j = 1, 4000
-!      code = f_crc32( msg )
-!    end do
-!  end do
+# define _FILE      'crc_test_file.txt~'
+  i = fopen( _FILE, 'UNFORMATTED' )
+  write(i) trim(msg)
+  call close(i)
+  _assert( hex( crc32_file( _FILE ) )                                      == '0x946614C8' )
+  call close( fopen( _FILE ), status="delete" )
 
 end
 
