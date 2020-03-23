@@ -5,11 +5,11 @@
 
 *.*~
 
-\.work/
+.*/
 
-*/\.work/
+*/.*/
 
-*/*/\.work/
+*/*/.*/
 
 src/basetypes\.F90
 src/containertypes\.F90
