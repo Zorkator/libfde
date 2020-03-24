@@ -14,7 +14,7 @@ include(cmi.cmake)
 cmi_set_build_environment()
 
 # Generating files
-cmi_find_python(PACKAGES docopt)
+cmi_find_python()
 
 # fortres
 add_subdirectory(libfortres)
