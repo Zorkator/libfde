@@ -563,6 +563,7 @@ f_plugin_iterate_so( SOInfoHandler handler )
   CloseHandle( procHandle );
 
 #else
+  #if defined HAVE_LINK_H
   struct CB_Data
   {
     StringRef     &_moduleId;
@@ -583,6 +584,7 @@ f_plugin_iterate_so( SOInfoHandler handler )
   };
 
   status = dl_iterate_phdr( CB_Code::callback, &DATA );
+  #endif
 #endif
   return status;
 }

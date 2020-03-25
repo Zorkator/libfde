@@ -5,7 +5,7 @@
 
 cmake_minimum_required(VERSION 3.8)
 
-set(CMI_TAG "3004010cdd38a7d5bf2aa32bc18e5579d62a9714")
+set(CMI_TAG "40a8cc612ef5d24951d29a18f07692c2d923749d")
 
 get_property(CMI_LOADER_FILE GLOBAL PROPERTY CMI_LOADER_FILE)
 # First include
@@ -295,7 +295,7 @@ function(cmi_add_git_ PROJECT_NAME_ PROJECT_URL_ PROJECT_REV_)
   endif()
   set_property(GLOBAL PROPERTY ${PROJECT_NAME_UPPER_}_POPULATED "TRUE")
 
-  find_package(Git REQUIRED)
+  find_package(Git)
   set(${PROJECT_NAME_UPPER_}_DIR "${CMI_EXTERNALS_DIR}/${PROJECT_NAME_LOWER_}" CACHE PATH "")
   set(UPDATER_ "${CMI_EXTERNALS_DIR}/checkout.${PROJECT_NAME_LOWER_}.cmake")
 
@@ -384,7 +384,7 @@ function(cmi_add_svn_ PROJECT_NAME_ PROJECT_URL_ PROJECT_REV_)
   endif()
   set_property(GLOBAL PROPERTY ${PROJECT_NAME_UPPER_}_POPULATED "TRUE")
 
-  find_package(Subversion REQUIRED)
+  find_package(Subversion)
   set(${PROJECT_NAME_UPPER_}_DIR "${CMI_EXTERNALS_DIR}/${PROJECT_NAME_LOWER_}" CACHE PATH "")
 
 
@@ -448,89 +448,62 @@ endfunction()
 
 function(cmi_Fortran_append var name)
   # Compiler presets
-  set(Fortran_TRACEBACK_Linux_GNU "-fbacktrace")
-  set(Fortran_TRACEBACK_CYGWIN_GNU "-fbacktrace")
-  set(Fortran_TRACEBACK_Windows_GNU "-fbacktrace")
+  set(Fortran_TRACEBACK_Generic_GNU "-fbacktrace")
   set(Fortran_TRACEBACK_Linux_Intel "-traceback")
   set(Fortran_TRACEBACK_Windows_Intel "/traceback")
 
-  set(Fortran_CONSISTENCY_Linux_GNU "")
-  set(Fortran_CONSISTENCY_CYGWIN_GNU "")
-  set(Fortran_CONSISTENCY_Windows_GNU "")
+  set(Fortran_CONSISTENCY_Generic_GNU "")
   set(Fortran_CONSISTENCY_Linux_Intel "-fimf-arch-consistency=true")
   set(Fortran_CONSISTENCY_Windows_Intel "/Qimf-arch-consistency:true")
 
-  set(Fortran_FPP_Linux_GNU "-cpp -ffree-line-length-none -ffixed-line-length-none")
-  set(Fortran_FPP_CYGWIN_GNU "-cpp -ffree-line-length-none -ffixed-line-length-none")
-  set(Fortran_FPP_Windows_GNU "-cpp -ffree-line-length-none -ffixed-line-length-none")
+  set(Fortran_FPP_Generic_GNU "-cpp -ffree-line-length-none -ffixed-line-length-none")
   set(Fortran_FPP_Linux_Intel "-fpp -allow nofpp-comments")
   set(Fortran_FPP_Windows_Intel "/fpp")
 
-  set(Fortran_FPE0_Linux_GNU "-ffpe-trap=invalid,zero,overflow")
-  set(Fortran_FPP0_CYGWIN_GNU "-ffpe-trap=invalid,zero,overflow")
-  set(Fortran_FPP0_Windows_GNU "-ffpe-trap=invalid,zero,overflow")
+  set(Fortran_FPP0_Generic_GNU "-ffpe-trap=invalid,zero,overflow")
   set(Fortran_FPE0_Linux_Intel "-fpe0")
   set(Fortran_FPE0_Windows_Intel "/fpe:0")
 
-  set(Fortran_FPSCOMPGENERAL_Linux_GNU "")
-  set(Fortran_FPSCOMPGENERAL_CYGWIN_GNU "")
-  set(Fortran_FPSCOMPGENERAL_Windows_GNU "")
+  set(Fortran_FPSCOMPGENERAL_Generic_GNU "")
   set(Fortran_FPSCOMPGENERAL_Linux_Intel "-fpscomp general")
   set(Fortran_FPSCOMPGENERAL_Windows_Intel "/fpscomp:general")
 
-  set(Fortran_FPMODELSOURCE_Linux_GNU "")
-  set(Fortran_FPMODELSOURCE_CYGWIN_GNU "")
-  set(Fortran_FPMODELSOURCE_Windows_GNU "")
+  set(Fortran_FPMODELSOURCE_Generic_GNU "")
   set(Fortran_FPMODELSOURCE_Linux_Intel "-fp-model source")
   set(Fortran_FPMODELSOURCE_Windows_Intel "/fp:source")
 
-  set(Fortran_FPSPECULATIONSAFE_Linux_GNU "")
-  set(Fortran_FPSPECULATIONSAFE_CYGWIN_GNU "")
-  set(Fortran_FPSPECULATIONSAFE_Windows_GNU "")
+  set(Fortran_FPSPECULATIONSAFE_Generic_GNU "")
   set(Fortran_FPSPECULATIONSAFE_Linux_Intel "-fp-speculation safe")
   set(Fortran_FPSPECULATIONSAFE_Windows_Intel "/Qfp-speculation=safe")
 
-  set(Fortran_OMP_Linux_GNU "-fopenmp")
-  set(Fortran_OMP_CYGWIN_GNU "-fopenmp")
-  set(Fortran_OMP_Windows_GNU "-fopenmp")
+  set(Fortran_OMP_Generic_GNU "-fopenmp")
   set(Fortran_OMP_Linux_Intel "-qopenmp")
   set(Fortran_OMP_Windows_Intel "/Qopenmp")
 
-  set(Fortran_TRAPUV_Linux_GNU "-finit-real=snan -finit-integer=-1 -finit-character=0 -finit-logical=false")
-  set(Fortran_TRAPUV_CYGWIN_GNU "-finit-real=snan -finit-integer=-1 -finit-character=0 -finit-logical=false")
-  set(Fortran_TRAPUV_Windows_GNU "-finit-real=snan -finit-integer=-1 -finit-character=0 -finit-logical=false")
+  set(Fortran_TRAPUV_Generic_GNU "-finit-real=snan -finit-integer=-1 -finit-character=0 -finit-logical=false")
   set(Fortran_TRAPUV_Linux_Intel "-ftrapuv")
   set(Fortran_TRAPUV_Windows_Intel "/Qtrapuv")
 
-  set(Fortran_WSRCTRUNC_Linux_GNU "-Wline-truncation")
-  set(Fortran_WSRCTRUNC_CYGWIN_GNU "-Wline-truncation")
-  set(Fortran_WSRCTRUNC_Windows_GNU "-Wline-truncation")
+  set(Fortran_WSRCTRUNC_Generic_GNU "-Wline-truncation")
   set(Fortran_WSRCTRUNC_Linux_Intel "-warn truncated_source")
   set(Fortran_WSRCTRUNC_Windows_Intel "/warn:truncated_source")
 
-  set(Fortran_CHECKALL_Linux_GNU "-fcheck=pointer,bounds")
-  set(Fortran_CHECKALL_CYGWIN_GNU "-fcheck=pointer,bounds")
-  set(Fortran_CHECKALL_Windows_GNU "-fcheck=pointer,bounds")
+  set(Fortran_CHECKALL_Generic_GNU "-fcheck=pointer,bounds")
   set(Fortran_CHECKALL_Linux_Intel "-check pointer,bounds,uninit,format,output_conversion")
   set(Fortran_CHECKALL_Windows_Intel "/check:pointer /check:bounds /check:uninit /check:format /check:output_conversion")
 
-  set(Fortran_THREADS_Linux_GNU "-pthread")
-  set(Fortran_THREADS_CYGWIN_GNU "-pthread")
-  set(Fortran_THREADS_Windows_GNU "-pthread")
+  set(Fortran_THREADS_Generic_GNU "-pthread")
   set(Fortran_THREADS_Linux_Intel "-threads")
   set(Fortran_THREADS_Windows_Intel "/threads")
 
-  set(Fortran_STACK_Linux_GNU "")
-  set(Fortran_STACK_CYGWIN_GNU "")
-  set(Fortran_STACK_Windows_GNU "")
+  set(Fortran_STACK_Generic_GNU "")
   set(Fortran_STACK_Linux_Intel "")
   set(Fortran_STACK_Windows_Intel "/STACK:10000000,10000000")
 
-  set(Fortran_MULTIPLEDEFINITION_Linux_GNU "")
-  set(Fortran_MULTIPLEDEFINITION_CYGWIN_GNU "")
-  set(Fortran_MULTIPLEDEFINITION_Windows_GNU "-Wl,--allow-multiple-definition")
-  set(Fortran_MULTIPLEDEFINITION_Linux_Intel "")
-  set(Fortran_MULTIPLEDEFINITION_Windows_Intel "")
+  # No platform specific flags are needed with GNU
+  if(CMAKE_Fortran_COMPILER_ID STREQUAL "GNU")
+    set(CMAKE_SYSTEM_NAME Generic)
+  endif()
 
   set(${var} "${${var}} ${Fortran_${name}_${CMAKE_SYSTEM_NAME}_${CMAKE_Fortran_COMPILER_ID}}" PARENT_SCOPE)
   string(STRIP "${${var}}" ${var})
@@ -655,7 +628,13 @@ function(cmi_set_directory TARGET_)
   file(RELATIVE_PATH PATH_TO_BIN "${_OUTPUT}" "${BINARY_DIR}")
   if(TARGET ${TARGET_})
     set_property(TARGET ${TARGET_} PROPERTY BUILD_WITH_INSTALL_RPATH TRUE)
-    set_property(TARGET ${TARGET_} PROPERTY INSTALL_RPATH "$ORIGIN/${PATH_TO_BIN}")
+
+    if(CMAKE_SYSTEM_NAME STREQUAL "Darwin")
+      set_property(TARGET ${TARGET_} PROPERTY INSTALL_RPATH "@loader_path/${PATH_TO_BIN}")
+    else()
+      set_property(TARGET ${TARGET_} PROPERTY INSTALL_RPATH "$ORIGIN/${PATH_TO_BIN}")
+    endif()
+
     set_property(TARGET ${TARGET_} PROPERTY ARCHIVE_OUTPUT_DIRECTORY "${_OUTPUT}")
     set_property(TARGET ${TARGET_} PROPERTY LIBRARY_OUTPUT_DIRECTORY "${_OUTPUT}")
     set_property(TARGET ${TARGET_} PROPERTY RUNTIME_OUTPUT_DIRECTORY "${_OUTPUT}")
