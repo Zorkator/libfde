@@ -5,7 +5,7 @@
 
 cmake_minimum_required(VERSION 3.8)
 
-set(CMI_TAG "40a8cc612ef5d24951d29a18f07692c2d923749d")
+set(CMI_TAG "6e8ca46026a195aa4dea39496e814d83db78f89a")
 
 get_property(CMI_LOADER_FILE GLOBAL PROPERTY CMI_LOADER_FILE)
 # First include
@@ -72,6 +72,10 @@ unset(CMI_LOADER_FILE)
 ######################################
 
 set(CMI_LOADED TRUE)
+
+if(POLICY CMP0068)
+  cmake_policy(SET CMP0068 NEW)
+endif()
 
 # Consider root project as populated and included
 string(TOUPPER "${CMAKE_PROJECT_NAME}" PROJECT_NAME_UPPER_)
