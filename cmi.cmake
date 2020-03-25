@@ -5,7 +5,7 @@
 
 cmake_minimum_required(VERSION 3.8)
 
-set(CMI_TAG "6e8ca46026a195aa4dea39496e814d83db78f89a")
+set(CMI_TAG "61554bf307243e1012630b61f468ecd45d6269de")
 
 get_property(CMI_LOADER_FILE GLOBAL PROPERTY CMI_LOADER_FILE)
 # First include
@@ -72,10 +72,6 @@ unset(CMI_LOADER_FILE)
 ######################################
 
 set(CMI_LOADED TRUE)
-
-if(POLICY CMP0068)
-  cmake_policy(SET CMP0068 NEW)
-endif()
 
 # Consider root project as populated and included
 string(TOUPPER "${CMAKE_PROJECT_NAME}" PROJECT_NAME_UPPER_)
@@ -582,6 +578,11 @@ macro(cmi_load_build_environment)
   cmi_set_build_environment(${ARGV})
 endmacro()
 macro(cmi_set_build_environment)
+  if(POLICY CMP0068)
+    cmake_policy(SET CMP0068 NEW)
+  endif()
+
+
   set(CMI_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/package/$<CONFIG>" CACHE PATH "")
   set(CMI_BINARAY_OUTPUT_DIRECTORY "${CMI_OUTPUT_DIRECTORY}/bin" CACHE PATH "")
   set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${CMI_BINARAY_OUTPUT_DIRECTORY}" CACHE INTERNAL "")
