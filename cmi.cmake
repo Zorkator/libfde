@@ -5,7 +5,7 @@
 
 cmake_minimum_required(VERSION 3.8)
 
-set(CMI_TAG "61554bf307243e1012630b61f468ecd45d6269de")
+set(CMI_TAG "acf4434df038488e316c3c1ec62ef6b4faf10885")
 
 get_property(CMI_LOADER_FILE GLOBAL PROPERTY CMI_LOADER_FILE)
 # First include
@@ -449,59 +449,58 @@ endfunction()
 function(cmi_Fortran_append var name)
   # Compiler presets
   set(Fortran_TRACEBACK_Generic_GNU "-fbacktrace")
-  set(Fortran_TRACEBACK_Linux_Intel "-traceback")
+  set(Fortran_TRACEBACK_Generic_Intel "-traceback")
   set(Fortran_TRACEBACK_Windows_Intel "/traceback")
 
   set(Fortran_CONSISTENCY_Generic_GNU "")
-  set(Fortran_CONSISTENCY_Linux_Intel "-fimf-arch-consistency=true")
+  set(Fortran_CONSISTENCY_Generic_Intel "-fimf-arch-consistency=true")
   set(Fortran_CONSISTENCY_Windows_Intel "/Qimf-arch-consistency:true")
 
   set(Fortran_FPP_Generic_GNU "-cpp -ffree-line-length-none -ffixed-line-length-none")
-  set(Fortran_FPP_Linux_Intel "-fpp -allow nofpp-comments")
+  set(Fortran_FPP_Generic_Intel "-fpp -allow nofpp-comments")
   set(Fortran_FPP_Windows_Intel "/fpp")
 
   set(Fortran_FPP0_Generic_GNU "-ffpe-trap=invalid,zero,overflow")
-  set(Fortran_FPE0_Linux_Intel "-fpe0")
+  set(Fortran_FPE0_Generic_Intel "-fpe0")
   set(Fortran_FPE0_Windows_Intel "/fpe:0")
 
   set(Fortran_FPSCOMPGENERAL_Generic_GNU "")
-  set(Fortran_FPSCOMPGENERAL_Linux_Intel "-fpscomp general")
+  set(Fortran_FPSCOMPGENERAL_Generic_Intel "-fpscomp general")
   set(Fortran_FPSCOMPGENERAL_Windows_Intel "/fpscomp:general")
 
   set(Fortran_FPMODELSOURCE_Generic_GNU "")
-  set(Fortran_FPMODELSOURCE_Linux_Intel "-fp-model source")
+  set(Fortran_FPMODELSOURCE_Generic_Intel "-fp-model source")
   set(Fortran_FPMODELSOURCE_Windows_Intel "/fp:source")
 
   set(Fortran_FPSPECULATIONSAFE_Generic_GNU "")
-  set(Fortran_FPSPECULATIONSAFE_Linux_Intel "-fp-speculation safe")
+  set(Fortran_FPSPECULATIONSAFE_Generic_Intel "-fp-speculation safe")
   set(Fortran_FPSPECULATIONSAFE_Windows_Intel "/Qfp-speculation=safe")
 
   set(Fortran_OMP_Generic_GNU "-fopenmp")
-  set(Fortran_OMP_Linux_Intel "-qopenmp")
+  set(Fortran_OMP_Generic_Intel "-qopenmp")
   set(Fortran_OMP_Windows_Intel "/Qopenmp")
 
   set(Fortran_TRAPUV_Generic_GNU "-finit-real=snan -finit-integer=-1 -finit-character=0 -finit-logical=false")
-  set(Fortran_TRAPUV_Linux_Intel "-ftrapuv")
+  set(Fortran_TRAPUV_Generic_Intel "-ftrapuv")
   set(Fortran_TRAPUV_Windows_Intel "/Qtrapuv")
 
   set(Fortran_WSRCTRUNC_Generic_GNU "-Wline-truncation")
-  set(Fortran_WSRCTRUNC_Linux_Intel "-warn truncated_source")
+  set(Fortran_WSRCTRUNC_Generic_Intel "-warn truncated_source")
   set(Fortran_WSRCTRUNC_Windows_Intel "/warn:truncated_source")
 
   set(Fortran_CHECKALL_Generic_GNU "-fcheck=pointer,bounds")
-  set(Fortran_CHECKALL_Linux_Intel "-check pointer,bounds,uninit,format,output_conversion")
+  set(Fortran_CHECKALL_Generic_Intel "-check pointer,bounds,uninit,format,output_conversion")
   set(Fortran_CHECKALL_Windows_Intel "/check:pointer /check:bounds /check:uninit /check:format /check:output_conversion")
 
   set(Fortran_THREADS_Generic_GNU "-pthread")
-  set(Fortran_THREADS_Linux_Intel "-threads")
+  set(Fortran_THREADS_Generic_Intel "-threads")
   set(Fortran_THREADS_Windows_Intel "/threads")
 
   set(Fortran_STACK_Generic_GNU "")
-  set(Fortran_STACK_Linux_Intel "")
+  set(Fortran_STACK_Generic_Intel "")
   set(Fortran_STACK_Windows_Intel "/STACK:10000000,10000000")
 
-  # No platform specific flags are needed with GNU
-  if(CMAKE_Fortran_COMPILER_ID STREQUAL "GNU")
+  if(NOT MSVC)
     set(CMAKE_SYSTEM_NAME Generic)
   endif()
 
