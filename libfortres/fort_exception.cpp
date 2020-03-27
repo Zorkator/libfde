@@ -254,7 +254,7 @@ f_try_v( int *catchList, StringRef *what, TraceProcedure tp, Procedure proc, va_
 
   // unpack list of given procedure arguments into argBuf
   ArgRef *argPtr = argBuf;
-  while( *argPtr++ = va_arg( vaArgs, ArgRef ) ) { /* empty */ };
+  while( (*argPtr++ = va_arg( vaArgs, ArgRef ) ) ) { /* empty */ };
   nrArgs = (argPtr - argBuf) - 1;
 
   Context *context = getContext();
