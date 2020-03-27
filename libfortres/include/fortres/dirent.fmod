@@ -59,7 +59,7 @@
             type(DIR_t), intent(inout) :: dir
             integer(kind=c_int)        :: stat
           end subroutine
-        
+
           subroutine rewinddir_( dir, stat ) _cID(f_rewinddir)
             import DIR_t, c_int
             type(DIR_t),  value :: dir
@@ -101,14 +101,14 @@
             character(len=*), intent(in)    :: from, to
             call mkrp_ft_( strBuf(res), str(from), str(to) )
           end subroutine
-      
+
 !_PROC_EXPORT(relPath_to)
           subroutine relPath_to( res, to )
             character(len=*), intent(inout) :: res
             character(len=*), intent(in)    :: to
             call mkrp_t_( strBuf(res), str(to) )
           end subroutine
-      
+
 !_PROC_EXPORT(opendir)
           function opendir( dir, path )
             type(DIR_t),     intent(out) :: dir
@@ -116,7 +116,7 @@
             logical                      :: opendir
             opendir = (opendir_( dir, str(path) ) /= 0)
           end function
-        
+
 !_PROC_EXPORT(readdir)
           function readdir( dir, dirEntry )
             type(DIR_t),               value :: dir
@@ -133,7 +133,7 @@
             call closedir_( dir, stat_ )
             if (present(stat)) stat = (stat_ == 0)
           end subroutine
-  
+
 !_PROC_EXPORT(rewinddir)
           subroutine rewinddir( dir, stat )
             type(DIR_t),  value :: dir

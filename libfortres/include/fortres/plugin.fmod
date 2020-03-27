@@ -22,7 +22,7 @@
             type(StringRef_t) :: id, fp
             integer           :: st
           end subroutine
-      
+
           function SOInfoHandler( id, addr )
             import StringRef_t
             type(StringRef_t) :: id

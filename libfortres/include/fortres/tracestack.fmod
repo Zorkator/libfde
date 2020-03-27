@@ -17,7 +17,7 @@
             import StringRef_t
             type(StringRef_t) :: frameInfo
           end subroutine
-      
+
           subroutine tracestack_by_( op, skip, info ) _cID(f_tracestack)
             import c_funptr, c_int, StringRef_t
             type(c_funptr),     intent(in) :: op
@@ -30,9 +30,9 @@
             type (c_funptr), value, intent(in) :: op
           end subroutine
         end interface
-    
+
       contains
-      
+
 !_PROC_EXPORT(tracestack_by)
         subroutine tracestack_by( op, skipped, info )
           procedure(FrameInfoOp)     :: op

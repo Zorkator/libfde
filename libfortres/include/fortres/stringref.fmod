@@ -7,12 +7,12 @@
         use, intrinsic :: iso_c_binding
         implicit none
         private
-      
+
         type, bind(C) :: StringRef_t
           type (c_ptr)           :: loc = c_null_ptr
           integer(kind=c_size_t) :: len = 0
         end type
-      
+
         interface str
           module procedure stringref_of_str_trim, stringref_of_str
           module procedure stringref_to_str
@@ -21,15 +21,15 @@
         interface strBuf
           module procedure stringref_of_buf
         end interface
-      
+
         interface len
           module procedure stringref_len
         end interface
-      
+
         public :: StringRef_t, str, strBuf, len
 
         character(len=0), private, target :: empty_string_ = ""
-      
+
       !-------------------
         contains
       !-------------------
@@ -109,7 +109,7 @@
           integer*4                      :: l
           l = strRef%len
         end function
-      
+
       end module
 
 #endif
