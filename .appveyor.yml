@@ -13,7 +13,7 @@ for:
   install:
     - mkdir _build
     - cd _build
-    - cmake ..
+    - cmake .. -DCMAKE_BUILD_TYPE=Debug
     - cmake --build .
 
   test_script:
@@ -28,7 +28,7 @@ for:
     - set PATH=C:\mingw-w64\x86_64-7.2.0-posix-seh-rt_v5-rev1\mingw64\bin;C:\Program Files (x86)\CMake\bin
     - mkdir _build
     - cd _build
-    - cmake .. -G "MinGW Makefiles"
+    - cmake .. -G "MinGW Makefiles" -DCMAKE_BUILD_TYPE=Debug
     - cmake --build .
 
   test_script:
@@ -43,7 +43,7 @@ for:
     - brew install gcc
     - mkdir _build
     - cd _build
-    - cmake ..
+    - cmake .. -DCMAKE_BUILD_TYPE=Debug
     - cmake --build .
 
   test_script:
