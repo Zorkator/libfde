@@ -1750,7 +1750,7 @@ program test_fde
     call test_file_string()
     call test_write_read()
     call test_ref_change()
-    call test_pointer_bounds()
+!    call test_pointer_bounds()
   end subroutine
 end
 
