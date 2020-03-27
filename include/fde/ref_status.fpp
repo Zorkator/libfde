@@ -4,10 +4,10 @@
 # define _RefStatus \
     integer*1, dimension(2)
 
-# define _ref_WeakLent        (/0, 0/)
-# define _ref_WeakMine        (/0, 1/)
-# define _ref_HardLent        (/1, 0/)
-# define _ref_HardMine        (/1, 1/)
+# define _ref_WeakLent        (/int(0,1), int(0,1)/)
+# define _ref_WeakMine        (/int(0,1), int(1,1)/)
+# define _ref_HardLent        (/int(1,1), int(0,1)/)
+# define _ref_HardMine        (/int(1,1), int(1,1)/)
 
 # define _ref_init(s,h)       s(1:2) = (/int(h,1), int(0,1)/)
 # define _ref_initMine(s,h)   s(1:2) = (/int(h,1), int(1,1)/)
