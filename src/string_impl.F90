@@ -136,8 +136,7 @@ end module
     integer                    :: limit
 
     limit = min(_len(self), length)
-    res(1:limit)  = _array(self)
-    res(limit+1:) = ' '
+    res(1:limit)  = self%str%ptr(1:limit)
     _release_weak( self )
   end function
 
