@@ -52,7 +52,7 @@ program testinger
   print *, iachar(ds2)
   print *, ichar(ds2)
   print *, "#" // adjustr(ds2) // '#'
-  print *, "#" // adjustl(ds2) // '#' 
+  print *, "#" // adjustl(ds2) // '#'
   print *, "#" // adjustr(String('text')) // '#'
   print *, "#" // adjustl(String('       text ')) // '#' // String('usw')
 
@@ -107,7 +107,7 @@ program testinger
   !end if
   call free(gref)
 
-  print *, lge( buffer, achar(ds2) )
+  print *, lge( buffer, achar(ds2, size(buffer)) )
   print *, lge( ds2, 'abcdef' )
   print *, lge( ds2, 'abxdxf' )
 
