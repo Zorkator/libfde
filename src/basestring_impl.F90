@@ -264,7 +264,6 @@
     implicit none
     type(BaseString_t)                     :: bs
     character(len=*), optional, intent(in) :: cs
-    character(len=:),              pointer :: tgt
 
     if (present(cs)) then; bs%len = len(cs)
                      else; bs%len = 0
@@ -284,8 +283,16 @@
     ! update string buffer and content ...
     10  allocate( bs%ptr(bs%len) )
         _ref_setMine( bs%refstat, 1 )
-    20  call c_f_pointer( c_loc(bs%ptr(1)), tgt )
-        tgt(:bs%len) = cs
+    20  call assign_cs()
+
+    contains
+
+      subroutine assign_cs()
+        character(len=bs%len), pointer :: tgt
+        call c_f_pointer( c_loc(bs%ptr(1)), tgt )
+        tgt(:) = cs
+      end subroutine
+
   end subroutine
 
 
