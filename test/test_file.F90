@@ -25,7 +25,7 @@ contains
 
 end module
 
-program charstacking
+program testing
   use test_file 
 
   call test_open_close()
