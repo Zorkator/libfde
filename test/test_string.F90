@@ -1,7 +1,10 @@
 
+#include "fde/exception.fpp"
+
 program testinger
   use fde_string
   use fde_ref
+  use fde_exception
   implicit none
 
   type(String_t)          :: tmp
@@ -107,7 +110,10 @@ program testinger
   !end if
   call free(gref)
 
-  print *, lge( buffer, achar(ds2) )
+#define T .true.
+#define F .false.
+
+  _assert( all( lge( buffer, achar(ds2, size(buffer)) ) .eqv. [T,T,F,T,T,T,F,F,F,T] ) )
   print *, lge( ds2, 'abcdef' )
   print *, lge( ds2, 'abxdxf' )
 
