@@ -47,7 +47,7 @@
     end if
   end subroutine
 
-
+  
 !_PROC_EXPORT(basestring_init_by_buf)
 !_ARG_REFERENCE1(bs)
   subroutine basestring_init_by_buf( bs, attr, buf )
@@ -76,7 +76,7 @@
     implicit none
     type(BaseString_t)          :: bs
     integer(kind=1), intent(in) :: attr
-
+  
     _ref_setHard( bs%refstat, attr )
   end subroutine
 
@@ -87,7 +87,7 @@
     use fde_basestring, only: BaseString_t
     implicit none
     type(BaseString_t) :: bs
-
+  
     if (_ref_isWeakMine( bs%refstat )) &
       deallocate( bs%ptr )
   end subroutine
@@ -233,7 +233,7 @@
 
     bs%len = len_trim( basestring_ptr(bs) )
   end subroutine
-
+  
 
 !_PROC_EXPORT(basestring_reserve)
 !_ARG_REFERENCE1(bs)
@@ -244,7 +244,7 @@
     type(BaseString_t)             :: bs
     integer                        :: length
     character(len=length), pointer :: res
-
+    
     if (_ref_isWeakMine( bs%refstat )) then
       deallocate( bs%ptr )
       res => null()
@@ -255,7 +255,7 @@
     call c_f_pointer( c_loc(bs%ptr(1)), res )
   end function
 
-
+  
 !_PROC_EXPORT(basestring_assign_charstring_c)
 !_ARG_REFERENCE1(bs)
   subroutine basestring_assign_charstring_c( bs, cs )
@@ -330,7 +330,6 @@
     implicit none
     type(BaseString_t), intent(inout) :: lhs
     type(BaseString_t),    intent(in) :: rhs
-    character(len=:), pointer         :: rhs_ptr
 
     ! prevent self assignment ...
     if (.not. associated(lhs%ptr, rhs%ptr)) then
@@ -346,12 +345,7 @@
 
       ! assigning from hard rhs
       else
-        rhs_ptr => basestring_ptr(rhs)
-        if (associated(rhs_ptr)) then
-          call basestring_assign_charstring_c( lhs, rhs_ptr) !< use ptr function to get the right length!
-        else
-          call basestring_assign_charstring_c( lhs, "")
-        end if
+        call basestring_assign_charstring_c( lhs, basestring_ptr(rhs) ) !< use ptr function to get the right length!
       end if
     end if
   end subroutine
