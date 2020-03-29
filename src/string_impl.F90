@@ -136,7 +136,8 @@ end module
     integer                    :: limit
 
     limit = min(_len(self), length)
-    res(1:limit)  = self%str%ptr(1:limit)
+    res(1:limit) = self%str%ptr(1:limit)
+    res(limit+1:) = ' '
     _release_weak( self )
   end function
 
@@ -167,9 +168,8 @@ end module
 !_PROC_EXPORT(string_strip)
   function string_strip( self ) result(res)
     use impl_string__; implicit none
-    type(String_t)                     :: self
-    character(len=:),          pointer :: res
-    character(len=_len(self)), pointer :: tmp
+    type(String_t)            :: self
+    character(len=:), pointer :: res
     integer :: idx
 
     res => _safeptr( self )
