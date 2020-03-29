@@ -19,7 +19,7 @@ OUT_DIR          = release
 MAYOR           := 2.7.2
 CC_INCLUDE_DIRS := ./include ../include ./config
 CC_LIBRARIES     = dl
-CC_FLAGS.%       = $(cc_threads) $(cc_m)$(mk_ARCH)
+CC_FLAGS.%       = $(cc_threads) $(cc_m)$(mk_ARCH) $(cc_c++11)
 
 ifneq ($(MAKEIT_DIR),)
 include $(MAKEIT_DIR)/mk.c++
