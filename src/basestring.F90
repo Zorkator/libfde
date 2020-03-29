@@ -108,8 +108,8 @@ module fde_basestring
 
     subroutine basestring_assign_charstring_c( bs, cs )
       import BaseString_t
-      type(BaseString_t), intent(inout) :: bs
-      character(len=*),   intent(in)    :: cs
+      type(BaseString_t),      intent(inout) :: bs
+      character(len=*), optional, intent(in) :: cs
     end subroutine
 
     subroutine basestring_assign_buf( lhs, rhs )

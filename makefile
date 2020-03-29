@@ -26,7 +26,7 @@ FC_INCLUDE_DIRS := ./libfortres/include ./include
 SUBPACKAGES.%    = libfortres
 FC_LIBRARIES.%   = fortres.x$(mk_ARCH)
 
-FC_FLAGS.%        = $(fc_threads) $(fc_m)$(mk_ARCH)
+FC_FLAGS.%        = $(fc_threads) $(fc_m)$(mk_ARCH) $(fc_Wnointerfaces) #$(fc_Wall)
 FC_CFLAGS.%       = $(fc_fpp) $(call fc_form,free,none) $(fc_backtrace)
 FC_LFLAGS.%       = $(fl_dynamic)
 
