@@ -440,12 +440,19 @@ module fde_string
       type(String_t),                 intent(inout) :: lhs
       character(len=1), dimension(:), intent(in)    :: rhs
     end subroutine
+
+    subroutine string_assign_to_buf( lhs, rhs )
+      import String_t
+      character(len=1), dimension(:), intent(out) :: lhs
+      type(String_t),                 intent(in)  :: rhs
+    end subroutine
   end interface
 
 
   interface assignment(=)
     module procedure charstring_assign_string_private, string_assign_string_private
-    module procedure string_assign_charstring_private, string_assign_buf_private
+    module procedure string_assign_charstring_private
+    module procedure string_assign_buf_private, string_assign_to_buf_private
   end interface
 
 
@@ -672,6 +679,13 @@ module fde_string
   subroutine string_assign_buf_private( lhs, rhs )
     type(String_t),                 intent(inout) :: lhs
     character(len=1), dimension(:), intent(in)    :: rhs
+    call assign( lhs, rhs )
+  end subroutine
+
+!_PROC_EXPORT(string_assign_to_buf_private)
+  subroutine string_assign_to_buf_private( lhs, rhs )
+    character(len=1), dimension(:), intent(inout) :: lhs
+    type(String_t),                 intent(in)    :: rhs
     call assign( lhs, rhs )
   end subroutine
 
