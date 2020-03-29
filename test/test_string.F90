@@ -23,7 +23,8 @@ program testinger
   call set_attribute( tmp, attribute_permanent )
 
 # define _testStr   'test string'
-# define _shortStr  ' short '
+# define _shortStr  'short'
+# define _spacedStr '   text   '
 # define _longStr   'some long test string of more than ten characters ...'
 # define _frame(x)  '#' // x // '#'
 
@@ -68,47 +69,42 @@ program testinger
   _assert( (char(ds2,  5) // '#') == _testStr(:5) // '#' )
   _assert( (char(ds2, 20) // '#') == _testStr // repeat(' ', 20 - len(ds2)) // '#' )
 
-  ds2 = _shortStr
-  _assert( any(iachar(ds2) == [32, 115, 104, 111, 114, 116, 32]) )
-  _assert( any(iachar(ds2) == ichar(ds2)) )
-  _assert( _frame(adjustr(ds2)) == _frame(adjustr(_shortStr)) )
-  _assert( _frame(adjustl(ds2)) == _frame(adjustl(_shortStr)) )
+  ds2 = _spacedStr
+  _assert( all(iachar(ds2) == [32,32,32,116,101,120,116,32,32,32]) )
+  _assert( all(iachar(ds2) == ichar(ds2)) )
+  _assert( _frame(adjustr(ds2)) == _frame(adjustr(_spacedStr)) )
+  _assert( _frame(adjustl(ds2)) == _frame(adjustl(_spacedStr)) )
   _assert( _frame(adjustr(String('text'))) == _frame('text') )
   _assert( _frame(adjustl(String('      test '))) == _frame('test       ') )
 
-  print *, trim(ds2)//'<<'
-  print *, file_dirname( __FILE__ )
-  print *, file_basename( __FILE__ )
-  ds2 = __FILE__
-  print *, file_dirname( ds2 )
-  print *, file_basename( ds2 )
-  print *, file_dirname( string(__FILE__) )
-  print *, file_basename( string(__FILE__) )
-  print *, str( string(__FILE__) )
-  ds2 = ds2 // "                                       "
-  print *, trim(ds2)//'<<'
-  ds2 = ' testinger  '
-  print *, trim(ds2)//'<<'
-  ds2 = ''
-  print *, trim(ds2)//'<<'
-  print *, trim( string(' testinger     ') )//'<<'
-  ds2 = ''
-  print *, '>>'//strip(ds2)//'<<'
-  print *, strip( string('    testinger     ') )//'<<'
-  ds2 = ' testinger  '
-  print *, '>>'//strip(ds2)//'<<'
+  _assert( _frame(trim(ds2)) == _frame(trim(_spacedStr)) )
+  _assert( _frame(strip(ds2)) == _frame('text') )
 
-  ds2 = "abcdef"
+  ds2 = '     '
+  _assert( _frame(ds2) == '#     #' )
+  _assert( _frame(strip(ds2)) == _frame('') )
 
-  buffer = ' '
-  buffer(:len(ds2)) = achar(ds2)
+  ds2 = 'test/test_string.F90' !< can't use __FILE__, its' content is compiler dependent
+  _assert( str(ds2) == 'test/test_string.F90' )
+  _assert( file_dirname( ds2 ) == 'test/' )
+  _assert( file_basename( ds2 ) == 'test_string' )
+
+  ds2    = "abcdef"
+  buffer = ds2
+  _assert( all(buffer == transfer( 'abcdef    ', buffer )) )
+  buffer = 'x'
   buffer(:4) = achar(ds2, 4)
-  buffer = achar(ds2, 10)
-  print *, buffer
+  _assert( all(buffer == transfer( 'abcdxxxxxx', buffer )) )
+  buffer(:len(ds2)) = achar(ds2)
+  _assert( all(buffer == transfer( 'abcdefxxxx', buffer )) )
+  buffer = achar(ds2, size(buffer))
+  _assert( all(buffer == transfer( 'abcdef    ', buffer )) )
 
-  print *, str(String('testinger'))
-  ds2 = String( buffer ) // " appendix"
+  _assert( str(String('testinger')) == '' ) !< str-conversion of temporary-String
+  ds2 = String( buffer ) // ' appendix'
+  _assert( ds2 == 'abcdef     appendix' )
   ds2 = buffer
+  _assert( ds2 == 'abcdef    ' )
 
   !print *, cptr(ds2)
   strRef = ref_of(ds2)
