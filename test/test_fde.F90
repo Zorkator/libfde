@@ -687,7 +687,9 @@ subroutine test_dyncast()!{{{
   type(Ref_t)  :: ref_
   type(c_ptr)  :: cp
 
-  ref_ = ref_of(item_)
+  ref_  = ref_of(item_)
+  v_ref = ref_of(cp) !< set v_ref to something to make test work
+                     !< TODO: check if dynamic_cast could handle this!
 
 # define _chk_dyn_cast( typeId )                     ;\
   item_ = ref_of(_paste(v_,typeId))                  ;\

@@ -136,7 +136,7 @@ end module
     integer                    :: limit
 
     limit = min(_len(self), length)
-    res(1:limit) = self%str%ptr(1:limit)
+    res(1:limit)  = self%str%ptr(1:limit)
     res(limit+1:) = ' '
     _release_weak( self )
   end function
@@ -149,6 +149,19 @@ end module
     character(len=*), intent(out) :: lhs
     type(String_t),    intent(in) :: rhs
     lhs = _ptr(rhs)
+    _release_weak( rhs )
+  end subroutine
+
+!_PROC_EXPORT(string_assign_to_buf)
+  subroutine string_assign_to_buf( lhs, rhs )
+    use impl_string__; implicit none
+    character(len=1), dimension(:), intent(out) :: lhs
+    type(String_t),                 intent(in)  :: rhs
+    integer                                     :: limit
+
+    limit = min(_len(rhs), size(lhs))
+    lhs(1:limit)  = rhs%str%ptr(1:limit)
+    lhs(limit+1:) = ' '
     _release_weak( rhs )
   end subroutine
 
@@ -174,8 +187,8 @@ end module
 
     res => _safeptr( self )
     idx = verify( res, ' ' )
-    if (idx > 0) then
-      res => res( idx : len_trim(res) )
+    if (idx > 0) then; res => res( idx : len_trim(res) )
+                 else; res => res(:0)
     end if
   end function
 

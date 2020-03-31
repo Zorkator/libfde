@@ -22,76 +22,89 @@ program testinger
   call set_attribute( tmp, attribute_volatile )
   call set_attribute( tmp, attribute_permanent )
 
-  ds = String("test string")
-  print *, str(ds), len(ds)   !< print string and its length
-  print *, str(ds2), len(ds2) !< print null string and its length
+# define _testStr   'test string'
+# define _shortStr  'short'
+# define _spacedStr '   text   '
+# define _longStr   'some long test string of more than ten characters ...'
+# define _frame(x)  '#' // x // '#'
+
+# define _cmp(this,to)              \
+    _assert( str(this) == to )     ;\
+    _assert( len(this) == len(to) )
+
+
+  ds = String( _testStr )
+  _cmp( ds, _testStr )
+  _cmp( ds2, '' )             !< test null string
+
   ds2 = ds                    !< assignment to null string
-  ds2 = "short"               !< assignment of shorter character string (no re-allocation!)
-  print *, str(ds2), len(ds2) !< print shorter string from original buffer ...
+  ds2 = _shortStr             !< assignment of shorter character string (no re-allocation!)
+  _cmp( ds2, _shortStr )      !< shorter string from original buffer ...
+
   ds  = ds                    !< self assignment (no effect!)
+  _cmp( ds, _testStr )
+
   ds2 = ds3                   !< assign null string (cleared but no deallocation!)
-  print *, str(ds2), len(ds2) !< print cleared string and its length
+  _cmp( ds2, '' )             !< print cleared string and its length
+
   ds2 = ds // ds2             !< concat and reassign
+  _cmp( ds2, _testStr )
 
-  print *, str(ds2)
-  print *, char(ds2)
+  ! string concatenation ...
+  _assert( (ds2 // ' concat') == (_testStr // ' concat') )
+  _assert( ('prefix ' // ds2) == ('prefix ' // _testStr) )
+  _assert( (ds2 // ds2)       == (_testStr // _testStr) )
 
-  print *, ds2 // " concat"
-  print *, "prefix " // ds2
-  print *, ds2 // ds2
+  _assert( (ds3 .eq. String('foo'))              .eqv. .false. )
+  _assert( ('bar' == ds3)                        .eqv. .false. )
+  _assert( (ds2 // 'bla' .eq. String(char(ds3))) .eqv. .false. )
 
-  print *, ds3 .eq. String("foo")
-  print *, "bar" == ds3
-  print *, ds2 // 'bla' .eq. String(char(ds3))
 
-  ds2 = "some long test string of more than ten characters ..."
-  print *, char(ds2)
-  print *, char(ds2, 10)
+  ds2 = _longStr
+  _assert( char(ds2) == _longStr )
+  _assert( char(ds2, 10) == _longStr(:10) )
 
-  ds2 = "    short    "
-  print *, char(ds2)
-  print *, char(ds2, 5) // '#'
-  print *, char(ds2, 20) // '#'
-  print *, iachar(ds2)
-  print *, ichar(ds2)
-  print *, "#" // adjustr(ds2) // '#'
-  print *, "#" // adjustl(ds2) // '#' 
-  print *, "#" // adjustr(String('text')) // '#'
-  print *, "#" // adjustl(String('       text ')) // '#' // String('usw')
+  ds2 = _testStr
+  _assert( char(ds2) == _testStr )
+  _assert( (char(ds2,  5) // '#') == _testStr(:5) // '#' )
+  _assert( (char(ds2, 20) // '#') == _testStr // repeat(' ', 20 - len(ds2)) // '#' )
 
-  print *, trim(ds2)//'<<'
-  print *, file_dirname( __FILE__ )
-  print *, file_basename( __FILE__ )
-  ds2 = __FILE__
-  print *, file_dirname( ds2 )
-  print *, file_basename( ds2 )
-  print *, file_dirname( string(__FILE__) )
-  print *, file_basename( string(__FILE__) )
-  print *, str( string(__FILE__) )
-  ds2 = ds2 // "                                       "
-  print *, trim(ds2)//'<<'
-  ds2 = ' testinger  '
-  print *, trim(ds2)//'<<'
-  ds2 = ''
-  print *, trim(ds2)//'<<'
-  print *, trim( string(' testinger     ') )//'<<'
-  ds2 = ''
-  print *, '>>'//strip(ds2)//'<<'
-  print *, strip( string('    testinger     ') )//'<<'
-  ds2 = ' testinger  '
-  print *, '>>'//strip(ds2)//'<<'
+  ds2 = _spacedStr
+  _assert( all(iachar(ds2) == [32,32,32,116,101,120,116,32,32,32]) )
+  _assert( all(iachar(ds2) == ichar(ds2)) )
+  _assert( _frame(adjustr(ds2)) == _frame(adjustr(_spacedStr)) )
+  _assert( _frame(adjustl(ds2)) == _frame(adjustl(_spacedStr)) )
+  _assert( _frame(adjustr(String('text'))) == _frame('text') )
+  _assert( _frame(adjustl(String('      test '))) == _frame('test       ') )
 
-  ds2 = "abcdef"
+  _assert( _frame(trim(ds2)) == _frame(trim(_spacedStr)) )
+  _assert( _frame(strip(ds2)) == _frame('text') )
 
-  buffer = ' '
-  buffer(:len(ds2)) = achar(ds2)
+  ds2 = '     '
+  _assert( _frame(ds2) == '#     #' )
+  _assert( _frame(strip(ds2)) == _frame('') )
+
+  ds2 = 'test/test_string.F90' !< can't use __FILE__, its' content is compiler dependent
+  _assert( str(ds2) == 'test/test_string.F90' )
+  _assert( file_dirname( ds2 ) == 'test/' )
+  _assert( file_basename( ds2 ) == 'test_string' )
+
+  ds2    = "abcdef"
+  buffer = ds2
+  _assert( all(buffer == transfer( 'abcdef    ', buffer )) )
+  buffer = 'x'
   buffer(:4) = achar(ds2, 4)
-  buffer = achar(ds2, 10)
-  print *, buffer
+  _assert( all(buffer == transfer( 'abcdxxxxxx', buffer )) )
+  buffer(:len(ds2)) = achar(ds2)
+  _assert( all(buffer == transfer( 'abcdefxxxx', buffer )) )
+  buffer = achar(ds2, size(buffer))
+  _assert( all(buffer == transfer( 'abcdef    ', buffer )) )
 
-  print *, str(String('testinger'))
-  ds2 = String( buffer ) // " appendix"
+  _assert( str(String('testinger')) == '' ) !< str-conversion of temporary-String
+  ds2 = String( buffer ) // ' appendix'
+  _assert( ds2 == 'abcdef     appendix' )
   ds2 = buffer
+  _assert( ds2 == 'abcdef    ' )
 
   !print *, cptr(ds2)
   strRef = ref_of(ds2)
