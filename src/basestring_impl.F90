@@ -262,11 +262,13 @@
     use fde_basestring, only: BaseString_t
     use iso_c_binding
     implicit none
-    type(BaseString_t)              :: bs
-    character(len=*),    intent(in) :: cs
-    character(len=len(cs)), pointer :: tgt
+    type(BaseString_t)                     :: bs
+    character(len=*), optional, intent(in) :: cs
 
-    bs%len = len(cs)
+    if (present(cs)) then; bs%len = len(cs)
+                     else; bs%len = 0
+    end if
+
     if (bs%len == 0) return !< nothing to do
 
     if (_ref_isMine( bs%refstat )) then
@@ -281,8 +283,16 @@
     ! update string buffer and content ...
     10  allocate( bs%ptr(bs%len) )
         _ref_setMine( bs%refstat, 1 )
-    20  call c_f_pointer( c_loc(bs%ptr(1)), tgt )
-        tgt(:bs%len) = cs
+    20  call assign_cs()
+
+    contains
+
+      subroutine assign_cs()
+        character(len=bs%len), pointer :: tgt
+        call c_f_pointer( c_loc(bs%ptr(1)), tgt )
+        tgt(:) = cs
+      end subroutine
+
   end subroutine
 
 
@@ -316,7 +326,7 @@
 !_PROC_EXPORT(basestring_assign_basestring_c)
 !_ARG_REFERENCE2(lhs, rhs)
   subroutine basestring_assign_basestring_c( lhs, rhs )
-    use fde_basestring, only: BaseString_t, basestring_ptr
+    use fde_basestring, only: BaseString_t, basestring_ptr, basestring_assign_charstring_c
     implicit none
     type(BaseString_t), intent(inout) :: lhs
     type(BaseString_t),    intent(in) :: rhs

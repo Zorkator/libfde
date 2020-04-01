@@ -136,7 +136,7 @@ end module
     integer                    :: limit
 
     limit = min(_len(self), length)
-    res(1:limit) = self%str%ptr(1:limit)
+    res(1:limit)  = self%str%ptr(1:limit)
     res(limit+1:) = ' '
     _release_weak( self )
   end function
@@ -149,6 +149,19 @@ end module
     character(len=*), intent(out) :: lhs
     type(String_t),    intent(in) :: rhs
     lhs = _ptr(rhs)
+    _release_weak( rhs )
+  end subroutine
+
+!_PROC_EXPORT(string_assign_to_buf)
+  subroutine string_assign_to_buf( lhs, rhs )
+    use impl_string__; implicit none
+    character(len=1), dimension(:), intent(out) :: lhs
+    type(String_t),                 intent(in)  :: rhs
+    integer                                     :: limit
+
+    limit = min(_len(rhs), size(lhs))
+    lhs(1:limit)  = rhs%str%ptr(1:limit)
+    lhs(limit+1:) = ' '
     _release_weak( rhs )
   end subroutine
 
@@ -174,8 +187,8 @@ end module
 
     res => _safeptr( self )
     idx = verify( res, ' ' )
-    if (idx > 0) then
-      res => res( idx : len_trim(res) )
+    if (idx > 0) then; res => res( idx : len_trim(res) )
+                 else; res => res(:0)
     end if
   end function
 
@@ -741,30 +754,57 @@ end module
   end function
 
 
-!_PROC_EXPORT(string_file_basename_charstring)
-  function string_file_basename_charstring( filePath ) result(res)
+!_PROC_EXPORT(string_filename_charstring)
+  function string_filename_charstring( filePath, keepExt ) result(res)
     use impl_string__; implicit none
     character(len=*),  target :: filePath
+    logical,         optional :: keepExt
     character(len=:), pointer :: res
-    integer                   :: i,j
+    logical                   :: keepExt_
+    integer                   :: i,j, l
+
+    _optArg( keepExt_, keepExt, .true. )
+    l = len_trim( filePath )
     i = max( index( filePath, '/', back=.true. ), index( filePath, '\', back=.true. ) )
-    j = index( filePath, '.', back=.true. ) - 1
-    j = merge( j, -1, j > i )
-    j = modulo( j, len(filePath) + 1 )
+    if (keepExt_) then
+        j = l
+    else
+        j = index( filePath, '.', back=.true. ) - 1
+        j = merge( j, -1, j > i )
+        j = modulo( j, l + 1 )
+    end if
     res => filePath(i+1:j)
   end function
 
-!_PROC_EXPORT(string_file_basename_string)
-  function string_file_basename_string( filePath ) result(res)
+!_PROC_EXPORT(string_filename_string)
+  function string_filename_string( filePath, keepExt ) result(res)
     use impl_string__; implicit none
     type(String_t)            :: filePath
+    logical,         optional :: keepExt
     character(len=:), pointer :: res
-    res => file_basename( _safeptr(filePath) )
+    res => filename( _safeptr(filePath), keepExt )
   end function
 
 
-!_PROC_EXPORT(string_file_dirname_charstring)
-  function string_file_dirname_charstring( filePath ) result(res)
+!_PROC_EXPORT(string_basename_charstring)
+  function string_basename_charstring( filePath ) result(res)
+    use impl_string__; implicit none
+    character(len=*),  target :: filePath
+    character(len=:), pointer :: res
+    res => filename( filePath, .false. )
+  end function
+
+!_PROC_EXPORT(string_basename_string)
+  function string_basename_string( filePath ) result(res)
+    use impl_string__; implicit none
+    type(String_t)            :: filePath
+    character(len=:), pointer :: res
+    res => filename( _safeptr(filePath), .false. )
+  end function
+
+
+!_PROC_EXPORT(string_dirname_charstring)
+  function string_dirname_charstring( filePath ) result(res)
     use impl_string__; implicit none
     character(len=*),  target :: filePath
     character(len=:), pointer :: res
@@ -773,11 +813,11 @@ end module
     res => filePath(:i)
   end function
 
-!_PROC_EXPORT(string_file_dirname_string)
-  function string_file_dirname_string( filePath ) result(res)
+!_PROC_EXPORT(string_dirname_string)
+  function string_dirname_string( filePath ) result(res)
     use impl_string__; implicit none
     type(String_t)            :: filePath
     character(len=:), pointer :: res
-    res => file_dirname( _safeptr(filePath) )
+    res => dirname( _safeptr(filePath) )
   end function
 

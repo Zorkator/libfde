@@ -65,8 +65,9 @@ module fde_string
   public :: operator(>=)
 
   ! auxiliary functions
-  public :: file_basename
-  public :: file_dirname
+  public :: filename
+  public :: basename
+  public :: dirname
 
 
   ! interface definitions
@@ -440,12 +441,19 @@ module fde_string
       type(String_t),                 intent(inout) :: lhs
       character(len=1), dimension(:), intent(in)    :: rhs
     end subroutine
+
+    subroutine string_assign_to_buf( lhs, rhs )
+      import String_t
+      character(len=1), dimension(:), intent(out) :: lhs
+      type(String_t),                 intent(in)  :: rhs
+    end subroutine
   end interface
 
 
   interface assignment(=)
     module procedure charstring_assign_string_private, string_assign_string_private
-    module procedure string_assign_charstring_private, string_assign_buf_private
+    module procedure string_assign_charstring_private
+    module procedure string_assign_buf_private, string_assign_to_buf_private
   end interface
 
 
@@ -599,26 +607,41 @@ module fde_string
     end function
   end interface
 
-  interface file_basename
-    function string_file_basename_charstring( cs ) result(res)
+  interface filename
+    function string_filename_charstring( cs, keepExt ) result(res)
+      character(len=*), intent(in) :: cs
+      logical,            optional :: keepExt
+      character(len=:),    pointer :: res
+    end function
+
+    function string_filename_string( ds, keepExt ) result(res)
+      import String_t
+      type(String_t)               :: ds
+      logical,            optional :: keepExt
+      character(len=:),    pointer :: res
+    end function
+  end interface
+
+  interface basename
+    function string_basename_charstring( cs ) result(res)
       character(len=*), intent(in) :: cs
       character(len=:),    pointer :: res
     end function
 
-    function string_file_basename_string( ds ) result(res)
+    function string_basename_string( ds ) result(res)
       import String_t
       type(String_t)               :: ds
       character(len=:),    pointer :: res
     end function
   end interface
 
-  interface file_dirname
-    function string_file_dirname_charstring( cs ) result(res)
+  interface dirname
+    function string_dirname_charstring( cs ) result(res)
       character(len=*), intent(in) :: cs
       character(len=:),    pointer :: res
     end function
 
-    function string_file_dirname_string( ds ) result(res)
+    function string_dirname_string( ds ) result(res)
       import String_t
       type(String_t)               :: ds
       character(len=:),    pointer :: res
@@ -672,6 +695,13 @@ module fde_string
   subroutine string_assign_buf_private( lhs, rhs )
     type(String_t),                 intent(inout) :: lhs
     character(len=1), dimension(:), intent(in)    :: rhs
+    call assign( lhs, rhs )
+  end subroutine
+
+!_PROC_EXPORT(string_assign_to_buf_private)
+  subroutine string_assign_to_buf_private( lhs, rhs )
+    character(len=1), dimension(:), intent(inout) :: lhs
+    type(String_t),                 intent(in)    :: rhs
     call assign( lhs, rhs )
   end subroutine
 

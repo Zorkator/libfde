@@ -69,7 +69,7 @@
 # endif
 
 # define _file_scopeId() \
-    file_basename( __FILE__ )
+    basename( __FILE__ )
 
 # define _file_scope_in( parent ) \
     _get_scope( parent, _file_scopeId() )
