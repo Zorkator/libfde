@@ -1,18 +1,19 @@
 #ifndef __FDE_COMPAT_2_7_2_FPP
 #define __FDE_COMPAT_2_7_2_FPP
 
-! list of compatibility defines ...
-#define dirname         dirname_fde_compat_272_
-#define dirName         dirname_fde_compat_272_
-#define basename        basename_fde_compat_272_
-#define baseName        basename_fde_compat_272_
+#define _FDE_declare_future
+#include "fde/future.fpp"
 
+! list of compatibility defines ...
 #define file_basename   basename
 #define file_dirname    dirname
-
-
-
 ! ...
+
+#define _disarm_fde_clashes \
+    use fde_string, only:   \
+        _fde_from_future(filename) ,\
+        _fde_from_future(basename)
+
 
 ! Warn the user ....
 #warning #---------------------------------------------------------
@@ -20,6 +21,8 @@
 #warning # Please try to get rid of it by updating the following:
 #warning # >> file_basename  - renamed to ->  basename
 #warning # >> file_dirname   - renamed to ->  dirname
+#warning #
+#warning # >> Sorry for the name-clashes that might occur :-/
 #warning #---------------------------------------------------------
 
 #endif
