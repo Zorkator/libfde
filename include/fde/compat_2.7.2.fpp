@@ -3,7 +3,9 @@
 
 ! list of compatibility defines ...
 #define dirname         dirname_fde_compat_272_
+#define dirName         dirname_fde_compat_272_
 #define basename        basename_fde_compat_272_
+#define baseName        basename_fde_compat_272_
 
 #define file_basename   basename
 #define file_dirname    dirname
