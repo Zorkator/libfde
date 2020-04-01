@@ -7,7 +7,7 @@
     trim(adjustl(st))
 
 # define _this_file_basename() \
-    _strip(file_basename( __FILE__ ))
+    _strip(basename( __FILE__ ))
 
 
 ! The following definition might be changed by the native code using libfde.

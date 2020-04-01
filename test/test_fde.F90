@@ -1125,30 +1125,6 @@ subroutine test_hashmap_cloning()!{{{
 end subroutine!}}}
 
 
-subroutine test_file_string()!{{{
-  use fde_string
-  type(String_t) :: s
-
-  s = "c:\path/test/blub.f"
-  s = file_basename(s)
-  s = _this_file_basename()
-
-  print *, _this_file_basename()
-  print *, file_basename("\.testinger")
-  print *, file_basename("/.testinger\bla")
-  print *, file_basename(".testinger")
-  print *, file_basename("testinger.f90")
-  print *, file_basename("path\testinger.f90")
-  print *, file_basename("c:\path/testinger.f90")
-  print *, file_basename("path/testinger")
-  print *, file_basename("testinger")
-
-  print *, file_dirname("c:\path/testinger.f90")
-
-  call delete(s)
-end subroutine!}}}
-
-
 subroutine test_visitor()!{{{
   use test_basedata
 
@@ -1648,7 +1624,6 @@ program test_fde
     call test_usernode_list()
     call test_hashmap_nesting()
     call test_hashmap_cloning()
-    call test_file_string()
     call test_write_read()
     call test_ref_change()
 !    call test_pointer_bounds()
