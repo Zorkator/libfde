@@ -2,10 +2,15 @@
 #define __FDE_COMPAT_2_7_2_FPP
 
 ! list of compatibility defines ...
+#define dirname         dirname_fde_compat_272_
+#define basename        basename_fde_compat_272_
+
 #define file_basename   basename
 #define file_dirname    dirname
-! ...
 
+
+
+! ...
 
 ! Warn the user ....
 #warning #---------------------------------------------------------
