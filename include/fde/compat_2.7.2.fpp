@@ -4,16 +4,11 @@
 #define _FDE_declare_future
 #include "fde/future.fpp"
 
-! list of compatibility defines ...
-#define file_basename   basename
-#define file_dirname    dirname
-! ...
-
-#define _disarm_fde_clashes \
-    use fde_string, only:   \
+#define _fde_postpone_future \
+    use fde_string, only:    \
         _fde_from_future(filename) ,\
-        _fde_from_future(basename)
-
+        _fde_from_future(basename) ,\
+        _fde_from_future(dirname)
 
 ! Warn the user ....
 #warning #---------------------------------------------------------
@@ -22,7 +17,8 @@
 #warning # >> file_basename  - renamed to ->  basename
 #warning # >> file_dirname   - renamed to ->  dirname
 #warning #
-#warning # >> Sorry for the name-clashes that might occur :-/
+#warning # For now you can use the compatibility modules instead:
+#warning # >> use fde_string_compat_2_7_2
 #warning #---------------------------------------------------------
 
 #endif
