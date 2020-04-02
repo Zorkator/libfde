@@ -8,8 +8,10 @@
     trim(adjustl(st))
 
 # define _this_file_basename() \
-    _strip(_fde_future(basename)( __FILE__ ))
+    _fde_future(basename)( __FILE__ )
 
+# define _this_file_basename_stripped() \
+    _strip(_this_file_basename())
 
 ! The following definition might be changed by the native code using libfde.
 !  __sym2str__: a macro converting a symbol to a string.

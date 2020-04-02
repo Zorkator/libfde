@@ -2,7 +2,7 @@
 #define __FDE_SCOPE_FPP
 
 #include "fde/allocate.fpp"
-#include "fde/future.fpp"
+#include "fde/string.fpp"
 
 # define _get_scope( parent, scopeId ) \
     getScope( parent, _strip(scopeId) )
@@ -70,7 +70,7 @@
 # endif
 
 # define _file_scopeId() \
-    _fde_future(basename)( __FILE__ )
+    _this_file_basename()
 
 # define _file_scope_in( parent ) \
     _get_scope( parent, _file_scopeId() )
