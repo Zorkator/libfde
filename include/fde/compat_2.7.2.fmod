@@ -1,13 +1,21 @@
 #ifndef __FDE_COMPAT_2_7_2_FMOD
 #define __FDE_COMPAT_2_7_2_FMOD
 
-#include "fde/compat_2.7.2.fpp"
+#define __FDE_declare_future
+#include "fde/future.fpp"
+
+#undef fde_string
+
+#define _fde_postpone_future \
+    use fde_string, only:    \
+        _fde_mark_future(filename) ,\
+        _fde_mark_future(basename) ,\
+        _fde_mark_future(dirname)
 
 module fde_string_compat_2_7_2
     use fde_string
     _fde_postpone_future
 
-    ! __FDE_COMPAT_2_7_2_FPP
     interface file_basename
         function string_basename_charstring( cs ) result(res)
             character(len=*), intent(in) :: cs
@@ -34,6 +42,8 @@ module fde_string_compat_2_7_2
         end function
     end interface
 end module
+
+#include "fde/compat_2.7.2.fpp"
 
 #endif
 
