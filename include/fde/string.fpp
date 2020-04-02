@@ -2,13 +2,16 @@
 #define __FDE_STRING_FPP
 
 #include "fortres/ppUtil.xpp"
+#include "fde/future.fpp"
 
 # define _strip(st) \
     trim(adjustl(st))
 
 # define _this_file_basename() \
-    _strip(basename( __FILE__ ))
+    _fde_future(basename)( __FILE__ )
 
+# define _this_file_basename_stripped() \
+    _strip(_this_file_basename())
 
 ! The following definition might be changed by the native code using libfde.
 !  __sym2str__: a macro converting a symbol to a string.
