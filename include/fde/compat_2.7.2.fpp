@@ -1,8 +1,10 @@
 #ifndef __FDE_COMPAT_2_7_2_FPP
 #define __FDE_COMPAT_2_7_2_FPP
 
+! allow using future declarations ...
 #define __FDE_declare_future
 #include "fde/future.fpp"
+
 
 ! Warn the user ....
 # warning #---------------------------------------------------------
