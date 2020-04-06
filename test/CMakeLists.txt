@@ -1,4 +1,9 @@
+# Compiler flags
+cmi_Fortran_append(CMAKE_Fortran_FLAGS TRACEBACK)
 cmi_fortran_append(CMAKE_Fortran_FLAGS FPP)
+
+cmi_Fortran_append(CMAKE_Fortran_FLAGS_DEBUG TRAPUV)
+cmi_Fortran_append(CMAKE_Fortran_FLAGS_DEBUG CHECKALL)
 
 # fde input files for generator
 set(generate_files

@@ -5,7 +5,7 @@
 
 cmake_minimum_required(VERSION 3.8)
 
-set(CMI_TAG "acf4434df038488e316c3c1ec62ef6b4faf10885")
+set(CMI_TAG "364b54e0200459f446190a94d177d27317d9447b")
 
 get_property(CMI_LOADER_FILE GLOBAL PROPERTY CMI_LOADER_FILE)
 # First include
@@ -85,6 +85,9 @@ set(CMI_IDE_EXTERNALS "_externals" CACHE PATH "")
 mark_as_advanced(CMI_EXTERNALS_DIR)
 mark_as_advanced(CMI_IDE_PRESETS)
 mark_as_advanced(CMI_IDE_EXTERNALS)
+
+set_property(GLOBAL PROPERTY USE_FOLDERS ON)
+set_property(GLOBAL PROPERTY PREDEFINED_TARGETS_FOLDER "${CMI_IDE_PRESETS}")
 
 ######################################
 # HELPER FUNCTIONS
@@ -409,7 +412,7 @@ function(cmi_add_svn_ PROJECT_NAME_ PROJECT_URL_ PROJECT_REV_)
           file(REMOVE_RECURSE \"\${TMP_DIR}\")
         endif()
         execute_process(
-          COMMAND \"\${SVN_EXECUTABLE}\" \"checkout\" \"\${SVN_URL}@\${SVN_REV}\" \"\${TMP_DIR}\"
+          COMMAND \"\${SVN_EXECUTABLE}\" \"checkout\" \"--ignore-externals\" \"\${SVN_URL}@\${SVN_REV}\" \"\${TMP_DIR}\"
           RESULT_VARIABLE RESULT_
         )
         if(RESULT_ STREQUAL 0)
@@ -425,7 +428,7 @@ function(cmi_add_svn_ PROJECT_NAME_ PROJECT_URL_ PROJECT_REV_)
       foreach(try RANGE 2)
         message(STATUS \"Switch \${SVN_DIR} \${SVN_URL} \${SVN_REV}\")
         execute_process(
-          COMMAND \"\${SVN_EXECUTABLE}\" \"switch\" \"\${SVN_URL}@\${SVN_REV}\" \"\${SVN_DIR}\"
+          COMMAND \"\${SVN_EXECUTABLE}\" \"switch\" \"--ignore-externals\" \"\${SVN_URL}@\${SVN_REV}\" \"\${SVN_DIR}\"
           RESULT_VARIABLE RESULT_
         )
         if(RESULT_ STREQUAL 0)
@@ -554,18 +557,6 @@ function(cmi_disable_vs_debug_runtime)
   endif()
 endfunction()
 
-function(cmi_mingw_allow_multiple_defintion)
-  if(DEFINED CMAKE_Fortran_COMPILER_ID AND CMAKE_SYSTEM_NAME STREQUAL "Windows" AND CMAKE_Fortran_COMPILER_ID STREQUAL "GNU")
-    cmi_Fortran_append(FLAG_ MULTIPLEDEFINITION)
-    if(DEFINED CMAKE_Fortran_FLAGS)
-      string(FIND "${CMAKE_Fortran_FLAGS}" "${FLAG_}" STATUS_)
-      if("${STATUS_}" STREQUAL "-1")
-        set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} ${FLAG_}" PARENT_SCOPE)
-      endif()
-    endif()
-  endif()
-endfunction()
-
 
 ######################################
 # BUILD SETTINGS
@@ -581,20 +572,23 @@ macro(cmi_set_build_environment)
     cmake_policy(SET CMP0068 NEW)
   endif()
 
-
   set(CMI_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/package/$<CONFIG>" CACHE PATH "")
   set(CMI_BINARAY_OUTPUT_DIRECTORY "${CMI_OUTPUT_DIRECTORY}/bin" CACHE PATH "")
-  set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${CMI_BINARAY_OUTPUT_DIRECTORY}" CACHE INTERNAL "")
-  set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMI_BINARAY_OUTPUT_DIRECTORY}" CACHE INTERNAL "")
-  set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMI_BINARAY_OUTPUT_DIRECTORY}" CACHE INTERNAL "")
-
   mark_as_advanced(CMI_OUTPUT_DIRECTORY)
   mark_as_advanced(CMI_BINARAY_OUTPUT_DIRECTORY)
-  mark_as_advanced(CMAKE_ARCHIVE_OUTPUT_DIRECTORY)
-  mark_as_advanced(CMAKE_LIBRARY_OUTPUT_DIRECTORY)
-  mark_as_advanced(CMAKE_RUNTIME_OUTPUT_DIRECTORY)
 
-  set_property(GLOBAL PROPERTY PREDEFINED_TARGETS_FOLDER "${CMI_IDE_PRESETS}")
+  # Predefined target properties
+  set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${CMI_BINARAY_OUTPUT_DIRECTORY}")
+  set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMI_BINARAY_OUTPUT_DIRECTORY}")
+  set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMI_BINARAY_OUTPUT_DIRECTORY}")
+  set(CMAKE_BUILD_WITH_INSTALL_RPATH TRUE)
+  if(CMAKE_SYSTEM_NAME STREQUAL "Darwin")
+    set(CMAKE_INSTALL_RPATH "@loader_path")
+  else()
+    set(CMAKE_INSTALL_RPATH "$ORIGIN")
+  endif()
+  set(CMAKE_FOLDER "${PROJECT_NAME}")
+
 
   # Enabled testing by default
   option(BUILD_TESTING "" ON)
@@ -620,32 +614,38 @@ macro(cmi_set_build_environment)
 endmacro()
 
 function(cmi_set_directory TARGET_)
-  set(OPTIONS_ OUTPUT IDE)
+  set(OPTIONS_ "OUTPUT" "IDE")
   cmake_parse_arguments("" "" "${OPTIONS_}" "" ${ARGN})
 
-  if(NOT DEFINED _OUTPUT OR NOT IS_ABSOLUTE "${_OUTPUT}")
-    set(_OUTPUT "${CMI_BINARAY_OUTPUT_DIRECTORY}/${_OUTPUT}")
+  if(NOT TARGET ${TARGET_})
+    message(WARNING "Can not set directoy for unknown target ${TARGET_}")
+    return()
   endif()
 
-  get_filename_component(_OUTPUT "${_OUTPUT}" REALPATH)
-  get_filename_component(BINARY_DIR "${CMI_BINARAY_OUTPUT_DIRECTORY}" REALPATH)
-  file(RELATIVE_PATH PATH_TO_BIN "${_OUTPUT}" "${BINARY_DIR}")
-  if(TARGET ${TARGET_})
-    set_property(TARGET ${TARGET_} PROPERTY BUILD_WITH_INSTALL_RPATH TRUE)
-
-    if(CMAKE_SYSTEM_NAME STREQUAL "Darwin")
-      set_property(TARGET ${TARGET_} PROPERTY INSTALL_RPATH "@loader_path/${PATH_TO_BIN}")
-    else()
-      set_property(TARGET ${TARGET_} PROPERTY INSTALL_RPATH "$ORIGIN/${PATH_TO_BIN}")
+  if(DEFINED _OUTPUT)
+    if(NOT IS_ABSOLUTE "${_OUTPUT}")
+      set(_OUTPUT "${CMI_BINARAY_OUTPUT_DIRECTORY}/${_OUTPUT}")
+      #get_property(_OUTPUT TARGET ${TARGET_} PROPERTY RUNTIME_OUTPUT_DIRECTORY)
     endif()
-
+    file(RELATIVE_PATH PATH_TO_BIN "${_OUTPUT}" "${CMI_BINARAY_OUTPUT_DIRECTORY}")
     set_property(TARGET ${TARGET_} PROPERTY ARCHIVE_OUTPUT_DIRECTORY "${_OUTPUT}")
     set_property(TARGET ${TARGET_} PROPERTY LIBRARY_OUTPUT_DIRECTORY "${_OUTPUT}")
     set_property(TARGET ${TARGET_} PROPERTY RUNTIME_OUTPUT_DIRECTORY "${_OUTPUT}")
-    set_property(TARGET ${TARGET_} PROPERTY FOLDER "${PROJECT_NAME}/${_IDE}")
-    set_property(GLOBAL PROPERTY USE_FOLDERS ON)
-  else()
-    message(WARNING "Can not set directoy for unknown target ${TARGET_}")
+    set_property(TARGET ${TARGET_} PROPERTY BUILD_WITH_INSTALL_RPATH TRUE)
+    if(CMAKE_SYSTEM_NAME STREQUAL "Darwin")
+      set_property(TARGET ${TARGET_} APPEND PROPERTY INSTALL_RPATH "@loader_path/${PATH_TO_BIN}")
+    else()
+      set_property(TARGET ${TARGET_} APPEND PROPERTY INSTALL_RPATH "$ORIGIN/${PATH_TO_BIN}")
+    endif()
+  endif()
+
+  if(DEFINED _IDE)
+    string(REGEX REPLACE "^/" "" _IDE_NEW ${_IDE})
+    if(_IDE_NEW STREQUAL _IDE)
+      set_property(TARGET ${TARGET_} PROPERTY FOLDER "${PROJECT_NAME}/${_IDE}")
+    else()
+      set_property(TARGET ${TARGET_} PROPERTY FOLDER "${_IDE_NEW}")
+    endif()
   endif()
 endfunction()
 
@@ -657,8 +657,6 @@ function(cmi_copy TARGET_ SOURCE_ DESTINATION_)
     COMMAND ${CMAKE_COMMAND} -DFILE_PATTERN="${SOURCE_DIRECTORY_}/${SOURCE_NAME_WE_}*" -DDESTINATION="${DESTINATION_}" -P "${CMAKE_CURRENT_LIST_DIR}/cmi_copy.txt"
   )
 endfunction()
-
-
 
 
 ######################################
@@ -703,6 +701,22 @@ function(cmi_add_external_library LIB_NAME_ LIB_SOURCE_ LIB_DESTINATION_)
   cmi_set_directory(${LIB_NAME_}_import IDE "imports")
 endfunction()
 
+macro(cmi_include HEADER)
+  if("${HEADER}" STREQUAL "GenerateExportHeader")
+    # Generate export header
+    if(${CMAKE_VERSION} VERSION_LESS "3.12.0" AND NOT CMAKE_CXX_COMPILER)
+      message(STATUS "Applying GenerateExportHeader workaround for CMAKE < 3.12 - Enabling CXX")
+      message(STATUS "See: https://gitlab.kitware.com/cmake/cmake/merge_requests/1799")
+      check_language(CXX)
+      if(CMAKE_CXX_COMPILER)
+        enable_language(CXX)
+      else()
+        message(FATAL_ERROR "No CXX support")
+      endif()
+    endif()
+  endif()
+  include(${HEADER})
+endmacro()
 
 ######################################
 # FIND
@@ -713,150 +727,152 @@ endfunction()
 # Usage(Windows/Linux):
 # target_include_directories(mytarget PUBLIC "${MPI_INCLUDE}")
 # target_link_libraries(mytarget PUBLIC "${MPI_LIB}")
-# Setting up MPI
-macro(cmi_find_mpi)
-  if(MSVC)
-    # Don't use FindMPI when using MS Visual Studio
-    foreach(COMPILER_ IN ITEMS C CXX Fortran)
-      if(DEFINED CMAKE_${COMPILER_}_COMPILER)
-        if(MPI_${COMPILER_}_FOUND)
-          set(MPI_FOUND TRUE CACHE INTERNAL "")
-        else()
-          set(MPI_FOUND FALSE CACHE INTERNAL "")
-          break()
-        endif()
-      endif()
-    endforeach()
-    unset(COMPILER_)
 
-    if(NOT MPI_FOUND)
 
-      if(NOT DEFINED I_MPI_ROOT)
-        set(CMPI_ROOT "$ENV{I_MPI_ROOT}")
-      else()
-        set(CMPI_ROOT "${I_MPI_ROOT}")
-      endif()
 
-      if(NOT EXISTS "${CMPI_ROOT}")
-        message(STATUS " Folder does NOT exist: I_MPI_ROOT=${CMPI_ROOT}")
-      else()
-        set(MPI_INCLUDE "${CMPI_ROOT}/intel64/include" CACHE PATH "")
-        set(MPI_LIB "${CMPI_ROOT}/intel64/lib/release/impi.lib" CACHE PATH "")
-        set(MPIEXEC "${CMPI_ROOT}/intel64/bin/mpiexec.exe" CACHE PATH "")
-        mark_as_advanced(MPI_LIB)
-        mark_as_advanced(MPI_INCLUDE)
-        message(STATUS " I_MPI_ROOT: " "${CMPI_ROOT}")
+macro(check_mpi COMPONENT RESULT)
 
-        if(NOT EXISTS "${MPI_INCLUDE}")
-          message(STATUS " MPI_INCLUDE path does NOT exist: ${MPI_INCLUDE}")
-        else()
-          message(STATUS " MPI_INCLUDE: ${MPI_INCLUDE}")
+  set(MPI_C_TEST_CODE_
+    "#include<mpi.h>
+      int main(int argc, char **args) {
+        MPI_Init(&argc, &args);
+        MPI_Finalize();
+        return 0;
+    }"
+  )
+  set(MPI_F77_TEST_CODE_
+    "program main
+     implicit none
+     include \"mpif.h\"
+     end program"
+  )
+  set(MPI_F90_TEST_CODE_
+    "program main
+    use mpi
+    implicit none
+    end program"
+  )
 
-          if(NOT EXISTS "${MPI_LIB}")
-            message(STATUS " MPI_LIB path does not exist: ${MPI_LIB}")
-          else()
-            message(STATUS " MPI_LIB: ${MPI_LIB}")
+  if(${COMPONENT} STREQUAL "C")
+    enable_language(C)
+    include(CheckCCompilerFlag)
+    CHECK_C_SOURCE_COMPILES("${MPI_C_TEST_CODE_}" ${RESULT})
 
-            if(NOT EXISTS "${MPIEXEC}")
-              message(STATUS " MPIEXEC does not exist: ${MPIEXEC}")
-            else()
-              message(STATUS " MPIEXEC: ${MPIEXEC}")
+  elseif(${COMPONENT} STREQUAL "CXX")
+    enable_language(CXX)
+    include(CheckCXXCompilerFlag)
+    CHECK_CXX_SOURCE_COMPILES("${MPI_C_TEST_CODE_}" ${RESULT})
 
-              # Check C and CXX
-              if(CMAKE_C_COMPILER OR CMAKE_CXX_COMPILER)
-                if(NOT EXISTS "${MPI_INCLUDE}/mpi.h")
-                  message(STATUS " Could NOT find mpi.h file in: ${MPI_INCLUDE}")
-                else()
-                  if(CMAKE_C_COMPILER)
-                    set(MPI_C_FOUND TRUE CACHE INTERNAL "")
-                  endif()
-                  if(CMAKE_CXX_COMPILER)
-                    set(MPI_CXX_FOUND TRUE CACHE INTERNAL "")
-                  endif()
-                endif()
-              endif()
-
-              # Check Fortran
-              if(CMAKE_Fortran_COMPILER)
-                if(NOT EXISTS "${MPI_INCLUDE}/mpif.h")
-                  message(STATUS " Could NOT find mpif.h file in: ${MPI_INCLUDE}")
-                else()
-                  if(CMAKE_Fortran_COMPILER)
-                    set(MPI_Fortran_FOUND TRUE CACHE INTERNAL "")
-                  endif()
-                endif()
-              endif()
-
-            endif()
-          endif()
-        endif()
-
-      endif()
-
-      foreach(COMPILER_ IN ITEMS C CXX Fortran)
-        if(DEFINED CMAKE_${COMPILER_}_COMPILER)
-          if(MPI_${COMPILER_}_FOUND)
-            set(MPI_FOUND TRUE CACHE INTERNAL "")
-          else()
-            set(MPI_FOUND FALSE CACHE INTERNAL "")
-            message("Missing ${COMPILER_}")
-            break()
-          endif()
-        endif()
-      endforeach()
-      unset(COMPILER_)
-
-      if(DEFINED MPI_FOUND AND NOT MPI_FOUND)
-        message(WARNING " Make sure that IntelMPI SDK is installed and env var I_MPI_ROOT points to it. For example:\n"
-                        " I_MPI_ROOT=C:\\Program Files(x86)\\IntelSWTools\\compilers_and_libraries_2019.5.281\\windows\\mpi\\\n")
-      endif()
+  elseif(${COMPONENT} STREQUAL "F77" OR ${COMPONENT} STREQUAL "F90")
+    enable_language(Fortran)
+    include(CheckFortranCompilerFlag)
+    if(${COMPONENT} STREQUAL "F77")
+      CHECK_Fortran_SOURCE_COMPILES("${MPI_F77_TEST_CODE_}" ${RESULT} SRC_EXT F90)
+    elseif(${COMPONENT} STREQUAL "F90")
+      CHECK_Fortran_SOURCE_COMPILES("${MPI_F90_TEST_CODE_}" ${RESULT} SRC_EXT F90)
     endif()
+
   else()
-    if(DEFINED CMAKE_C_COMPILER)
-      set(MPI_C_COMPILER ${CMAKE_C_COMPILER} CACHE FILEPATH "")
-    endif()
-    if(DEFINED CMAKE_CXX_COMPILER)
-      set(MPI_CXX_COMPILER ${CMAKE_CXX_COMPILER} CACHE FILEPATH "")
-    endif()
-    if(DEFINED CMAKE_Fortran_COMPILER)
-      set(MPI_Fortran_COMPILER ${CMAKE_Fortran_COMPILER} CACHE FILEPATH "")
-    endif()
+    set(${RESULT} 0)
+  endif()
+endmacro()
 
-    find_package(MPI)
-    if(CMAKE_C_COMPILER)
-      if(NOT MPI_C_FOUND)
-        message(STATUS "C compiler ${CMAKE_C_COMPILER} has NO MPI support.\nTo enable support, provide MPI compiler wrapper explicitly e.g. 'CC=mpicc cmake', delete cache and rerun cmake.")
-      endif()
-    endif()
-    if(CMAKE_CXX_COMPILER)
-      if(NOT MPI_CXX_FOUND)
-        message(STATUS "CXX compiler ${CMAKE_CXX_COMPILER} has NO MPI support.\nTo enable support, provide MPI compiler wrapper explicitly e.g. 'CXX=mpicxx cmake', delete cache and rerun cmake.")
-      endif()
-    endif()
-    if(CMAKE_Fortran_COMPILER)
-      if(NOT MPI_Fortran_FOUND)
-        message(STATUS "Fortran compiler ${CMAKE_Fortran_COMPILER} has NO MPI support.\nTo enable support, provide MPI compiler warpper explicitly e.g. 'FC=mpifc cmake', delete cache and rerun cmake.")
-      endif()
-    endif()
-    set(MPI_INCLUDE "" CACHE PATH "")
-    set(MPI_LIB "" CACHE PATH "")
+
+# Setting up MPI
+function(cmi_find_mpi)
+  set(OPTIONS_ COMPONENTS)
+  cmake_parse_arguments("" "" "" "${OPTIONS_}" ${ARGN})
+  if(NOT DEFINED _COMPONENTS)
+    set(_COMPONENTS C CXX F77 F90)
   endif()
 
-  foreach(COMPILER_ IN ITEMS C CXX Fortran)
-    set(CMPI_${COMPILER_}_FOUND ${MPI_${COMPILER_}_FOUND})
-    if(MPI_${COMPILER_}_FOUND)
-      set(MPI_FOUND TRUE)
+
+  # Intel MPI
+  if(NOT I_MPI_ROOT)
+    set(I_MPI_ROOT "$ENV{I_MPI_ROOT}" CACHE PATH "")
+  endif()
+  if(I_MPI_ROOT AND CYGWIN)
+    message(STATUS "MPI: Intel MPI is not compatible with Cygwin!")
+  endif()
+
+  if(I_MPI_ROOT AND NOT CYGWIN)
+    set(VENDOR INTEL)
+
+    if(NOT CMI_MPI_ROOT STREQUAL I_MPI_ROOT)
+      unset(CMI_MPI_MISSING)
+      foreach(COMPONENT IN ITEMS _COMPONENTS)
+        unset(MPI_$[COMPONENT}_COMPILES CACHE)
+      endforeach()
+    endif()
+
+    # Handle MPI_LIB
+    set(MPI_EXEC "${I_MPI_ROOT}/intel64/bin/mpiexec")
+    find_library(MPI_LIB NAMES impi mpi PATHS "${I_MPI_ROOT}/intel64/lib/release/" NO_DEFAULT_PATH)
+    set(MPI_LIB ${MPI_LIB})
+    unset(MPI_LIB CACHE)
+    if(NOT MPI_LIB)
+      message(WARNING "MPI: Missing developer libraries. MPI SDK installed correctly?")
+    endif()
+
+    # Handle MPI_INCLUDE
+    set(MPI_INCLUDE "${I_MPI_ROOT}/intel64/include")
+    if(NOT EXISTS "${MPI_INCLUDE}")
+      message(WARNING "MPI: Missing include directoy - ${MPI_INCLUDE}")
+    else()
+      if(CMAKE_Fortran_COMPILER_ID STREQUAL "GNU")
+        FILE(GLOB versions RELATIVE "${MPI_INCLUDE}/gfortran/" "${MPI_INCLUDE}/gfortran/*")
+        set(TARGET_VERSION "${CMAKE_Fortran_COMPILER_VERSION}")
+        foreach(version IN LISTS versions)
+          if(NOT version VERSION_GREATER TARGET_VERSION)
+            if(version VERSION_GREATER CURRENT_VERSION)
+              set(CURRENT_VERSION ${version})
+            endif()
+          endif()
+        endforeach()
+        if(CURRENT_VERSION)
+          list(INSERT MPI_INCLUDE 0 "${MPI_INCLUDE}/gfortran/${CURRENT_VERSION}")
+        endif()
+      endif()
+    endif()
+  endif()
+
+  # Handle components
+  foreach(COMPONENT IN LISTS _COMPONENTS)
+    if(NOT TARGET CMI_MPI_${COMPONENT})
+      set(CMAKE_REQUIRED_INCLUDES ${MPI_INCLUDE})
+      set(CMAKE_REQUIRED_LIBRARIES ${MPI_LIB})
+      check_mpi(${COMPONENT} MPI_${COMPONENT}_COMPILES)
+      unset(CMAKE_REQUIRED_INCLUDES)
+      unset(CMAKE_REQUIRED_LIBRARIES)
+      if(MPI_${COMPONENT}_COMPILES)
+        add_library(CMI_MPI_${COMPONENT} INTERFACE)
+        set_property(TARGET CMI_MPI_${COMPONENT} PROPERTY INTERFACE_INCLUDE_DIRECTORIES "${MPI_INCLUDE}")
+        set_property(TARGET CMI_MPI_${COMPONENT} PROPERTY INTERFACE_LINK_LIBRARIES "${MPI_LIB}")
+        add_library(CMI::MPI_${COMPONENT} ALIAS CMI_MPI_${COMPONENT})
+      else()
+        unset(MPI_${COMPONENT}_COMPILES CACHE)
+        list(APPEND CMI_MPI_MISSING ${COMPONENT})
+      endif()
     endif()
   endforeach()
-  unset(COMPILER_)
+  if(NOT CMI_MPI_MISSING)
+    set(CMI_MPI_ROOT "${I_MPI_ROOT}" CACHE INTERNAL "")
+  else()
+    message(SEND_ERROR "MPI: Follow components not working: ${CMI_MPI_MISSING}")
+  endif()
 
-  unset(CMPI_ROOT)
-  unset(CMPI_FOUND)
-  unset(CMPI_C_FOUND)
-  unset(CMPI_CXX_FOUND)
-  unset(CMPI_Fortran_FOUND)
 
-endmacro()
+  # Set mpiexec from environment
+  if(NOT MPI_EXEC)
+    set(MPI_EXEC "$ENV{MPIEXEC}")
+  endif()
+  # Set mpiexec to default
+  if(NOT MPI_EXEC)
+    set(MPI_EXEC "mpiexec")
+  endif()
+  set(CMI_MPIEXEC "${MPI_EXEC}" CACHE INTERNAL "")
+
+endfunction()
 
 
 macro(cmi_find_python_interpreter_)
@@ -924,13 +940,13 @@ endmacro()
 function(cmi_find_omp)
   cmi_Fortran_append(OMP_FLAGS_ OMP)
   string(STRIP "${OMP_FLAGS_}" OMP_FLAGS_)
-  if(NOT TARGET cmi_OpenMP_Fortran)
-    add_library(cmi_OpenMP_Fortran INTERFACE)
-    set_property(TARGET cmi_OpenMP_Fortran PROPERTY INTERFACE_COMPILE_OPTIONS ${OMP_FLAGS_})
+  if(NOT TARGET CMI_OpenMP_Fortran)
+    add_library(CMI_OpenMP_Fortran INTERFACE)
+    set_property(TARGET CMI_OpenMP_Fortran PROPERTY INTERFACE_COMPILE_OPTIONS ${OMP_FLAGS_})
     if(NOT MSVC)
-      target_link_libraries(cmi_OpenMP_Fortran INTERFACE ${OMP_FLAGS_})
+      target_link_libraries(CMI_OpenMP_Fortran INTERFACE ${OMP_FLAGS_})
     endif()
-    target_compile_definitions(cmi_OpenMP_Fortran INTERFACE _OMP)
-    add_library(cmi::OpenMP_Fortran ALIAS cmi_OpenMP_Fortran)
+    target_compile_definitions(CMI_OpenMP_Fortran INTERFACE _OMP)
+    add_library(CMI::OpenMP_Fortran ALIAS CMI_OpenMP_Fortran)
   endif()
 endfunction()
