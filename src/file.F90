@@ -36,16 +36,17 @@ module fde_file
 
    private :: fopen_bool_, fopen_autounit_
 
-   character(12), private, target :: form_opts(3)     = ['FORMATTED  ', 'UNFORMATTED', 'BINARY     ']
-   character(12), private, target :: status_opts(5)   = ['UNKNOWN    ', 'NEW        ', 'REPLACE    ', 'SCRATCH    ', 'OLD        ']
-   character(12), private, target :: action_opts(3)   = ['READWRITE  ', 'READ       ', 'WRITE      ']
-   character(12), private, target :: access_opts(3)   = ['SEQUENTIAL ', 'DIRECT     ', 'TRANSPARENT']
-   character(12), private, target :: position_opts(3) = ['ASIS       ', 'REWIND     ', 'APPEND     ']
-   character(12), private, target :: descr_opts(1)    = ['file']
+   character(13), private, target :: form_opts(3)     = ['FORMATTED    ', 'UNFORMATTED  ', 'BINARY       ']
+   character(13), private, target :: status_opts(5)   = ['UNKNOWN      ', 'NEW          ', 'REPLACE      ', 'SCRATCH      ', 'OLD          ']
+   character(13), private, target :: action_opts(3)   = ['READWRITE    ', 'READ         ', 'WRITE        ']
+   character(13), private, target :: access_opts(3)   = ['SEQUENTIAL   ', 'DIRECT       ', 'TRANSPARENT  ']
+   character(13), private, target :: position_opts(3) = ['ASIS         ', 'REWIND       ', 'APPEND       ']
+   character(13), private, target :: convert_opts(3)  = ['NATIVE       ', 'LITTLE_ENDIAN', 'BIG_ENDIAN   '] !< non-portable options omitted!
+   character(13), private, target :: descr_opts(1)    = ['file']
 
    character(16), private, target :: errBase_opts(2)  = ['opening         ', 'refuse reopening']
 
-#  define _open_kwArgs_list    form, status, action, access, position, descr
+#  define _open_kwArgs_list    form, status, action, access, position, convert, descr
 
 contains
 
@@ -172,7 +173,7 @@ contains
       integer,          optional,         intent(out) :: iostat
       integer                                         :: iostat_
       character(len=512)                              :: buffer
-      character(:),                           pointer :: access_, action_, form_, position_, status_, descr_, errBase_
+      character(:),                           pointer :: access_, action_, form_, position_, convert_, status_, descr_, errBase_
 
       ! Set pointer to either given string argument or the default string ...
       _optArgPtr( access_,   access,   access_opts(1) )
@@ -181,6 +182,7 @@ contains
       !          Thus, for FORM we use the same index where we find the chosen ACCESS in access_opts
       _optArgPtr( form_,     form,     form_opts( indexOf(upper(access_), access_opts, 1) ) )
       _optArgPtr( position_, position, position_opts(1) )
+      _optArgPtr( convert_,  convert,  convert_opts(1) )
       _optArgPtr( status_,   status,   status_opts(1) )
       _optArgPtr( descr_,    descr,    descr_opts(1) )
 
@@ -190,7 +192,7 @@ contains
       else
          errBase_ => errBase_opts(1)
 
-#        define _open_kwArgs_pass   access=access_, action=action_, form=form_, position=position_, status=status_
+#        define _open_kwArgs_pass   access=access_, action=action_, form=form_, position=position_, convert=convert_, status=status_
 
          if (upper(status_) == 'SCRATCH') then
             if (present(recl)) then; open( unit,            _open_kwArgs_pass, recl=recl, iostat=iostat_, err=10 )
