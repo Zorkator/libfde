@@ -1467,7 +1467,7 @@ module debug
   contains
 
   subroutine test_ref_change()
-    allocate( buffer(10) )
+    allocate( buffer(20) )
 
     buf_ptr(1:15) => buffer
 
