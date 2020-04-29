@@ -25,8 +25,7 @@ module impl_typeinfo__
     type(void_t)     :: wrap
     type(TypeInfo_t) :: ti
     type(ostream_t)  :: outs
-
-    call stream( outs, trim(ti%typeId) // ' @ ' // address_str(c_loc(wrap%ptr)) )
+    ! do nothing - we can't stream void!
   end subroutine
 
 end module
