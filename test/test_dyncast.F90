@@ -17,13 +17,23 @@ module test_dyncast
 
   contains
   
+  function nullRef()
+    type(Ref_t), pointer :: nullRef
+    nullRef => null()
+  end function
+
+  function nullItem()
+    type(Item_t), pointer :: nullItem
+    nullItem => null()
+  end function
+
   subroutine test_content_type()
     ref_ptr  => null()
     item_ptr => null()
-    ti => content_type(ref_)     ; _assert(ti%typeid == 'void')
-    ti => content_type(ref_ptr)  ; _assert(ti%typeid == 'void')
-    ti => content_type(item_)    ; _assert(ti%typeid == 'void')
-    ti => content_type(item_ptr) ; _assert(ti%typeid == 'void')
+    ti => content_type(ref_)       ; _assert(ti%typeid == 'void')
+    ti => content_type(nullRef())  ; _assert(ti%typeid == 'void')
+    ti => content_type(item_)      ; _assert(ti%typeid == 'void')
+    ti => content_type(nullItem()) ; _assert(ti%typeid == 'void')
 
     item_ptr => item_
     ti => content_type(item_ptr) ; _assert(ti%typeid == 'void')
@@ -32,8 +42,7 @@ module test_dyncast
 
     print *, "test_content_type: ok"
   end subroutine
-
-
+    
   subroutine test_dynamic_cast()
     real*8             :: rval = 1.23
     real*8,    pointer :: rptr
@@ -41,14 +50,15 @@ module test_dyncast
     integer*4, pointer :: ptr
 
     item_ = 42        ; _assert( dynamic_cast( ptr, item_ ) )
-    item_ = 4.2       ; _assert( .not. dynamic_cast( ptr, item_ )    .and. .not. associated(ptr) )
-    item_ptr => null(); _assert( .not. dynamic_cast( ptr, item_ptr ) .and. .not. associated(ptr) )
+    item_ = 4.2       ; _assert( .not. dynamic_cast( ptr, item_ )      .and. .not. associated(ptr) )
+    item_ptr => null(); _assert( .not. dynamic_cast( ptr, nullItem() ) .and. .not. associated(ptr) )
 
-    ref_ptr  => null() ; _assert( .not. dynamic_cast( ptr, ref_ptr ) .and. .not. associated(ptr) )
-    ref_ = ref_of(val) ; _assert( dynamic_cast( ptr, ref_ )          .and.       ptr == 42 )
-    ref_ = ref_of(rval); _assert( .not. dynamic_cast( ptr, ref_ )    .and. .not. associated(ptr) )
-    ref_ptr  => ref_   ; _assert( .not. dynamic_cast( ptr, ref_ptr ) .and. .not. associated(ptr) )
-    continue           ; _assert( dynamic_cast( rptr, ref_ptr )      .and.       rptr == 1.23 )
+    ref_ptr  => null() ; _assert( .not. dynamic_cast( ptr, nullRef() ) .and. .not. associated(ptr) )
+    ref_ = ref_of(val) ; _assert( dynamic_cast( ptr, ref_ )            .and.       ptr == 42 )
+    ref_ = ref_of(rval); _assert( .not. dynamic_cast( ptr, ref_ )      .and. .not. associated(ptr) )
+    ref_ptr  => ref_   ; _assert( .not. dynamic_cast( ptr, ref_ptr )   .and. .not. associated(ptr) )
+    continue           ; _assert( dynamic_cast( rptr, ref_ptr )        .and.       rptr == 1.23 )
+    item_ = ref_       ; _assert( dynamic_cast( rptr, item_ )          .and.       rptr == rval )
 
     print *, "test_dynamic_cast: ok"
   end subroutine
