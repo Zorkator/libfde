@@ -17,23 +17,13 @@ module test_dyncast
 
   contains
   
-  function nullRef()
-    type(Ref_t), pointer :: nullRef
-    nullRef => null()
-  end function
-
-  function nullItem()
-    type(Item_t), pointer :: nullItem
-    nullItem => null()
-  end function
-
   subroutine test_content_type()
     ref_ptr  => null()
     item_ptr => null()
-    ti => content_type(ref_)       ; _assert(ti%typeid == 'void')
-    ti => content_type(nullRef())  ; _assert(ti%typeid == 'void')
-    ti => content_type(item_)      ; _assert(ti%typeid == 'void')
-    ti => content_type(nullItem()) ; _assert(ti%typeid == 'void')
+    ti => content_type(ref_)     ; _assert(ti%typeid == 'void')
+    ti => content_type(ref_ptr)  ; _assert(ti%typeid == 'void')
+    ti => content_type(item_)    ; _assert(ti%typeid == 'void')
+    ti => content_type(item_ptr) ; _assert(ti%typeid == 'void')
 
     item_ptr => item_
     ti => content_type(item_ptr) ; _assert(ti%typeid == 'void')
@@ -42,7 +32,8 @@ module test_dyncast
 
     print *, "test_content_type: ok"
   end subroutine
-    
+
+
   subroutine test_dynamic_cast()
     real*8             :: rval = 1.23
     real*8,    pointer :: rptr
