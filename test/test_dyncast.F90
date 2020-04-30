@@ -50,15 +50,15 @@ module test_dyncast
     integer*4, pointer :: ptr
 
     item_ = 42        ; _assert( dynamic_cast( ptr, item_ ) )
-    item_ = 4.2       ; _assert( .not. dynamic_cast( ptr, item_ )      .and. .not. associated(ptr) )
-    item_ptr => null(); _assert( .not. dynamic_cast( ptr, nullItem() ) .and. .not. associated(ptr) )
+    item_ = 4.2       ; _assert( .not. dynamic_cast( ptr, item_ )    .and. .not. associated(ptr) )
+    item_ptr => null(); _assert( .not. dynamic_cast( ptr, item_ptr ) .and. .not. associated(ptr) )
 
-    ref_ptr  => null() ; _assert( .not. dynamic_cast( ptr, nullRef() ) .and. .not. associated(ptr) )
-    ref_ = ref_of(val) ; _assert( dynamic_cast( ptr, ref_ )            .and.       ptr == 42 )
-    ref_ = ref_of(rval); _assert( .not. dynamic_cast( ptr, ref_ )      .and. .not. associated(ptr) )
-    ref_ptr  => ref_   ; _assert( .not. dynamic_cast( ptr, ref_ptr )   .and. .not. associated(ptr) )
-    continue           ; _assert( dynamic_cast( rptr, ref_ptr )        .and.       rptr == 1.23 )
-    item_ = ref_       ; _assert( dynamic_cast( rptr, item_ )          .and.       rptr == rval )
+    ref_ptr  => null() ; _assert( .not. dynamic_cast( ptr, ref_ptr ) .and. .not. associated(ptr) )
+    ref_ = ref_of(val) ; _assert( dynamic_cast( ptr, ref_ )          .and.       ptr == 42 )
+    ref_ = ref_of(rval); _assert( .not. dynamic_cast( ptr, ref_ )    .and. .not. associated(ptr) )
+    ref_ptr  => ref_   ; _assert( .not. dynamic_cast( ptr, ref_ptr ) .and. .not. associated(ptr) )
+    continue           ; _assert( dynamic_cast( rptr, ref_ptr )      .and.       rptr == 1.23 )
+    item_ = ref_       ; _assert( dynamic_cast( rptr, item_ )        .and.       rptr == rval )
 
     print *, "test_dynamic_cast: ok"
   end subroutine

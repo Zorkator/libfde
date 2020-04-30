@@ -513,7 +513,7 @@ class RefType(TypeSpec):
     function {typeId}_dynamic_cast_r_( tgt, self ) result(res)
       use iso_c_binding
       {baseType}{dimSpec}, pointer, intent(out) :: tgt
-      type(Ref_t),                  intent(in)  :: self
+      type(Ref_t), pointer,         intent(in)  :: self
       type(c_ptr)                               :: cp
 
       interface
@@ -543,7 +543,7 @@ class RefType(TypeSpec):
     function {typeId}_dynamic_cast_i_( tgt, self ) result(res)
       use iso_c_binding
       {baseType}{dimSpec}, pointer, intent(out) :: tgt
-      type(Item_t),                 intent(in)  :: self
+      type(Item_t), pointer,        intent(in)  :: self
       type(c_ptr)                               :: cp
 
       interface
