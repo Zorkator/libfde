@@ -39,8 +39,8 @@ module impl_item__
 
     function item_content_type( self ) result(res)
       import Item_i, TypeInfo_t
-      type(Item_i),  intent(in) :: self
-      type(TypeInfo_t), pointer :: res
+      type(Item_i),     pointer, intent(in) :: self
+      type(TypeInfo_t), pointer             :: res
     end function
 
     function item_get_ref( self ) result(res)
@@ -131,33 +131,27 @@ end module
 
 !_PROC_EXPORT(item_content_type)
   function item_content_type( self ) result(res)
-    ! NOTE: in contrast to the interface argument self is declared optional here!
-    !       This is because we need to handle null pointers here, while we do not allow
-    !         calling content_type with self actually missing!
     use impl_item__, only: Item_i, TypeInfo_t, void_type
     implicit none
-    type(Item_i), optional, intent(in) :: self
-    type(TypeInfo_t),          pointer :: res
+    type(Item_i),     pointer, intent(in) :: self
+    type(TypeInfo_t), pointer             :: res
 
     res => null()
-    if (present(self))         res => self%typeInfo
+    if (associated(self))      res => self%typeInfo
     if (.not. associated(res)) res => void_type()
   end function
 
 
 !_PROC_EXPORT(item_content_type_c)
   subroutine item_content_type_c( res, self )
-    ! NOTE: in contrast to the interface argument self is declared optional here!
-    !       This is because we need to handle null pointers here, while we do not allow
-    !         calling content_type with self actually missing!
     use impl_item__
     implicit none
-    type(TypeSpecs_t),      intent(inout) :: res
-    type(Item_i), optional, intent(in)    :: self
-    type(TypeInfo_t),             pointer :: ptr
+    type(TypeSpecs_t),         intent(inout) :: res
+    type(Item_i),     pointer, intent(in)    :: self
+    type(TypeInfo_t), pointer                :: ptr
 
     ptr => null()
-    if (present(self))         ptr => self%typeInfo
+    if (associated(self))      ptr => self%typeInfo
     if (.not. associated(ptr)) ptr => void_type()
     res = ptr%typeSpecs
   end subroutine
@@ -165,13 +159,10 @@ end module
 
 !_PROC_EXPORT(item_dynamic_type)
   function item_dynamic_type( self ) result(res)
-    ! NOTE: in contrast to the interface argument self is declared optional here!
-    !       This is because we need to handle null pointers here, while we do not allow
-    !         calling dynamic_type with self actually missing!
     use impl_item__, only: Ref_t, Item_i, TypeInfo_t
     implicit none
-    type(Item_i), optional, intent(in) :: self
-    type(TypeInfo_t),          pointer :: res
+    type(Item_i),     pointer, intent(in) :: self
+    type(TypeInfo_t), pointer             :: res
 
     interface
       function item_resolve_type( ref, item ) result(ti)
@@ -191,7 +182,7 @@ end module
     use impl_item__
     implicit none
     type(Item_i) :: self
-    
+
     if (associated( self%typeInfo )) then
       if (associated( self%typeInfo%deleteProc )) &
         call self%typeInfo%deleteProc( self%data )
@@ -342,7 +333,7 @@ end module
     implicit none
     type(Item_i), target, intent(in) :: self
     type(MemoryRef_t), intent(inout) :: res
-    
+
     if (associated( self%typeInfo )) then
       res%loc = c_loc(self%data(1))
       res%len = self%typeInfo%typeSpecs%byteSize
@@ -413,7 +404,7 @@ end module
     call assign( ptr, rhs )
   end subroutine
 
-  
+
 !_PROC_EXPORT(item_assign_refencoding_)
   subroutine item_assign_refencoding_( lhs, rhs )
     use impl_item__
@@ -458,7 +449,7 @@ end module
   function auto_assignable_( src, lhsPtr, lhsType, rhs ) result(res)
     use impl_item__, only: c_ptr, TypeInfo_t, Item_i, Ref_t, item_content_type, item_get_ref, user_assignment_ &
                          , temporary_ref, type_of, content_type, ref, cptr, c_loc
-    implicit none          
+    implicit none
     type(c_ptr),  intent(out) :: src
     type(c_ptr)               :: lhsPtr
     type(TypeInfo_t), pointer :: lhsType, rhsType, refType
@@ -466,7 +457,7 @@ end module
     type(Ref_t),      pointer :: refPtr
     integer,        parameter :: stdout = 6
     integer                   :: stat
-  
+
     rhsType => item_content_type(rhs)
     res     =  associated( lhsType, rhsType )
     if (res) then
@@ -488,7 +479,7 @@ end module
         src = cptr(refPtr)
         res = associated( lhsType, rhsType )
       end if
-    
+
       ! types don't match ...
       if (.not. res) then
         ! try user-assignment or write error to stdout
@@ -666,7 +657,7 @@ end module
     type(TypeInfo_t), pointer :: ti
     type(void_t)              :: dataWrap
     character(len=32)         :: buff
-    
+
     ti => item_content_type(wrap%ptr)
     call c_f_pointer( c_loc(wrap%ptr%data), dataWrap%ptr )
     call ti%streamProc( dataWrap, ti, outs )
@@ -716,8 +707,8 @@ end module
 
     recursive &
     subroutine visit_ref( r )
-      type(Ref_t) :: r
-      
+      type(Ref_t), target :: r
+
       dt => content_type( r )
       if (associated( dt, ti )) then
         ctgt = ref_get_typereference( r )
@@ -732,7 +723,7 @@ end module
 
     recursive &
     subroutine visit_item( i )
-      type(Item_t) :: i
+      type(Item_t), target :: i
 
       dt => content_type( i )
       if (associated( dt, ti )) then
@@ -770,7 +761,7 @@ end module
 
     recursive &
     subroutine visit_ref( r )
-      type(Ref_t) :: r
+      type(Ref_t), target :: r
 
       res => content_type( r )
       if     (associated( res, refType ))  then; call visit_ref( ref(r) )
@@ -780,7 +771,7 @@ end module
 
     recursive &
     subroutine visit_item( i )
-      type(Item_t) :: i
+      type(Item_t), target :: i
 
       res => content_type( i )
       if (associated( res, refType )) then; call visit_ref( ref(i) )

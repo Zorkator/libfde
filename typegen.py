@@ -480,7 +480,14 @@ class RefType(TypeSpec):
     function {typeId}_in_ref_( self ) result(res)
       type(Ref_t), intent(in) :: self
       logical                 :: res
-      res = associated( content_type(self), type_{typeId} )
+      call as_target_( self )
+
+      contains
+
+      subroutine as_target_( ref )
+        type(Ref_t), target :: ref
+        res = associated( content_type(ref), type_{typeId} )
+      end subroutine
     end function
     """,
 

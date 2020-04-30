@@ -589,8 +589,8 @@ end subroutine!}}}
 subroutine test_dyntype()!{{{
   use test_basedata
   implicit none
-  type(Item_t)              :: item_
-  type(Ref_t)               :: ref_
+  type(Item_t), target :: item_
+  type(Ref_t),  target :: ref_
   type(TypeInfo_t), pointer :: ti1, ti2
 
   ref_ = ref_of( item_ )
@@ -683,9 +683,9 @@ end subroutine!}}}
 subroutine test_dyncast()!{{{
   use test_basedata
   implicit none
-  type(Item_t) :: item_
-  type(Ref_t)  :: ref_
-  type(c_ptr)  :: cp
+  type(Item_t), target :: item_
+  type(Ref_t),  target :: ref_
+  type(c_ptr)          :: cp
 
   ref_  = ref_of(item_)
   v_ref = ref_of(cp) !< set v_ref to something to make test work
@@ -994,7 +994,7 @@ subroutine test_hashmap_nesting()!{{{
   implicit none
 
   type(HashMap_t), pointer :: scope => null()
-  type(Ref_t)              :: ref1
+  type(Ref_t),      target :: ref1
   integer                  :: i
   character(len=10)        :: buff
   real*8, dimension(:), pointer :: r_array
@@ -1064,7 +1064,13 @@ subroutine test_hashmap_nesting()!{{{
   function item_hit( item ) result(res)
     type(Item_t)             :: item
     type(HashMap_t), pointer :: ptr
-    res = dynamic_cast( ptr, item )
+    res = dynamic_cast( ptr, mk_item_ptr(item) )
+  end function
+
+  function mk_item_ptr( item ) result(res)
+    type(Item_t), target  :: item
+    type(Item_t), pointer :: res
+    res => item
   end function
 end subroutine!}}}
 
@@ -1354,7 +1360,7 @@ module pointer_remapping
   subroutine test_pointer_bounds()
     real*4, dimension(:,:,:), pointer :: ptr
     real*4, dimension(:,:),   pointer :: ptr2
-    type(Ref_t)                       :: m_ref, m_ref2
+    type(Ref_t),              target  :: m_ref, m_ref2
 
     _REALLOCATE_visible( v_hashmap, matrix, (-5:-2,8:10,3:4) )
 
@@ -1460,7 +1466,7 @@ module debug
   use fde_item
   use fde_basetypes
 
-  type(Item_t)       :: it
+  type(Item_t), target :: it
   integer, dimension(:), allocatable, target :: buffer
   integer, dimension(:), pointer             :: buf_ptr, other_ptr
 

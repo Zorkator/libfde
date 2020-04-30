@@ -123,8 +123,8 @@ module fde_ref
   interface content_type
     function ref_content_type( self ) result(res)
       import Ref_t, TypeInfo_t
-      type(Ref_t),   intent(in) :: self
-      type(TypeInfo_t), pointer :: res
+      type(Ref_t),      pointer, intent(in) :: self
+      type(TypeInfo_t), pointer             :: res
     end function
   end interface
 
@@ -132,8 +132,8 @@ module fde_ref
   interface dynamic_type
     function ref_dynamic_type( self ) result(res)
       import Ref_t, TypeInfo_t
-      type(Ref_t),   intent(in) :: self
-      type(TypeInfo_t), pointer :: res
+      type(Ref_t),      pointer, intent(in) :: self
+      type(TypeInfo_t), pointer             :: res
     end function
   end interface
 

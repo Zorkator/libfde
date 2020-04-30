@@ -79,8 +79,8 @@ module impl_ref__
 
     function ref_content_type( self ) result(res)
       import Ref_t, TypeInfo_t
-      type(Ref_t), intent(in) :: self
-      type(TypeInfo_t), pointer :: res
+      type(Ref_t),      pointer, intent(in) :: self
+      type(TypeInfo_t), pointer             :: res
     end function
 
     subroutine ref_set_attribute_c( self, attrib )
@@ -126,7 +126,7 @@ end module
     type(Ref_t), intent(inout) :: self
     integer,     intent(in)    :: has_proto
     type(Ref_t), intent(in)    :: proto
-    
+
     if (has_proto /= 0) then;
       _ref_init( self%refstat, _ref_hardness(proto%refstat) )
       call basestring_init_by_basestring_c( self%ref_str, 1, proto%ref_str )
@@ -194,7 +194,7 @@ end module
     character(len=1), dimension(:), pointer :: stream
     type(TypeInfo_ptr_t), dimension(:), pointer :: typeInfo
     type(c_ptr)                             :: encoding, rhsPtr
-    
+
     encoding = c_loc(rhs(1))
     call c_f_pointer( encoding, typeInfo, (/2/) )
     call c_f_pointer( encoding, stream, (/ size(rhs) * size_encoding /) )
@@ -318,7 +318,7 @@ end module
     implicit none
     type(RefEncoding_t), target, intent(in) :: enc(:)
     type(Ref_t)                             :: res
-    
+
     call ref_assign_encoding( res, enc )
     call ref_assign_ref_c( res, ref_clone( res ) )
     call ref_set_attribute_c( res, attribute_volatile )
@@ -414,25 +414,22 @@ end module
     !         calling content_type with self actually missing!
     use impl_ref__, only: Ref_t, TypeInfo_t, void_type
     implicit none
-    type(Ref_t), optional, intent(in) :: self
-    type(TypeInfo_t),         pointer :: res
+    type(Ref_t),      pointer, intent(in) :: self
+    type(TypeInfo_t), pointer             :: res
 
     res => null()
-    if (present(self))         res => self%typeInfo
+    if (associated(self))      res => self%typeInfo
     if (.not. associated(res)) res => void_type()
   end function
 
-  
+
 !_PROC_EXPORT(ref_dynamic_type)
 !_ARG_REFERENCE1(self)
   function ref_dynamic_type( self ) result(res)
-    ! NOTE: in contrast to the interface argument self is declared optional here!
-    !       This is because we need to handle null pointers here, while we do not allow
-    !         calling content_type with self actually missing!
     use impl_ref__, only: Ref_t, TypeInfo_t
     implicit none
-    type(Ref_t), optional, intent(in) :: self
-    type(TypeInfo_t),         pointer :: res
+    type(Ref_t),      pointer, intent(in) :: self
+    type(TypeInfo_t), pointer             :: res
 
     interface
       function item_resolve_type( ref, item ) result(ti)
@@ -445,7 +442,7 @@ end module
     res => item_resolve_type( ref=self )
   end function
 
-  
+
 !_PROC_EXPORT(ref_content_type_c)
 !_ARG_REFERENCE1(self)
   subroutine ref_content_type_c( res, self )
@@ -454,17 +451,17 @@ end module
     !         calling content_type with self actually missing!
     use impl_ref__
     implicit none
-    type(TypeSpecs_t),     intent(inout) :: res
-    type(Ref_t), optional, intent(in)    :: self
-    type(TypeInfo_t),            pointer :: ptr
+    type(TypeSpecs_t),         intent(inout) :: res
+    type(Ref_t),      pointer, intent(in)    :: self
+    type(TypeInfo_t), pointer                :: ptr
 
     ptr => null()
-    if (present(self))         ptr => self%typeInfo
+    if (associated(self))      ptr => self%typeInfo
     if (.not. associated(ptr)) ptr => void_type()
     res = ptr%typeSpecs
   end subroutine
 
-  
+
 !_PROC_EXPORT(ref_bind_c)
 !_ARG_REFERENCE1(self)
   subroutine ref_bind_c( self, do_bind )
@@ -483,7 +480,7 @@ end module
     implicit none
     type(Ref_t),  intent(inout) :: self
     integer(kind=1), intent(in) :: attrib
-    
+
     call basestring_set_attribute( self%ref_str, attrib )
     _ref_setHard( self%refstat, attrib )
   end subroutine

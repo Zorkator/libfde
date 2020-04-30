@@ -9,13 +9,13 @@ program testinger
   use fde_string
   implicit none
 
-  type(Item_t)     :: v1, v2
-  type(TypeInfo_t) :: ti
-  integer*4        :: intvar, i, j
-  type(String_t)   :: ds
-  type(Ref_t)      :: gr, gr2
-  real*4           :: realVal
-  logical          :: logic
+  type(Item_t), target :: v1, v2
+  type(TypeInfo_t)     :: ti
+  integer*4            :: intvar, i, j
+  type(String_t)       :: ds
+  type(Ref_t)          :: gr, gr2
+  real*4               :: realVal
+  logical              :: logic
 
   print *, "Item: ",       storage_size(v1)/8
   print *, "String: ", storage_size(ds)/8
@@ -116,7 +116,7 @@ end
     implicit none                      ;\
     _baseType                 :: val   ;\
     _baseType,        pointer :: ptr   ;\
-    type(Item_t)              :: vi    ;\
+    type(Item_t),      target :: vi    ;\
     type(TypeInfo_t), pointer :: ti    ;\
     complex*16, parameter :: cplx = (0.234,-3.4) ;\
     val = _val                         ;\

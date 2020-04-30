@@ -23,7 +23,7 @@ program testinger
   type(TypeInfo_t),        pointer :: ti
 
   type(c_ptr)         :: cpointer
-  type(Ref_t)         :: ref1, ref2, ref3, ref4
+  type(Ref_t), target :: ref1, ref2, ref3, ref4
   complex*16          :: cplx
   complex*16, pointer :: cplx_ptr
 
