@@ -9,8 +9,6 @@ if(MSVC)
 else()
   if("${CMAKE_Fortran_COMPILER_ID}" STREQUAL "GNU")
     set_source_files_properties(./crc_impl.F90 APPEND PROPERTIES COMPILE_FLAGS "-fno-range-check")
-  elseif("${CMAKE_Fortran_COMPILER_ID}" STREQUAL "Intel")
-    set_source_files_properties(./crc_impl.F90 APPEND PROPERTIES COMPILE_FLAGS "-assume noold_boz")
   endif()
 endif()
 
