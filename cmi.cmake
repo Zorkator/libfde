@@ -5,7 +5,7 @@
 
 cmake_minimum_required(VERSION 3.8)
 
-set(CMI_TAG "9790854bbbabbfd81eddf3fde440560ac3e7aa60")
+set(CMI_TAG "d3825e0eea35cbed4cbb37bf2cba71fe66e371f8")
 
 get_property(CMI_LOADER_FILE GLOBAL PROPERTY CMI_LOADER_FILE)
 # First include
@@ -23,7 +23,7 @@ if(NOT CMI_LOADER_FILE)
 
     #Check filesize of download
     set(INPUT_FILE_ "${CMI_LOADER_TMP_}.in")
-    if(${CMAKE_VERSION} VERSION_LESS "3.12.0")
+    if(${CMAKE_VERSION} VERSION_LESS "3.14.0")
       set(CMI_LOADER_FILESIZE_ "0")
       if(EXISTS "${INPUT_FILE_}")
         file(READ "${INPUT_FILE_}" FILE_CONTENT_ LIMIT 1 HEX)
@@ -99,7 +99,7 @@ function(cmi_file)
   if (_FILE_LENGTH STREQUAL 2)
     list(GET _FILE_SIZE 0 INPUT_FILE)
     list(GET _FILE_SIZE 1 FILE_SIZE)
-    if(${CMAKE_VERSION} VERSION_LESS "3.12.0")
+    if(${CMAKE_VERSION} VERSION_LESS "3.14.0")
       set(FILE_SIZE_ "0")
       if(EXISTS "${INPUT_FILE}")
         file(READ "${INPUT_FILE}" FILE_CONTENT_ HEX)
@@ -453,7 +453,7 @@ function(cmi_Fortran_append var name)
   # Compiler presets
   set(Fortran_O0_Generic_GNU "-Og")
   set(Fortran_O0_Generic_Intel "-O0")
-  set(Fortran_O0_Windows_Intel "/O0")
+  set(Fortran_O0_Windows_Intel "/Od")
 
   set(Fortran_TRACEBACK_Generic_GNU "-fbacktrace")
   set(Fortran_TRACEBACK_Generic_Intel "-traceback")
@@ -490,6 +490,18 @@ function(cmi_Fortran_append var name)
   set(Fortran_WSRCTRUNC_Generic_GNU "-Wline-truncation")
   set(Fortran_WSRCTRUNC_Generic_Intel "-warn truncated_source")
   set(Fortran_WSRCTRUNC_Windows_Intel "/warn:truncated_source")
+
+  set(Fortran_WUNUSED_Generic_GNU "-Wunused")
+  set(Fortran_WUNUSED_Generic_Intel "-warn unused")
+  set(Fortran_WUNUSED_Windows_Intel "/warn:unused")
+
+  set(Fortran_WINTERFACES_Generic_GNU "")
+  set(Fortran_WINTERFACES_Generic_Intel "-warn interfaces")
+  set(Fortran_WINTERFACES_Windows_Intel "/warn:interfaces")
+
+  set(Fortran_WDECLARATIONS_Generic_GNU "")
+  set(Fortran_WDECLARATIONS_Generic_Intel "-warn declarations")
+  set(Fortran_WDECLARATIONS_Windows_Intel "/warn:declarations")
 
   set(Fortran_CHECKALL_Generic_GNU "-fcheck=all")
   set(Fortran_CHECKALL_Generic_Intel "-check all,noarg_temp_created")
@@ -913,6 +925,8 @@ macro(cmi_find_python_development_)
     # Backwards compatibility
     find_package(PythonLibs REQUIRED)
     set(Python_INCLUDE_DIRS "${PYTHON_INCLUDE_DIRS}")
+    set(Python_LIBRARIES "${PYTHON_LIBRARIES}")
+    set(Python_LIBRARY_DIRS "${PYTHON_LIBRARY_DIRS}")
   else()
     find_package(Python REQUIRED Development)
   endif()
