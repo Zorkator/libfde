@@ -52,58 +52,58 @@
     integer(kind=c_int8_t),  intent(in) :: buf(size)
     integer(kind=c_int32_t)             :: crc_, tabIdx
     integer(kind=c_size_t)              :: idx
-  
-    integer(kind=c_int32_t), parameter, dimension(0:255) :: crc32_tab = (/ &
-      z'00000000', z'77073096', z'ee0e612c', z'990951ba', z'076dc419', z'706af48f', &
-      z'e963a535', z'9e6495a3', z'0edb8832', z'79dcb8a4', z'e0d5e91e', z'97d2d988', &
-      z'09b64c2b', z'7eb17cbd', z'e7b82d07', z'90bf1d91', z'1db71064', z'6ab020f2', &
-      z'f3b97148', z'84be41de', z'1adad47d', z'6ddde4eb', z'f4d4b551', z'83d385c7', &
-      z'136c9856', z'646ba8c0', z'fd62f97a', z'8a65c9ec', z'14015c4f', z'63066cd9', &
-      z'fa0f3d63', z'8d080df5', z'3b6e20c8', z'4c69105e', z'd56041e4', z'a2677172', &
-      z'3c03e4d1', z'4b04d447', z'd20d85fd', z'a50ab56b', z'35b5a8fa', z'42b2986c', &
-      z'dbbbc9d6', z'acbcf940', z'32d86ce3', z'45df5c75', z'dcd60dcf', z'abd13d59', &
-      z'26d930ac', z'51de003a', z'c8d75180', z'bfd06116', z'21b4f4b5', z'56b3c423', &
-      z'cfba9599', z'b8bda50f', z'2802b89e', z'5f058808', z'c60cd9b2', z'b10be924', &
-      z'2f6f7c87', z'58684c11', z'c1611dab', z'b6662d3d', z'76dc4190', z'01db7106', &
-      z'98d220bc', z'efd5102a', z'71b18589', z'06b6b51f', z'9fbfe4a5', z'e8b8d433', &
-      z'7807c9a2', z'0f00f934', z'9609a88e', z'e10e9818', z'7f6a0dbb', z'086d3d2d', &
-      z'91646c97', z'e6635c01', z'6b6b51f4', z'1c6c6162', z'856530d8', z'f262004e', &
-      z'6c0695ed', z'1b01a57b', z'8208f4c1', z'f50fc457', z'65b0d9c6', z'12b7e950', &
-      z'8bbeb8ea', z'fcb9887c', z'62dd1ddf', z'15da2d49', z'8cd37cf3', z'fbd44c65', &
-      z'4db26158', z'3ab551ce', z'a3bc0074', z'd4bb30e2', z'4adfa541', z'3dd895d7', &
-      z'a4d1c46d', z'd3d6f4fb', z'4369e96a', z'346ed9fc', z'ad678846', z'da60b8d0', &
-      z'44042d73', z'33031de5', z'aa0a4c5f', z'dd0d7cc9', z'5005713c', z'270241aa', &
-      z'be0b1010', z'c90c2086', z'5768b525', z'206f85b3', z'b966d409', z'ce61e49f', &
-      z'5edef90e', z'29d9c998', z'b0d09822', z'c7d7a8b4', z'59b33d17', z'2eb40d81', &
-      z'b7bd5c3b', z'c0ba6cad', z'edb88320', z'9abfb3b6', z'03b6e20c', z'74b1d29a', &
-      z'ead54739', z'9dd277af', z'04db2615', z'73dc1683', z'e3630b12', z'94643b84', &
-      z'0d6d6a3e', z'7a6a5aa8', z'e40ecf0b', z'9309ff9d', z'0a00ae27', z'7d079eb1', &
-      z'f00f9344', z'8708a3d2', z'1e01f268', z'6906c2fe', z'f762575d', z'806567cb', &
-      z'196c3671', z'6e6b06e7', z'fed41b76', z'89d32be0', z'10da7a5a', z'67dd4acc', &
-      z'f9b9df6f', z'8ebeeff9', z'17b7be43', z'60b08ed5', z'd6d6a3e8', z'a1d1937e', &
-      z'38d8c2c4', z'4fdff252', z'd1bb67f1', z'a6bc5767', z'3fb506dd', z'48b2364b', &
-      z'd80d2bda', z'af0a1b4c', z'36034af6', z'41047a60', z'df60efc3', z'a867df55', &
-      z'316e8eef', z'4669be79', z'cb61b38c', z'bc66831a', z'256fd2a0', z'5268e236', &
-      z'cc0c7795', z'bb0b4703', z'220216b9', z'5505262f', z'c5ba3bbe', z'b2bd0b28', &
-      z'2bb45a92', z'5cb36a04', z'c2d7ffa7', z'b5d0cf31', z'2cd99e8b', z'5bdeae1d', &
-      z'9b64c2b0', z'ec63f226', z'756aa39c', z'026d930a', z'9c0906a9', z'eb0e363f', &
-      z'72076785', z'05005713', z'95bf4a82', z'e2b87a14', z'7bb12bae', z'0cb61b38', &
-      z'92d28e9b', z'e5d5be0d', z'7cdcefb7', z'0bdbdf21', z'86d3d2d4', z'f1d4e242', &
-      z'68ddb3f8', z'1fda836e', z'81be16cd', z'f6b9265b', z'6fb077e1', z'18b74777', &
-      z'88085ae6', z'ff0f6a70', z'66063bca', z'11010b5c', z'8f659eff', z'f862ae69', &
-      z'616bffd3', z'166ccf45', z'a00ae278', z'd70dd2ee', z'4e048354', z'3903b3c2', &
-      z'a7672661', z'd06016f7', z'4969474d', z'3e6e77db', z'aed16a4a', z'd9d65adc', &
-      z'40df0b66', z'37d83bf0', z'a9bcae53', z'debb9ec5', z'47b2cf7f', z'30b5ffe9', &
-      z'bdbdf21c', z'cabac28a', z'53b39330', z'24b4a3a6', z'bad03605', z'cdd70693', &
-      z'54de5729', z'23d967bf', z'b3667a2e', z'c4614ab8', z'5d681b02', z'2a6f2b94', &
-      z'b40bbe37', z'c30c8ea1', z'5a05df1b', z'2d02ef8d' /)
 
-    crc_ = ieor( seed, z'ffffffff' )
+    integer(kind=c_int32_t), parameter, dimension(0:255) :: crc32_tab = (/ &
+      int(z'00000000'), int(z'77073096'), int(z'ee0e612c'), int(z'990951ba'), int(z'076dc419'), int(z'706af48f'), &
+      int(z'e963a535'), int(z'9e6495a3'), int(z'0edb8832'), int(z'79dcb8a4'), int(z'e0d5e91e'), int(z'97d2d988'), &
+      int(z'09b64c2b'), int(z'7eb17cbd'), int(z'e7b82d07'), int(z'90bf1d91'), int(z'1db71064'), int(z'6ab020f2'), &
+      int(z'f3b97148'), int(z'84be41de'), int(z'1adad47d'), int(z'6ddde4eb'), int(z'f4d4b551'), int(z'83d385c7'), &
+      int(z'136c9856'), int(z'646ba8c0'), int(z'fd62f97a'), int(z'8a65c9ec'), int(z'14015c4f'), int(z'63066cd9'), &
+      int(z'fa0f3d63'), int(z'8d080df5'), int(z'3b6e20c8'), int(z'4c69105e'), int(z'd56041e4'), int(z'a2677172'), &
+      int(z'3c03e4d1'), int(z'4b04d447'), int(z'd20d85fd'), int(z'a50ab56b'), int(z'35b5a8fa'), int(z'42b2986c'), &
+      int(z'dbbbc9d6'), int(z'acbcf940'), int(z'32d86ce3'), int(z'45df5c75'), int(z'dcd60dcf'), int(z'abd13d59'), &
+      int(z'26d930ac'), int(z'51de003a'), int(z'c8d75180'), int(z'bfd06116'), int(z'21b4f4b5'), int(z'56b3c423'), &
+      int(z'cfba9599'), int(z'b8bda50f'), int(z'2802b89e'), int(z'5f058808'), int(z'c60cd9b2'), int(z'b10be924'), &
+      int(z'2f6f7c87'), int(z'58684c11'), int(z'c1611dab'), int(z'b6662d3d'), int(z'76dc4190'), int(z'01db7106'), &
+      int(z'98d220bc'), int(z'efd5102a'), int(z'71b18589'), int(z'06b6b51f'), int(z'9fbfe4a5'), int(z'e8b8d433'), &
+      int(z'7807c9a2'), int(z'0f00f934'), int(z'9609a88e'), int(z'e10e9818'), int(z'7f6a0dbb'), int(z'086d3d2d'), &
+      int(z'91646c97'), int(z'e6635c01'), int(z'6b6b51f4'), int(z'1c6c6162'), int(z'856530d8'), int(z'f262004e'), &
+      int(z'6c0695ed'), int(z'1b01a57b'), int(z'8208f4c1'), int(z'f50fc457'), int(z'65b0d9c6'), int(z'12b7e950'), &
+      int(z'8bbeb8ea'), int(z'fcb9887c'), int(z'62dd1ddf'), int(z'15da2d49'), int(z'8cd37cf3'), int(z'fbd44c65'), &
+      int(z'4db26158'), int(z'3ab551ce'), int(z'a3bc0074'), int(z'd4bb30e2'), int(z'4adfa541'), int(z'3dd895d7'), &
+      int(z'a4d1c46d'), int(z'd3d6f4fb'), int(z'4369e96a'), int(z'346ed9fc'), int(z'ad678846'), int(z'da60b8d0'), &
+      int(z'44042d73'), int(z'33031de5'), int(z'aa0a4c5f'), int(z'dd0d7cc9'), int(z'5005713c'), int(z'270241aa'), &
+      int(z'be0b1010'), int(z'c90c2086'), int(z'5768b525'), int(z'206f85b3'), int(z'b966d409'), int(z'ce61e49f'), &
+      int(z'5edef90e'), int(z'29d9c998'), int(z'b0d09822'), int(z'c7d7a8b4'), int(z'59b33d17'), int(z'2eb40d81'), &
+      int(z'b7bd5c3b'), int(z'c0ba6cad'), int(z'edb88320'), int(z'9abfb3b6'), int(z'03b6e20c'), int(z'74b1d29a'), &
+      int(z'ead54739'), int(z'9dd277af'), int(z'04db2615'), int(z'73dc1683'), int(z'e3630b12'), int(z'94643b84'), &
+      int(z'0d6d6a3e'), int(z'7a6a5aa8'), int(z'e40ecf0b'), int(z'9309ff9d'), int(z'0a00ae27'), int(z'7d079eb1'), &
+      int(z'f00f9344'), int(z'8708a3d2'), int(z'1e01f268'), int(z'6906c2fe'), int(z'f762575d'), int(z'806567cb'), &
+      int(z'196c3671'), int(z'6e6b06e7'), int(z'fed41b76'), int(z'89d32be0'), int(z'10da7a5a'), int(z'67dd4acc'), &
+      int(z'f9b9df6f'), int(z'8ebeeff9'), int(z'17b7be43'), int(z'60b08ed5'), int(z'd6d6a3e8'), int(z'a1d1937e'), &
+      int(z'38d8c2c4'), int(z'4fdff252'), int(z'd1bb67f1'), int(z'a6bc5767'), int(z'3fb506dd'), int(z'48b2364b'), &
+      int(z'd80d2bda'), int(z'af0a1b4c'), int(z'36034af6'), int(z'41047a60'), int(z'df60efc3'), int(z'a867df55'), &
+      int(z'316e8eef'), int(z'4669be79'), int(z'cb61b38c'), int(z'bc66831a'), int(z'256fd2a0'), int(z'5268e236'), &
+      int(z'cc0c7795'), int(z'bb0b4703'), int(z'220216b9'), int(z'5505262f'), int(z'c5ba3bbe'), int(z'b2bd0b28'), &
+      int(z'2bb45a92'), int(z'5cb36a04'), int(z'c2d7ffa7'), int(z'b5d0cf31'), int(z'2cd99e8b'), int(z'5bdeae1d'), &
+      int(z'9b64c2b0'), int(z'ec63f226'), int(z'756aa39c'), int(z'026d930a'), int(z'9c0906a9'), int(z'eb0e363f'), &
+      int(z'72076785'), int(z'05005713'), int(z'95bf4a82'), int(z'e2b87a14'), int(z'7bb12bae'), int(z'0cb61b38'), &
+      int(z'92d28e9b'), int(z'e5d5be0d'), int(z'7cdcefb7'), int(z'0bdbdf21'), int(z'86d3d2d4'), int(z'f1d4e242'), &
+      int(z'68ddb3f8'), int(z'1fda836e'), int(z'81be16cd'), int(z'f6b9265b'), int(z'6fb077e1'), int(z'18b74777'), &
+      int(z'88085ae6'), int(z'ff0f6a70'), int(z'66063bca'), int(z'11010b5c'), int(z'8f659eff'), int(z'f862ae69'), &
+      int(z'616bffd3'), int(z'166ccf45'), int(z'a00ae278'), int(z'd70dd2ee'), int(z'4e048354'), int(z'3903b3c2'), &
+      int(z'a7672661'), int(z'd06016f7'), int(z'4969474d'), int(z'3e6e77db'), int(z'aed16a4a'), int(z'd9d65adc'), &
+      int(z'40df0b66'), int(z'37d83bf0'), int(z'a9bcae53'), int(z'debb9ec5'), int(z'47b2cf7f'), int(z'30b5ffe9'), &
+      int(z'bdbdf21c'), int(z'cabac28a'), int(z'53b39330'), int(z'24b4a3a6'), int(z'bad03605'), int(z'cdd70693'), &
+      int(z'54de5729'), int(z'23d967bf'), int(z'b3667a2e'), int(z'c4614ab8'), int(z'5d681b02'), int(z'2a6f2b94'), &
+      int(z'b40bbe37'), int(z'c30c8ea1'), int(z'5a05df1b'), int(z'2d02ef8d') /)
+
+    crc_ = ieor( seed, int(z'ffffffff') )
     do idx = 1, size
-      tabIdx = iand( ieor( crc_, int( buf(idx), c_int32_t ) ), z'000000ff' )
+      tabIdx = iand( ieor( crc_, int( buf(idx), c_int32_t ) ), int(z'000000ff') )
       crc_   = ieor( crc32_tab(tabIdx), ishft( crc_, -8 ) )
     end do
-    crc_ = ieor( crc_, z'ffffffff' )
+    crc_ = ieor( crc_, int(z'ffffffff') )
   end function
 
 
