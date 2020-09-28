@@ -181,9 +181,8 @@
       end function
     end interface
 
-    if (fopen( newunit(chnl), file=fileName, form="unformatted", access="stream", status="old" )) then
-        crc_ = crc32_file_channel( chnl, file_size(chnl), seed, iostat )
-        close( chnl )
-    end if
+    chnl = fopen( fileName, form="unformatted", access="stream", status="old" )
+    crc_ = crc32_file_channel( chnl, file_size(chnl), seed, iostat )
+    close( chnl )
   end function
 
