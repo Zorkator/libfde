@@ -160,7 +160,7 @@
         private
 
 #       define _fortres_exception_type(_ident, _num) \
-          integer*4, public, parameter :: _ident = _same(x)_str(_num);
+          integer*4, public, parameter :: _ident = int(_same(z)_str(_num));
           _fortres_ExceptionTable
 #       undef  _fortres_exception_type
 

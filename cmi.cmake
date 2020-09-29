@@ -5,7 +5,7 @@
 
 cmake_minimum_required(VERSION 3.8)
 
-set(CMI_TAG "364b54e0200459f446190a94d177d27317d9447b")
+set(CMI_TAG "d3825e0eea35cbed4cbb37bf2cba71fe66e371f8")
 
 get_property(CMI_LOADER_FILE GLOBAL PROPERTY CMI_LOADER_FILE)
 # First include
@@ -23,7 +23,7 @@ if(NOT CMI_LOADER_FILE)
 
     #Check filesize of download
     set(INPUT_FILE_ "${CMI_LOADER_TMP_}.in")
-    if(${CMAKE_VERSION} VERSION_LESS "3.12.0")
+    if(${CMAKE_VERSION} VERSION_LESS "3.14.0")
       set(CMI_LOADER_FILESIZE_ "0")
       if(EXISTS "${INPUT_FILE_}")
         file(READ "${INPUT_FILE_}" FILE_CONTENT_ LIMIT 1 HEX)
@@ -99,7 +99,7 @@ function(cmi_file)
   if (_FILE_LENGTH STREQUAL 2)
     list(GET _FILE_SIZE 0 INPUT_FILE)
     list(GET _FILE_SIZE 1 FILE_SIZE)
-    if(${CMAKE_VERSION} VERSION_LESS "3.12.0")
+    if(${CMAKE_VERSION} VERSION_LESS "3.14.0")
       set(FILE_SIZE_ "0")
       if(EXISTS "${INPUT_FILE}")
         file(READ "${INPUT_FILE}" FILE_CONTENT_ HEX)
@@ -451,6 +451,10 @@ endfunction()
 
 function(cmi_Fortran_append var name)
   # Compiler presets
+  set(Fortran_O0_Generic_GNU "-Og")
+  set(Fortran_O0_Generic_Intel "-O0")
+  set(Fortran_O0_Windows_Intel "/Od")
+
   set(Fortran_TRACEBACK_Generic_GNU "-fbacktrace")
   set(Fortran_TRACEBACK_Generic_Intel "-traceback")
   set(Fortran_TRACEBACK_Windows_Intel "/traceback")
@@ -466,10 +470,6 @@ function(cmi_Fortran_append var name)
   set(Fortran_FPP0_Generic_GNU "-ffpe-trap=invalid,zero,overflow")
   set(Fortran_FPE0_Generic_Intel "-fpe0")
   set(Fortran_FPE0_Windows_Intel "/fpe:0")
-
-  set(Fortran_FPSCOMPGENERAL_Generic_GNU "")
-  set(Fortran_FPSCOMPGENERAL_Generic_Intel "-fpscomp general")
-  set(Fortran_FPSCOMPGENERAL_Windows_Intel "/fpscomp:general")
 
   set(Fortran_FPMODELSOURCE_Generic_GNU "")
   set(Fortran_FPMODELSOURCE_Generic_Intel "-fp-model source")
@@ -491,9 +491,25 @@ function(cmi_Fortran_append var name)
   set(Fortran_WSRCTRUNC_Generic_Intel "-warn truncated_source")
   set(Fortran_WSRCTRUNC_Windows_Intel "/warn:truncated_source")
 
-  set(Fortran_CHECKALL_Generic_GNU "-fcheck=pointer,bounds")
-  set(Fortran_CHECKALL_Generic_Intel "-check pointer,bounds,uninit,format,output_conversion")
-  set(Fortran_CHECKALL_Windows_Intel "/check:pointer /check:bounds /check:uninit /check:format /check:output_conversion")
+  set(Fortran_WUNUSED_Generic_GNU "-Wunused")
+  set(Fortran_WUNUSED_Generic_Intel "-warn unused")
+  set(Fortran_WUNUSED_Windows_Intel "/warn:unused")
+
+  set(Fortran_WINTERFACES_Generic_GNU "")
+  set(Fortran_WINTERFACES_Generic_Intel "-warn interfaces")
+  set(Fortran_WINTERFACES_Windows_Intel "/warn:interfaces")
+
+  set(Fortran_WDECLARATIONS_Generic_GNU "")
+  set(Fortran_WDECLARATIONS_Generic_Intel "-warn declarations")
+  set(Fortran_WDECLARATIONS_Windows_Intel "/warn:declarations")
+
+  set(Fortran_CHECKALL_Generic_GNU "-fcheck=all")
+  set(Fortran_CHECKALL_Generic_Intel "-check all,noarg_temp_created")
+  set(Fortran_CHECKALL_Windows_Intel "/check:all,noarg_temp_created")
+
+  set(Fortran_CHECKBASIC_Generic_GNU "-fcheck=pointer,bounds")
+  set(Fortran_CHECKBASIC_Generic_Intel "-check pointer,bounds,uninit,format,output_conversion")
+  set(Fortran_CHECKBASIC_Windows_Intel "/check:pointer,bounds,uninit,format,output_conversion")
 
   set(Fortran_THREADS_Generic_GNU "-pthread")
   set(Fortran_THREADS_Generic_Intel "-threads")
@@ -507,8 +523,10 @@ function(cmi_Fortran_append var name)
     set(CMAKE_SYSTEM_NAME Generic)
   endif()
 
-  set(${var} "${${var}} ${Fortran_${name}_${CMAKE_SYSTEM_NAME}_${CMAKE_Fortran_COMPILER_ID}}" PARENT_SCOPE)
-  string(STRIP "${${var}}" ${var})
+  set(NEW_FLAG "${Fortran_${name}_${CMAKE_SYSTEM_NAME}_${CMAKE_Fortran_COMPILER_ID}}")
+  if(NOT ${var} MATCHES "${NEW_FLAG}")
+    set(${var} "${${var}} ${NEW_FLAG}" PARENT_SCOPE)
+  endif()
 endfunction()
 
 function(cmi_fortran_default_mangling)
@@ -520,6 +538,7 @@ function(cmi_fortran_default_mangling)
     endif()
   endif()
 endfunction()
+
 
 macro(cmi_disable_vs_incremental_linker_ FLAG_)
   if(DEFINED ${FLAG_})
@@ -610,7 +629,11 @@ macro(cmi_set_build_environment)
 
   cmi_disable_vs_incremental_linker()
   cmi_disable_vs_debug_runtime()
-  cmi_fortran_default_mangling()
+  if(CMAKE_Fortran_COMPILER)
+    cmi_fortran_default_mangling()
+    cmi_fortran_append(CMAKE_Fortran_FLAGS_DEBUG O0)
+    #cmi_fortran_append(CMAKE_Fortran_FLAGS TRACEBACK)
+  endif()
 endmacro()
 
 function(cmi_set_directory TARGET_)
@@ -781,11 +804,18 @@ endmacro()
 # Setting up MPI
 function(cmi_find_mpi)
   set(OPTIONS_ COMPONENTS)
-  cmake_parse_arguments("" "" "" "${OPTIONS_}" ${ARGN})
+  cmake_parse_arguments("" "REQUIRED" "" "${OPTIONS_}" ${ARGN})
   if(NOT DEFINED _COMPONENTS)
-    set(_COMPONENTS C CXX F77 F90)
+    if(CMAKE_C_COMPILER)
+      list(APPEND _COMPONTENS C)
+    endif()
+    if(CMAKE_CXX_COMPILER)
+      list(APPEND _COMPONTENS CXX)
+    endif()
+    if(CMAKE_Fortran_COMPILER)
+      list(APPEND _COMPONTENS F77 F90)
+    endif()
   endif()
-
 
   # Intel MPI
   if(NOT I_MPI_ROOT)
@@ -798,7 +828,9 @@ function(cmi_find_mpi)
   if(I_MPI_ROOT AND NOT CYGWIN)
     set(VENDOR INTEL)
 
+    # (Re)initialize MPI
     if(NOT CMI_MPI_ROOT STREQUAL I_MPI_ROOT)
+      message(STATUS "MPI: I_MPI_ROOT - ${I_MPI_ROOT}")
       unset(CMI_MPI_MISSING)
       foreach(COMPONENT IN ITEMS _COMPONENTS)
         unset(MPI_$[COMPONENT}_COMPILES CACHE)
@@ -858,7 +890,10 @@ function(cmi_find_mpi)
   if(NOT CMI_MPI_MISSING)
     set(CMI_MPI_ROOT "${I_MPI_ROOT}" CACHE INTERNAL "")
   else()
-    message(SEND_ERROR "MPI: Follow components not working: ${CMI_MPI_MISSING}")
+    message(STATUS "MPI: Unable to use the following component(s): ${CMI_MPI_MISSING}")
+    if(_REQUIRED)
+      message(SEND_ERROR "MPI: Unsatisfied requirements.")
+    endif()
   endif()
 
 
@@ -890,6 +925,8 @@ macro(cmi_find_python_development_)
     # Backwards compatibility
     find_package(PythonLibs REQUIRED)
     set(Python_INCLUDE_DIRS "${PYTHON_INCLUDE_DIRS}")
+    set(Python_LIBRARIES "${PYTHON_LIBRARIES}")
+    set(Python_LIBRARY_DIRS "${PYTHON_LIBRARY_DIRS}")
   else()
     find_package(Python REQUIRED Development)
   endif()

@@ -37,7 +37,6 @@ module fde_ostream
   contains
 
 !_PROC_EXPORT(ostream_create)
-  pure &
   function ostream_create( chnl ) result(res)
     integer, intent(in) :: chnl
     type(ostream_t)     :: res
@@ -71,16 +70,16 @@ module fde_ostream
   subroutine ostream_indent( self, num )
     type(ostream_t) :: self
     integer         :: num
-    self%indents = num 
+    self%indents = num
   end subroutine
 
-  
+
 !_PROC_EXPORT(ostream_fuselines)
   subroutine ostream_fuselines( self, num )
     type(ostream_t) :: self
     integer         :: num
 
-    if (num > 0) then; 
+    if (num > 0) then;
       self%fuseCnt = self%fuseCnt + sign( num, self%fuseCnt )
     else if(self%fuseCnt /= 0) then
       write( self%channel, self%nl, iostat=self%status )
@@ -88,7 +87,7 @@ module fde_ostream
     end if
   end subroutine
 
-  
+
 !_PROC_EXPORT(ostream_newline)
   subroutine ostream_newline( self, num )
     type(ostream_t) :: self
@@ -121,7 +120,7 @@ module fde_ostream
     call self%drainFunc( self, trim(str) )
   end subroutine
 
-  
+
   subroutine ostream_drain_( self, str )
     type(ostream_t)  :: self
     character(len=*) :: str
@@ -148,7 +147,7 @@ module fde_ostream
       write( self%channel, self%nl, iostat=self%status )
   end subroutine
 
-  
+
 !_PROC_EXPORT(ostream_error)
   subroutine ostream_error( self, ti )
     type(ostream_t)  :: self
