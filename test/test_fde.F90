@@ -1512,6 +1512,7 @@ module test_exception
     print *, str(msg)
   end subroutine
 
+  recursive &
   function reciprocal( valStr ) result(res)
     type(StringRef_t)         :: valStr
     real(8)                   :: res
@@ -1526,6 +1527,7 @@ module test_exception
     res = 1.0 / res
   end function
 
+  recursive &
   subroutine test_conversion( valStr )
     type(StringRef_t) :: valStr
     real*8            :: res
