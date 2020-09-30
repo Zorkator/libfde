@@ -1,6 +1,6 @@
 image:
 - Ubuntu
-- Visual Studio 2017
+- Visual Studio 2015
 - macOS
 
 
@@ -22,10 +22,10 @@ for:
 -
   matrix:
     only:
-      - image: Visual Studio 2017
+      - image: Visual Studio 2015
 
   install:
-    - set PATH=C:\mingw-w64\x86_64-7.2.0-posix-seh-rt_v5-rev1\mingw64\bin;C:\Program Files (x86)\CMake\bin
+    - set PATH=C:\mingw-w64\x86_64-7.3.0-posix-seh-rt_v5-rev0\mingw64\bin;C:\Program Files (x86)\CMake\bin
     - mkdir _build
     - cd _build
     - cmake .. -G "MinGW Makefiles" -DCMAKE_BUILD_TYPE=Debug
