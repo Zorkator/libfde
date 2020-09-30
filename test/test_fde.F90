@@ -1062,7 +1062,7 @@ subroutine test_hashmap_nesting()!{{{
 
   logical &
   function item_hit( item ) result(res)
-    type(Item_t)             :: item
+    type(Item_t), target :: item
     type(HashMap_t), pointer :: ptr
     res = dynamic_cast( ptr, mk_item_ptr(item) )
   end function

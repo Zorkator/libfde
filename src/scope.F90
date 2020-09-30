@@ -32,7 +32,7 @@ module fde_scope
   interface
     logical &
     function AcceptItem_itf( item ); import
-      type(Item_t) :: item
+      type(Item_t), target :: item
     end function
   end interface
 
