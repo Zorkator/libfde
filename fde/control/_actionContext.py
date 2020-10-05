@@ -55,8 +55,9 @@ class _Action(object):
 ##########################################
 class ActionContext(object):
 ##########################################
-    Trigger = _Trigger
-    Action  = _Action
+    Trigger  = _Trigger
+    Action   = _Action
+    _globals = dict( __builtins__ = None )
 
     @property
     def globals( self ):
@@ -74,8 +75,8 @@ class ActionContext(object):
         varLookup = varLookup or (lambda i : i)
 
         self._host    = host
-        self._locals  = dict()                      if (locals  is None) else locals
-        self._globals = dict( __builtins__ = None ) if (globals is None) else globals
+        self._locals  = dict()                if (locals  is None) else locals
+        self._globals = dict( self._globals ) if (globals is None) else globals
         self._globals['__lookup__'] = varLookup
 
         # Derive given classes to make own ones for the newly created ActionContext
