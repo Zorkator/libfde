@@ -1,6 +1,6 @@
 # Compiler flags
 #cmi_Fortran_append(CMAKE_Fortran_FLAGS TRACEBACK)
-cmi_fortran_append(CMAKE_Fortran_FLAGS FPP)
+cmi_fortran_append(CMAKE_Fortran_FLAGS EXTENDEDLINESF90)
 
 cmi_Fortran_append(CMAKE_Fortran_FLAGS_DEBUG TRAPUV)
 cmi_Fortran_append(CMAKE_Fortran_FLAGS_DEBUG CHECKBASIC)
@@ -8,7 +8,7 @@ cmi_Fortran_append(CMAKE_Fortran_FLAGS_DEBUG CHECKBASIC)
 if(MSVC)
 else()
   if("${CMAKE_Fortran_COMPILER_ID}" STREQUAL "GNU")
-    set_source_files_properties(./crc_impl.F90 APPEND PROPERTIES COMPILE_FLAGS "-fno-range-check")
+    set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -fno-range-check")
   endif()
 endif()
 

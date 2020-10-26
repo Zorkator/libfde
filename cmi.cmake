@@ -1,11 +1,34 @@
 # BSD 2-Clause License
-# Copyright (c) 2019, Volker Jacht
+#
+# Copyright (c) 2019-2020, Volker Jacht
 # All rights reserved.
+#
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions are met:
+#
+# 1. Redistributions of source code must retain the above copyright notice, this
+#    list of conditions and the following disclaimer.
+#
+# 2. Redistributions in binary form must reproduce the above copyright notice,
+#    this list of conditions and the following disclaimer in the documentation
+#    and/or other materials provided with the distribution.
+#
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+# AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+# IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+# DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+# FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+# DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+# SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+# CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+# OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+# OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
 # See https://gitlab.com/nordfox/cmakeit
 
 cmake_minimum_required(VERSION 3.8)
 
-set(CMI_TAG "d3825e0eea35cbed4cbb37bf2cba71fe66e371f8")
+set(CMI_TAG "9830c79124380fa4958a61f37807948dc48961dc")
 
 get_property(CMI_LOADER_FILE GLOBAL PROPERTY CMI_LOADER_FILE)
 # First include
@@ -72,6 +95,7 @@ unset(CMI_LOADER_FILE)
 ######################################
 
 set(CMI_LOADED TRUE)
+set(CMI_VERSION "0.1.0")
 
 # Consider root project as populated and included
 string(TOUPPER "${CMAKE_PROJECT_NAME}" PROJECT_NAME_UPPER_)
@@ -81,6 +105,9 @@ unset(PROJECT_NAME_UPPER_)
 set(CMI_EXTERNALS_DIR "${CMAKE_SOURCE_DIR}/_externals" CACHE PATH "")
 set(CMI_IDE_PRESETS "_targets" CACHE PATH "")
 set(CMI_IDE_EXTERNALS "_externals" CACHE PATH "")
+set(CMI_CHECKOUT_SCRIPT "${CMAKE_BINARY_DIR}/checkout.cmake")
+
+option(CMI_AUTO_CHECKOUT "" ON)
 
 mark_as_advanced(CMI_EXTERNALS_DIR)
 mark_as_advanced(CMI_IDE_PRESETS)
@@ -92,6 +119,13 @@ set_property(GLOBAL PROPERTY PREDEFINED_TARGETS_FOLDER "${CMI_IDE_PRESETS}")
 ######################################
 # HELPER FUNCTIONS
 ######################################
+
+function(cmi_minimum_required)
+  cmake_parse_arguments("" "" "VERSION" "" ${ARGN})
+  if("${CMI_VERSION}" VERSION_LESS "${_VERSION}")
+    message(FATAL_ERROR "CMI ${_VERSION} or higher is required. You are running version ${CMI_VERSION}")
+  endif()
+endfunction()
 
 function(cmi_file)
   cmake_parse_arguments(_FILE "" "" "SIZE" ${ARGN})
@@ -210,21 +244,28 @@ function(cmi_add_update_script_ FILEPATH_)
   endif()
   file(APPEND "${UPDATER_}" "    )
     foreach(file_ IN LISTS files)
-      execute_process(COMMAND \"${CMAKE_COMMAND}\" -P \"\${file_}\")
-      if(${USE_ZERO_CHECK_})
-        execute_process(
-          COMMAND \${CMAKE_COMMAND} --build . --target ZERO_CHECK
-        )
-      else()
-        execute_process(
-          COMMAND \${CMAKE_COMMAND} \"${CMAKE_BINARY_DIR}\"
-        )
+      execute_process(COMMAND \"${CMAKE_COMMAND}\" -P \"\${file_}\" OUTPUT_VARIABLE OUTPUT_)
+      string(REGEX REPLACE \"\\n\$\" \"\" OUTPUT_ \"\${OUTPUT_}\")
+      if(OUTPUT_)
+        message(STATUS \"Processing \${file_}\n\${OUTPUT_}\")
+      endif()
+      if(OUTPUT_ MATCHES \"Update: \")
+        message(\"STATUS SUCCESS \${file_}\")
+        if(${USE_ZERO_CHECK_})
+          execute_process(
+            COMMAND \${CMAKE_COMMAND} --build \"${CMAKE_BINARY_DIR}\" --target ZERO_CHECK
+          )
+        else()
+          execute_process(
+            COMMAND \${CMAKE_COMMAND} \"${CMAKE_BINARY_DIR}\"
+          )
+        endif()
       endif()
     endforeach()
   ")
 
   if(NOT TARGET checkout)
-    add_custom_target(checkout ${CMAKE_COMMAND} -P "${UPDATER_}")
+    add_custom_target(checkout ${CMAKE_COMMAND} -P "${CMI_CHECKOUT_SCRIPT}")
     set_property(TARGET checkout PROPERTY FOLDER "${CMI_IDE_EXTERNALS}")
   endif()
 endfunction()
@@ -300,7 +341,7 @@ function(cmi_add_git_ PROJECT_NAME_ PROJECT_URL_ PROJECT_REV_)
 
   find_package(Git)
   set(${PROJECT_NAME_UPPER_}_DIR "${CMI_EXTERNALS_DIR}/${PROJECT_NAME_LOWER_}" CACHE PATH "")
-  set(UPDATER_ "${CMI_EXTERNALS_DIR}/checkout.${PROJECT_NAME_LOWER_}.cmake")
+  set(UPDATER_ "${CMAKE_BINARY_DIR}/checkout.${PROJECT_NAME_LOWER_}.cmake")
 
   cmi_add_update_script_("${UPDATER_}")
 
@@ -311,70 +352,123 @@ function(cmi_add_git_ PROJECT_NAME_ PROJECT_URL_ PROJECT_REV_)
     set(GIT_URL \"${PROJECT_URL_}\")
     set(GIT_REV \"${PROJECT_REV_}\")
 
+    set(GIT_FETCH 1)
 
-    macro(git_checkout)
-      # Git Checkout
-      message(STATUS \"Checkout \${GIT_REV}\")
+    if(EXISTS \"\${GIT_DIR}\")
       execute_process(
-        COMMAND \${GIT_EXECUTABLE} -c advice.detachedHead=false checkout \${GIT_REV}
+        COMMAND \${GIT_EXECUTABLE} rev-list -n 1 \${GIT_REV}
         WORKING_DIRECTORY \"\${GIT_DIR}\"
         RESULT_VARIABLE RESULT_
+        ERROR_QUIET
+        OUTPUT_VARIABLE TARGET_REV_
       )
-    endmacro()
-
-    if(NOT (\${GIT_REV} MATCHES \"^origin/.+\"))
-      if(EXISTS \"\${GIT_DIR}\")
-        git_checkout()
-        if(RESULT_ STREQUAL \"0\")
-          return()
-        endif()
+      if(RESULT_ STREQUAL \"0\" AND NOT (\${GIT_REV} MATCHES \"^origin/.+\"))
+        set(GIT_FETCH 0)
       endif()
     endif()
 
     # Clone repo
-    if(NOT EXISTS \"\${GIT_DIR}\")
+    if(GIT_FETCH)
       foreach(try RANGE 2)
-        message(STATUS \"Clone \${GIT_DIR} \${GIT_URL} \${GIT_REV}\")
-        set(TMP_DIR \"\${GIT_DIR}.tmp\")
-        if(EXISTS \"\${TMP_DIR}\")
-          message(STATUS \"Removing \${TMP_DIR}\")
+        if(NOT EXISTS \"\${GIT_DIR}\")
+          message(STATUS \"Clone \${GIT_DIR} \${GIT_URL} \${GIT_REV}\")
+          set(TMP_DIR \"\${GIT_DIR}.tmp\")
+          if(EXISTS \"\${TMP_DIR}\")
+            message(STATUS \"Removing \${TMP_DIR}\")
+            file(REMOVE_RECURSE \"\${TMP_DIR}\")
+          endif()
+          execute_process(
+            COMMAND \${GIT_EXECUTABLE} clone \${GIT_URL} \"\${TMP_DIR}\"
+            RESULT_VARIABLE RESULT_ ERROR_VARIABLE STDERR_
+          )
+          if(RESULT_ STREQUAL 0)
+            file(RENAME \"\${TMP_DIR}\" \"\${GIT_DIR}\")
+            break()
+          endif()
+          # Cloning failed. Delete directory.
           file(REMOVE_RECURSE \"\${TMP_DIR}\")
+        else()
+          message(STATUS \"Fetch \${GIT_DIR} \${GIT_URL} \${GIT_REV}\")
+          execute_process(
+            COMMAND \${GIT_EXECUTABLE} fetch
+            WORKING_DIRECTORY \"\${GIT_DIR}\"
+            RESULT_VARIABLE RESULT_ ERROR_VARIABLE STDERR_
+          )
+          if(RESULT_ STREQUAL 0)
+            break()
+          endif()
         endif()
-        execute_process(
-          COMMAND \${GIT_EXECUTABLE} clone \${GIT_URL} \"\${TMP_DIR}\"
-          RESULT_VARIABLE RESULT_
-        )
-        if(RESULT_ STREQUAL 0)
-          file(RENAME \"\${TMP_DIR}\" \"\${GIT_DIR}\")
-          break()
+        message(SEND_ERROR \"Git clone/fetch failed.\")
+        if(\${STDERR_} MATCHES \"bad line length character: git\")
+          message(WARNING \"Probably missing SSH private key!\")
+          return()
         endif()
-        # Cloning failed. Delete directory.
-        message(SEND_ERROR \"Git clone failed.\")
-        file(REMOVE_RECURSE \"\${TMP_DIR}\")
-      endforeach()
-    else()
-      # Git Fetch
-      foreach(try RANGE 2)
-        message(STATUS \"Fetch \${GIT_DIR} \${GIT_URL} \${GIT_REV}\")
-        execute_process(
-          COMMAND \${GIT_EXECUTABLE} fetch
-          WORKING_DIRECTORY \"\${GIT_DIR}\"
-          RESULT_VARIABLE RESULT_
-        )
-        if(RESULT_ STREQUAL 0)
-          break()
-        endif()
-        message(SEND_ERROR \"Git fetch failed.\")
       endforeach()
     endif()
 
-    git_checkout()
+    # Git Checkout
+    # message(STATUS \"Checkout \${GIT_REV}\")
+    execute_process(
+      COMMAND \${GIT_EXECUTABLE} status -s
+      WORKING_DIRECTORY \"\${GIT_DIR}\"
+      RESULT_VARIABLE RESULT_
+      OUTPUT_VARIABLE STASH_NEEDED_
+    )
+    execute_process(
+      COMMAND \${GIT_EXECUTABLE} rev-list -n 1 HEAD
+      WORKING_DIRECTORY \"\${GIT_DIR}\"
+      RESULT_VARIABLE RESULT_
+      OUTPUT_VARIABLE CURRENT_REV_
+    )
+    execute_process(
+      COMMAND \${GIT_EXECUTABLE} rev-list -n 1 \${GIT_REV}
+      WORKING_DIRECTORY \"\${GIT_DIR}\"
+      RESULT_VARIABLE RESULT_
+      OUTPUT_VARIABLE TARGET_REV_
+      ERROR_QUIET
+    )
+
+    if(STASH_NEEDED_ OR (NOT CURRENT_REV_ STREQUAL TARGET_REV_))
+      message(STATUS \"Update: \${GIT_DIR}\")
+    endif()
+
+    if(NOT RESULT_ STREQUAL \"0\")
+      message(FATAL_ERROR \"Rev \${GIT_REV} not found.\")
+    endif()
+
+    if(STASH_NEEDED_)
+      execute_process(
+        COMMAND \${GIT_EXECUTABLE} stash
+        WORKING_DIRECTORY \"\${GIT_DIR}\"
+        RESULT_VARIABLE RESULT_
+        OUTPUT_VARIABLE STDOUT_
+        ERROR_VARIABLE STDOUT_
+      )
+      message(STATUS \"\${STDOUT_}\")
+    endif()
+    if(NOT CURRENT_REV_ STREQUAL TARGET_REV_)
+      execute_process(
+        COMMAND \${GIT_EXECUTABLE} -c advice.detachedHead=false checkout \${GIT_REV}
+        WORKING_DIRECTORY \"\${GIT_DIR}\"
+        RESULT_VARIABLE RESULT_
+        OUTPUT_VARIABLE STDOUT_
+        ERROR_VARIABLE STDOUT_
+      )
+      message(STATUS \"\${STDOUT_}\")
+    endif()
+
     if(NOT (RESULT_ STREQUAL 0))
-      message(SEND_ERROR \"Git checkout failed.\")
+      message(FATAL_ERROR \"Git checkout failed.\")
     endif()
   ")
-  if(NOT EXISTS "${${PROJECT_NAME_UPPER_}_DIR}")
-    execute_process(COMMAND ${CMAKE_COMMAND} -P "${UPDATER_}")
+  if(CMI_AUTO_CHECKOUT OR NOT EXISTS "${${PROJECT_NAME_UPPER_}_DIR}")
+    execute_process(
+      COMMAND ${CMAKE_COMMAND} -P "${UPDATER_}"
+      RESULT_VARIABLE RESULT_
+    )
+  endif()
+  if(NOT RESULT_ STREQUAL "0")
+    message(SEND_ERROR "Could not update ${GIT_DIR}")
   endif()
 endfunction()
 
@@ -455,6 +549,18 @@ function(cmi_Fortran_append var name)
   set(Fortran_O0_Generic_Intel "-O0")
   set(Fortran_O0_Windows_Intel "/Od")
 
+  set(Fortran_O1_Generic_GNU "-O1")
+  set(Fortran_O1_Generic_Intel "-O1")
+  set(Fortran_O1_Windows_Intel "/O1")
+
+  set(Fortran_O2_Generic_GNU "-O2")
+  set(Fortran_O2_Generic_Intel "-O2")
+  set(Fortran_O2_Windows_Intel "/O2")
+
+  set(Fortran_O3_Generic_GNU "-O3")
+  set(Fortran_O3_Generic_Intel "-O3")
+  set(Fortran_O3_Windows_Intel "/O3")
+
   set(Fortran_TRACEBACK_Generic_GNU "-fbacktrace")
   set(Fortran_TRACEBACK_Generic_Intel "-traceback")
   set(Fortran_TRACEBACK_Windows_Intel "/traceback")
@@ -463,11 +569,15 @@ function(cmi_Fortran_append var name)
   set(Fortran_CONSISTENCY_Generic_Intel "-fimf-arch-consistency=true")
   set(Fortran_CONSISTENCY_Windows_Intel "/Qimf-arch-consistency:true")
 
+  set(Fortran_CPP_Generic_GNU "-cpp")
+  set(Fortran_CPP_Generic_Intel "-fpp")
+  set(Fortran_CPP_Windows_Intel "/fpp")
+
   set(Fortran_FPP_Generic_GNU "-cpp -ffree-line-length-none -ffixed-line-length-none")
   set(Fortran_FPP_Generic_Intel "-fpp -allow nofpp-comments")
   set(Fortran_FPP_Windows_Intel "/fpp")
 
-  set(Fortran_FPP0_Generic_GNU "-ffpe-trap=invalid,zero,overflow")
+  set(Fortran_FPE0_Generic_GNU "-ffpe-trap=invalid,zero,overflow")
   set(Fortran_FPE0_Generic_Intel "-fpe0")
   set(Fortran_FPE0_Windows_Intel "/fpe:0")
 
@@ -475,21 +585,29 @@ function(cmi_Fortran_append var name)
   set(Fortran_FPMODELSOURCE_Generic_Intel "-fp-model source")
   set(Fortran_FPMODELSOURCE_Windows_Intel "/fp:source")
 
+  set(Fortran_FPSPECULATIONOFF_Generic_GNU "")
+  set(Fortran_FPSPECULATIONOFF_Generic_Intel "-fp-speculation off")
+  set(Fortran_FPSPECULATIONOFF_Windows_Intel "/Qfp-speculation=off")
+
   set(Fortran_FPSPECULATIONSAFE_Generic_GNU "")
   set(Fortran_FPSPECULATIONSAFE_Generic_Intel "-fp-speculation safe")
   set(Fortran_FPSPECULATIONSAFE_Windows_Intel "/Qfp-speculation=safe")
+
+  set(Fortran_FPMODELSTRICT_Generic_GNU "")
+  set(Fortran_FPMODELSTRICT_Generic_Intel "-fp-model strict")
+  set(Fortran_FPMODELSTRICT_Windows_Intel "/fp:strict")
 
   set(Fortran_OMP_Generic_GNU "-fopenmp")
   set(Fortran_OMP_Generic_Intel "-qopenmp")
   set(Fortran_OMP_Windows_Intel "/Qopenmp")
 
-  set(Fortran_TRAPUV_Generic_GNU "-finit-real=snan -finit-integer=-1 -finit-character=0 -finit-logical=false")
-  set(Fortran_TRAPUV_Generic_Intel "-ftrapuv")
-  set(Fortran_TRAPUV_Windows_Intel "/Qtrapuv")
-
   set(Fortran_WSRCTRUNC_Generic_GNU "-Wline-truncation")
   set(Fortran_WSRCTRUNC_Generic_Intel "-warn truncated_source")
   set(Fortran_WSRCTRUNC_Windows_Intel "/warn:truncated_source")
+
+  set(Fortran_EXTENDEDLINESF90_Generic_GNU "-ffree-line-length-none")
+  set(Fortran_EXTENDEDLINESF90_Generic_Intel "")
+  set(Fortran_EXTENDEDLINESF90_Windows_Intel "")
 
   set(Fortran_WUNUSED_Generic_GNU "-Wunused")
   set(Fortran_WUNUSED_Generic_Intel "-warn unused")
@@ -503,9 +621,25 @@ function(cmi_Fortran_append var name)
   set(Fortran_WDECLARATIONS_Generic_Intel "-warn declarations")
   set(Fortran_WDECLARATIONS_Windows_Intel "/warn:declarations")
 
+  set(Fortran_TRAPUV_Generic_GNU "-finit-real=snan -finit-integer=-1 -finit-character=0 -finit-logical=false")
+  set(Fortran_TRAPUV_Generic_Intel "-ftrapuv")
+  set(Fortran_TRAPUV_Windows_Intel "/Qtrapuv")
+
   set(Fortran_CHECKALL_Generic_GNU "-fcheck=all")
-  set(Fortran_CHECKALL_Generic_Intel "-check all,noarg_temp_created")
-  set(Fortran_CHECKALL_Windows_Intel "/check:all,noarg_temp_created")
+  set(Fortran_CHECKALL_Generic_Intel "-check all")
+  set(Fortran_CHECKALL_Windows_Intel "/check:all")
+
+  set(Fortran_CHECKNONE_Generic_GNU "-fcheck=no-all")
+  set(Fortran_CHECKNONE_Generic_Intel "-check none")
+  set(Fortran_CHECKNONE_Windows_Intel "/nocheck")
+
+  set(Fortran_DBGMIN_Generic_GNU "")
+  set(Fortran_DBGMIN_Generic_Intel "-debug minimal")
+  set(Fortran_DBGMIN_Windows_Intel "/debug:minimal")
+
+  set(Fortran_CHECKNOARGTMP_Generic_GNU "-fcheck=no-array-temps")
+  set(Fortran_CHECKNOARGTMP_Generic_Intel "-check noarg_temp_created")
+  set(Fortran_CHECKNOARGTMP_Windows_Intel "/check:noarg_temp_created")
 
   set(Fortran_CHECKBASIC_Generic_GNU "-fcheck=pointer,bounds")
   set(Fortran_CHECKBASIC_Generic_Intel "-check pointer,bounds,uninit,format,output_conversion")
@@ -515,18 +649,63 @@ function(cmi_Fortran_append var name)
   set(Fortran_THREADS_Generic_Intel "-threads")
   set(Fortran_THREADS_Windows_Intel "/threads")
 
+  set(Fortran_NOOMFP_Generic_GNU "-fno-omit-frame-pointer")
+  set(Fortran_NOOMFP_Generic_Intel "-fno-omit-frame-pointer")
+  set(Fortran_NOOMFP_Windows_Intel "/Oy-")
+
   set(Fortran_STACK_Generic_GNU "")
   set(Fortran_STACK_Generic_Intel "")
   set(Fortran_STACK_Windows_Intel "/STACK:10000000,10000000")
+
+  set(Fortran_PROF_Generic_GNU "-pg")
+  set(Fortran_PROF_Generic_Intel "-pg")
+  set(Fortran_PROF_Windows_Intel "")
+
+  set(Fortran_NOFTZ_Generic_GNU "")
+  set(Fortran_NOFTZ_Generic_Intel "-no-ftz")
+  set(Fortran_NOFTZ_Windows_Intel "/Qftz-")
+
+  set(Fortran_SAVE_Generic_GNU "-fno-automatic")
+  set(Fortran_SAVE_Generic_Intel "-save")
+  set(Fortran_SAVE_Windows_Intel "/Qsave")
+
+  set(Fortran_STDF90_Generic_GNU "")
+  set(Fortran_STDF90_Generic_Intel "-stand f90")
+  set(Fortran_STDF90_Windows_Intel "/stand:f90")
+
+  set(Fortran_STDF95_Generic_GNU "-std f95")
+  set(Fortran_STDF95_Generic_Intel "-stand f95")
+  set(Fortran_STDF95_Windows_Intel "/stand:f95")
+
+  set(Fortran_STDF03_Generic_GNU "-std f2003")
+  set(Fortran_STDF03_Generic_Intel "-stand f03")
+  set(Fortran_STDF03_Windows_Intel "/stand:f03")
+
+  set(Fortran_VSMP_Generic_GNU "")
+  set(Fortran_VSMP_Generic_Intel "")
+  set(Fortran_VSMP_Windows_Intel "/MP")
 
   if(NOT MSVC)
     set(CMAKE_SYSTEM_NAME Generic)
   endif()
 
+  if(NOT DEFINED Fortran_${name}_${CMAKE_SYSTEM_NAME}_${CMAKE_Fortran_COMPILER_ID})
+    message(AUTHOR_WARNING "Fortran flag ${name} not found. "
+      "If typing is correct, the root project's cmi.cmake file needs to be updated."
+    )
+  endif()
+
   set(NEW_FLAG "${Fortran_${name}_${CMAKE_SYSTEM_NAME}_${CMAKE_Fortran_COMPILER_ID}}")
   if(NOT ${var} MATCHES "${NEW_FLAG}")
-    set(${var} "${${var}} ${NEW_FLAG}" PARENT_SCOPE)
+    string(STRIP "${${var}} ${NEW_FLAG}" ${var})
+    set(${var} "${${var}}" PARENT_SCOPE)
   endif()
+
+  if(${name} STREQUAL "FPP")
+    message(DEPRECATION "Fortran FPP flag has been deprecated and can be replaced by CPP and EXTENDEDLINESF90. "
+    "Also consider using uppercase extension .F90, which will implicitly activate preprocessing.")
+  endif()
+
 endfunction()
 
 function(cmi_fortran_default_mangling)
@@ -539,12 +718,60 @@ function(cmi_fortran_default_mangling)
   endif()
 endfunction()
 
+macro(cmi_disable_vs_manifest_ TARGET_FLAG_)
+  if(MSVC)
+    set(flag "/MANIFEST:NO")
+    if(DEFINED ${TARGET_FLAG_})
+      string(FIND "${${TARGET_FLAG_}}" "${flag}" status)
+      if("${status}" STREQUAL "-1")
+        set(${TARGET_FLAG_} "${${TARGET_FLAG_}} ${flag}" CACHE STRING "" FORCE)
+      endif()
+    endif()
+  endif()
+endmacro()
+
+function(cmi_disable_vs_manifest)
+    cmi_disable_vs_manifest_(CMAKE_EXE_LINKER_FLAGS)
+    cmi_disable_vs_manifest_(CMAKE_SHARED_LINKER_FLAGS)
+    cmi_disable_vs_manifest_(CMAKE_MODULE_LINKER_FLAGS)
+endfunction()
+
+macro(cmi_enable_vs_z7_ FLAG_)
+  if(DEFINED ${FLAG_})
+    # Replace /Zi and /ZI by /Z7
+    string(REGEX REPLACE "/Z[iI]" "/Z7" ${FLAG_} "${${FLAG_}}")
+
+    # Explicitly add /Z7 if /debug:full or /debug:minimal is set
+    string(FIND "${${FLAG_}}" "/Z7" status)
+    if("${status}" STREQUAL "-1")
+      string(REGEX REPLACE "/debug:full" "/debug:full /Z7" ${FLAG_} "${${FLAG_}}")
+      string(REGEX REPLACE "/debug:minimal" "/debug:minimal /Z7" ${FLAG_} "${${FLAG_}}")
+    endif()
+
+    string(STRIP "${${FLAG_}}" ${FLAG_})
+    set(${FLAG_} "${${FLAG_}}" CACHE STRING "" FORCE)
+  endif()
+endmacro()
+
+function(cmi_enable_vs_z7)
+  if(MSVC)
+    set(LANGUAGES "C" "CXX" "Fortran")
+    foreach(LANGUAGE IN LISTS LANGUAGES)
+      foreach(CONFIGURATION IN LISTS CMAKE_CONFIGURATION_TYPES)
+        string(TOUPPER ${CONFIGURATION} CONFIGURATION)
+        cmi_enable_vs_z7_(CMAKE_${LANGUAGE}_FLAGS_${CONFIGURATION})
+      endforeach()
+      cmi_enable_vs_z7_(CMAKE_${LANGUAGE}_FLAGS)
+    endforeach()
+  endif()
+endfunction()
+
 
 macro(cmi_disable_vs_incremental_linker_ FLAG_)
   if(DEFINED ${FLAG_})
-    string(REGEX REPLACE "/INCREMENTAL(:YES)? " "/INCREMENTAL:NO " ${FLAG_} "${${FLAG_}} ")
-    string(STRIP ${${FLAG_}} ${FLAG_})
-    set(${FLAG_} ${${FLAG_}} CACHE STRING "" FORCE)
+    string(REGEX REPLACE "/INCREMENTAL(:YES)?($| )" "/INCREMENTAL:NO" ${FLAG_} "${${FLAG_}}")
+    string(STRIP "${${FLAG_}}" ${FLAG_})
+    set(${FLAG_} "${${FLAG_}}" CACHE STRING "" FORCE)
   endif()
 endmacro()
 
@@ -554,6 +781,7 @@ function(cmi_disable_vs_incremental_linker)
       string(TOUPPER ${CONFIGURATION} CONFIGURATION)
       cmi_disable_vs_incremental_linker_(CMAKE_EXE_LINKER_FLAGS_${CONFIGURATION})
       cmi_disable_vs_incremental_linker_(CMAKE_SHARED_LINKER_FLAGS_${CONFIGURATION})
+      cmi_disable_vs_incremental_linker_(CMAKE_STATIC_LINKER_FLAGS_${CONFIGURATION})
       cmi_disable_vs_incremental_linker_(CMAKE_MODULE_LINKER_FLAGS_${CONFIGURATION})
     endforeach()
   endif()
@@ -569,13 +797,49 @@ function(cmi_disable_vs_debug_runtime)
         string(REPLACE "/dbglibs " " " FLAGS "${FLAGS} ")
         string(REPLACE "/MDd " "/MD " FLAGS "${FLAGS} ")
         string(REPLACE "/MTd " "/MT " FLAGS "${FLAGS} ")
-        string(STRIP ${FLAGS} FLAGS)
+        string(STRIP "${FLAGS}" FLAGS)
         set(${TARGET_FLAG} "${FLAGS}" CACHE STRING "" FORCE)
       endif()
     endforeach()
   endif()
 endfunction()
 
+function(cmi_enable_vs_mp)
+  if(MSVC)
+    cmi_Fortran_append(flag VSMP)
+    set(LANGUAGES "C" "CXX" "Fortran")
+    foreach(LANGUAGE IN LISTS LANGUAGES)
+      set(TARGET_FLAG "CMAKE_${LANGUAGE}_FLAGS")
+      if(DEFINED ${TARGET_FLAG})
+        if(${CMAKE_VERSION} VERSION_LESS "3.19.0" AND LANGUAGE STREQUAL "Fortran")
+          # Skip /MP as older CMake versions can't set /Z7 to prevent corrupt PDB files
+          message(STATUS "CMake version 3.19.0 is required to enable parallel building of Fortran projects. Skipped.")
+          continue()
+        endif()
+        string(FIND "${${TARGET_FLAG}}" "${flag}" status)
+        if("${status}" STREQUAL "-1")
+          string(STRIP "${${TARGET_FLAG}}" ${TARGET_FLAG})
+          set(${TARGET_FLAG} "${${TARGET_FLAG}} ${flag}" CACHE STRING "" FORCE)
+        endif()
+      endif()
+    endforeach()
+  endif()
+endfunction()
+
+function(cmi_disable_vs_mp)
+  if(MSVC)
+    cmi_Fortran_append(flag VSMP)
+    set(LANGUAGES "C" "CXX" "Fortran")
+    foreach(LANGUAGE IN LISTS LANGUAGES)
+      set(TARGET_FLAG "CMAKE_${LANGUAGE}_FLAGS")
+      if(DEFINED ${TARGET_FLAG})
+        string(REGEX REPLACE "${flag}" "" ${TARGET_FLAG} "${${TARGET_FLAG}}")
+        string(STRIP "${${TARGET_FLAG}}" ${TARGET_FLAG})
+        set(${TARGET_FLAG} "${${TARGET_FLAG}}" CACHE STRING "" FORCE)
+      endif()
+    endforeach()
+  endif()
+endfunction()
 
 ######################################
 # BUILD SETTINGS
@@ -583,7 +847,7 @@ endfunction()
 
 # Set default path variables
 macro(cmi_load_build_environment)
-  message(AUTHOR_WARNING "cmi_load_build_environment() deprecated. Use cmi_set_build_environment() instead.")
+  message(DEPRECATION "cmi_load_build_environment() deprecated. Use cmi_set_build_environment() instead.")
   cmi_set_build_environment(${ARGV})
 endmacro()
 macro(cmi_set_build_environment)
@@ -610,7 +874,7 @@ macro(cmi_set_build_environment)
 
 
   # Enabled testing by default
-  option(BUILD_TESTING "" ON)
+  option(BUILD_TESTING "" OFF)
   if(BUILD_TESTING)
     enable_testing()
   endif()
@@ -626,6 +890,26 @@ macro(cmi_set_build_environment)
       "Debug" "Release" "MinSizeRel" "RelWithDebInfo")
   endif()
   unset(DEFAULT_BUILD_TYPE_)
+
+  if(MSVC)
+    option(BUILD_PARALLEL "Enable parallel builds. To switch off, deleting cache is required! Should be combined with BUILD_VS_Z7" OFF)
+    if(BUILD_PARALLEL)
+      cmi_enable_vs_mp()
+    else()
+      cmi_disable_vs_mp()
+    endif()
+
+    option(BUILD_VS_Z7 "Avoid corrupted pdb files when compiling in parallel. To switch off, deleting cache is required!" ${BUILD_PARALLEL})
+    if(BUILD_VS_Z7)
+      cmi_enable_vs_z7()
+    endif()
+
+    option(BUILD_NO_MANIFEST "Disable manifest generation. To switch off, deleting cache is required!" ON)
+    if(BUILD_NO_MANIFEST)
+      cmi_disable_vs_manifest()
+    endif()
+    mark_as_advanced(BUILD_PARALLEL BUILD_NO_MANIFEST BUILD_VS_Z7)
+  endif()
 
   cmi_disable_vs_incremental_linker()
   cmi_disable_vs_debug_runtime()
@@ -679,6 +963,70 @@ function(cmi_copy TARGET_ SOURCE_ DESTINATION_)
   add_custom_target(${TARGET_}
     COMMAND ${CMAKE_COMMAND} -DFILE_PATTERN="${SOURCE_DIRECTORY_}/${SOURCE_NAME_WE_}*" -DDESTINATION="${DESTINATION_}" -P "${CMAKE_CURRENT_LIST_DIR}/cmi_copy.txt"
   )
+endfunction()
+
+function(cmi_fortran_check_newline_style)
+  set(_INFO_MESSAGE "Detecting Fortran newline style")
+  if(DEFINED HAVE_FORTRAN_NEWLINE_STYLE_CRLF AND DEFINED HAVE_FORTRAN_NEWLINE_STYLE_LF)
+    return()
+  endif()
+  message(STATUS "${_INFO_MESSAGE}")
+
+  # Compile and run test program to detect Fortran newline style
+  set(CHECK_LINE_ENDINGS
+    "program check_line_endings
+  implicit none
+  integer :: i
+  integer :: file_size
+  character, dimension(:), allocatable :: data
+  character(len=*), parameter :: file_name = 'check_newline_style.txt'
+  open(20, file=file_name, form='FORMATTED')
+  write(20,'(A)') ''
+  close(20)
+  open(20, file=file_name, access='STREAM', form='UNFORMATTED')
+  inquire(file=file_name, size=file_size)
+  allocate(data(file_size))
+!  write(*,*) 'size', file_size
+  do i = 1, file_size
+    read(20) data(i)
+!    write(*,'(I3)') ichar(data(i))
+  end do
+  close(20, status='delete')
+  if (file_size .eq. 2 .and. data(1) .eq. char(13) .and. data(2) .eq. char(10)) then
+    write(*,'(A)') 'CRLF'
+  else if (file_size .eq. 1 .and. data(1) .eq. char(10)) then
+    write(*,'(A)') 'LF'
+  else
+    write(*,'(A)') 'UNKNOWN'
+  end if
+end program"
+  )
+  file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/check_newline_style.F90 ${CHECK_LINE_ENDINGS})
+  try_run(RUN_RESULT_VAR COMPILE_RESULT_VAR ${CMAKE_CURRENT_BINARY_DIR} SOURCES ${CMAKE_CURRENT_BINARY_DIR}/check_newline_style.F90 RUN_OUTPUT_VARIABLE output)
+  file(REMOVE ${CMAKE_CURRENT_BINARY_DIR}/check_newline_style.F90)
+  # Something went wrong, set manually
+  if(NOT COMPILE_RESULT_VAR OR (NOT RUN_RESULT_VAR STREQUAL 0))
+    if(WIN32)
+      set(output "CRLF")
+    else()
+      set(output "LF")
+    endif()
+    message(STATUS "${_INFO_MESSAGE} - failed, using fallback")
+  endif()
+  string(STRIP "${output}" output)
+  message(STATUS "${_INFO_MESSAGE} - '${output}'")
+  if(output STREQUAL "CRLF")
+    set(HAVE_FORTRAN_NEWLINE_STYLE_CRLF 1 CACHE STRING "")
+  else()
+    set(HAVE_FORTRAN_NEWLINE_STYLE_CRLF 0 CACHE STRING "")
+  endif()
+  mark_as_advanced(HAVE_FORTRAN_NEWLINE_STYLE_CRLF)
+  if(output STREQUAL "LF")
+    set(HAVE_FORTRAN_NEWLINE_STYLE_LF 1 CACHE STRING "")
+  else()
+    set(HAVE_FORTRAN_NEWLINE_STYLE_LF 0 CACHE STRING "")
+  endif()
+  mark_as_advanced(HAVE_FORTRAN_NEWLINE_STYLE_LF)
 endfunction()
 
 
@@ -744,16 +1092,26 @@ endmacro()
 ######################################
 # FIND
 ######################################
-
-# On Linux: User must provide MPI wrapper. This is the only way to get Fortran MPI modules work right, when switching between ifort and gfortran.
-# On Windows: Since MPI wrapper are not available/broken, we rely on cmake's findMPI
-# Usage(Windows/Linux):
-# target_include_directories(mytarget PUBLIC "${MPI_INCLUDE}")
-# target_link_libraries(mytarget PUBLIC "${MPI_LIB}")
-
-
-
-macro(check_mpi COMPONENT RESULT)
+# MPI
+# Prequisites:
+# If I_MPI_ROOT environment variable is set correctly, Intel MPI is used as library.
+# Otherwise, passing a working MPI compiler wrapper is required.
+# E.g. FC=mpif90 CC=mpicc CXX=mpicxx
+#
+# Example usage:
+# cmi_find_mpi(REQUIRED COMPONENTS CXX)
+# target_link_libraries(your_target PUBLIC CMI::MPI_CXX)
+#
+#| component | compiler | binding          | target          |
+#|-----------|----------|------------------|-----------------|
+#| F77       | Fortran  | MPI F77 mpif.h   | CMI::MPI_F77    |
+#| F90       | Fortran  | MPI F90 mpi mod  | CMI::MPI_F90    |
+#| C         | C        | MPI C            | CMI::MPI_C      |
+#| CXX       | C++      | MPI C            | CMI::MPI_CXX    |
+#| MPICXX    | C++      | MPI C++ (depcr.) | CMI::MPI_MPICXX |
+#
+#
+macro(cmi_mpi_compiles_ COMPONENT RESULT)
 
   set(MPI_C_TEST_CODE_
     "#include<mpi.h>
@@ -763,16 +1121,32 @@ macro(check_mpi COMPONENT RESULT)
         return 0;
     }"
   )
+  set(MPI_CXX_TEST_CODE_
+    "#include<mpi.h>
+      using namespace MPI;
+      int main(int argc, char **args) {
+        MPI_Init(&argc, &args);
+        Info *info = new Info();
+        MPI_Finalize();
+        return 0;
+    }"
+  )
   set(MPI_F77_TEST_CODE_
     "program main
      implicit none
      include \"mpif.h\"
+     integer :: ierror
+     call MPI_Init(ierror)
+     call MPI_Finalize(ierror)
      end program"
   )
   set(MPI_F90_TEST_CODE_
     "program main
     use mpi
     implicit none
+    integer :: ierror
+    call MPI_Init(ierror)
+    call MPI_Finalize(ierror)
     end program"
   )
 
@@ -785,6 +1159,11 @@ macro(check_mpi COMPONENT RESULT)
     enable_language(CXX)
     include(CheckCXXCompilerFlag)
     CHECK_CXX_SOURCE_COMPILES("${MPI_C_TEST_CODE_}" ${RESULT})
+
+  elseif(${COMPONENT} STREQUAL "MPICXX")
+    enable_language(CXX)
+    include(CheckCXXCompilerFlag)
+    CHECK_CXX_SOURCE_COMPILES("${MPI_CXX_TEST_CODE_}" ${RESULT})
 
   elseif(${COMPONENT} STREQUAL "F77" OR ${COMPONENT} STREQUAL "F90")
     enable_language(Fortran)
@@ -807,13 +1186,13 @@ function(cmi_find_mpi)
   cmake_parse_arguments("" "REQUIRED" "" "${OPTIONS_}" ${ARGN})
   if(NOT DEFINED _COMPONENTS)
     if(CMAKE_C_COMPILER)
-      list(APPEND _COMPONTENS C)
+      list(APPEND _COMPONENTS C)
     endif()
     if(CMAKE_CXX_COMPILER)
-      list(APPEND _COMPONTENS CXX)
+      list(APPEND _COMPONENTS CXX MPICXX)
     endif()
     if(CMAKE_Fortran_COMPILER)
-      list(APPEND _COMPONTENS F77 F90)
+      list(APPEND _COMPONENTS F77 F90)
     endif()
   endif()
 
@@ -821,30 +1200,59 @@ function(cmi_find_mpi)
   if(NOT I_MPI_ROOT)
     set(I_MPI_ROOT "$ENV{I_MPI_ROOT}" CACHE PATH "")
   endif()
-  if(I_MPI_ROOT AND CYGWIN)
-    message(STATUS "MPI: Intel MPI is not compatible with Cygwin!")
+  if(I_MPI_ROOT AND CYGWIN AND NOT DEFINED CMI_MPI_TYPE)
+    message(STATUS "MPI: I_MPI_ROOT is set, but Intel MPI is not compatible with Cygwin!")
   endif()
 
   if(I_MPI_ROOT AND NOT CYGWIN)
-    set(VENDOR INTEL)
+    set(MPI_TYPE "Intel")
+    if(NOT CMI_MPI_TYPE STREQUAL MPI_TYPE)
+      message(STATUS "MPI: Using Intel MPI")
+    endif()
 
     # (Re)initialize MPI
     if(NOT CMI_MPI_ROOT STREQUAL I_MPI_ROOT)
       message(STATUS "MPI: I_MPI_ROOT - ${I_MPI_ROOT}")
-      unset(CMI_MPI_MISSING)
       foreach(COMPONENT IN ITEMS _COMPONENTS)
         unset(MPI_$[COMPONENT}_COMPILES CACHE)
       endforeach()
+      unset(I_MPI_C_LIB_ CACHE)
+      unset(I_MPI_CXX_LIB_ CACHE)
+      unset(I_MPI_F_LIB_ CACHE)
     endif()
 
-    # Handle MPI_LIB
+    set(MPI_ROOT "${I_MPI_ROOT}")
+
+    # Handle MPI_EXEC
     set(MPI_EXEC "${I_MPI_ROOT}/intel64/bin/mpiexec")
-    find_library(MPI_LIB NAMES impi mpi PATHS "${I_MPI_ROOT}/intel64/lib/release/" NO_DEFAULT_PATH)
-    set(MPI_LIB ${MPI_LIB})
-    unset(MPI_LIB CACHE)
-    if(NOT MPI_LIB)
-      message(WARNING "MPI: Missing developer libraries. MPI SDK installed correctly?")
-    endif()
+
+    # Handle MPI_<comp>_LIB
+    foreach(COMPONENT IN LISTS _COMPONENTS)
+      set(I_MPI_LIB_DIR_ "${I_MPI_ROOT}/intel64/lib")
+
+      # all require the C library
+      find_library(I_MPI_C_LIB_ NAMES impi mpi PATHS "${I_MPI_LIB_DIR_}/release" NO_DEFAULT_PATH)
+      set(MPI_${COMPONENT}_LIB ${I_MPI_C_LIB_})
+
+      if(${COMPONENT} STREQUAL "MPICXX")
+        find_library(I_MPI_CXX_LIB_ NAMES impicxx mpicxx PATHS "${I_MPI_LIB_DIR_}" NO_DEFAULT_PATH)
+        if(I_MPI_CXX_LIB_)
+          set(MPI_${COMPONENT}_LIB ${I_MPI_CXX_LIB_} ${I_MPI_C_LIB_})
+        endif()
+
+      elseif(${COMPONENT} STREQUAL "F77" OR ${COMPONENT} STREQUAL "F90")
+        find_library(I_MPI_F_LIB_ NAMES mpifort PATHS "${I_MPI_LIB_DIR_}" NO_DEFAULT_PATH)
+        if(I_MPI_F_LIB_)
+          set(MPI_${COMPONENT}_LIB ${I_MPI_F_LIB_} ${I_MPI_C_LIB_})
+        endif()
+
+      endif()
+
+      if(NOT MPI_${COMPONENT}_LIB)
+        message(WARNING "MPI: Missing developer libraries (${COMPONENT}). MPI SDK installed correctly?")
+      endif()
+    endforeach()
+    unset(I_MPI_LIB_DIR_)
 
     # Handle MPI_INCLUDE
     set(MPI_INCLUDE "${I_MPI_ROOT}/intel64/include")
@@ -852,7 +1260,7 @@ function(cmi_find_mpi)
       message(WARNING "MPI: Missing include directoy - ${MPI_INCLUDE}")
     else()
       if(CMAKE_Fortran_COMPILER_ID STREQUAL "GNU")
-        FILE(GLOB versions RELATIVE "${MPI_INCLUDE}/gfortran/" "${MPI_INCLUDE}/gfortran/*")
+        file(GLOB versions RELATIVE "${MPI_INCLUDE}/gfortran/" "${MPI_INCLUDE}/gfortran/*")
         set(TARGET_VERSION "${CMAKE_Fortran_COMPILER_VERSION}")
         foreach(version IN LISTS versions)
           if(NOT version VERSION_GREATER TARGET_VERSION)
@@ -866,20 +1274,31 @@ function(cmi_find_mpi)
         endif()
       endif()
     endif()
+    # /Intel MPI
+
+  else()
+     # Wrapper MPI
+    set(MPI_TYPE "Wrapper")
+    if(NOT CMI_MPI_TYPE STREQUAL MPI_TYPE)
+      message(STATUS "MPI: Using compiler wrapper")
+    endif()
+    set(MPI_EXEC "mpiexec")
+    # /Wrapper MPI
   endif()
 
-  # Handle components
+
+  # Check if MPI components work
   foreach(COMPONENT IN LISTS _COMPONENTS)
     if(NOT TARGET CMI_MPI_${COMPONENT})
       set(CMAKE_REQUIRED_INCLUDES ${MPI_INCLUDE})
-      set(CMAKE_REQUIRED_LIBRARIES ${MPI_LIB})
-      check_mpi(${COMPONENT} MPI_${COMPONENT}_COMPILES)
+      set(CMAKE_REQUIRED_LIBRARIES ${MPI_${COMPONENT}_LIB})
+      cmi_mpi_compiles_(${COMPONENT} MPI_${COMPONENT}_COMPILES)
       unset(CMAKE_REQUIRED_INCLUDES)
       unset(CMAKE_REQUIRED_LIBRARIES)
       if(MPI_${COMPONENT}_COMPILES)
         add_library(CMI_MPI_${COMPONENT} INTERFACE)
         set_property(TARGET CMI_MPI_${COMPONENT} PROPERTY INTERFACE_INCLUDE_DIRECTORIES "${MPI_INCLUDE}")
-        set_property(TARGET CMI_MPI_${COMPONENT} PROPERTY INTERFACE_LINK_LIBRARIES "${MPI_LIB}")
+        set_property(TARGET CMI_MPI_${COMPONENT} PROPERTY INTERFACE_LINK_LIBRARIES "${MPI_${COMPONENT}_LIB}")
         add_library(CMI::MPI_${COMPONENT} ALIAS CMI_MPI_${COMPONENT})
       else()
         unset(MPI_${COMPONENT}_COMPILES CACHE)
@@ -887,25 +1306,26 @@ function(cmi_find_mpi)
       endif()
     endif()
   endforeach()
-  if(NOT CMI_MPI_MISSING)
-    set(CMI_MPI_ROOT "${I_MPI_ROOT}" CACHE INTERNAL "")
-  else()
+
+  set(CMI_MPI_ROOT "${MPI_ROOT}" CACHE INTERNAL "")
+  set(CMI_MPI_TYPE "${MPI_TYPE}" CACHE INTERNAL "")
+
+  # Set mpiexec from environment
+  if(NOT MPI_EXEC OR NOT EXISTS "${MPI_EXEC}")
+    set(MPI_EXEC "$ENV{MPIEXEC}")
+  endif()
+  # Set mpiexec to default
+  if(NOT MPI_EXEC OR NOT EXISTS "${MPI_EXEC}")
+    set(MPI_EXEC "mpiexec")
+  endif()
+  set(CMI_MPIEXEC "${MPI_EXEC}" CACHE INTERNAL "")
+
+  if(CMI_MPI_MISSING)
     message(STATUS "MPI: Unable to use the following component(s): ${CMI_MPI_MISSING}")
     if(_REQUIRED)
       message(SEND_ERROR "MPI: Unsatisfied requirements.")
     endif()
   endif()
-
-
-  # Set mpiexec from environment
-  if(NOT MPI_EXEC)
-    set(MPI_EXEC "$ENV{MPIEXEC}")
-  endif()
-  # Set mpiexec to default
-  if(NOT MPI_EXEC)
-    set(MPI_EXEC "mpiexec")
-  endif()
-  set(CMI_MPIEXEC "${MPI_EXEC}" CACHE INTERNAL "")
 
 endfunction()
 
@@ -976,7 +1396,6 @@ endmacro()
 
 function(cmi_find_omp)
   cmi_Fortran_append(OMP_FLAGS_ OMP)
-  string(STRIP "${OMP_FLAGS_}" OMP_FLAGS_)
   if(NOT TARGET CMI_OpenMP_Fortran)
     add_library(CMI_OpenMP_Fortran INTERFACE)
     set_property(TARGET CMI_OpenMP_Fortran PROPERTY INTERFACE_COMPILE_OPTIONS ${OMP_FLAGS_})
