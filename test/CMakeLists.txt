@@ -18,8 +18,8 @@ foreach(inFile IN LISTS generate_files)
   add_custom_command(
     OUTPUT "${outFile}"
     COMMAND "${CMAKE_COMMAND}" -E make_directory "${outDir}"
-    COMMAND "${Python_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/../typegen.py" "${inFile}" -o "${outFile}"
-    DEPENDS "${inFile}"
+    COMMAND "${Python_EXECUTABLE}" "${FDE_GENERATOR_SCRIPT}" "${inFile}" -o "${outFile}"
+    DEPENDS "${inFile}" "${FDE_GENERATOR_SCRIPT}"
   )
   list(APPEND OutputFileList "${outFile}")
 endforeach()

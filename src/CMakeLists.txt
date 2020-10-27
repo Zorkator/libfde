@@ -24,7 +24,6 @@ set(generate_files
   ./string.F90_tpp
 )
 set(OutputFileList "")
-set(GENERATOR_SCRIPT "${CMAKE_CURRENT_SOURCE_DIR}/../typegen.py")
 foreach(inFile IN LISTS generate_files)
   string(REPLACE "_tpp" "" outFile "${inFile}")
   set(inFile "${CMAKE_CURRENT_SOURCE_DIR}/${inFile}")
@@ -33,8 +32,8 @@ foreach(inFile IN LISTS generate_files)
   add_custom_command(
     OUTPUT "${outFile}"
     COMMAND "${CMAKE_COMMAND}" -E make_directory "${outDir}"
-    COMMAND "${Python_EXECUTABLE}" "${GENERATOR_SCRIPT}" "${inFile}" -o "${outFile}"
-    DEPENDS "${inFile}" "${GENERATOR_SCRIPT}"
+    COMMAND "${Python_EXECUTABLE}" "${FDE_GENERATOR_SCRIPT}" "${inFile}" -o "${outFile}"
+    DEPENDS "${inFile}" "${FDE_GENERATOR_SCRIPT}"
   )
   list(APPEND OutputFileList "${outFile}")
 endforeach()

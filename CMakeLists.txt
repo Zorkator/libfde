@@ -16,6 +16,8 @@ cmi_set_build_environment()
 # Generating files
 cmi_find_python()
 
+set(FDE_GENERATOR_SCRIPT "${CMAKE_CURRENT_SOURCE_DIR}/typegen.py")
+
 # fortres
 add_subdirectory(libfortres)
 add_subdirectory(src)
