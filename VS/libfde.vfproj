@@ -4,9 +4,9 @@
 		<Platform Name="Win32"/>
 		<Platform Name="x64"/></Platforms>
 	<Configurations>
-		<Configuration Name="Debug|Win32" OutputDirectory="..\lib\$(ConfigurationName).$(PlatformName)" IntermediateDirectory=".work\$(ConfigurationName).$(PlatformName)" TargetName="$(ProjectName).2.7.2.$(ConfigurationName).$(PlatformName)" ConfigurationType="typeDynamicLibrary">
+		<Configuration Name="Debug|Win32" OutputDirectory="..\lib\$(ConfigurationName).$(PlatformName)" IntermediateDirectory=".work\$(ConfigurationName).$(PlatformName)" TargetName="$(ProjectName).2.8.0.$(ConfigurationName).$(PlatformName)" ConfigurationType="typeDynamicLibrary">
 				<Tool Name="VFFortranCompilerTool" SuppressStartupBanner="true" DebugInformationFormat="debugEnabled" Optimization="optimizeDisabled" Preprocess="preprocessYes" AdditionalIncludeDirectories="../libfortres/include; ../include" PreprocessorDefinitions="BUILT_TYPE=SHARED_LIB;FDE_DEBUG=ENABLED" ExternalNameInterpretation="extNameLowerCase" ExternalNameUnderscore="true" Traceback="true" BoundsCheck="true" RuntimeLibrary="rtMultiThreadedDLL"/>
-				<Tool Name="VFLinkerTool" LinkIncremental="linkIncrementalNo" SuppressStartupBanner="true" AdditionalLibraryDirectories="..\libfortres\bin\$(ConfigurationName)" GenerateManifest="false" GenerateDebugInformation="true" SubSystem="subSystemWindows" LinkDLL="true" AdditionalDependencies="libfortres.2.7.2.$(PlatformName).lib"/>
+				<Tool Name="VFLinkerTool" LinkIncremental="linkIncrementalNo" SuppressStartupBanner="true" AdditionalLibraryDirectories="..\libfortres\bin\$(ConfigurationName)" GenerateManifest="false" GenerateDebugInformation="true" SubSystem="subSystemWindows" LinkDLL="true" AdditionalDependencies="libfortres.2.8.0.$(PlatformName).lib"/>
 				<Tool Name="VFResourceCompilerTool"/>
 				<Tool Name="VFMidlTool" SuppressStartupBanner="true"/>
 				<Tool Name="VFCustomBuildTool"/>
@@ -14,9 +14,9 @@
 				<Tool Name="VFPreBuildEventTool"/>
 				<Tool Name="VFPostBuildEventTool" CommandLine="&quot;$(ProjectDir)\..\copylib.bat&quot; &quot;$(OutDir)&quot; &quot;$(IntDir)\fde_*.mod&quot; &quot;$(IntDir)\libfde*&quot; &quot;..\libfortres\bin\$(ConfigurationName)\libfortres*$(PlatformName).*&quot;" Description="copy library files from $(IntDir) to $(OutDir)"/>
 				<Tool Name="VFManifestTool" SuppressStartupBanner="true"/></Configuration>
-		<Configuration Name="Release|Win32" OutputDirectory="..\lib\$(ConfigurationName).$(PlatformName)" IntermediateDirectory=".work\$(ConfigurationName).$(PlatformName)" TargetName="$(ProjectName).2.7.2.$(ConfigurationName).$(PlatformName)" ConfigurationType="typeDynamicLibrary">
+		<Configuration Name="Release|Win32" OutputDirectory="..\lib\$(ConfigurationName).$(PlatformName)" IntermediateDirectory=".work\$(ConfigurationName).$(PlatformName)" TargetName="$(ProjectName).2.8.0.$(ConfigurationName).$(PlatformName)" ConfigurationType="typeDynamicLibrary">
 				<Tool Name="VFFortranCompilerTool" SuppressStartupBanner="true" Preprocess="preprocessYes" AdditionalIncludeDirectories="../libfortres/include; ../include" PreprocessorDefinitions="BUILT_TYPE=SHARED_LIB" ExternalNameInterpretation="extNameLowerCase" ExternalNameUnderscore="true" RuntimeLibrary="rtMultiThreadedDLL"/>
-				<Tool Name="VFLinkerTool" LinkIncremental="linkIncrementalNo" SuppressStartupBanner="true" AdditionalLibraryDirectories="..\libfortres\bin\$(ConfigurationName)" GenerateManifest="false" GenerateDebugInformation="true" SubSystem="subSystemWindows" LinkDLL="true" AdditionalDependencies="libfortres.2.7.2.$(PlatformName).lib"/>
+				<Tool Name="VFLinkerTool" LinkIncremental="linkIncrementalNo" SuppressStartupBanner="true" AdditionalLibraryDirectories="..\libfortres\bin\$(ConfigurationName)" GenerateManifest="false" GenerateDebugInformation="true" SubSystem="subSystemWindows" LinkDLL="true" AdditionalDependencies="libfortres.2.8.0.$(PlatformName).lib"/>
 				<Tool Name="VFResourceCompilerTool"/>
 				<Tool Name="VFMidlTool" SuppressStartupBanner="true"/>
 				<Tool Name="VFCustomBuildTool"/>
@@ -24,9 +24,9 @@
 				<Tool Name="VFPreBuildEventTool"/>
 				<Tool Name="VFPostBuildEventTool" CommandLine="&quot;$(ProjectDir)\..\copylib.bat&quot; &quot;$(OutDir)&quot; &quot;$(IntDir)\fde_*.mod&quot; &quot;$(IntDir)\libfde*&quot; &quot;..\libfortres\bin\$(ConfigurationName)\libfortres*$(PlatformName).*&quot;" Description="copy library files from $(IntDir) to $(OutDir)"/>
 				<Tool Name="VFManifestTool" SuppressStartupBanner="true"/></Configuration>
-		<Configuration Name="Debug|x64" OutputDirectory="..\lib\$(ConfigurationName).$(PlatformName)" IntermediateDirectory=".work\$(ConfigurationName).$(PlatformName)" TargetName="$(ProjectName).2.7.2.$(ConfigurationName).$(PlatformName)" ConfigurationType="typeDynamicLibrary">
+		<Configuration Name="Debug|x64" OutputDirectory="..\lib\$(ConfigurationName).$(PlatformName)" IntermediateDirectory=".work\$(ConfigurationName).$(PlatformName)" TargetName="$(ProjectName).2.8.0.$(ConfigurationName).$(PlatformName)" ConfigurationType="typeDynamicLibrary">
 				<Tool Name="VFFortranCompilerTool" SuppressStartupBanner="true" DebugInformationFormat="debugEnabled" Optimization="optimizeDisabled" Preprocess="preprocessYes" AdditionalIncludeDirectories="../libfortres/include; ../include" PreprocessorDefinitions="BUILT_TYPE=SHARED_LIB;FDE_DEBUG=ENABLED" ExternalNameInterpretation="extNameLowerCase" ExternalNameUnderscore="true" Traceback="true" BoundsCheck="true" RuntimeLibrary="rtMultiThreadedDLL"/>
-				<Tool Name="VFLinkerTool" LinkIncremental="linkIncrementalNo" SuppressStartupBanner="true" AdditionalLibraryDirectories="..\libfortres\bin\$(ConfigurationName)" GenerateManifest="false" GenerateDebugInformation="true" SubSystem="subSystemWindows" LinkDLL="true" AdditionalDependencies="libfortres.2.7.2.$(PlatformName).lib"/>
+				<Tool Name="VFLinkerTool" LinkIncremental="linkIncrementalNo" SuppressStartupBanner="true" AdditionalLibraryDirectories="..\libfortres\bin\$(ConfigurationName)" GenerateManifest="false" GenerateDebugInformation="true" SubSystem="subSystemWindows" LinkDLL="true" AdditionalDependencies="libfortres.2.8.0.$(PlatformName).lib"/>
 				<Tool Name="VFResourceCompilerTool"/>
 				<Tool Name="VFMidlTool" SuppressStartupBanner="true" TargetEnvironment="midlTargetAMD64"/>
 				<Tool Name="VFCustomBuildTool"/>
@@ -34,9 +34,9 @@
 				<Tool Name="VFPreBuildEventTool"/>
 				<Tool Name="VFPostBuildEventTool" CommandLine="&quot;$(ProjectDir)\..\copylib.bat&quot; &quot;$(OutDir)&quot; &quot;$(IntDir)\fde_*.mod&quot; &quot;$(IntDir)\libfde*&quot; &quot;..\libfortres\bin\$(ConfigurationName)\libfortres*$(PlatformName).*&quot;" Description="copy library files from $(IntDir) to $(OutDir)"/>
 				<Tool Name="VFManifestTool" SuppressStartupBanner="true"/></Configuration>
-		<Configuration Name="Release|x64" OutputDirectory="..\lib\$(ConfigurationName).$(PlatformName)" IntermediateDirectory=".work\$(ConfigurationName).$(PlatformName)" TargetName="$(ProjectName).2.7.2.$(ConfigurationName).$(PlatformName)" ConfigurationType="typeDynamicLibrary">
+		<Configuration Name="Release|x64" OutputDirectory="..\lib\$(ConfigurationName).$(PlatformName)" IntermediateDirectory=".work\$(ConfigurationName).$(PlatformName)" TargetName="$(ProjectName).2.8.0.$(ConfigurationName).$(PlatformName)" ConfigurationType="typeDynamicLibrary">
 				<Tool Name="VFFortranCompilerTool" SuppressStartupBanner="true" Preprocess="preprocessYes" AdditionalIncludeDirectories="../libfortres/include; ../include" PreprocessorDefinitions="BUILT_TYPE=SHARED_LIB" ExternalNameInterpretation="extNameLowerCase" ExternalNameUnderscore="true" RuntimeLibrary="rtMultiThreadedDLL"/>
-				<Tool Name="VFLinkerTool" LinkIncremental="linkIncrementalNo" SuppressStartupBanner="true" AdditionalLibraryDirectories="..\libfortres\bin\$(ConfigurationName)" GenerateManifest="false" GenerateDebugInformation="true" SubSystem="subSystemWindows" LinkDLL="true" AdditionalDependencies="libfortres.2.7.2.$(PlatformName).lib"/>
+				<Tool Name="VFLinkerTool" LinkIncremental="linkIncrementalNo" SuppressStartupBanner="true" AdditionalLibraryDirectories="..\libfortres\bin\$(ConfigurationName)" GenerateManifest="false" GenerateDebugInformation="true" SubSystem="subSystemWindows" LinkDLL="true" AdditionalDependencies="libfortres.2.8.0.$(PlatformName).lib"/>
 				<Tool Name="VFResourceCompilerTool"/>
 				<Tool Name="VFMidlTool" SuppressStartupBanner="true" TargetEnvironment="midlTargetAMD64"/>
 				<Tool Name="VFCustomBuildTool"/>
