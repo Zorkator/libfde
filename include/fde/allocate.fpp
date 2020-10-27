@@ -94,6 +94,6 @@
 # define _expand_REALLOCATE( sym, times, pad, tmp ) \
     _expand_REALLOCATE_st( sym, times, pad, tmp, __istat__ )
 
-#endif 
+#endif
 ! ^^ __FDE_ALLOCATE_FPP
 

@@ -1,3 +1,4 @@
+#include <fortres_config.h>
 
 #include <sys/stat.h>
 #include <errno.h>
@@ -5,25 +6,26 @@
 #define  _DLL_EXPORT_IMPLEMENTATION_
 #include "fortres/dirent.hpp"
 
-#if !defined _MSC_VER
+#if defined HAVE_STRING_SECURE
+# define strtok_r( str, delim, ctxt )   strtok_s( str, delim, ctxt )
+#endif
+
+#if defined HAVE_WINDOWS_H
+# include <windows.h>
+  /* sorry, it's M$ ... */
+# define getcwd( buf, size )            GetCurrentDirectoryA( (DWORD)size, buf )
+#else
   /* assume POSIX compatible compiler */
 # include <stdlib.h>
 # include <unistd.h>
-# include <dlfcn.h>
-#	ifndef MAX_PATH
-#		define MAX_PATH		4096
-#	endif
-
-#else
-  /* sorry, it's M$ ... */
-# include <windows.h>
-# define getcwd( buf, size )    				GetCurrentDirectoryA( (DWORD)size, buf )
-#	define strtok_r( str, delim, ctxt )		strtok_s( str, delim, ctxt )
-# define stat                           _stat
 #endif
 
-static const char _pathDelim[] = PATH_DELIM;
-static const char _pathSep[]   = PATH_DELIM other_PATH_DELIM;
+#if defined HAVE_DLFCN_H
+# include <dlfcn.h>
+#endif
+
+static const char _pathDelim[] = PATH_SEP;
+static const char _pathSep[]   = PATH_SEP_WINDOWS PATH_SEP_UNIX;
 
 
 void
@@ -31,6 +33,7 @@ make_cwd( std::string *cwd )
 {
   cwd->resize( MAX_PATH );
   getcwd( &(*cwd)[0], cwd->capacity() );
+  cwd->resize( strnlen( &(*cwd)[0], cwd->capacity() ) );
 }
 
 
@@ -54,7 +57,7 @@ make_relPath_from_to( std::string *res, char *src, char *tgt )
       t1 = strtok_r( NULL, _pathSep, &t1n );
       t2 = strtok_r( NULL, _pathSep, &t2n );
     }
-    
+
     // make way up starting from src ...
     while (t1 != NULL)
     {
@@ -154,11 +157,12 @@ so_filepath_of( const void *addr, char buff[], size_t len )
 {
   size_t res = 0;
 
-#if defined _MSC_VER
+#if defined HAVE_LIBLOADERAPI_H
   HMODULE hdl = NULL;
   if (GetModuleHandleExA( GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS | GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT, (LPCSTR)addr, &hdl ))
     { res = GetModuleFileNameA( hdl, buff, (DWORD)len ); }
-#else
+
+#elif defined HAVE_DLFCN_H
   Dl_info info;
   if (dladdr( const_cast<void *>(addr), &info ))
   {
@@ -169,6 +173,9 @@ so_filepath_of( const void *addr, char buff[], size_t len )
       buff[res] = '\0'; //< make sure string is terminated!
     }
   }
+
+#else
+  #error "Neither HAVE_WINDOWS_H nor HAVE_DLFCN_H"
 #endif
   return res;
 }
@@ -179,8 +186,7 @@ size_t
 f_so_filepath_of( const void *addr, StringRef *filePath )
 {
   size_t len = so_filepath_of( addr, filePath->buffer(), filePath->length() );
-  if (len < filePath->length())
-    { memset( filePath->buffer() + len, ' ', filePath->length() - len ); }
+  filePath->pad( len );
   return len;
 }
 
@@ -190,7 +196,7 @@ make_realpath( const char *filePath, char *buff, size_t len )
 {
   size_t tgtLen = 0;
 
-#if defined _MSC_VER
+#if defined HAVE_WINDOWS_H
   tgtLen = GetFullPathName( filePath, static_cast<DWORD>(len), buff, NULL );
 #else
   char *ptr;

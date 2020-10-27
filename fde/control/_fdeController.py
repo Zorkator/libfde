@@ -1,9 +1,9 @@
 
 import sys
 from ctypes  import create_string_buffer, byref, c_size_t
-from ..tools import core_loader
-from .       import NativeController
 
+from ..tools            import core_loader
+from ._nativeController import NativeController
 
 ########################################
 class FDEController(NativeController):

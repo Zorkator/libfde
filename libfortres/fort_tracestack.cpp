@@ -1,12 +1,21 @@
+#include <fortres_config.h>
 
-#if defined _MSC_VER
+#if defined HAVE_DBGHELP_H
 # define _CRT_SECURE_NO_WARNINGS
 # include <windows.h>
 # include <DbgHelp.h>
-
 #else
-# include <dlfcn.h>
 # include <execinfo.h>
+#endif
+
+
+#if defined HAVE_LIBLOADERAPI_H
+# include <windows.h>
+# include <libloaderapi.h>
+#elif defined HAVE_DLFCN_H
+# include <dlfcn.h>
+#else
+  #error "Neither HAVE_LIBLOADERAPI_H nor HAVE_DLFCN_H"
 #endif
 
 #include <stdio.h>
@@ -40,13 +49,13 @@ f_tracestack( FrameInfoOp infoOp, const int *skippedFrames, StringRef *info )
 {
   void     *frames[100];
   int       stackSize;
-	StringRef infoRef;
+  StringRef infoRef;
 
   /* make sure there is a FrameInfoOp */
   if (infoOp == NULL) infoOp = _frameInfoOp;
   if (infoOp == NULL) infoOp = f_printFrameLine;
 
-#if defined _MSC_VER
+#if defined HAVE_DBGHELP_H
   HANDLE       process;
   char         frameBuffer[512+32];
   char         symbolBuffer[sizeof(SYMBOL_INFO) + 256 * sizeof(char)];
@@ -67,19 +76,19 @@ f_tracestack( FrameInfoOp infoOp, const int *skippedFrames, StringRef *info )
     infoOp( &infoRef.referTo(frameBuffer).trim() );
   }
 #else
-	char **strings;
+  char **strings;
 
-	stackSize = backtrace( frames, sizeof(frames) );
-	strings   = backtrace_symbols( frames, stackSize );
+  stackSize = backtrace( frames, sizeof(frames) );
+  strings   = backtrace_symbols( frames, stackSize );
 
-	if (strings)
-	{
+  if (strings)
+  {
     for (int i = stackSize - 1; i > *skippedFrames; --i)
-			{ infoOp( &infoRef.referTo(strings[i]).trim() ); }
-		free( strings );
-	}
+      { infoOp( &infoRef.referTo(strings[i]).trim() ); }
+      free( strings );
+  }
 #endif
-  
+
   if (info && info->length())
     { infoOp( info ); }
 }

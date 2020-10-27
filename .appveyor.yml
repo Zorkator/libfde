@@ -1,0 +1,54 @@
+image:
+- Ubuntu
+- Visual Studio 2015
+- macOS
+
+
+for:
+-
+  matrix:
+    only:
+      - image: Ubuntu
+
+  install:
+    - mkdir _build
+    - cd _build
+    - cmake .. -DCMAKE_BUILD_TYPE=Debug -DBUILD_TESTING=1
+    - cmake --build .
+
+  test_script:
+    - ctest --output-on-failure .
+
+-
+  matrix:
+    only:
+      - image: Visual Studio 2015
+
+  install:
+    - set PATH=C:\mingw-w64\x86_64-7.3.0-posix-seh-rt_v5-rev0\mingw64\bin;C:\Program Files (x86)\CMake\bin
+    - mkdir _build
+    - cd _build
+    - cmake .. -G "MinGW Makefiles" -DCMAKE_BUILD_TYPE=Debug -DBUILD_TESTING=1
+    - cmake --build .
+
+  test_script:
+    - ctest --output-on-failure .
+
+-
+  matrix:
+    only:
+      - image: macOS
+
+  install:
+    - brew install gcc
+    - mkdir _build
+    - cd _build
+    - cmake .. -DCMAKE_BUILD_TYPE=Debug -DBUILD_TESTING=1
+    - cmake --build .
+
+  test_script:
+    - ctest --output-on-failure .
+
+build: off
+
+

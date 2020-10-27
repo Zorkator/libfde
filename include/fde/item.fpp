@@ -22,7 +22,7 @@
 
 
   ! For ifort and gfortran (both, in various versions) using real*16 or complex*32 results in REALLY fragile code!
-  ! Calling the original subroutine (macro) for real128/complex128 causes strange segfaults in assingment or 
+  ! Calling the original subroutine (macro) for real128/complex128 causes strange segfaults in assingment or
   !   constructor while assigning a real*16/complex*32 variable to another.
   ! In some cases, this is even that fragile that commenting out a line causes
   !   a segfault at some assignment BEFORE.
@@ -30,7 +30,7 @@
   !   guess that this might be caused by some corruption of the MMX/SSE stack (used for copying a real*16/complex*32)
   !   or whatever.
   ! Even the intel inspector is perfectly fine with the test code (test_var_item.f90), throwing the sefaults!
-  ! 
+  !
   ! FOR NOW: sorry, but best is to disable real*16 and complex*32 for Item storage by default.
   ! Some sunny day, we either find that nasty BUG or we finally got better compilers that tell us the truth.
   ! If so, we could reenable the types by defining the preprocessor flag ITEM_REAL16

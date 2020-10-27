@@ -1,3 +1,4 @@
+#include <fortres_config.h>
 
 # define _CRT_SECURE_NO_WARNINGS
 #include <map>
@@ -12,14 +13,21 @@
 #include "fortres/String.hpp"
 #include "fortres/stdlib.h"
 
-#if defined _MSC_VER
+#if defined HAVE_WINDOWS_H
 # include <windows.h>
-# define LIB_PREFIX         "lib"
-# define LIB_SUFFIX         ".dll"
-# define LIB_PATH_VAR       "PATH"
-# define LIB_PATH_SEP       ";"
-# define LIB_DIR_SEP        "\\"
-# define LIB_DIR_SEP_other  "/"
+#endif
+
+#if defined HAVE_DLFCN_H
+# include <dlfcn.h>
+
+# define dlOpen(lib)        dlopen( lib, RTLD_NOW | RTLD_GLOBAL )
+# define dlClose(hdl)       dlclose( hdl )
+# define dlSym(hdl,sym)     dlsym( hdl, sym )
+# define dlError()          dlerror()
+# define dlErrorCode()      errno
+
+#elif defined HAVE_LIBLOADERAPI_H
+# include <libloaderapi.h>
 
 # define dlOpen(lib)        LoadLibraryA( (LPCSTR)lib )
 # define dlClose(hdl)       FreeLibrary( (HMODULE)hdl )
@@ -28,19 +36,15 @@
 # define dlErrorCode()      GetLastError()
 
 #else
-# include <dlfcn.h>
-# define LIB_PREFIX         "lib"
-# define LIB_SUFFIX         ".so"
-# define LIB_PATH_VAR       "LD_LIBRARY_PATH"
-# define LIB_PATH_SEP       ":"
-# define LIB_DIR_SEP        "/"
-# define LIB_DIR_SEP_other  "\\"
+  #error "Neither HAVE_LIBLOADERAPI_H nor HAVE_DLFCN_H"
+#endif
 
-# define dlOpen(lib)        dlopen( lib, RTLD_NOW | RTLD_GLOBAL )
-# define dlClose(hdl)       dlclose( hdl )
-# define dlSym(hdl,sym)     dlsym( hdl, sym )
-# define dlError()          dlerror()
-# define dlErrorCode()      errno
+#if defined HAVE_LINK_H
+# include <link.h>
+#endif
+
+#if defined HAVE_PSAPI_H
+# include <psapi.h>
 #endif
 
 # define _ref_str(strRef)       strRef->str()
@@ -61,6 +65,7 @@ class SharedLib
       typedef void (*Function)( void );
 
       SharedLib( const char *libFile )
+      : _hdl(NULL), _initialized(false)
       {
         _hdl = dlOpen( libFile );
         if (!_hdl && _dbg_info)
@@ -71,12 +76,37 @@ class SharedLib
       ~SharedLib( void )
       {
         if (_hdl != NULL)
-          { dlClose( _hdl ); }
+        {
+          this->finalize();
+          dlClose( _hdl );
+        }
+      }
+
+    void
+      initialize( void )
+      {
+        Function init = (Function)this->getSymbol( "initialize_c_" );
+        if (init != NULL)
+        {
+          init();
+          _initialized = true;
+        }
+      }
+
+    void
+      finalize( void )
+      {
+        if (_initialized)
+        {
+          Function fin = (Function)this->getSymbol( "finalize_c_" );
+          if (fin != NULL)
+            { fin(); }
+        }
       }
 
     void *
       getSymbol( const char *funcID )
-        { return dlSym( _hdl, funcID ); }
+        { return (void *) dlSym( _hdl, funcID ); }
 
     const char *
       getError( void ) const
@@ -91,6 +121,7 @@ class SharedLib
 
   private:
     void *_hdl;
+    bool  _initialized;
 };
 
 
@@ -98,6 +129,19 @@ class SharedLib
 class PluginBroker
 /*******************/
 {
+  public:
+    typedef enum
+    {
+      State_invalid  = -1,
+      State_disabled =  0,
+      State_enabled  =  1,
+      State_located  =  2
+    /*******************/
+    } PluginState;
+    /*******************/
+
+
+  private:
     /*******************/
     class Predicate
     /*******************/
@@ -125,14 +169,6 @@ class PluginBroker
     };
 
 
-    typedef enum
-    {
-      State_invalid  = -1,
-      State_disabled =  0,
-      State_enabled  =  1
-    } PluginState;
-
-    
     /*******************/
     class PluginRef
     /*******************/
@@ -143,10 +179,23 @@ class PluginBroker
           { /* nothing to do here */ }
 
         PluginRef( const char *filePath_, const SharedLib::Handle &handle_, PluginState state_ = State_disabled )
-        : filePath( realpath_of(filePath_) )
-        , handle(handle_)
-        , state(state_)
-          { /* nothing to do here */ }
+        : handle(handle_)
+        {
+          if (state_ == State_located)
+          {
+            /* use original filePath if shared library should be located by OS (PATH / LD_LIBRARY_PATH) */
+            state    = State_enabled;
+            filePath = filePath_;
+          }
+          else
+          {
+            /* use original path if realpath conversion failed */
+            state    = state_;
+            filePath = realpath_of( filePath_ );
+            if (filePath.empty())
+              { filePath = filePath_; }
+          }
+        }
 
         String            filePath;
         SharedLib::Handle handle;
@@ -161,7 +210,6 @@ class PluginBroker
     {
       public:
         typedef std::map<String, PluginRef>::iterator  Iterator;
-        typedef SharedLib::Function                    Initializer;
 
         static SharedLib *
           tryLoad( const String &filePath, const Predicate &pred = Predicate() )
@@ -199,12 +247,7 @@ class PluginBroker
 
                   ref.handle.reset( lib );
                   if (lib)
-                  {
-                    /* if implemented, call initialize function */
-                    Initializer init = (Initializer)lib->getSymbol("initialize_c_");
-                    if (init)
-                      { init(); }
-                  }
+                    { lib->initialize(); }
                 }
               }
             }
@@ -250,13 +293,10 @@ class PluginBroker
         _libPath << LIB_PATH_SEP;
       }
 
-    
+
     void
-      registerPlugin( const StringRef *filePath, const StringRef *id, bool isEnabled = true )
-      {
-        PluginState state = (isEnabled)? State_enabled : State_disabled;
-        _pluginMap.insertPlugin( _ref_str(filePath), _ref_str(id), NULL, state );
-      }
+      registerPlugin( const StringRef *filePath, const StringRef *id, PluginState state = State_enabled )
+        { _pluginMap.insertPlugin( _ref_str(filePath), _ref_str(id), NULL, state ); }
 
 
     bool
@@ -268,7 +308,7 @@ class PluginBroker
           { itr->second.state = (isEnabled)? State_enabled : State_disabled; }
         return isOk;
       }
-    
+
 
     void
       scanPlugins( const StringRef *predSym )
@@ -306,7 +346,7 @@ class PluginBroker
           { sym = lib->getSymbol( _ref_cstr(symId) ); }
         return sym;
       }
-    
+
 
     bool
       isAvailable( const StringRef *pluginId, const StringRef *symId = NULL )
@@ -337,12 +377,26 @@ class PluginBroker
       }
 
 
+    bool
+      unload( const StringRef *pluginId )
+        { return (_pluginMap.erase( _ref_str(pluginId) ) != 0); }
+
+
+    void
+      clear( void )
+      {
+        _pluginMap.clear();
+        _pluginDir.clear();
+        _libPath.clear();
+      }
+
+
     static String
       libFileToId( const String &libFile )
       {
         size_t id_beg, id_end;
 
-        id_beg = libFile.find_last_of( LIB_DIR_SEP LIB_DIR_SEP_other );
+        id_beg = libFile.find_last_of( PATH_SEP_WINDOWS PATH_SEP_UNIX );
         id_beg = (id_beg == String::npos)? 0 : id_beg + 1; //< skip DIR_SEP
         if (libFile.find( _libPrefix, id_beg ) == id_beg)  //< skip optional LIB_PREFIX 'lib'
           { id_beg += _libPrefix.length(); }
@@ -351,7 +405,7 @@ class PluginBroker
         id_end = (id_end == String::npos)? libFile.length() : id_end;
         return libFile.substr( id_beg, id_end - id_beg );
       }
-      
+
   private:
     Map    _pluginMap;
     String _pluginDir;
@@ -385,7 +439,15 @@ void
 f_plugin_register( StringRef *filePath, StringRef *id, int *isEnabled )
 {
   bool enabled = isEnabled == NULL || *isEnabled != 0; //< default: true!
-  getBroker()->registerPlugin( filePath, id, enabled );
+  getBroker()->registerPlugin( filePath, id, PluginBroker::PluginState(enabled) );
+}
+
+
+_dllExport_C
+void
+f_plugin_register_so( StringRef *fileName, StringRef *id )
+{
+  getBroker()->registerPlugin( fileName, id, PluginBroker::State_located );
 }
 
 
@@ -466,5 +528,80 @@ f_plugin_try_call( StringRef *pluginId, StringRef *symId )
   if (func != NULL)
     { reinterpret_cast<SharedLib::Function>(func)(); }
   return (func != NULL);
+}
+
+
+_dllExport_C
+int
+f_plugin_iterate_so( SOInfoHandler handler )
+{
+  StringRef moduleId;
+  int       status = 0;
+
+#if defined HAVE_WINDOWS_H
+  HMODULE  handles[1024];
+  HANDLE   procHandle;
+  DWORD    numBytes;
+  wchar_t  idBuffer[MAX_PATH];
+  size_t   len;
+
+  procHandle = GetCurrentProcess();
+  if (EnumProcessModules( procHandle, handles, sizeof(handles), &numBytes ))
+  {
+    for (unsigned int i = 0; i < (numBytes / sizeof(HMODULE)); ++i)
+    {
+      len = GetModuleFileNameEx( procHandle, handles[i], (LPSTR)idBuffer, sizeof(idBuffer) / sizeof(idBuffer[0]) );
+      if (len > 0)
+      {
+        moduleId.referTo( (const char *)idBuffer, len );
+        status = handler( &moduleId, handles[i] );
+        if (status != 0)
+          { break; }
+      }
+    }
+  }
+  CloseHandle( procHandle );
+
+#else
+  #if defined HAVE_LINK_H
+  struct CB_Data
+  {
+    StringRef     &_moduleId;
+    SOInfoHandler &_handler;
+  } DATA = {moduleId, handler};
+
+  struct CB_Code
+  {
+    static int
+    callback( struct dl_phdr_info *info, size_t size, void *_data )
+    {
+      CB_Data &data = *static_cast<CB_Data *>(_data);
+      data._moduleId.referTo( info->dlpi_name );
+      if (data._moduleId.length() > 0)
+        { return data._handler( &data._moduleId, (void *)&info->dlpi_addr ); }
+      return 0;
+    }
+  };
+
+  status = dl_iterate_phdr( CB_Code::callback, &DATA );
+  #endif
+#endif
+  return status;
+}
+
+
+_dllExport_C
+int
+f_plugin_unload( StringRef *pluginId )
+{
+  if (pluginId == NULL || pluginId->length() == 0)
+  {
+    getBroker()->clear();
+    return 1;
+  }
+  else
+  {
+    return getBroker()->unload( pluginId );
+  }
 }
 

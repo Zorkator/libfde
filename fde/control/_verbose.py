@@ -1,5 +1,6 @@
 
-from ..tools   import openFile, sys_channel
+from ..tools            import openFile, sys_channel
+from ._nativeController import cached_property
 
 #############################
 class Verbose(object):
@@ -34,13 +35,10 @@ class Verbose(object):
     return self
 
 
-  @property
+  @cached_property
   def logger( self ):
     """returns lazy-opened output file handle, specified by options logFile and logBuff."""
-    try   : return self._stock._logger
-    except:
-      self._stock._logger = openFile( self._logFile.format( **self.about ), 'w+', int(self._logBuff) )
-      return self._stock._logger
+    return openFile( self._logFile.format( **self.about ), 'w+', int(self._logBuff) )
 
 
   def log( self, msg ):

@@ -26,6 +26,10 @@ namespace fortres
         : std::string( other )
           { /* nothing to do here */ }
 
+        String( size_t n, char ch )
+        : std::string( n, ch )
+          { /* nothing to do here */ }
+
       template <typename TYPE>
         explicit
         String( const TYPE &val )
@@ -123,7 +127,9 @@ namespace fortres
       String &
         trimBegin( void )
         {
-          this->erase( this->begin(), std::find_if( this->begin(), this->end(), std::not1( std::ptr_fun<int, int>(std::isspace) ) ) );
+          this->erase( this->begin(), std::find_if( this->begin(), this->end(), []( int character ) {
+              return !std::isspace( character );
+          } ) );
           return (*this);
         }
 
@@ -137,7 +143,9 @@ namespace fortres
       String &
         trimEnd( void )
         {
-          this->erase( std::find_if( this->rbegin(), this->rend(), std::not1( std::ptr_fun<int, int>(std::isspace) ) ).base(), this->end() );
+          this->erase( std::find_if( this->rbegin(), this->rend(), []( int character ) {
+              return !std::isspace( character );
+          } ).base(), this->end() );
           return (*this);
         }
 

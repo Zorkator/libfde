@@ -29,7 +29,7 @@ class NullGuard(object):
     return self
 
   def __exit__( self, *args ):
-    return 
+    return
 
 
 ######################################
@@ -52,4 +52,9 @@ def auto_raise( obj, what = None ):
   if isinstance( obj, type ) and issubclass( obj, Exception ): raise obj(what)
   if isinstance( obj, Exception )                            : raise obj
   return obj
+
+
+def _decorate( kvPairs, **kwArgs ):
+  for k,v in dict( kvPairs, **kwArgs ).items():
+    yield ('_' + k, v)
 

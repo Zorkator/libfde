@@ -11,7 +11,7 @@
 !                      . o O (need value != 0 for detecting user IDs)
 # define DISABLED    -1
 # define ENABLED      1
-# define APPLICATION  2 
+# define APPLICATION  2
 # define STATIC_LIB   3
 # define SHARED_LIB   4
 
@@ -81,6 +81,26 @@
 #   define _ARG_REFERENCE5( a, b, c, d, e )
 # endif
 
+
+# undef  _INTEL
+# if defined __INTEL_COMPILER
+!   define *DEPRECATED* compatibility flag _INTEL ...
+!     >> use '__INTEL_COMPILER' instead
+#   define _INTEL
+
+#   define _INTEL_USE(mod)                 use mod
+#   define _INTEL_USE_ONLY_1(mod,a)        use mod, only: a
+#   define _INTEL_USE_ONLY_2(mod,a,b)      use mod, only: a, b
+#   define _INTEL_USE_ONLY_3(mod,a,b,c)    use mod, only: a, b, c
+
+# else
+
+#   define _INTEL_USE(mod)
+#   define _INTEL_USE_ONLY_1(mod,a)
+#   define _INTEL_USE_ONLY_2(mod,a,b)
+#   define _INTEL_USE_ONLY_3(mod,a,b,c)
+
+# endif
 
 # if defined __INTEL_COMPILER
 #   define _CPROC( id )              DEC$ ATTRIBUTES C::id

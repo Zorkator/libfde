@@ -67,6 +67,6 @@ TestSimulator.lib
 	<Files>
 		<Filter Name="Header Files" Filter="fi;fd"/>
 		<Filter Name="Resource Files" Filter="rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe"/>
-		<Filter Name="Source Files" Filter="f90;for;f;fpp;ftn;def;odl;idl">
-		<File RelativePath="..\test_simulator_driver.f90"/></Filter></Files>
+		<Filter Name="Source Files" Filter="F90;f90;for;f;fpp;ftn;def;odl;idl">
+		<File RelativePath="..\test_simulator_driver.F90"/></Filter></Files>
 	<Globals/></VisualStudioProject>

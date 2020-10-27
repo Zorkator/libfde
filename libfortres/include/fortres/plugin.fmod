@@ -1,22 +1,20 @@
 #ifndef __FORTRES_PLUGIN_FMOD
 #define __FORTRES_PLUGIN_FMOD
 
-#if !defined _MODULENAME_plugin
-# define _MODULENAME_plugin  plugin
-#endif
-
 #include "fortres/itfUtil.fpp"
 
-      module _MODULENAME_plugin
-        use _MODULENAME_stringref
+      module fde_plugin
+        use fde_stringref
         use, intrinsic :: iso_c_binding
         implicit none
         private
 
-        public :: plugin_set_path, plugin_register, plugin_set_enabled
+        public :: plugin_set_path, plugin_set_enabled
+        public :: plugin_register, plugin_register_so
         public :: plugin_iterate, plugin_filePath_to_id
         public :: plugin_available, plugin_sym, plugin_proc, plugin_call
         public :: plugin_try_sym, plugin_try_proc, plugin_try_call
+        public :: plugin_iterate_so, plugin_unload
 
         interface
           subroutine PluginInfoHandler( id, fp, st )
@@ -24,7 +22,14 @@
             type(StringRef_t) :: id, fp
             integer           :: st
           end subroutine
-      
+
+          function SOInfoHandler( id, addr )
+            import StringRef_t
+            type(StringRef_t) :: id
+            integer           :: addr
+            integer           :: SOInfoHandler
+          end function
+
           subroutine plugin_set_path_( p, l, c ) _cID(f_plugin_set_path)
             import StringRef_t
             type(StringRef_t), intent(in) :: p !< plugin path
@@ -37,6 +42,12 @@
             type(StringRef_t), intent(in) :: f !< plugin filePath
             type(StringRef_t), intent(in) :: i !< plugin id
             integer                       :: e !< plugin enabled?
+          end subroutine
+
+          subroutine plugin_reg_so_( f, i ) _cID(f_plugin_register_so)
+            import StringRef_t
+            type(StringRef_t), intent(in) :: f !< plugin fileName
+            type(StringRef_t), intent(in) :: i !< plugin id
           end subroutine
 
           function plugin_set_ebl_( id, ebl ) _cID(f_plugin_set_enabled)
@@ -108,6 +119,20 @@
             type(StringRef_t), intent(in) :: sId !< symbolId
             integer(kind=c_int)           :: plugin_try_call_
           end function
+
+          ! others ...
+
+          function plugin_iterate_so_( op ) _cID(f_plugin_iterate_so)
+            import c_funptr, c_int
+            type(c_funptr), value, intent(in) :: op
+            integer(kind=c_int)               :: plugin_iterate_so_
+          end function
+
+          function plugin_unload_( pId ) _cID(f_plugin_unload)
+            import
+            type(StringRef_t), intent(in) :: pId !< pluginId
+            integer(kind=c_int)           :: plugin_unload_
+          end function
         end interface
 
       contains
@@ -129,6 +154,13 @@
                                   else; enabled_ = 1
             end if
             call plugin_register_( str(filePath), str(id), enabled_ )
+          end subroutine
+
+!_PROC_EXPORT(plugin_register_so)
+          subroutine plugin_register_so( fileName, id )
+            character(len=*)           :: fileName
+            character(len=*), optional :: id
+            call plugin_reg_so_( str(fileName), str(id) )
           end subroutine
 
 !_PROC_EXPORT(plugin_set_enabled)
@@ -212,6 +244,19 @@
             res = (plugin_try_call_( str(pluginId), str(symId) ) /= 0)
           end function
 
+!_PROC_EXPORT(plugin_iterate_so)
+          function plugin_iterate_so( op ) result(res)
+            procedure(SOInfoHandler) :: op
+            integer                  :: res
+            res = plugin_iterate_so_( c_funloc(op) )
+          end function
+
+!_PROC_EXPORT(plugin_unload)
+          function plugin_unload( pluginId ) result(res)
+            character(len=*), optional :: pluginId
+            logical                    :: res
+            res = (plugin_unload_( str(pluginId) ) /= 0)
+          end function
       end module
 
 #endif

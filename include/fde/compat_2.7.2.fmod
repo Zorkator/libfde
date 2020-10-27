@@ -1,0 +1,49 @@
+#ifndef __FDE_COMPAT_2_7_2_FMOD
+#define __FDE_COMPAT_2_7_2_FMOD
+
+#define __FDE_declare_future
+#include "fde/future.fpp"
+
+#undef fde_string
+
+#define _fde_postpone_future \
+    use fde_string, only:    \
+        _fde_mark_future(filename) ,\
+        _fde_mark_future(basename) ,\
+        _fde_mark_future(dirname)
+
+module fde_string_compat_2_7_2
+    use fde_string
+    _fde_postpone_future
+
+    interface file_basename
+        function string_basename_charstring( cs ) result(res)
+            character(len=*), intent(in) :: cs
+            character(len=:),    pointer :: res
+        end function
+
+        function string_basename_string( ds ) result(res)
+            import String_t
+            type(String_t)               :: ds
+            character(len=:),    pointer :: res
+        end function
+    end interface
+
+    interface file_dirname
+        function string_dirname_charstring( cs ) result(res)
+            character(len=*), intent(in) :: cs
+            character(len=:),    pointer :: res
+        end function
+
+        function string_dirname_string( ds ) result(res)
+            import String_t
+            type(String_t)               :: ds
+            character(len=:),    pointer :: res
+        end function
+    end interface
+end module
+
+#include "fde/compat_2.7.2.fpp"
+
+#endif
+

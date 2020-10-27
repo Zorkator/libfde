@@ -1,13 +1,6 @@
 #ifndef __FORTRES_EXCEPTION_FMOD
 #define __FORTRES_EXCEPTION_FMOD
 
-#if !defined _MODULENAME_try_interface
-# define _MODULENAME_exception  try_interface
-#endif
-
-#if !defined _MODULENAME_exception
-# define _MODULENAME_exception  exception
-#endif
 
 #include "fortres/itfUtil.fpp"
 #include "fortres/exception.fpp"
@@ -25,7 +18,7 @@
 !_PROC_EXPORT(try__)
       subroutine try__( res, catch, tp, what, tgt, _enum_20(arg) )
         use, intrinsic :: iso_c_binding
-        use _MODULENAME_stringref
+        use fde_stringref
         integer(kind=c_int)       :: res
         integer                   :: catch(*)
         type(StringRef_t), target :: what
@@ -35,7 +28,7 @@
         interface
           function c_try_( c, w, tp, tgt, _enum_20(arg), x_ )_cID(f_try)
             use, intrinsic :: iso_c_binding
-            use _MODULENAME_stringref
+            use fde_stringref
             integer(kind=c_int),   intent(in) :: c(*) !< catch-list
             type(c_ptr),    value             :: w    !< what-buffer
             type(c_funptr), value, intent(in) :: tp   !< trace procedure
@@ -56,8 +49,8 @@
       end subroutine
 
 
-      module _MODULENAME_try_interface
-        use _MODULENAME_stringref
+      module fde_try_interface
+        use fde_stringref
         use iso_c_binding
 
         ! Using the try-catch mechanism requires an interface definition
@@ -88,7 +81,7 @@
         end interface
 
         contains
-        
+
 !_PROC_EXPORT(try_void)
         function try_void( _tryArgs ) result(res)
           _tryDecl :: res
@@ -159,18 +152,18 @@
       end module
 
 
-      module _MODULENAME_exception
-        use _MODULENAME_stringref
-        use _MODULENAME_tracestack
-        use _MODULENAME_try_interface
+      module fde_exception
+        use fde_stringref
+        use fde_tracestack
+        use fde_try_interface
         implicit none
         private
 
 #       define _fortres_exception_type(_ident, _num) \
-          integer*4, public, parameter :: _ident = _same(x)_str(_num);
+          integer*4, public, parameter :: _ident = int(_same(z)_str(_num));
           _fortres_ExceptionTable
 #       undef  _fortres_exception_type
-      
+
         interface
           subroutine throw_( code, what ) _cID(f_throw)
             use, intrinsic :: iso_c_binding
@@ -332,28 +325,28 @@
           handle_abort = 1
           call throw( AbortExecution, 'handle_abort' )
         end function
-      
+
         integer*4 function handle_term( signum )
           !DIR$ ATTRIBUTES C :: handle_term
           integer*2 :: signum
           handle_term = 1
           call throw( TerminateExecution, 'handle_term' )
         end function
-      
+
         integer*4 function handle_ill( signum )
           !DIR$ ATTRIBUTES C :: handle_ill
           integer*2 :: signum
           handle_ill = 1
           call throw( IllegalInstruction, 'handle_ill' )
         end function
-      
+
         integer*4 function handle_segv( signum )
           !DIR$ ATTRIBUTES C :: handle_segv
           integer*2 :: signum
           handle_segv = 1
           call throw( SegmentationFault, 'handle_segv' )
         end function
-      
+
         integer*4 function handle_fpe( signum )
           !DIR$ ATTRIBUTES C :: handle_fpe
           integer*2 :: signum
@@ -367,7 +360,7 @@
           handle_int = 1
           call throw( KeyboardInterrupt, 'handle_int' )
         end function
-      
+
         integer*4 function notify_int( signum )
           !DIR$ ATTRIBUTES C :: notify_int
           integer*2 :: signum
@@ -379,7 +372,7 @@
           !   calling interrupt_requested() to detect and handle SIGINT.
           SIGINT_ocurred = .true.
         end function
-      
+
 
 !_PROC_EXPORT(interrupt_requested)
         logical function interrupt_requested( code )

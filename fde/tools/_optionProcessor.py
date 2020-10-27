@@ -27,7 +27,6 @@ class OptionProcessor(object):
   def knownOptions( _class, optsMap = '__opts__' ):
     """return dictionary of options and default values known by this class.
     Use the class attribute set by optsMap to build up the option dictionary.
-    
     """
     try   : return _class._knownOpts
     except:
@@ -54,7 +53,7 @@ class OptionProcessor(object):
 
   def __init__( self, **kwArgs ):
     """prepares instance by accepting and converting given arguments to attributes.
-    
+
     keyword arguments:
      * All accepted 'dashed' arguments, as provided by the commadline, get renamed and stored as attributes.
        The attribute name is made by replacing the double dashes by one underscore , e.g.
@@ -63,10 +62,8 @@ class OptionProcessor(object):
          --unknown = 42 gets stored as self.__dict__['--unknown']
      * Any other arguments provided get decorated by underscore '_' and stored as attributes.
        Note that on name collision 'dashed' arguments are treated with priority!
-
     """
-    def _decorate( opt ): return '_' + opt[0], opt[1]
-
-    # extract known options from kwArgs, and make them attributes ...
-    self.__dict__.update( map( _decorate, self.extractOpts( kwArgs ) ) )
+    from . import _decorate
+    # # extract known options from kwArgs, and make them attributes ...
+    self.__dict__.update( _decorate( self.extractOpts( kwArgs ) ) )
 

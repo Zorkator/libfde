@@ -94,9 +94,10 @@ class StringRef
         { return this->referTo( str.buffer(), str.length() ); }
 
 
-    std::string
+    template <typename T = char>
+    std::basic_string<T>
       str( void ) const
-        { return std::string( _ref, _len ); }
+        { return std::basic_string<T>( reinterpret_cast<const T *const>(_ref), _len ); }
 
     StringRef &
       trim( void )

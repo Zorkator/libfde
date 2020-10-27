@@ -68,7 +68,7 @@ class Context
       typedef std::vector<int>        CodeSet;
       typedef std::vector<Procedure>  ProcList;
 
-      
+
         CheckPoint( int *codeList, size_t len, StringRef *what, TraceProcedure tracer )
         : _codes( codeList, codeList + len ), _what(what), _code(0), _tracer(tracer)
         {
@@ -129,7 +129,7 @@ class Context
         _checkPoints.push_back( CheckPoint( codeList, len, what, tracer ) );
         return _checkPoints.back()._env;
       }
-    
+
     void
       closeFrame( void )
         { _checkPoints.pop_back(); }
@@ -160,7 +160,7 @@ class Context
           }
           _checkPoints.pop_back();
         }
-        
+
         if (tracer)
         {
           std::string msgLine( exceptionMap.get(code) );
@@ -203,7 +203,7 @@ class Context
  * Additionally, we don't know what type of threading is applied by the program using libfortres.
  * Thats why we handle this as "not-my-business" and expect the program to hook a synchronizer procedure.
  * Basically, such procedure could be kept as easy as the following example (C-pseudo):
- * 
+ *
  * void my_synchronizer( Context **context, int )
  * {
  *   mutex->lock();
@@ -254,19 +254,19 @@ f_try_v( int *catchList, StringRef *what, TraceProcedure tp, Procedure proc, va_
 
   // unpack list of given procedure arguments into argBuf
   ArgRef *argPtr = argBuf;
-  while( *argPtr++ = va_arg( vaArgs, ArgRef ) ) { /* empty */ };
+  while( (*argPtr++ = va_arg( vaArgs, ArgRef ) ) ) { /* empty */ };
   nrArgs = (argPtr - argBuf) - 1;
 
   Context *context = getContext();
   int code = setjmp( context->openFrame( catchList, what, tp ) ); //< mark current stack location as point of return ...
                                                                   //  NOTE that setjmp returns 0 for marking!
-  
+
   //<<< longjmp ends up here with some code different from 0!
   if (code == 0)
   {
     switch (nrArgs)
     {
-#     define expandArgs_0     
+#     define expandArgs_0
 #     define expandArgs_1     argBuf[0]
 #     define expandArgs_2     expandArgs_1, argBuf[1]
 #     define expandArgs_3     expandArgs_2, argBuf[2]

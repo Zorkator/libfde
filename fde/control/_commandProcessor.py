@@ -2,12 +2,11 @@
 from traceback import format_exception
 import sys, os, shlex
 
-
 ######################################
 class CommandProcessor(object):
 ######################################
   """Abstract Mixin class extending Startable, Stateful, Hookable FDEController types.
-  
+
   CommandProcessor provides a simple interface for executing the main loop of Startable codes
     controlled by commands.
 
@@ -27,8 +26,8 @@ class CommandProcessor(object):
           from ..tools import debug; debug()
 
         if   isinstance( cmd, basestring ): res = self._dispatchCommand( cmd )
-        elif hasattr( cmd, 'keys' )       : res = self.setStateData( cmd )
-        elif hasattr( cmd, '__iter__' )   : res = self.getStateData( cmd )
+        elif hasattr( cmd, 'keys' )       : res = self.setData( cmd )
+        elif hasattr( cmd, '__iter__' )   : res = self.getData( cmd )
         else                              : res = "unknown command"
 
       except StopIteration:
@@ -53,14 +52,8 @@ class CommandProcessor(object):
   # command implementations
   #
 
-  def _keySeparator( self, sep ):
-    if   sep is None: return None
-    elif sep != ''  : return lambda k: filter( bool, map( type(k).strip, k.split(sep) ) )
-    else            : return lambda k: k.split()
-    
-
   def cmd_setKeyOp( self, sep = None ):
-    self.scopeKeyOperator = self._keySeparator( sep )
+    self.keyTokenizer = self.makeKeyTokenizer( sep )
     return True
 
   # Some default commands for Simulators.
@@ -80,7 +73,7 @@ class CommandProcessor(object):
   def cmd_debug( self, stat ):
     self._debug = int( stat.lower() in 'on true 1 yes enabled'.split() )
     return True
-    
+
 
   # methods to be [re-]implemented by subclasses
 

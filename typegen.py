@@ -13,7 +13,6 @@ Options:
   --debug                       enable debugging
 """
 
-from docopt import docopt
 import sys, re
 
 
@@ -102,7 +101,7 @@ class TypeSpec(object):
     for what in filter( None, args ):
       out( self._template[what].format( **dict( self.__dict__, **kwArgs ) ) )
 
-  
+
   def expandAccess( self, out, access, *identList ):
     for ident in filter( None, identList ):
       if ident not in self.declWatcher:
@@ -124,7 +123,7 @@ class RefType(TypeSpec):
     # parameters:
     #   typeId:    type identifier
     #   baseType:  fortran base type | type(...) | procedure(...) [needs baseExtra: , nopass]
-    #   baseExtra: ('', ', nopass')[is_procedure] 
+    #   baseExtra: ('', ', nopass')[is_procedure]
     #   dimSpec:   ('', ', dimension(:,...)')[has_dimension]
     #
     type = """
@@ -169,7 +168,7 @@ class RefType(TypeSpec):
     """,
 
     access_ref = "{typeId}, is_{typeId}",
-  
+
     # parameters:
     #   access:     private | public
     #   typeId:     type identifier
@@ -309,7 +308,7 @@ class RefType(TypeSpec):
       call ti%acceptProc( wrap, ti, vstr )
     end subroutine
     """,
-  
+
     ref_acceptor = """
 !_PROC_EXPORT({typeId}_accept_wrap)
 !_ARG_REFERENCE1(wrap)
@@ -380,7 +379,7 @@ class RefType(TypeSpec):
       {encoder_ptr_func}
     end function
     """,
-    
+
     # parameters:
     #   typeId:    type identifier
     #   baseType:  fortran base type | type(...) | procedure(...)
@@ -394,14 +393,14 @@ class RefType(TypeSpec):
       type(Ref_t),        intent(in) :: val
       {baseType}{dimSpec},   pointer :: res
       type({typeId}Ptr_t),   pointer :: wrap
-      
+
       call c_f_pointer( ref_get_typereference(val), wrap )
       if (associated(wrap)) then; res => wrap%ptr
                             else; res => null()
       end if
     end function
     """,
-    
+
     # parameters:
     #   typeId:        type identifier
     #   baseType:      fortran base type | type(...) | procedure(...)
@@ -413,7 +412,7 @@ class RefType(TypeSpec):
       type(Ref_t)                  :: tgt_ref
       type(Ref_t),      intent(in) :: src_ref
       {baseType}{dimSpec}, pointer :: src, tgt => null()
-    
+
       src => {typeId}_decode_ref_( src_ref )
       {code_clonePtr}
       tgt_ref =  {typeId}_encode_ref_( tgt, .true.{cloneSrcBounds} )
@@ -481,7 +480,14 @@ class RefType(TypeSpec):
     function {typeId}_in_ref_( self ) result(res)
       type(Ref_t), intent(in) :: self
       logical                 :: res
-      res = associated( content_type(self), type_{typeId} )
+      call as_target_( self )
+
+      contains
+
+      subroutine as_target_( ref )
+        type(Ref_t), target :: ref
+        res = associated( content_type(ref), type_{typeId} )
+      end subroutine
     end function
     """,
 
@@ -495,7 +501,7 @@ class RefType(TypeSpec):
       type(c_ptr),                  intent(in)  :: cp
       {baseType}{dimSpec}, pointer, intent(out) :: tgt
       type({typeId}Ptr_t),              pointer :: wrap
-      
+
       if (c_associated( cp )) then
         call c_f_pointer( cp, wrap )
         tgt => wrap%ptr
@@ -514,7 +520,7 @@ class RefType(TypeSpec):
     function {typeId}_dynamic_cast_r_( tgt, self ) result(res)
       use iso_c_binding
       {baseType}{dimSpec}, pointer, intent(out) :: tgt
-      type(Ref_t),                  intent(in)  :: self
+      type(Ref_t), pointer,         intent(in)  :: self
       type(c_ptr)                               :: cp
 
       interface
@@ -526,7 +532,7 @@ class RefType(TypeSpec):
           type(Ref_t),   optional, target :: item !< we cannot use Item_t here, but its ignored anyways!
         end function
       end interface
-      
+
       select case (item_resolve_data( cp, type_{typeId}, ref=self ))
         case (1); call c_f_unwrap( cp, tgt );  res = .true.
         {itemCast}
@@ -544,7 +550,7 @@ class RefType(TypeSpec):
     function {typeId}_dynamic_cast_i_( tgt, self ) result(res)
       use iso_c_binding
       {baseType}{dimSpec}, pointer, intent(out) :: tgt
-      type(Item_t),                 intent(in)  :: self
+      type(Item_t), pointer,        intent(in)  :: self
       type(c_ptr)                               :: cp
 
       interface
@@ -556,7 +562,7 @@ class RefType(TypeSpec):
           type(Item_t),  optional, target :: item
         end function
       end interface
-      
+
       select case (item_resolve_data( cp, type_{typeId}, item=self ))
         case (1); call c_f_unwrap( cp, tgt );  res = .true.
         {itemCast}
@@ -643,14 +649,14 @@ class RefType(TypeSpec):
     # handle type cloning ...
     ptrClonerId     = keySpecs.get('cloneMode', '_shallow')               #< by default clone via shallow copy
     self._ptrCloner = self._template['ptr_cloner'].get( ptrClonerId, '' ) #< get code for default implementation
-    
+
     if self._ptrCloner:
       # we implement a default cloner (_shallow or _type) - so update ptrClonerId
       ptrClonerId = typeId + '_clone_ptr_'
     elif ptrClonerId == '_none':
       # cloning disabled via _none - so there's no ptrClonerId
       ptrClonerId = ''
-    
+
     if ptrClonerId:
       self.code_clonePtr = 'call %s( tgt, src )' % ptrClonerId
       self.cloneProc     = ', cloneObjProc = %s' % ptrClonerId
@@ -669,13 +675,13 @@ class RefType(TypeSpec):
       writeBuf  = ('{0}', 'size(self%ptr)*{0}')[self._isArray].format( writeSize ),
       writeExpr = self.peelString( keySpecs.get( 'writeExpr', writeExpr ) )
     )
-    
+
     if streamFmt:
       keySpecs.update( writeFmt = 100, formatSpec = '\n100   format({0})'.format( streamFmt ) )
     else:
       keySpecs.update( writeFmt = '*', formatSpec = '' )
     keySpecs.update( streamWriting = streamTpl.format( **dict( self.__dict__, **keySpecs ) ) )
-    
+
     self._itf          = ('ref_itf',           'proc_itf'         )[self._isProc]
     self._itemCastItf  = ('',                  'item_itf',        )[doItemCast]
     self._access       = ('access_ref',        'access_proc'      )[self._isProc]
@@ -738,9 +744,9 @@ class RefType(TypeSpec):
       self._implemented = True
 
 
-  
+
 class ListNode(TypeSpec):
-  
+
   _template  = dict( TypeSpec._template,
     info = """
     !@ _TypeGen_declare_ListNode( {access}, {typeId}, {baseType}, {dimType} )""",
@@ -898,13 +904,13 @@ class TypeGenerator(object):
   _nodeDecl  = '^\s*!\s*_TypeGen_declare_ListNode\(%s,%s,%s,%s\)' % (_ident, _ident, _baseType, _dimType)
   _typeImpl  = '^\s*!\s*_TypeGen_implement\(%s\)' % _ident
   _typeImplA = '^\s*!\s*_TypeGen_implementAll\(\)'
-  
+
   typeDeclMatch    = re.compile( _typeDecl ).match
   nodeDeclMatch    = re.compile( _nodeDecl ).match
   typeImplMatch    = re.compile( _typeImpl ).match
   typeImplAllMatch = re.compile( _typeImplA ).match
 
-  
+
   @classmethod
   def setDeclaration( _class, key, decl ):
     key = '%s.%s' % (key, type(decl).__name__)
@@ -936,7 +942,7 @@ class TypeGenerator(object):
   @classmethod
   def convert( _class, options ):
     import pdb
-   
+
     if options.get('--debug'):
       pdb.set_trace()
 
@@ -950,7 +956,7 @@ class TypeGenerator(object):
         lineBuf.append( line.rstrip() )
         if lineBuf[-1].endswith('\\'):
           continue
-        
+
         bufStr  = '\n'.join( lineBuf ) + '\n'
         lines   = '!' + ''.join( _class._purgeLines( lineBuf ) )
         lineBuf = []
@@ -980,7 +986,15 @@ class TypeGenerator(object):
       outChnl.close()
 
 
+
 if __name__ == '__main__':
+  try:
+    from docopt import docopt
+  except ImportError:
+    def docopt( *ignored ): #< define stupid emergency mockup
+        return { 'FILE'    : sys.argv[1:2][0],
+                 '--output': sys.argv[3:4][0],
+                 '--debug' : sys.argv[4:5] }
   TypeGenerator.convert( docopt( __doc__ ) )
 
 

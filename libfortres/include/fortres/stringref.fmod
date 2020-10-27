@@ -1,22 +1,18 @@
 #ifndef __FORTRES_STRINGREF_FMOD
 #define __FORTRES_STRINGREF_FMOD
 
-#if !defined _MODULENAME_stringref
-# define _MODULENAME_stringref  stringref
-#endif
-
 #include "fortres/itfUtil.fpp"
 
-      module _MODULENAME_stringref
+      module fde_stringref
         use, intrinsic :: iso_c_binding
         implicit none
         private
-      
+
         type, bind(C) :: StringRef_t
           type (c_ptr)           :: loc = c_null_ptr
           integer(kind=c_size_t) :: len = 0
         end type
-      
+
         interface str
           module procedure stringref_of_str_trim, stringref_of_str
           module procedure stringref_to_str
@@ -25,15 +21,15 @@
         interface strBuf
           module procedure stringref_of_buf
         end interface
-      
+
         interface len
           module procedure stringref_len
         end interface
-      
+
         public :: StringRef_t, str, strBuf, len
 
         character(len=0), private, target :: empty_string_ = ""
-      
+
       !-------------------
         contains
       !-------------------
@@ -82,8 +78,8 @@
 
 !_PROC_EXPORT(stringref_of_buf)
         function stringref_of_buf( fstrBuf ) result(strRef)
-          character(len=*),  intent(out) :: fstrBuf
-          type (StringRef_t)             :: strRef
+          character(len=*),  intent(inout) :: fstrBuf
+          type (StringRef_t)               :: strRef
           strRef = stringref_of_str_trim( fstrBuf, .false. )
         end function
 
@@ -113,7 +109,7 @@
           integer*4                      :: l
           l = strRef%len
         end function
-      
+
       end module
 
 #endif

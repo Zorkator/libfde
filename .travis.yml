@@ -1,0 +1,11 @@
+language: c
+before_install:
+  - sudo apt-get install gfortran
+install:
+  - mkdir _build
+  - cd _build
+  - CC=gcc CXX=g++ FC=gfortran cmake -DBUILD_TESTING=1 ..
+  - make
+script:
+  - make test
+

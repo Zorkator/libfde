@@ -7,10 +7,6 @@ from ._ftypes   import mappedType, _mapType, ARRAY_t, VOID_Ptr, POINTER_t
 @mappedType( 'ref', 'type(Ref_t)' )
 class Ref(TypedObject):
 
-  @TypedObject.value.getter
-  def value( self ):
-    return self
-
   @property
   def ptr( self ):
     p = VOID_Ptr()
