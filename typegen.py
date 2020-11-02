@@ -486,7 +486,9 @@ class RefType(TypeSpec):
 
       subroutine as_target_( ref )
         type(Ref_t), target :: ref
-        res = associated( content_type(ref), type_{typeId} )
+        type(Ref_t), pointer :: refPtr
+        refPtr => ref
+        res = associated( content_type(refPtr), type_{typeId} )
       end subroutine
     end function
     """,

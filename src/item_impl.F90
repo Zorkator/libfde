@@ -454,11 +454,13 @@ end module
     type(c_ptr)               :: lhsPtr
     type(TypeInfo_t), pointer :: lhsType, rhsType, refType
     type(Item_i),      target :: rhs
+    type(Item_i),     pointer :: rhsPtr
     type(Ref_t),      pointer :: refPtr
     integer,        parameter :: stdout = 6
     integer                   :: stat
 
-    rhsType => item_content_type(rhs)
+    rhsPtr => rhs
+    rhsType => item_content_type(rhsPtr)
     res     =  associated( lhsType, rhsType )
     if (res) then
       ! types match
@@ -708,8 +710,10 @@ end module
     recursive &
     subroutine visit_ref( r )
       type(Ref_t), target :: r
+      type(Ref_t), pointer :: rPtr
 
-      dt => content_type( r )
+      rPtr => r
+      dt => content_type( rPtr )
       if (associated( dt, ti )) then
         ctgt = ref_get_typereference( r )
         res  = 1
@@ -724,8 +728,10 @@ end module
     recursive &
     subroutine visit_item( i )
       type(Item_t), target :: i
+      type(Item_t), pointer :: iPtr
 
-      dt => content_type( i )
+      iPtr => i
+      dt => content_type( iPtr )
       if (associated( dt, ti )) then
         ctgt = item_get_data_cptr( i )
         res  = 2
@@ -762,8 +768,10 @@ end module
     recursive &
     subroutine visit_ref( r )
       type(Ref_t), target :: r
+      type(Ref_t), pointer :: rPtr
 
-      res => content_type( r )
+      rPtr => r
+      res => content_type( rPtr )
       if     (associated( res, refType ))  then; call visit_ref( ref(r) )
       elseif (associated( res, itemType )) then; call visit_item( item(r) )
       end if
@@ -772,8 +780,10 @@ end module
     recursive &
     subroutine visit_item( i )
       type(Item_t), target :: i
+      type(Item_t), pointer :: iPtr
 
-      res => content_type( i )
+      iPtr => i
+      res => content_type( iPtr )
       if (associated( res, refType )) then; call visit_ref( ref(i) )
       end if
     end subroutine
