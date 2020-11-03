@@ -181,7 +181,7 @@
       end function
     end interface
 
-    chnl = fopen( fileName, form="unformatted", access="stream", status="old" )
+    chnl = fopen( fileName, form="unformatted", access="stream", status="old", action="read")
     crc_ = crc32_file_channel( chnl, file_size(chnl), seed, iostat )
     close( chnl )
   end function
