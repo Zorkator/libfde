@@ -28,7 +28,7 @@
 
 cmake_minimum_required(VERSION 3.8)
 
-set(CMI_TAG "9830c79124380fa4958a61f37807948dc48961dc")
+set(CMI_TAG "ceb3020aeb84b37bb5f5b7efd38eafb96f6adddc")
 
 get_property(CMI_LOADER_FILE GLOBAL PROPERTY CMI_LOADER_FILE)
 # First include
@@ -96,6 +96,13 @@ unset(CMI_LOADER_FILE)
 
 set(CMI_LOADED TRUE)
 set(CMI_VERSION "0.1.0")
+
+if(NOT DEFINED CMI_PRINT_VERSION)
+  set(CMI_PRINT_VERSION TRUE CACHE INTERNAL "")
+  message(STATUS "CMI Version: ${CMI_VERSION}")
+  message(STATUS "CMI Tag: ${CMI_TAG}")
+endif()
+
 
 # Consider root project as populated and included
 string(TOUPPER "${CMAKE_PROJECT_NAME}" PROJECT_NAME_UPPER_)
@@ -466,9 +473,9 @@ function(cmi_add_git_ PROJECT_NAME_ PROJECT_URL_ PROJECT_REV_)
       COMMAND ${CMAKE_COMMAND} -P "${UPDATER_}"
       RESULT_VARIABLE RESULT_
     )
-  endif()
-  if(NOT RESULT_ STREQUAL "0")
-    message(SEND_ERROR "Could not update ${GIT_DIR}")
+    if(NOT RESULT_ STREQUAL "0")
+      message(SEND_ERROR "Could not update ${GIT_DIR}")
+    endif()
   endif()
 endfunction()
 
@@ -545,6 +552,10 @@ endfunction()
 
 function(cmi_Fortran_append var name)
   # Compiler presets
+  set(Fortran_DEBUGINFO_Generic_GNU "-g")
+  set(Fortran_DEBUGINFO_Generic_Intel "-g")
+  set(Fortran_DEBUGINFO_Windows_Intel "/debug:full")
+
   set(Fortran_O0_Generic_GNU "-Og")
   set(Fortran_O0_Generic_Intel "-O0")
   set(Fortran_O0_Windows_Intel "/Od")
@@ -604,6 +615,10 @@ function(cmi_Fortran_append var name)
   set(Fortran_WSRCTRUNC_Generic_GNU "-Wline-truncation")
   set(Fortran_WSRCTRUNC_Generic_Intel "-warn truncated_source")
   set(Fortran_WSRCTRUNC_Windows_Intel "/warn:truncated_source")
+
+  set(Fortran_EXTENDEDLINESF77_Generic_GNU "-ffixed-line-length-none")
+  set(Fortran_EXTENDEDLINESF77_Generic_Intel "")
+  set(Fortran_EXTENDEDLINESF77_Windows_Intel "")
 
   set(Fortran_EXTENDEDLINESF90_Generic_GNU "-ffree-line-length-none")
   set(Fortran_EXTENDEDLINESF90_Generic_Intel "")
@@ -669,6 +684,10 @@ function(cmi_Fortran_append var name)
   set(Fortran_SAVE_Generic_Intel "-save")
   set(Fortran_SAVE_Windows_Intel "/Qsave")
 
+  set(Fortran_STACKARRAYLIMIT65_Generic_GNU "-fmax-stack-var-size=65535")
+  set(Fortran_STACKARRAYLIMIT65_Generic_Intel "-heap-arrays 65")
+  set(Fortran_STACKARRAYLIMIT65_Windows_Intel "/heap-arrays:65")
+
   set(Fortran_STDF90_Generic_GNU "")
   set(Fortran_STDF90_Generic_Intel "-stand f90")
   set(Fortran_STDF90_Windows_Intel "/stand:f90")
@@ -701,10 +720,10 @@ function(cmi_Fortran_append var name)
     set(${var} "${${var}}" PARENT_SCOPE)
   endif()
 
-  if(${name} STREQUAL "FPP")
-    message(DEPRECATION "Fortran FPP flag has been deprecated and can be replaced by CPP and EXTENDEDLINESF90. "
-    "Also consider using uppercase extension .F90, which will implicitly activate preprocessing.")
-  endif()
+#  if(${name} STREQUAL "FPP")
+#    message(DEPRECATION "Fortran FPP flag has been deprecated and can be replaced by CPP and EXTENDEDLINESF90. "
+#    "Also consider using uppercase extension .F90, which will implicitly activate preprocessing.")
+#  endif()
 
 endfunction()
 
@@ -753,6 +772,15 @@ macro(cmi_enable_vs_z7_ FLAG_)
   endif()
 endmacro()
 
+macro(cmi_disable_vs_z7_ FLAG_)
+  if(DEFINED ${FLAG_})
+    # Remove /Z7
+    string(REGEX REPLACE "/Z7" "/Zi" ${FLAG_} "${${FLAG_}}")
+    string(STRIP "${${FLAG_}}" ${FLAG_})
+    set(${FLAG_} "${${FLAG_}}" CACHE STRING "" FORCE)
+  endif()
+endmacro()
+
 function(cmi_enable_vs_z7)
   if(MSVC)
     set(LANGUAGES "C" "CXX" "Fortran")
@@ -766,6 +794,18 @@ function(cmi_enable_vs_z7)
   endif()
 endfunction()
 
+function(cmi_disable_vs_z7)
+  if(MSVC)
+    set(LANGUAGES "C" "CXX" "Fortran")
+    foreach(LANGUAGE IN LISTS LANGUAGES)
+      foreach(CONFIGURATION IN LISTS CMAKE_CONFIGURATION_TYPES)
+        string(TOUPPER ${CONFIGURATION} CONFIGURATION)
+        cmi_disable_vs_z7_(CMAKE_${LANGUAGE}_FLAGS_${CONFIGURATION})
+      endforeach()
+      cmi_disable_vs_z7_(CMAKE_${LANGUAGE}_FLAGS)
+    endforeach()
+  endif()
+endfunction()
 
 macro(cmi_disable_vs_incremental_linker_ FLAG_)
   if(DEFINED ${FLAG_})
@@ -892,30 +932,35 @@ macro(cmi_set_build_environment)
   unset(DEFAULT_BUILD_TYPE_)
 
   if(MSVC)
-    option(BUILD_PARALLEL "Enable parallel builds. To switch off, deleting cache is required! Should be combined with BUILD_VS_Z7" OFF)
+    option(BUILD_PARALLEL "Enable parallel builds. To switch off, deleting cache is recommended." OFF)
     if(BUILD_PARALLEL)
       cmi_enable_vs_mp()
-    else()
-      cmi_disable_vs_mp()
-    endif()
-
-    option(BUILD_VS_Z7 "Avoid corrupted pdb files when compiling in parallel. To switch off, deleting cache is required!" ${BUILD_PARALLEL})
-    if(BUILD_VS_Z7)
       cmi_enable_vs_z7()
+      set(CMI_BUILD_PARALLEL_ACTIVATED "" CACHE INTERNAL "")
+    else()
+      if(DEFINED CMI_BUILD_PARALLEL_ACTIVATED)
+        cmi_disable_vs_mp()
+        cmi_disable_vs_z7()
+      endif()
     endif()
 
     option(BUILD_NO_MANIFEST "Disable manifest generation. To switch off, deleting cache is required!" ON)
     if(BUILD_NO_MANIFEST)
       cmi_disable_vs_manifest()
     endif()
-    mark_as_advanced(BUILD_PARALLEL BUILD_NO_MANIFEST BUILD_VS_Z7)
+    mark_as_advanced(BUILD_NO_MANIFEST BUILD_VS_Z7)
   endif()
 
   cmi_disable_vs_incremental_linker()
   cmi_disable_vs_debug_runtime()
   if(CMAKE_Fortran_COMPILER)
     cmi_fortran_default_mangling()
-    cmi_fortran_append(CMAKE_Fortran_FLAGS_DEBUG O0)
+    if(DEFINED CMAKE_Fortran_FLAGS_DEBUG)
+      cmi_fortran_append(CMAKE_Fortran_FLAGS_DEBUG O0)
+    endif()
+    if(DEFINED CMAKE_Fortran_FLAGS_RELEASE)
+      cmi_fortran_append(CMAKE_Fortran_FLAGS_RELEASE O2)
+    endif()
     #cmi_fortran_append(CMAKE_Fortran_FLAGS TRACEBACK)
   endif()
 endmacro()
@@ -1229,10 +1274,15 @@ function(cmi_find_mpi)
     # Handle MPI_<comp>_LIB
     foreach(COMPONENT IN LISTS _COMPONENTS)
       set(I_MPI_LIB_DIR_ "${I_MPI_ROOT}/intel64/lib")
+      set(I_MPI_FABRIC_DIR "${I_MPI_ROOT}/intel64/libfabric")
 
       # all require the C library
       find_library(I_MPI_C_LIB_ NAMES impi mpi PATHS "${I_MPI_LIB_DIR_}/release" NO_DEFAULT_PATH)
       set(MPI_${COMPONENT}_LIB ${I_MPI_C_LIB_})
+      find_library(I_MPI_FABRIC_LIB_ NAMES fabric PATHS "${I_MPI_FABRIC_DIR}/lib" NO_DEFAULT_PATH)
+      if(I_MPI_FABRIC_LIB_)
+        list(APPEND I_MPI_C_LIB_ ${I_MPI_FABRIC_LIB_})
+      endif()
 
       if(${COMPONENT} STREQUAL "MPICXX")
         find_library(I_MPI_CXX_LIB_ NAMES impicxx mpicxx PATHS "${I_MPI_LIB_DIR_}" NO_DEFAULT_PATH)
@@ -1257,7 +1307,7 @@ function(cmi_find_mpi)
     # Handle MPI_INCLUDE
     set(MPI_INCLUDE "${I_MPI_ROOT}/intel64/include")
     if(NOT EXISTS "${MPI_INCLUDE}")
-      message(WARNING "MPI: Missing include directoy - ${MPI_INCLUDE}")
+      message(WARNING "MPI: Missing include directory - ${MPI_INCLUDE}")
     else()
       if(CMAKE_Fortran_COMPILER_ID STREQUAL "GNU")
         file(GLOB versions RELATIVE "${MPI_INCLUDE}/gfortran/" "${MPI_INCLUDE}/gfortran/*")

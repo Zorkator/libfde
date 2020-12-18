@@ -1,5 +1,6 @@
 # Compiler flags
 #cmi_Fortran_append(CMAKE_Fortran_FLAGS TRACEBACK)
+cmi_Fortran_append(CMAKE_Fortran_FLAGS STACKARRAYLIMIT65)
 cmi_fortran_append(CMAKE_Fortran_FLAGS EXTENDEDLINESF90)
 
 cmi_Fortran_append(CMAKE_Fortran_FLAGS_DEBUG TRAPUV)

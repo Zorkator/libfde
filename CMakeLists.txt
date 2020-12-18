@@ -9,7 +9,7 @@ set(FDE_VERSION_MINOR 8)
 set(FDE_VERSION_PATCH 0)
 set(FDE_VERSION       "${FDE_VERSION_MAJOR}.${FDE_VERSION_MINOR}.${FDE_VERSION_PATCH}")
 
-set(CMI_DOWNLOAD_TAG 9830c79124380fa4958a61f37807948dc48961dc)
+set(CMI_DOWNLOAD_TAG ceb3020aeb84b37bb5f5b7efd38eafb96f6adddc)
 include(cmi.cmake)
 cmi_set_build_environment()
 
