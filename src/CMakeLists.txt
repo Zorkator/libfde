@@ -1,5 +1,9 @@
 # Compiler flags
-#cmi_Fortran_append(CMAKE_Fortran_FLAGS TRACEBACK)
+if(NOT "${CMAKE_CXX_COMPILER_ID}" STREQUAL "Intel")
+  # Intel C++ and Traceback is buggy and results in infinite recursion loop
+  cmi_Fortran_append(CMAKE_Fortran_FLAGS TRACEBACK)
+endif()
+
 cmi_Fortran_append(CMAKE_Fortran_FLAGS STACKARRAYLIMIT65)
 cmi_fortran_append(CMAKE_Fortran_FLAGS EXTENDEDLINESF90)
 
