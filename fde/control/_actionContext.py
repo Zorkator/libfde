@@ -95,8 +95,8 @@ class ActionContext(object):
             context  = self
 
         self.lookup  = varLookup
-        self.trigger = Trigger
-        self.action  = Action
+        self.Trigger = Trigger
+        self.Action  = Action
         self._globals.update( Trigger = Trigger, Action = Action )
 
 
