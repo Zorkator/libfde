@@ -77,7 +77,7 @@ class ExceptionRouter(object):
 
   def __except__( self, _type, _value, _traceback ):
     code = c_int32(int('0x02200000', 16)) #< TODO: should map _type to exception code!
-    what = ''.join( traceback.format_exception( _type, _value, _traceback ) )
+    what = ''.join( traceback.format_exception( _type, _value, _traceback ) ).encode()
     self.handle[ self._throwFunc ]( byref(code), c_char_p(what), c_size_t(len(what)) )
 
 
