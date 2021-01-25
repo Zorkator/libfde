@@ -57,10 +57,10 @@ class HashMap(Object):
       self[k] = v
 
 
-  def _getptr( self, getter, key ):
-    ptr = ItemPtr(); bool(ptr) #< de-optimize Python (????), so next line works
-    key = key.encode('utf-8')
-    getter( byref(ptr), byref(self), c_char_p(key), c_int(len(key)) )
+  def _getptr( self, getter, ident ):
+    ptr   = ItemPtr(); bool(ptr) #< de-optimize Python (????), so next line works
+    ident = ident.encode()
+    getter( byref(ptr), byref(self), c_char_p(ident), c_int(len(ident)) )
     return ptr
 
 
@@ -108,10 +108,12 @@ class HashMap(Object):
 
 
   def __delitem__( self, ident ):
+    ident = ident.encode()
     self.remove_key_( byref(self), ident, len(ident) )
 
 
   def __contains__( self, ident ):
+    ident = ident.encode()
     return self.has_key_( byref(self), c_char_p(ident), c_int(len(ident)) ) != 0
 
 
@@ -152,7 +154,8 @@ class HashMap(Object):
 
 
   def setdefault( self, ident, default = None ):
-    ptr = ItemPtr()
+    ptr   = ItemPtr()
+    ident = ident.encode()
     self.set_default_( byref(ptr), byref(self), c_char_p(ident), byref(Item(default)), c_int(len(ident)) )
     return ptr.contents.resolved
 
@@ -168,11 +171,12 @@ class HashMap(Object):
       self[k] = v
 
 
-  def pop( self, key, default = KeyError ):
-    ptr = ItemPtr()
-    self.pop_key_( byref(ptr), byref(self), c_char_p(key), c_int(len(key)) )
+  def pop( self, ident, default = KeyError ):
+    ptr   = ItemPtr()
+    ident = ident.encode()
+    self.pop_key_( byref(ptr), byref(self), c_char_p(ident), c_int(len(ident)) )
     try   : return ptr.contents.resolved
-    except: return auto_raise( default, key )
+    except: return auto_raise( default, ident )
 
 
 
