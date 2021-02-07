@@ -1,20 +1,19 @@
 # Compiler flags
+cmi_Fortran_append(CMAKE_Fortran_FLAGS STACKARRAYLIMIT65)
+cmi_fortran_append(CMAKE_Fortran_FLAGS EXTENDEDLINESF90)
+
+cmi_Fortran_append(CMAKE_Fortran_FLAGS_DEBUG TRAPUV)
+
 if(NOT "${CMAKE_CXX_COMPILER_ID}" STREQUAL "Intel")
   # Intel C++ and Traceback is buggy and results in infinite recursion loop
   cmi_Fortran_append(CMAKE_Fortran_FLAGS TRACEBACK)
 endif()
 
-cmi_Fortran_append(CMAKE_Fortran_FLAGS STACKARRAYLIMIT65)
-cmi_fortran_append(CMAKE_Fortran_FLAGS EXTENDEDLINESF90)
-
-cmi_Fortran_append(CMAKE_Fortran_FLAGS_DEBUG TRAPUV)
-cmi_Fortran_append(CMAKE_Fortran_FLAGS_DEBUG CHECKBASIC)
-
-if(MSVC)
+if("${CMAKE_Fortran_COMPILER_ID}" STREQUAL "GNU")
+  set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -fno-range-check")
 else()
-  if("${CMAKE_Fortran_COMPILER_ID}" STREQUAL "GNU")
-    set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -fno-range-check")
-  endif()
+  # Many most likely false positive errors with recent gfortran compilers
+  cmi_Fortran_append(CMAKE_Fortran_FLAGS_DEBUG CHECKBASIC)
 endif()
 
 # fde input files for generator
