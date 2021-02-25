@@ -2,6 +2,7 @@
 from ctypes  import Union, sizeof, addressof, Structure, c_int8
 from six     import add_metaclass
 from ..tools import core_loader
+from ..      import abstract
 
 try:
     from functools import reduce
@@ -15,6 +16,7 @@ class _Meta(type(Union)):
 
     def __new__( _class, name, bases, members ):
         from operator    import add
+        from itertools   import chain
         #from collections import OrderedDict
 
         def _mro( ident, default ):
@@ -42,7 +44,7 @@ class _Meta(type(Union)):
             anonym  = ['_struct']
 
         # extend bases by abstract interface classes to allow isinstance-checks
-        bases += tuple( members.get('__abstract__', []) )
+        bases += tuple( t for t in chain( members.get( '__abstract__', [] ), [getattr( abstract, name, None )] ) if t )
 
         size and fields.append( ('_data', size * c_int8) )
         members.update( _fields_=fields, _anonymous_=anonym )
