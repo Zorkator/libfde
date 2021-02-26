@@ -3,9 +3,9 @@ import os
 from ctypes  import c_int32, c_char_p, c_size_t, byref
 from ..tools import makedirs, NullGuard, debug
 
-########################################
+#----------------------------
 class Startable(object):
-########################################
+#----------------------------
     """Mixin class extending FDEController types.
 
     Startable provides the interface for starting the main process loop of native code.
@@ -23,7 +23,6 @@ class Startable(object):
 
     Furthermore, by the method fork() Startable basically prepares re-starting the native code
       within another Python process.
-
     """
 
     __opts__ = dict( args         = ''
@@ -85,4 +84,3 @@ class Startable(object):
     def __finalize__( self, code, **kwArgs ):
         self.handle[ self._finalizeFunc, lambda: None ]()
         return code
-

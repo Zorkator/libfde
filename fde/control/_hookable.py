@@ -1,13 +1,12 @@
 
 from ._nativeController import cached_property
 
-######################################
+#---------------------------
 class Hookable(object):
-######################################
+#---------------------------
     """Mixin class extending FDEController types.
 
     Hookable provides cashed access to certain hook scope, determined by option hooksPath
-
     """
     __opts__      = dict( hooksPath = '{rootId}/hooks' )
     __hookAlias__ = dict()
@@ -56,4 +55,3 @@ def connect_to_hook( *hookIds ):
         m._hookIds = hookIds
         return m
     return _decorate
-

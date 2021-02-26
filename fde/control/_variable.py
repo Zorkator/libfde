@@ -1,9 +1,9 @@
 
 from ..tools import _decorate
 
-#####################################
+#----------------------------
 class Variable(object):
-#####################################
+#----------------------------
 
     @property
     def value( self ):
@@ -99,4 +99,3 @@ class Variable(object):
     def __getitem__( self, item )      : return self.value[item]
     def __setitem__( self, item, val ) : self.value[item] = val
     def __delitem__( self, item )      : del self.value[item]
-

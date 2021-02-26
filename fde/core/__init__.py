@@ -15,4 +15,3 @@ from ._scope       import Scope,   ScopePtr
 
 __all__.extend( 'Complex8 Complex16 Complex32 MemoryRef CALLBACK'.split() )
 __all__.extend( 'TypeInfo String StringPtr Item ItemPtr Ref RefPtr List ListPtr HashMap HashMapPtr Scope ScopePtr'.split() )
-

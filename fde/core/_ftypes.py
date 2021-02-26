@@ -4,28 +4,30 @@ from operator import mul as _mul
 import six
 
 try:
-  from functools import reduce
+    from functools import reduce
 except ImportError:
-  pass
+    pass
+
+#-------------------------------------------
+class MemoryRef( Structure ):
+#-------------------------------------------
+    _fields_ = [('ptr', c_void_p),
+                ('len', c_size_t)]
+
+    def __str__( self ):
+        if six.PY2: return string_at( self.ptr, self.len )
+        else      : return string_at( self.ptr, self.len ).decode( 'utf-8' )
+
+    def __nonzero__( self ):
+        return self.len > 0 and bool(self.ptr)
 
 
-class MemoryRef(Structure):
-  _fields_ = [('ptr', c_void_p),
-              ('len', c_size_t)]
+#-------------------------------------------
+class TypeMap( dict ):
+#-------------------------------------------
 
-  def __str__( self ):
-    if six.PY2: return string_at( self.ptr, self.len )
-    else      : return string_at( self.ptr, self.len ).decode('utf-8')
-
-  def __nonzero__( self ):
-    return self.len > 0 and bool(self.ptr)
-
-
-
-class TypeMap(dict):
-
-  def lookup( self, val ):
-    return self.get( val ) or self[type(val)]
+    def lookup( self, val ):
+        return self.get( val ) or self[type(val)]
 
 
 _typeMap_py2id = TypeMap() #< call type mangling
@@ -34,41 +36,41 @@ _typeMap_ft2ct = TypeMap() #< value read (cast MemoryRef to value pointer)
 
 
 def _mapType( typeId, ftype, ctype, *pyTypes ):
-  _typeMap_ft2ct[ftype] = ctype
-  for py in pyTypes + (ctype,):
-    _typeMap_py2id[py] = typeId
-    _typeMap_py2ct[py] = ctype
+    _typeMap_ft2ct[ftype] = ctype
+    for py in pyTypes + (ctype,):
+        _typeMap_py2id[py] = typeId
+        _typeMap_py2ct[py] = ctype
 
 
 def mappedType( typeId, ftype, *pyTypes ):
-  def _wrap( ctype ):
-    _mapType( typeId, ftype, ctype, *pyTypes )
-    return ctype
-  return _wrap
+    def _wrap( ctype ):
+        _mapType( typeId, ftype, ctype, *pyTypes )
+        return ctype
+    return _wrap
 
 
 def _complexType( typeId, ftype, compType, *pyTypes ):
-  def _setVal( self, *args ):
-    cplx = complex(*args)
-    super(self.__class__, self).__init__( cplx.real, cplx.imag )
+    def _setVal( self, *args ):
+        cplx = complex( *args )
+        super(self.__class__, self).__init__( cplx.real, cplx.imag )
 
-  def _getVal( self ):
-    return complex( self.real, self.imag )
+    def _getVal( self ):
+        return complex( self.real, self.imag )
 
-  def _repr( self ):
-    return str(self.value)
+    def _repr( self ):
+        return str( self.value )
 
-  members = dict( _fields_    = [('real', compType), ('imag', compType)],
-                  __init__    = _setVal,
-                  __complex__ = _getVal,
-                  __repr__    = _repr,
-                  value       = property( _getVal, _setVal )
-                )
-  classId = typeId.capitalize()
-  _class  = type( classId, (Structure,), members )
-  _mapType( typeId, ftype, _class, *pyTypes )
-  globals()[classId] = _class
-  return _class
+    members = dict( _fields_    = [('real', compType), ('imag', compType)],
+                    __init__    = _setVal,
+                    __complex__ = _getVal,
+                    __repr__    = _repr,
+                    value       = property( _getVal, _setVal )
+                  )
+    classId = typeId.capitalize()
+    _class  = type( classId, (Structure,), members )
+    _mapType( typeId, ftype, _class, *pyTypes )
+    globals()[classId] = _class
+    return _class
 
 
 _mapType( 'void', '', c_void_p, type(None) )
@@ -97,57 +99,62 @@ _complexType( 'complex32', 'complex*32', c_longdouble )
 #
 
 def _ptr_repr( self ):
-  if self: return 'ptr(%s)' % self._type_.__name__
-  else   : return 'null'
+    if self: return 'ptr(%s)' % self._type_.__name__
+    else   : return 'null'
+
 
 def _func_repr( self ):
-  if self: return 'ptr(%s)' % type(self).__name__
-  else   : return 'None'
+    if self: return 'ptr(%s)' % type(self).__name__
+    else   : return 'None'
+
 
 def _array_raw( self ):
-  return cast( byref(self), self._rawtype_ ).contents
+    return cast( byref(self), self._rawtype_ ).contents
+
 
 def _array_repr( self ):
-  return 'Array(%s, %s): %s' % (self._basetype_.__name__, self._shape_, self.raw[:])
+    return 'Array(%s, %s): %s' % (self._basetype_.__name__, self._shape_, self.raw[:])
 
 
 def ARRAY_t( base, shape ):
-  shp = list( map( int, shape ) )
-  cls = reduce( _mul, shp, base )
-  cls._shape_    = shp
-  cls._basetype_ = base
-  cls._rawtype_  = POINTER(base * (sizeof(cls) // sizeof(base)))
-  cls.__repr__   = _array_repr
-  cls.raw        = property(_array_raw)
-  return cls
+    shp = list( map( int, shape ) )
+    cls = reduce( _mul, shp, base )
+    cls._shape_    = shp
+    cls._basetype_ = base
+    cls._rawtype_  = POINTER( base * (sizeof(cls) // sizeof(base)) )
+    cls.__repr__   = _array_repr
+    cls.raw        = property( _array_raw )
+    return cls
+
 
 def POINTER_t( tgtType ):
-  T = POINTER( tgtType )
-  T.__repr__ = _ptr_repr
-  return T
+    T = POINTER( tgtType )
+    T.__repr__ = _ptr_repr
+    return T
+
 
 def CALLBACK_t( argType = None ):
-  if argType is None: T = CFUNCTYPE(None)
-  else              : T = CFUNCTYPE(None, POINTER(argType))
-  T.__repr__ = _func_repr
-  return T
+    if argType is None: T = CFUNCTYPE( None )
+    else              : T = CFUNCTYPE( None, POINTER(argType) )
+    T.__repr__ = _func_repr
+    return T
+
 
 def CFUNCTION_t( retType = None, *args ):
-  T = CFUNCTYPE( retType, *args )
-  T.__repr__ = _func_repr
-  return T
+    T = CFUNCTYPE( retType, *args )
+    T.__repr__ = _func_repr
+    return T
 
 
-VOID_Ptr = POINTER_t(c_void_p)
+VOID_Ptr = POINTER_t( c_void_p )
 CALLBACK = CALLBACK_t()
-SHORT_ID = c_char * 10      #< define this type for gfortran workaround
+SHORT_ID = c_char * 10 #< define this type for gfortran workaround
 
 # Override representation of pointer types
 # ctypes doesn't like deriving those classes.
 SHORT_ID.__repr__ = lambda self: "'%s'" % self[:]
 
 
-_mapType( 'c_void_ptr', 'type(c_ptr)', VOID_Ptr,   type(VOID_Ptr) )
+_mapType( 'c_void_ptr', 'type(c_ptr)',             VOID_Ptr, type(VOID_Ptr) )
 _mapType( 'Callback',   'procedure(Callback_itf)', CALLBACK )
 _mapType( 'char10',     'character(len=10)',       SHORT_ID )
-

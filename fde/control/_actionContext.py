@@ -2,9 +2,9 @@
 from ._expression import Expression
 from ..tools      import _decorate
 
-##########################################
+#--------------------------------------------
 class _Trigger(Expression):
-##########################################
+#--------------------------------------------
     context = None #< set by ActionContext
 
     def __init__( self, expr, **kwArgs ):
@@ -13,9 +13,9 @@ class _Trigger(Expression):
 
 
 
-##########################################
+#--------------------------------------------
 class _Action(object):
-##########################################
+#--------------------------------------------
     _instances = []
     context    = None #< set by ActionContext
 
@@ -52,9 +52,9 @@ class _Action(object):
 
 
 
-##########################################
+#--------------------------------------------
 class ActionContext(object):
-##########################################
+#--------------------------------------------
     Trigger  = _Trigger
     Action   = _Action
     _globals = dict( __builtins__ = None )
@@ -106,4 +106,3 @@ class ActionContext(object):
 
     def execute( self, code ):
         exec( code, self._globals, self._locals )
-

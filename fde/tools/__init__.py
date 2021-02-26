@@ -5,6 +5,7 @@ __version__     = '.'.join( map( str, __versioninfo__ ) )
 __all__         = ['debug']
 
 import logging
+
 logging.basicConfig( level = logging.ERROR )
 
 
@@ -19,11 +20,13 @@ __all__.extend( 'NullHandle Wallet NullGuard LibLoader core_loader dict2obj sys_
 __all__.extend( '_arg auto_raise _decorate'.split() )
 __all__.extend( 'OptionProcessor ObjectFactory UniqueObjectFactory'.split() )
 
-class debug(object):
-  def __new__( _class ):
-    from os import environ as env
-    for m in filter( bool, [env.get('FDE_DEBUGGER'), 'pdb'] ):
-      try               : start_dbg = __import__( m, globals(), locals() ).set_trace; break
-      except ImportError: pass
-    return start_dbg()
 
+#-------------------------------------------
+class debug( object ):
+#-------------------------------------------
+    def __new__( _class ):
+        from os import environ as env
+        for m in filter( bool, [env.get( 'FDE_DEBUGGER' ), 'pdb'] ):
+            try               : start_dbg = __import__( m, globals(), locals() ).set_trace; break
+            except ImportError: pass
+        return start_dbg()

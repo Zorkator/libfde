@@ -2,9 +2,9 @@
 import re
 import math
 
-#####################################
+#--------------------------------
 class Expression(object):
-#####################################
+#--------------------------------
     _str1     = '"[^"]+"'
     _str2     = "'[^']+'"
     _other    = "[^\"'\s]+"
@@ -44,4 +44,3 @@ class Expression(object):
 
     def __str__( self ):
         return self._expr
-

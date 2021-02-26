@@ -4,10 +4,9 @@ from ._base   import Compound, pyData_property
 from ._object import Object
 from ._ftypes import MemoryRef, _typeMap_ft2ct
 
-
-######################################
+#-------------------------------------------
 class TypeSpecs(Structure):
-######################################
+#-------------------------------------------
     pass
 
 TypeSpecsPtr       = POINTER(TypeSpecs)
@@ -19,9 +18,9 @@ TypeSpecs._fields_ = [('typeId',   MemoryRef),
 
 
 
-######################################
+#-------------------------------------------
 class TypeInfo(Compound):
-######################################
+#-------------------------------------------
     _fields_    = [('_spec', TypeSpecs)]
     _anonymous_ = ['_spec']
     __slots__   = Compound.__slots__
@@ -43,9 +42,9 @@ TypeInfoPtr = POINTER(TypeInfo)
 
 
 
-######################################
+#-------------------------------------------
 class TypedObject(Object):
-######################################
+#-------------------------------------------
     __typeprocs__ = [] #< no native methods for TypedObject
     _fields_      = [('_typeInfo', TypeInfoPtr)]
     __slots__     = Object.__slots__
@@ -62,4 +61,3 @@ class TypedObject(Object):
         return bool(self._typeInfo)
 
     __nonzero__ = __bool__ #< py2 compatibility
-
