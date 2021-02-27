@@ -1,10 +1,8 @@
 
-class Object(object)     : pass
-class TypedObject(object): pass
-class TypeInfo(object)   : pass
-class String(object)     : pass
-class Item(object)       : pass
-class Ref(object)        : pass
-class List(object)       : pass
-class HashMap(object)    : pass
-class Scope(object)      : pass
+__author__      = 'Josef Scheuer'
+__versioninfo__ = (2, 8, 0)
+__version__     = '.'.join( map( str, __versioninfo__ ) )
+__all__         = "Object TypedObject TypeInfo String Item Ref List HashMap Scope".split()
+
+for classId in __all__:
+    globals()[classId] = type( classId, (object,), {} )

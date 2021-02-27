@@ -1,6 +1,6 @@
 
 __author__      = 'Josef Scheuer'
-__versioninfo__ = (2, 7, 2)
+__versioninfo__ = (2, 8, 0)
 __version__     = '.'.join( map( str, __versioninfo__ ) )
 __all__         = []
 
@@ -21,4 +21,3 @@ from ._variable           import Variable
 __all__.extend( 'NativeController FDEController ExceptionRouter Stateful cached_property'.split() )
 __all__.extend( 'Hookable Startable Verbose CommandProcessor Simulator'.split() )
 __all__.extend( 'Variable Expression ActionContext'.split() )
-
