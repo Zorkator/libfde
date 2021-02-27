@@ -1,5 +1,6 @@
 
 from traceback import format_exception
+from six       import string_types
 import sys, os, shlex
 
 #--------------------------------------------
@@ -24,10 +25,10 @@ class CommandProcessor( object ):
                 if self._debug > 0:
                     from ..tools import debug; debug()
 
-                if   isinstance( cmd, basestring ): res = self._dispatchCommand( cmd )
-                elif hasattr( cmd, 'keys' )       : res = self.setData( cmd )
-                elif hasattr( cmd, '__iter__' )   : res = self.getData( cmd )
-                else                              : res = "unknown command"
+                if   isinstance( cmd, string_types ): res = self._dispatchCommand( cmd )
+                elif hasattr( cmd, 'keys' )         : res = self.setData( cmd )
+                elif hasattr( cmd, '__iter__' )     : res = self.getData( cmd )
+                else                                : res = "unknown command"
 
             except StopIteration:
                 res = 'ok'
