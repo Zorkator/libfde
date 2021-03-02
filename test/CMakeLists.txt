@@ -11,6 +11,13 @@ set(generate_files
   ./test_ref_types.F90_tpp
 )
 set(OutputFileList "")
+# Multiproject generators like VS will always generate files on initial build of a config,
+# despite of correct rules and up to date timestamps from previous builds of other configs.
+# This might cause unnecessary recompilation of other projects depending on this.
+# Fix: Insert an additional step that will only overwrite generated files,
+# if the actual content has changed.
+file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/copy_file.cmake" "configure_file(\${INPUT_FILE} \${OUTPUT_FILE} COPYONLY)")
+
 foreach(inFile IN LISTS generate_files)
   string(REPLACE "_tpp" "" outFile "${inFile}")
   set(inFile "${CMAKE_CURRENT_SOURCE_DIR}/${inFile}")
@@ -19,7 +26,11 @@ foreach(inFile IN LISTS generate_files)
   add_custom_command(
     OUTPUT "${outFile}"
     COMMAND "${CMAKE_COMMAND}" -E make_directory "${outDir}"
-    COMMAND "${Python_EXECUTABLE}" "${FDE_GENERATOR_SCRIPT}" "${inFile}" -o "${outFile}"
+    COMMAND "${Python_EXECUTABLE}" "${FDE_GENERATOR_SCRIPT}" "${inFile}" -o "${outFile}.tmp"
+    COMMAND "${CMAKE_COMMAND}"
+            -D INPUT_FILE="${outFile}.tmp"
+            -D OUTPUT_FILE="${outFile}"
+            -P "${CMAKE_CURRENT_BINARY_DIR}/copy_file.cmake"
     DEPENDS "${inFile}" "${FDE_GENERATOR_SCRIPT}"
   )
   list(APPEND OutputFileList "${outFile}")
