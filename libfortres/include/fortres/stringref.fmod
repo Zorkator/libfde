@@ -91,8 +91,14 @@
           if (strRef%len > 0) then
             call c_f_pointer( strRef%loc, fptr )
           else
-            fptr => empty_string_
+            call c_f_pointer( get_string_loc_(empty_string_), fptr )
           end if
+          contains
+            function get_string_loc_( fstr ) result(loc)
+              character(len=*), target, intent(in) :: fstr
+              type (c_ptr)                         :: loc
+              loc = c_loc(fstr)
+            end function
         end function
 
 
