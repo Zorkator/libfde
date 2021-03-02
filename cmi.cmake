@@ -1,6 +1,6 @@
 # BSD 2-Clause License
 #
-# Copyright (c) 2019-2020, Volker Jacht
+# Copyright (c) 2019-2021, Volker Jacht
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -28,7 +28,7 @@
 
 cmake_minimum_required(VERSION 3.8)
 
-set(CMI_TAG "ceb3020aeb84b37bb5f5b7efd38eafb96f6adddc")
+set(CMI_TAG "v0.1.1")
 
 get_property(CMI_LOADER_FILE GLOBAL PROPERTY CMI_LOADER_FILE)
 # First include
@@ -95,7 +95,7 @@ unset(CMI_LOADER_FILE)
 ######################################
 
 set(CMI_LOADED TRUE)
-set(CMI_VERSION "0.1.0")
+set(CMI_VERSION "0.1.1")
 
 if(NOT DEFINED CMI_PRINT_VERSION)
   set(CMI_PRINT_VERSION TRUE CACHE INTERNAL "")
@@ -135,9 +135,10 @@ function(cmi_minimum_required)
 endfunction()
 
 function(cmi_file)
-  cmake_parse_arguments(_FILE "" "" "SIZE" ${ARGN})
-  list(LENGTH _FILE_SIZE _FILE_LENGTH)
-  if (_FILE_LENGTH STREQUAL 2)
+  cmake_parse_arguments(_FILE "" "" "SIZE;DOWNLOAD" ${ARGN})
+  list(LENGTH _FILE_SIZE _FILE_SIZE_LENGTH)
+  list(LENGTH _FILE_DOWNLOAD _FILE_DOWNLOAD_LENGTH)
+  if (_FILE_SIZE_LENGTH STREQUAL 2)
     list(GET _FILE_SIZE 0 INPUT_FILE)
     list(GET _FILE_SIZE 1 FILE_SIZE)
     if(${CMAKE_VERSION} VERSION_LESS "3.14.0")
@@ -151,6 +152,25 @@ function(cmi_file)
       file(SIZE "${INPUT_FILE}" FILE_SIZE_)
     endif()
     set(${FILE_SIZE} ${FILE_SIZE_} PARENT_SCOPE)
+  elseif(_FILE_DOWNLOAD_LENGTH STREQUAL 2)
+    list(GET _FILE_DOWNLOAD 0 DOWNLOAD_URL)
+    list(GET _FILE_DOWNLOAD 1 DOWNLOAD_DESTINATION)
+    set(DOWNLOAD_DESTINATION_TMP "${DOWNLOAD_DESTINATION}.tmp")
+    if(EXISTS "${DOWNLOAD_DESTINATION_TMP}")
+      message(STATUS "Removing ${DOWNLOAD_DESTINATION_TMP}")
+      file(REMOVE_RECURSE "${DOWNLOAD_DESTINATION_TMP}")
+    endif()
+    message(STATUS "Downloading ${DOWNLOAD_URL}")
+    file(DOWNLOAD "${DOWNLOAD_URL}" "${DOWNLOAD_DESTINATION_TMP}" SHOW_PROGRESS)
+    cmi_file(SIZE "${DOWNLOAD_DESTINATION_TMP}" DOWNLOAD_FILESIZE)
+    if(DOWNLOAD_FILESIZE STREQUAL 0)
+      message(WARNING "Can not download ${DOWNLOAD_DESTINATION}")
+      file(REMOVE "${DOWNLOAD_DESTINATION_TMP}")
+    else()
+      file(RENAME "${DOWNLOAD_DESTINATION}.tmp" "${DOWNLOAD_DESTINATION}")
+    endif()
+  else()
+    message(WARNING "CMI_FILE() no matching function for parameters ${ARGN}")
   endif()
 endfunction()
 
@@ -312,22 +332,16 @@ function(cmi_add_archive_ PROJECT_NAME_ PROJECT_URL_)
   endif()
   get_filename_component(${PROJECT_NAME_UPPER_}_ARCHIVE "${PROJECT_URL_}" NAME)
   set(${PROJECT_NAME_UPPER_}_ARCHIVE_PATH "${CMI_EXTERNALS_DIR}/${${PROJECT_NAME_UPPER_}_ARCHIVE}")
-  string(REPLACE ".tar.gz" "" ${PROJECT_NAME_UPPER_}_ARCHIVE_TAG "${${PROJECT_NAME_UPPER_}_ARCHIVE}")
+  string(REGEX REPLACE ".(tar.gz|zip|tgz)$" "" ${PROJECT_NAME_UPPER_}_ARCHIVE_TAG ${INPUT} "${${PROJECT_NAME_UPPER_}_ARCHIVE}")
   set(${PROJECT_NAME_UPPER_}_DIR "${CMI_EXTERNALS_DIR}/${${PROJECT_NAME_UPPER_}_ARCHIVE_TAG}" CACHE PATH "")
 
   if(NOT EXISTS "${${PROJECT_NAME_UPPER_}_DIR}")
     if(NOT EXISTS "${${PROJECT_NAME_UPPER_}_ARCHIVE_PATH}")
-      message(STATUS "Downloading ${PROJECT_NAME_UPPER_} ${PROJECT_URL_}")
-      file(DOWNLOAD "${PROJECT_URL_}" "${${PROJECT_NAME_UPPER_}_ARCHIVE_PATH}" SHOW_PROGRESS)
-      cmi_file(SIZE "${${PROJECT_NAME_UPPER_}_ARCHIVE_PATH}" ARCHIVE_FILESIZE_)
-      if(ARCHIVE_FILESIZE_ STREQUAL 0)
-        file(REMOVE "${${PROJECT_NAME_UPPER_}_ARCHIVE_PATH}")
-        message(WARNING "Can not download ${PROJECT_URL_}")
-      endif()
+      cmi_file(DOWNLOAD "${PROJECT_URL_}" "${${PROJECT_NAME_UPPER_}_ARCHIVE_PATH}")
     endif()
     message(STATUS "Extracting ${PROJECT_NAME_UPPER_} ${${PROJECT_NAME_UPPER_}_ARCHIVE_PATH} to ${${PROJECT_NAME_UPPER_}_DIR}")
     execute_process(
-      COMMAND "${CMAKE_COMMAND}" -E tar -xzf "${${PROJECT_NAME_UPPER_}_ARCHIVE_PATH}"
+      COMMAND "${CMAKE_COMMAND}" -E tar x "${${PROJECT_NAME_UPPER_}_ARCHIVE_PATH}"
       WORKING_DIRECTORY "${CMI_EXTERNALS_DIR}"
     )
   endif()
@@ -556,7 +570,7 @@ function(cmi_Fortran_append var name)
   set(Fortran_DEBUGINFO_Generic_Intel "-g")
   set(Fortran_DEBUGINFO_Windows_Intel "/debug:full")
 
-  set(Fortran_O0_Generic_GNU "-Og")
+  set(Fortran_O0_Generic_GNU "-O0")
   set(Fortran_O0_Generic_Intel "-O0")
   set(Fortran_O0_Windows_Intel "/Od")
 
@@ -684,7 +698,7 @@ function(cmi_Fortran_append var name)
   set(Fortran_SAVE_Generic_Intel "-save")
   set(Fortran_SAVE_Windows_Intel "/Qsave")
 
-  set(Fortran_STACKARRAYLIMIT65_Generic_GNU "-fmax-stack-var-size=65535")
+  set(Fortran_STACKARRAYLIMIT65_Generic_GNU "") # Default 65536
   set(Fortran_STACKARRAYLIMIT65_Generic_Intel "-heap-arrays 65")
   set(Fortran_STACKARRAYLIMIT65_Windows_Intel "/heap-arrays:65")
 
@@ -961,7 +975,6 @@ macro(cmi_set_build_environment)
     if(DEFINED CMAKE_Fortran_FLAGS_RELEASE)
       cmi_fortran_append(CMAKE_Fortran_FLAGS_RELEASE O2)
     endif()
-    #cmi_fortran_append(CMAKE_Fortran_FLAGS TRACEBACK)
   endif()
 endmacro()
 
@@ -1139,9 +1152,10 @@ endmacro()
 ######################################
 # MPI
 # Prequisites:
-# If I_MPI_ROOT environment variable is set correctly, Intel MPI is used as library.
+# If I_MPI_ROOT or I_MPI_ONEAPI_ROOT environment variable is set correctly,
+# Intel MPI is used as library.
 # Otherwise, passing a working MPI compiler wrapper is required.
-# E.g. FC=mpif90 CC=mpicc CXX=mpicxx
+# E.g. FC=mpifc CC=mpicc CXX=mpicxx
 #
 # Example usage:
 # cmi_find_mpi(REQUIRED COMPONENTS CXX)
@@ -1243,13 +1257,17 @@ function(cmi_find_mpi)
 
   # Intel MPI
   if(NOT I_MPI_ROOT)
-    set(I_MPI_ROOT "$ENV{I_MPI_ROOT}" CACHE PATH "")
+    if(EXISTS "$ENV{I_MPI_ROOT}")
+      set(I_MPI_ROOT "$ENV{I_MPI_ROOT}" CACHE PATH "")
+    elseif(EXISTS "$ENV{I_MPI_ONEAPI_ROOT}")
+      set(I_MPI_ROOT "$ENV{I_MPI_ONEAPI_ROOT}" CACHE PATH "")
+    endif()
   endif()
   if(I_MPI_ROOT AND CYGWIN AND NOT DEFINED CMI_MPI_TYPE)
     message(STATUS "MPI: I_MPI_ROOT is set, but Intel MPI is not compatible with Cygwin!")
   endif()
 
-  if(I_MPI_ROOT AND NOT CYGWIN)
+  if(I_MPI_ROOT AND NOT CYGWIN AND EXISTS "${I_MPI_ROOT}")
     set(MPI_TYPE "Intel")
     if(NOT CMI_MPI_TYPE STREQUAL MPI_TYPE)
       message(STATUS "MPI: Using Intel MPI")
@@ -1268,21 +1286,27 @@ function(cmi_find_mpi)
 
     set(MPI_ROOT "${I_MPI_ROOT}")
 
+    if(EXISTS "${I_MPI_ROOT}/intel64")
+      set(I_MPI_BASE "${I_MPI_ROOT}/intel64")
+    else()
+      set(I_MPI_BASE "${I_MPI_ROOT}")
+    endif()
+
     # Handle MPI_EXEC
-    set(MPI_EXEC "${I_MPI_ROOT}/intel64/bin/mpiexec")
+    set(MPI_EXEC "${I_MPI_BASE}/bin/mpiexec")
 
     # Handle MPI_<comp>_LIB
     foreach(COMPONENT IN LISTS _COMPONENTS)
-      set(I_MPI_LIB_DIR_ "${I_MPI_ROOT}/intel64/lib")
-      set(I_MPI_FABRIC_DIR "${I_MPI_ROOT}/intel64/libfabric")
+      set(I_MPI_LIB_DIR_ "${I_MPI_BASE}/lib")
+      set(I_MPI_FABRIC_DIR "${I_MPI_BASE}/libfabric")
 
       # all require the C library
       find_library(I_MPI_C_LIB_ NAMES impi mpi PATHS "${I_MPI_LIB_DIR_}/release" NO_DEFAULT_PATH)
-      set(MPI_${COMPONENT}_LIB ${I_MPI_C_LIB_})
       find_library(I_MPI_FABRIC_LIB_ NAMES fabric PATHS "${I_MPI_FABRIC_DIR}/lib" NO_DEFAULT_PATH)
       if(I_MPI_FABRIC_LIB_)
         list(APPEND I_MPI_C_LIB_ ${I_MPI_FABRIC_LIB_})
       endif()
+      set(MPI_${COMPONENT}_LIB ${I_MPI_C_LIB_})
 
       if(${COMPONENT} STREQUAL "MPICXX")
         find_library(I_MPI_CXX_LIB_ NAMES impicxx mpicxx PATHS "${I_MPI_LIB_DIR_}" NO_DEFAULT_PATH)
@@ -1302,10 +1326,10 @@ function(cmi_find_mpi)
         message(WARNING "MPI: Missing developer libraries (${COMPONENT}). MPI SDK installed correctly?")
       endif()
     endforeach()
-    unset(I_MPI_LIB_DIR_)
+    mark_as_advanced(I_MPI_LIB_DIR_ I_MPI_F_LIB_ I_MPI_C_LIB_ I_MPI_CXX_LIB_ I_MPI_FABRIC_LIB_)
 
     # Handle MPI_INCLUDE
-    set(MPI_INCLUDE "${I_MPI_ROOT}/intel64/include")
+    set(MPI_INCLUDE "${I_MPI_BASE}/include")
     if(NOT EXISTS "${MPI_INCLUDE}")
       message(WARNING "MPI: Missing include directory - ${MPI_INCLUDE}")
     else()
