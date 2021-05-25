@@ -140,7 +140,7 @@ class Scope( HashMap ):
             try:
                 base = reduce( lambda d, k: d[k], ident[:-1], self )
                 if type(type(base)) is type(Array): #< try on Scopes is expensive, so check for ctypes-Array!
-                    return base._type_.from_buffer( base, ident[-1] * sizeof( base._type_ ) )
+                    return base._type_.from_buffer( base, int(ident[-1]) * sizeof( base._type_ ) )
                 else:
                     return base[ident[-1]]
             except (TypeError, KeyError, AttributeError) as e:
@@ -151,7 +151,11 @@ class Scope( HashMap ):
 
     def __setitem__( self, ident, val ):
         if isinstance( ident, (tuple, list) ):
-            reduce( lambda d, k: d[k], ident[:-1], self )[ident[-1]] = val
+            base = reduce( lambda d, k: d[k], ident[:-1], self )
+            if type(type(base)) is type(Array): #< try on Scopes is expensive, so check for ctypes-Array!
+                base[int(ident[-1])] = val
+            else:
+                base[ident[-1]] = val
         else:
             return super(Scope, self).__setitem__( ident, val )
 
