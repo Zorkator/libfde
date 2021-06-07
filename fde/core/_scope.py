@@ -4,6 +4,7 @@ from ._ref     import Ref
 from ._ftypes  import mappedType, _mapType, CALLBACK, CALLBACK_t, CFUNCTION_t, POINTER_t, VOID_Ptr
 from ..tools   import dict2obj, _arg, auto_raise
 from ctypes    import byref, c_char_p, c_int, POINTER, sizeof, Array
+from six       import iteritems
 
 try:
     from functools import reduce
@@ -98,7 +99,7 @@ class Scope( HashMap ):
                     try                  : _tree_walk( v.iteritems(), stack + [stack[-1][k]] )
                     except AttributeError: stack[-1][k] = v
 
-        _tree_walk( other.iteritems(), [self] )
+        _tree_walk( iteritems(other), [self] )
 
 
     def update( self, other = {}, **kwArgs ):
