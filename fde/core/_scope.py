@@ -114,7 +114,7 @@ class Scope( HashMap ):
 
     def iterDomain( self, paths, keyOp = str.split, default = LookupError ):
         keyOp = keyOp or (lambda k: [k])
-        for p in map( keyOp, paths ):
+        for p in list(map( keyOp, paths )):
             try:
                 yield p, self[p] if p else None
             except (TypeError, KeyError, AttributeError) as e:
