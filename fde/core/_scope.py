@@ -75,15 +75,17 @@ class Scope( HashMap ):
 
     def setProcedure( self, ident, func, retType = None, args = () ):
         cfunc, ITF = self._mk_CFUNCTION( func, retType, args )
-        self.set_procedure_( byref(self), c_char_p(ident), cfunc, c_int(len(ident)) )
         self.getItem( ident, KeyError ).pyData.update( itf = ITF )
+        ident = ident.encode()
+        self.set_procedure_( byref(self), c_char_p(ident), cfunc, c_int(len(ident)) )
 
 
     def getProcedure( self, ident, retType = _arg(None), args = _arg([]) ):
         ITF = self.getItem( ident, KeyError ).pyData.get( 'itf' )
         if not ITF or _arg.isGiven( retType ) or _arg.isGiven( args ):
             ITF = CFUNCTION_t( _arg.get( retType ), *_arg.get( args ) )
-        proc = ITF(0)
+        proc  = ITF(0)
+        ident = ident.encode()
         self.get_procedure_( byref(proc), byref(self), c_char_p(ident), VOID_Ptr(), c_int(len(ident)) )
         proc._itf = ITF
         return proc
