@@ -77,7 +77,7 @@ class Stateful( object ):
         getData caches the result of the latest requested keyList and returns it if keyList is empty.
         """
         if keyList:
-            pairs = zip( *self.root.iterDomain( keyList, keyTok or self.keyTokenizer ) )
+            pairs = list( zip( *self.root.iterDomain( keyList, keyTok or self.keyTokenizer ) ) )
             self._stock._req_data = pairs and pairs[1] or []
         return getattr( self._stock, '_req_data', [] )
 
