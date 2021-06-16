@@ -14,6 +14,10 @@ _PATH  = ('LD_LIBRARY_PATH', 'PATH')[_isWin]
 class CDLL_t( _CDLL ):
 #-------------------------------------------
 
+    def __init__( self, name ):
+        try   : super(CDLL_t, self).__init__( name )
+        except: super(CDLL_t, self).__init__( name, winmode=0 )
+
     def __getitem__( self, ident ):
         """if given more than one argument, try one after another before giving up and returning the last as default."""
         if isinstance( ident, tuple ):
