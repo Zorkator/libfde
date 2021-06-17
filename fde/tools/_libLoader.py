@@ -14,9 +14,9 @@ _PATH  = ('LD_LIBRARY_PATH', 'PATH')[_isWin]
 class CDLL_t( _CDLL ):
 #-------------------------------------------
 
-    def __init__( self, name ):
-        try   : super(CDLL_t, self).__init__( name )
-        except: super(CDLL_t, self).__init__( name, winmode=0 )
+    def __init__( self, name, **kwArgs ):
+        try             : super(CDLL_t, self).__init__( name, **kwArgs )
+        except Exception: super(CDLL_t, self).__init__( name, **dict( {'winmode':0}, **kwArgs ) )
 
     def __getitem__( self, ident ):
         """if given more than one argument, try one after another before giving up and returning the last as default."""
