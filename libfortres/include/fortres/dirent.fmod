@@ -17,7 +17,7 @@
         public :: DIR_t
         public :: relPath
         public :: opendir, readdir, closedir, rewinddir, isdir
-        public :: realpath, so_filepath
+        public :: realpath, so_filepath, fde_filepath
 
         interface relPath
           module procedure relPath_from_to, relPath_to
@@ -172,6 +172,14 @@
             character(len=*)        :: buf
             integer(kind=c_size_t)  :: res
             res = so_filepath_data_( d, strBuf(buf) )
+          end function
+
+!_PROC_EXPORT(fde_filepath)
+          function fde_filepath( buf ) result(res)
+            use fde_typeinfo
+            character(len=*)        :: buf
+            integer(kind=c_size_t)  :: res
+            res = so_filepath_data_( c_loc(void_type()), strBuf(buf) )
           end function
       end module
 #endif
