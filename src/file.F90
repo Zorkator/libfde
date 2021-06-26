@@ -211,12 +211,12 @@ contains
 
       elseif (iostat_ /= 0) then
          ! otherwise we handle error by throwing an exception ...
-         write(buffer, 100, err=20) iostat_, trim(errBase_), trim(descr_), trim(file)
+         write(buffer, 100, err=20) iostat_, trim(errBase_), trim(descr_), trim(file), unit
          call gerror( buffer(len_trim(buffer)+2:) )
          20 call throw( IOError, buffer )
       end if
 
-      100 format( 'code ', I3, ', ', A, ' ', A, ' "', A, '": ' )
+      100 format( 'code ', I3, ', ', A, ' ', A, ' "', A, '" at unit ', I3, ': ' )
 
    contains
 
