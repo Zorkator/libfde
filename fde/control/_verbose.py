@@ -25,12 +25,13 @@ class Verbose( object ):
         return chnl
 
 
-    def say( self, msg, channel = 1 ):
-        """write and flush message string msg to system channel {1,2} => (stdout, stderr).
+    def say( self, verbosity, msg, channel = 1 ):
+        """if verbosity level met, write and flush message string msg to system channel {1,2} => (stdout, stderr).
         Returns self.
 
         """
-        self.write( self._preamble.format( **self.about ) + msg + '\n', channel ).flush()
+        if self._verbosity >= verbosity:
+            self.write( self._preamble.format( **self.about ) + msg + '\n', channel ).flush()
         return self
 
 
