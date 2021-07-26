@@ -12,6 +12,7 @@ module test_file
 
 contains
 
+  recursive &
   subroutine test_open_close()
     character(10) :: files(5) = ["test.1.txt", "test.2.txt", "test.3.txt", "test.4.txt", "test.5.txt"]
 
@@ -35,6 +36,12 @@ contains
 
     call close( fopen( _testfile ), status="delete" )
     _assert( .not. file_exists( _testfile ) )
+
+    _tryBlock(1)
+      call open( -12, _testfile, form="UNFORMATTED", action='WRITE' )
+    _tryCatch_nt(1, IOError)
+      case (0); call throw( RuntimeError, 'expected IOError not thrown!' ) 
+    _tryEnd(1)
   end subroutine
 
 end module
