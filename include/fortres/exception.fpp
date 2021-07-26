@@ -154,7 +154,14 @@
     return                                 ;\
     _paste(label,02) continue              ;\
     select case( try( _catch(catchList), what, _paste(tryblock__,label) ) ) ;\
-      case (0); continue  !< this is important! Without it gfortran would skip the try!
+      case (-1); continue  !< this is important! Without it gfortran would skip the try!
+
+!-- start non-tracing catch block, catching all given exception types --
+# define _tryCatch_nt(label, catchList)     \
+    return                                 ;\
+    _paste(label,02) continue              ;\
+    select case( try( _catch(catchList), _paste(tryblock__,label) ) ) ;\
+      case (-1); continue  !< this is important! Without it gfortran would skip the try!
 
 
 !-- end a simple try-catch
