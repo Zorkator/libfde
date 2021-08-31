@@ -98,16 +98,14 @@ class Scope( HashMap ):
             for key, v in itemItr:
                 if not isinstance( v, CALLBACK ):
                     k = keyOp( key )
-                    try                  : _tree_walk( v.iteritems(), stack + [stack[-1][k]] )
+                    try                  : _tree_walk( iteritems(v), stack + [stack[-1][k]] )
                     except AttributeError: stack[-1][k] = v
 
         _tree_walk( iteritems(other), [self] )
 
 
     def update( self, other = {}, **kwArgs ):
-        if not hasattr( other, 'iteritems' ):
-            other = dict( other )
-        self._assign_tree( other )
+        self._assign_tree( dict(other) )
         self._assign_tree( kwArgs )
 
     def updateDomain( self, path_dict, keyOp=str.split ):
