@@ -1,0 +1,19 @@
+stages:
+  - build
+
+linux:
+  stage: build
+  tags:
+    - docker
+    - linux
+  image: fedora:33
+  before_script:
+    - dnf install -y g++ gcc-gfortran cmake
+
+  script:
+    - mkdir -p _build
+    - cd _build
+    - cmake -DCMAKE_BUILD_TYPE=Debug -DBUILD_TESTING=1 ..
+    - make
+    - make test
+
