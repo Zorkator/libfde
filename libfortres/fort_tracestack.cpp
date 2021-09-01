@@ -1,7 +1,10 @@
 #include <fortres_config.h>
 
-#if defined HAVE_DBGHELP_H
+#ifndef NOMINMAX
 # define NOMINMAX
+#endif
+
+#if defined HAVE_DBGHELP_H
 # define _CRT_SECURE_NO_WARNINGS
 # include <windows.h>
 # include <DbgHelp.h>
@@ -9,9 +12,7 @@
 # include <execinfo.h>
 #endif
 
-
 #if defined HAVE_LIBLOADERAPI_H
-# define NOMINMAX
 # include <windows.h>
 # include <libloaderapi.h>
 #elif defined HAVE_DLFCN_H
