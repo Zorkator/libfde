@@ -1,6 +1,7 @@
 #include <fortres_config.h>
 
 #if defined HAVE_DBGHELP_H
+# define NOMINMAX
 # define _CRT_SECURE_NO_WARNINGS
 # include <windows.h>
 # include <DbgHelp.h>
@@ -10,6 +11,7 @@
 
 
 #if defined HAVE_LIBLOADERAPI_H
+# define NOMINMAX
 # include <windows.h>
 # include <libloaderapi.h>
 #elif defined HAVE_DLFCN_H
@@ -21,6 +23,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <algorithm>
 
 #define  _DLL_EXPORT_IMPLEMENTATION_
 #include "fortres/tracestack.hpp"
@@ -68,11 +71,12 @@ f_tracestack( FrameInfoOp infoOp, const int *skippedFrames, StringRef *info )
   symbol->MaxNameLen   = 255;
   symbol->SizeOfStruct = sizeof(SYMBOL_INFO);
 
-  for (int i = stackSize - 1; i > *skippedFrames; --i)
+  //                             . o O (we skip frame[0] that refers to most inner frame f_tracestac)
+  for (int i = stackSize - 1; i > std::max( 0, *skippedFrames ); --i)
   {
     SymFromAddr( process, (DWORD64)(frames[i]), 0, symbol );
     so_filepath_of( (void *)symbol->Address, frameBuffer, 256 );
-    sprintf( frameBuffer, "%s: %s [0x%0X]", frameBuffer, symbol->Name, symbol->Address );
+    sprintf( frameBuffer, "%s: %s [0x%0llX]", frameBuffer, symbol->Name, symbol->Address );
     infoOp( &infoRef.referTo(frameBuffer).trim() );
   }
 #else
@@ -83,7 +87,8 @@ f_tracestack( FrameInfoOp infoOp, const int *skippedFrames, StringRef *info )
 
   if (strings)
   {
-    for (int i = stackSize - 1; i > *skippedFrames; --i)
+    //                             . o O (we skip strings[0] that refers to most inner frame f_tracestac)
+    for (int i = stackSize - 1; i > std::max( 0, *skippedFrames ); --i)
       { infoOp( &infoRef.referTo(strings[i]).trim() ); }
       free( strings );
   }
