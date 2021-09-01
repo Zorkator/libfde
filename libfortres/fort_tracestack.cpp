@@ -29,6 +29,7 @@
 #include "fortres/tracestack.hpp"
 #include "fortres/dirent.hpp"
 
+#define arraySize(a)    (sizeof(a)/sizeof(a[0]))
 
 void
 f_printFrameLine( StringRef *frameInfo )
@@ -66,7 +67,7 @@ f_tracestack( FrameInfoOp infoOp, const int *skippedFrames, StringRef *info )
 
   process   = GetCurrentProcess();
   SymInitialize( process, NULL, TRUE );
-  stackSize = CaptureStackBackTrace( 0, sizeof(frames), frames, NULL );
+  stackSize = CaptureStackBackTrace( 0, arraySize(frames), frames, NULL );
 
   symbol->MaxNameLen   = 255;
   symbol->SizeOfStruct = sizeof(SYMBOL_INFO);
@@ -76,13 +77,13 @@ f_tracestack( FrameInfoOp infoOp, const int *skippedFrames, StringRef *info )
   {
     SymFromAddr( process, (DWORD64)(frames[i]), 0, symbol );
     so_filepath_of( (void *)symbol->Address, frameBuffer, 256 );
-    sprintf( frameBuffer, "%s: %s [0x%0llX]", frameBuffer, symbol->Name, symbol->Address );
+    sprintf( frameBuffer, "%s: %s [0x%0llX]", frameBuffer, symbol->Name, (ULONG64)symbol->Address );
     infoOp( &infoRef.referTo(frameBuffer).trim() );
   }
 #else
   char **strings;
 
-  stackSize = backtrace( frames, sizeof(frames) );
+  stackSize = backtrace( frames, arraySize(frames) );
   strings   = backtrace_symbols( frames, stackSize );
 
   if (strings)
