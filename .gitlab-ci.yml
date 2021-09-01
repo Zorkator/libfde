@@ -8,12 +8,23 @@ linux:
     - linux
   image: fedora:33
   before_script:
-    - dnf install -y g++ gcc-gfortran cmake
+    - dnf install -y g++ gcc-gfortran cmake gcovr
 
   script:
     - mkdir -p _build
     - cd _build
-    - cmake -DCMAKE_BUILD_TYPE=Debug -DBUILD_TESTING=1 ..
+    - cmake -DCMAKE_BUILD_TYPE=Debug -DBUILD_TESTING=1 -DCMAKE_Fortran_FLAGS=--coverage -DCMAKE_C_FLAGS=--coverage -DCMAKE_CXX_FLAGS=--coverage ..
     - make
     - make test
+    - mkdir -p ../coverage
+    - gcovr -r .. src libfortres
+    - gcovr -r .. src libfortres --xml=../coverage.xml --html-details=../coverage/coverage.html
+  coverage: '/^TOTAL.*\s+(\d+\%)$/'
+  artifacts:
+    reports:
+      cobertura: coverage.xml
+    expose_as: 'Coverage Report'
+    paths:
+      - coverage/
+
 

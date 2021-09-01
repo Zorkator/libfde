@@ -43,11 +43,11 @@ contains
     call close( fopen( _testfile ), status="delete" )
     _assert( .not. file_exists( _testfile ) )
 
-    _tryBlock(1)
-      call open( -12, _testfile, form="UNFORMATTED", action='WRITE' )
-    _tryCatch_nt(1, IOError)
-      case (0); call throw( RuntimeError, 'expected IOError not thrown!' ) 
-    _tryEnd(1)
+    !_tryBlock(1)
+    !  call open( -12, _testfile, form="UNFORMATTED", action='WRITE' )
+    !_tryCatch_nt(1, IOError)
+    !  case (0); call throw( RuntimeError, 'expected IOError not thrown!' )
+    !_tryEnd(1)
   end subroutine
 
 end module
