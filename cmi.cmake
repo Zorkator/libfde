@@ -26,9 +26,9 @@
 
 # See https://gitlab.com/nordfox/cmakeit
 
-cmake_minimum_required(VERSION 3.8)
+cmake_minimum_required(VERSION 3.13)
 
-set(CMI_TAG "v0.2.0")
+set(CMI_TAG "v0.3.3")
 
 get_property(CMI_LOADER_FILE GLOBAL PROPERTY CMI_LOADER_FILE)
 # First include
@@ -96,7 +96,7 @@ unset(CMI_LOADER_FILE)
 ######################################
 
 set(CMI_LOADED TRUE)
-set(CMI_VERSION "0.2.0")
+set(CMI_VERSION "0.3.3")
 
 if(NOT DEFINED CMI_PRINT_VERSION)
   set(CMI_PRINT_VERSION TRUE CACHE INTERNAL "")
@@ -107,7 +107,7 @@ endif()
 
 # Consider root project as populated and included
 string(TOUPPER "${CMAKE_PROJECT_NAME}" PROJECT_NAME_UPPER_)
-set_property(GLOBAL PROPERTY ${PROJECT_NAME_UPPER_}_INCLUDED "TRUE")
+set_property(GLOBAL PROPERTY CMI_${PROJECT_NAME_UPPER_}_INCLUDED "TRUE")
 unset(PROJECT_NAME_UPPER_)
 
 set(CMI_EXTERNALS_DIR "${CMAKE_SOURCE_DIR}/_externals" CACHE PATH "")
@@ -191,8 +191,8 @@ function(cmi_add_subdirectory PROJECT_NAME_)
   string(TOUPPER "${PROJECT_NAME_}" PROJECT_NAME_UPPER_)
   string(TOLOWER "${PROJECT_NAME_}" PROJECT_NAME_LOWER_)
 
-  get_property(${PROJECT_NAME_UPPER_}_INCLUDED_ GLOBAL PROPERTY ${PROJECT_NAME_UPPER_}_INCLUDED)
-  if(${PROJECT_NAME_UPPER_}_INCLUDED_)
+  get_property(${PROJECT_NAME_UPPER_}_INCLUDED GLOBAL PROPERTY CMI_${PROJECT_NAME_UPPER_}_INCLUDED SET)
+  if(${PROJECT_NAME_UPPER_}_INCLUDED)
     # project already been included
     return()
   endif()
@@ -236,7 +236,7 @@ function(cmi_add_subdirectory PROJECT_NAME_)
 
     if(EXISTS ${${PROJECT_NAME_UPPER_}_DIR})
       if(NOT CMI_ADD_SUBDIRECTORY_NO_CMAKE)
-        set_property(GLOBAL PROPERTY ${PROJECT_NAME_UPPER_}_INCLUDED "TRUE")
+        set_property(GLOBAL PROPERTY CMI_${PROJECT_NAME_UPPER_}_INCLUDED "TRUE")
         add_subdirectory("${${PROJECT_NAME_UPPER_}_DIR}" "${CMAKE_BINARY_DIR}/externals/${PROJECT_NAME_LOWER_}")
       endif()
     else()
@@ -1135,7 +1135,7 @@ function(cmi_add_external_library LIB_NAME_ LIB_SOURCE_ LIB_DESTINATION_)
   get_filename_component(LIB_SOURCE_DIRECTORY "${LIBS_}" DIRECTORY)
   get_filename_component(LIB_SOURCE_NAME_WE "${LIBS_}" NAME_WE)
   get_filename_component(LIB_SOURCE_NAME "${LIBS_}" NAME)
-  file(GLOB LIB_FILES "${LIB_SOURCE_DIRECTORY}/${LIB_SOURCE_NAME_WE}*")
+  file(GLOB LIB_FILES "${LIB_SOURCE_DIRECTORY}/${LIB_SOURCE_NAME_WE}.*")
   unset(LIBS_ CACHE)
 
   # Generate copy script
@@ -1515,6 +1515,144 @@ function(cmi_find_omp)
     endif()
     target_compile_definitions(CMI_OpenMP_Fortran INTERFACE _OMP)
     add_library(CMI::OpenMP_Fortran ALIAS CMI_OpenMP_Fortran)
+  endif()
+endfunction()
+
+
+function(cmi_copy PARAMETER_TARGET)
+  cmake_parse_arguments("PARAMETER" "" "" "TARGET_OPTIONS" ${ARGN})
+  get_property(${PARAMETER_TARGET}_COPY_SCRIPT_DEFINED GLOBAL PROPERTY ${PARAMETER_TARGET}_COPY_SCRIPT SET)
+  if (NOT ${PARAMETER_TARGET}_COPY_SCRIPT_DEFINED)
+    set(COPY_SCRIPT_DRAFT "${CMAKE_BINARY_DIR}/cmi_copy_${PARAMETER_TARGET}.cmake")
+    set(COPY_SCRIPT "${CMAKE_BINARY_DIR}/cmi_copy_${PARAMETER_TARGET}_$<CONFIG>.cmake")
+
+    file(WRITE "${COPY_SCRIPT_DRAFT}" [=[
+
+      cmake_minimum_required(VERSION 3.13)
+
+      function(copy)
+
+        cmake_parse_arguments("PARAMETER" "OPTIONAL;NO_RECURSE" "SOURCE_DIR;DEST_DIR;DEST_NAME;SOURCE_FILE;EXCLUDE;INCLUDE" "" ${ARGN})
+
+        if(DEFINED PARAMETER_SOURCE_DIR AND DEFINED PARAMETER_SOURCE_FILE)
+          message(FATAL_ERROR "Either SOURCE_DIR or SOURCE_FILE must be provided.")
+        endif()
+
+        if(DEFINED PARAMETER_SOURCE_DIR)
+          if(NOT IS_ABSOLUTE ${PARAMETER_SOURCE_DIR})
+            set(PARAMETER_SOURCE_DIR "${SOURCE_BASE_DIR}/${PARAMETER_SOURCE_DIR}")
+          endif()
+          get_filename_component(SOURCE_DIR "${PARAMETER_SOURCE_DIR}" DIRECTORY)
+          if(PARAMETER_NO_RECURSE)
+            set(MODE GLOB)
+          else()
+            set(MODE GLOB_RECURSE)
+          endif()
+          file(${MODE} SOURCE_FILES LIST_DIRECTORIES false RELATIVE "${SOURCE_BASE_DIR}" ${PARAMETER_SOURCE_DIR}/*)
+        elseif(DEFINED PARAMETER_SOURCE_FILE)
+          if(NOT IS_ABSOLUTE ${PARAMETER_SOURCE_FILE})
+            set(PARAMETER_SOURCE_FILE "${SOURCE_BASE_DIR}/${PARAMETER_SOURCE_FILE}")
+          endif()
+          get_filename_component(SOURCE_DIR "${PARAMETER_SOURCE_FILE}" DIRECTORY)
+          file(GLOB SOURCE_FILES LIST_DIRECTORIES false RELATIVE "${SOURCE_BASE_DIR}" ${PARAMETER_SOURCE_FILE})
+        else()
+          message(FATAL_ERROR "Either SOURCE_DIR or SOURCE_FILE must be provided.")
+        endif()
+        if(NOT IS_ABSOLUTE ${PARAMETER_DEST_DIR})
+          set(PARAMETER_DEST_DIR "${OUTPUT_BASE_DIR}/${PARAMETER_DEST_DIR}")
+        endif()
+
+        if(DEFINED PARAMETER_EXCLUDE)
+          list(FILTER SOURCE_FILES EXCLUDE REGEX "${PARAMETER_EXCLUDE}")
+        endif()
+        if(DEFINED PARAMETER_INCLUDE)
+          list(FILTER SOURCE_FILES INCLUDE REGEX "${PARAMETER_INCLUDE}")
+        endif()
+
+        foreach(ITEM IN ITEMS ${SOURCE_FILES})
+          set(NEW_ITEM "${SOURCE_BASE_DIR}/${ITEM}")
+          list(APPEND SOURCE_FILES_NEW "${NEW_ITEM}")
+        endforeach()
+        set(SOURCE_FILES ${SOURCE_FILES_NEW})
+
+
+        list(LENGTH SOURCE_FILES SOURCE_FILES_LENGTH)
+
+        if(SOURCE_FILES_LENGTH STREQUAL 0)
+          if(PARAMETER_OPTIONAL)
+            return()
+          else()
+            if(DEFINED PARAMETER_SOURCE_DIR)
+              message(FATAL_ERROR  "Source dir ${PARAMETER_SOURCE_DIR} not found.")
+            elseif(DEFINED PARAMETER_SOURCE_FILE)
+              message(FATAL_ERROR  "Source file ${PARAMETER_SOURCE_FILE} not found.")
+            endif()
+          endif()
+        endif()
+
+        foreach(ITEM IN ITEMS ${SOURCE_FILES})
+          file(RELATIVE_PATH NEW_ITEM "${SOURCE_DIR}" "${ITEM}")
+
+          if(DEFINED PARAMETER_DEST_NAME)
+            if(PARAMETER_DEST_NAME_USED)
+              message(FATAL_ERROR  "DEST_NAME should not be used with multiple files.")
+            endif()
+            set(PARAMETER_DEST_NAME_USED 1)
+            get_filename_component(NEW_ITEM_PATH "${NEW_ITEM}" DIRECTORY)
+            set(NEW_ITEM "./${NEW_ITEM_PATH}/${PARAMETER_DEST_NAME}")
+          endif()
+          file(TO_CMAKE_PATH "${PARAMETER_DEST_DIR}/${NEW_ITEM}" NEW_ITEM)
+
+          list(APPEND TARGET_FILES "${NEW_ITEM}")
+        endforeach()
+
+        math(EXPR SOURCE_FILES_LENGTH "${SOURCE_FILES_LENGTH}-1")
+        foreach(ITEM_INDEX RANGE ${SOURCE_FILES_LENGTH})
+          list(GET SOURCE_FILES ${ITEM_INDEX} SOURCE_FILE)
+          list(GET TARGET_FILES ${ITEM_INDEX} TARGET_FILE)
+
+          if("${SOURCE_FILE}" IS_NEWER_THAN "${TARGET_FILE}")
+            message(STATUS "Updating ${TARGET_FILE}")
+            execute_process(COMMAND ${CMAKE_COMMAND} -E copy "${SOURCE_FILE}" "${TARGET_FILE}" RESULT_VARIABLE RESULT)
+            if(NOT RESULT STREQUAL 0)
+              message(FATAL_ERROR "Can not copy ${SOURCE_FILE} to ${TARGET_FILE}")
+            endif()
+          endif()
+
+        endforeach()
+      endfunction()
+    ]=])
+
+    if(NOT DEFINED CMI_OUTPUT_DIRECTORY)
+      set(CMI_OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}")
+    endif()
+    file(APPEND "${COPY_SCRIPT_DRAFT}" "
+set(SOURCE_BASE_DIR \"${CMAKE_CURRENT_SOURCE_DIR}\")
+set(OUTPUT_BASE_DIR \"${CMI_OUTPUT_DIRECTORY}\")
+")
+    set_property(GLOBAL PROPERTY ${PARAMETER_TARGET}_COPY_SCRIPT_DRAFT "${COPY_SCRIPT_DRAFT}")
+    set_property(GLOBAL PROPERTY ${PARAMETER_TARGET}_COPY_SCRIPT "${COPY_SCRIPT}")
+
+    file(GENERATE OUTPUT "${COPY_SCRIPT}" INPUT "${COPY_SCRIPT_DRAFT}")
+  else()
+    get_property(COPY_SCRIPT_DRAFT GLOBAL PROPERTY ${PARAMETER_TARGET}_COPY_SCRIPT_DRAFT)
+    get_property(COPY_SCRIPT GLOBAL PROPERTY ${PARAMETER_TARGET}_COPY_SCRIPT)
+  endif()
+
+  unset(PARAMETERS_ESCAPED)
+  foreach(ITEM IN ITEMS ${ARGN})
+    set(NEW_ITEM "[[${ITEM}]]")
+    set(PARAMETERS_ESCAPED "${PARAMETERS_ESCAPED} ${NEW_ITEM}")
+  endforeach()
+
+  file(APPEND "${COPY_SCRIPT_DRAFT}" "
+copy(${PARAMETERS_ESCAPED})")
+
+  if(NOT TARGET ${PARAMETER_TARGET})
+    add_custom_target(${PARAMETER_TARGET}
+      COMMAND ${CMAKE_COMMAND} -P "${COPY_SCRIPT}"
+      ${TARGET_OPTIONS}
+    )
   endif()
 endfunction()
 
