@@ -26,6 +26,10 @@ module fde_file
       module procedure file_opened_name, file_opened_unit
    end interface
 
+   interface newunit
+      module procedure newunit_min_max, newunit_range
+   end interface
+
    interface open
       module procedure open_, open_v
    end interface
@@ -138,9 +142,9 @@ contains
    end function
 
 
-!_PROC_EXPORT(newunit)
+!_PROC_EXPORT(newunit_min_max)
    integer &
-   function newunit( unit, min, max )
+   function newunit_min_max( unit, min, max ) result(res)
       integer, optional, intent(out) :: unit
       integer, optional, intent(in)  :: min, max
       integer                        :: unit_, min_, max_, ios
@@ -149,16 +153,26 @@ contains
       _optArg( min_, min, 7 )
       _optArg( max_, max, 1000 )
 
-      newunit = -1
+      res = -1
       do unit_ = min_, max_
          inquire( unit=unit_, opened=is_open, iostat=ios )
          if (ios /= 0)      cycle
          if (.not. is_open) then
-            newunit = unit_
+            res = unit_
             exit
          end if
       end do
-      if (present(unit)) unit = newunit
+      if (present(unit)) unit = res
+   end function
+
+
+!_PROC_EXPORT(newunit_range)
+   integer &
+   function newunit_range( unit, range ) result(res)
+      integer, optional,     intent(out) :: unit
+      integer,               intent(in)  :: range(2)
+
+      res = newunit( unit, min=range(1), max=range(2) )
    end function
 
 
@@ -296,27 +310,31 @@ contains
 
 !_PROC_EXPORT(fopen_autounit_)
    integer &
-   function fopen_autounit_( file, _open_kwArgs_list, recl, iostat ) result(res)
+   function fopen_autounit_( file, _open_kwArgs_list, recl, iostat, unitrange ) result(res)
       character(len=*),                   intent(in)  :: file
       character(len=*), optional, target, intent(in)  :: _open_kwArgs_list
       integer,          optional,         intent(in)  :: recl
       integer,          optional,         intent(out) :: iostat
+      integer,          optional,         intent(in)  :: unitrange(2)
+      integer                                         :: unitrange_(2)
 
-      call open_( newunit(res), file, _open_kwArgs_list, recl, iostat )
+      _optArg( unitrange_, unitrange, (/7,1000/) )
+      call open_( newunit(res, unitrange_), file, _open_kwArgs_list, recl, iostat )
    end function
 
 
 !_PROC_EXPORT(fopen_autounit_v)
-   function fopen_autounit_v( files, _open_kwArgs_list, recl, iostat ) result(res)
+   function fopen_autounit_v( files, _open_kwArgs_list, recl, iostat, unitrange ) result(res)
       character(len=*), dimension(:),     intent(in)  :: files
       character(len=*), optional, target, intent(in)  :: _open_kwArgs_list
       integer,          optional,         intent(in)  :: recl
       integer,          optional,         intent(out) :: iostat
+      integer,          optional,         intent(in)  :: unitrange(2)
       integer,          dimension(size(files))        :: res
       integer                                         :: i
 
       do i = 1, size(files)
-         res(i) = fopen( files(i), _open_kwArgs_list, recl, iostat )
+         res(i) = fopen( files(i), _open_kwArgs_list, recl, iostat, unitrange )
       end do
    end function
 
