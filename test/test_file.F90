@@ -26,6 +26,12 @@ contains
     call close( fh, status="delete" )
     _assert( all( file_exists( files ) .eqv. .false. ) )
 
+
+    fh = fopen( files, position='append', unitrange=[10,20] )
+    _assert( all(fh == (/10,11,12,13,14/)) )
+    call close( fh, status="delete" )
+
+
 #   define _testfile 'size_test.bj'
 
     fh(1) = fopen( _testfile, form='UNFORMATTED', action='WRITE' )
