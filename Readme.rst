@@ -171,7 +171,7 @@ Code Preparations:
    * best, create separate module for code extensions
    * use Fortran modules
    * link libfde
-   * recommended: build legacy code as sheared library (so/dll)
+   * recommended: build legacy code as shared library (so/dll)
    * ...
 
 2. Instruct legacy code to build-up *„Table of Contents“*
@@ -266,7 +266,7 @@ Nevertheless, **a lot** of things can be improved and some aspects need further 
 Copyright and License Information
 ---------------------------------
 
-Copyright (c) 2020 Josef Scheuer.
+Copyright (c) 2021 Josef Scheuer.
 All rights reserved.
 
 See the file "LICENSE" for terms &
