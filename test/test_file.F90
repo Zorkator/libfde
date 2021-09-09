@@ -43,11 +43,26 @@ contains
     call close( fopen( _testfile ), status="delete" )
     _assert( .not. file_exists( _testfile ) )
 
+    !-- coverage-flag causes gfortran to fail on compiling tryBlock-variant...
     !_tryBlock(1)
     !  call open( -12, _testfile, form="UNFORMATTED", action='WRITE' )
     !_tryCatch_nt(1, IOError)
     !  case (0); call throw( RuntimeError, 'expected IOError not thrown!' )
     !_tryEnd(1)
+    !
+    select case( try( _catchAny, open_bad_unit ) )
+      case (IOError); continue !< caught expected exception
+      case   default; call throw( RuntimeError, 'expected IOError not thrown!' )
+    end select
+
+    contains
+
+    subroutine open_bad_unit()
+      ! Opening a bad unit number with the open-statement would terminate the program.
+      ! The fde_file-open is expected to throw a IOError instead!
+      call open( -12, _testfile, form="UNFORMATTED", action='WRITE' )
+    end subroutine
+
   end subroutine
 
 end module
