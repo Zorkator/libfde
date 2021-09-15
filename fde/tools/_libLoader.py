@@ -3,7 +3,7 @@ from ctypes import CDLL as _CDLL
 from os     import environ as _env, pathsep as _pathDelim, path as _path, getpid as _getpid
 from glob   import glob
 from sys    import stdout
-from .      import logging
+import logging
 import platform
 
 _isWin = platform.system() == "Windows"
@@ -130,14 +130,18 @@ class LibLoader( object ):
 
 
     def __init__( self, **kwArgs ):
-        self._opt = kwArgs
+        self._opt = dict()
         self._log = logging.getLogger( type(self).__name__ )
+        kwArgs.setdefault( 'logLevel', 'ERROR' )
+        self.set( **kwArgs )
 
     def __str__( self ):
         try   : return self._hdl._name
         except: return self.explicitFilePath or self.relativeFilePath
 
     def set( self, **kwArgs ):
+        try            : self._log.setLevel( kwArgs['logLevel'] )
+        except KeyError: pass
         self._opt.update( kwArgs )
 
 
