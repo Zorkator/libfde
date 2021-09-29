@@ -28,7 +28,7 @@
 
 cmake_minimum_required(VERSION 3.13)
 
-set(CMI_TAG "v0.4.0")
+set(CMI_TAG "v0.4.1")
 
 get_property(CMI_LOADER_FILE GLOBAL PROPERTY CMI_LOADER_FILE)
 # First include
@@ -96,7 +96,7 @@ unset(CMI_LOADER_FILE)
 ######################################
 
 set(CMI_LOADED TRUE)
-set(CMI_VERSION "0.4.0")
+set(CMI_VERSION "0.4.1")
 
 if(NOT DEFINED CMI_PRINT_VERSION)
   set(CMI_PRINT_VERSION TRUE CACHE INTERNAL "")
@@ -1024,10 +1024,7 @@ function(cmi_set_directory TARGET_)
   if(DEFINED PARAMETER_OUTPUT)
 
     if(IS_ABSOLUTE "${PARAMETER_OUTPUT}")
-      set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${PARAMETER_OUTPUT}")
-      set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${PARAMETER_OUTPUT}")
-      set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${PARAMETER_OUTPUT}")
-      set(OUTPUT_RPATH "${PARAMETER_OUTPUT}")
+      message(AUTHOR_WARNING "Output path needs to be relative: ${PARAMETER_OUTPUT}")
     else()
       get_property(CMAKE_ARCHIVE_OUTPUT_DIRECTORY TARGET ${TARGET_} PROPERTY ARCHIVE_OUTPUT_DIRECTORY)
       get_property(CMAKE_LIBRARY_OUTPUT_DIRECTORY TARGET ${TARGET_} PROPERTY LIBRARY_OUTPUT_DIRECTORY)
@@ -1042,11 +1039,11 @@ function(cmi_set_directory TARGET_)
       if(IS_ABSOLUTE "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}")
         set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${PARAMETER_OUTPUT}")
       endif()
-
+      file(RELATIVE_PATH RPATH "${PROJECT_SOURCE_DIR}/${PARAMETER_OUTPUT}" "${PROJECT_SOURCE_DIR}")
       if(CMAKE_SYSTEM_NAME STREQUAL "Darwin")
-        set(OUTPUT_RPATH "@loader_path/${PARAMETER_OUTPUT}")
+        set(OUTPUT_RPATH "@loader_path/${RPATH}")
       else()
-        set(OUTPUT_RPATH "$ORIGIN/${PARAMETER_OUTPUT}")
+        set(OUTPUT_RPATH "$ORIGIN/${RPATH}")
       endif()
     endif()
 
@@ -1610,7 +1607,7 @@ function(cmi_copy PARAMETER_TARGET)
             set(NEW_ITEM "./${NEW_ITEM_PATH}/${PARAMETER_DEST_NAME}")
           endif()
           file(TO_CMAKE_PATH "${PARAMETER_DEST_DIR}/${NEW_ITEM}" NEW_ITEM)
-
+          get_filename_component(NEW_ITEM "${NEW_ITEM}" ABSOLUTE)
           list(APPEND TARGET_FILES "${NEW_ITEM}")
         endforeach()
 
@@ -1620,7 +1617,8 @@ function(cmi_copy PARAMETER_TARGET)
           list(GET TARGET_FILES ${ITEM_INDEX} TARGET_FILE)
 
           if("${SOURCE_FILE}" IS_NEWER_THAN "${TARGET_FILE}")
-            message(STATUS "Updating ${TARGET_FILE}")
+            file(RELATIVE_PATH TARGET_FILE_RELATIVE "${OUTPUT_BASE_DIR}" "${TARGET_FILE}")
+            message(STATUS "Updating ${TARGET_FILE_RELATIVE}")
             execute_process(COMMAND ${CMAKE_COMMAND} -E copy "${SOURCE_FILE}" "${TARGET_FILE}" RESULT_VARIABLE RESULT)
             if(NOT RESULT STREQUAL 0)
               message(FATAL_ERROR "Can not copy ${SOURCE_FILE} to ${TARGET_FILE}")
