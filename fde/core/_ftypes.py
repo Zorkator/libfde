@@ -18,8 +18,10 @@ class MemoryRef( Structure ):
         if six.PY2: return string_at( self.ptr, self.len )
         else      : return string_at( self.ptr, self.len ).decode( 'utf-8' )
 
-    def __nonzero__( self ):
+    def __bool__( self ):
         return self.len > 0 and bool(self.ptr)
+    __nonzero__ = __bool__  # < py2 compatibility
+
 
 
 #-------------------------------------------

@@ -13,8 +13,9 @@ class List( Object ):
     #-------------------------------------------
         __typename__ = 'ListIndex'
 
-        def __nonzero__( self ):
+        def __bool__( self ):
             return self.is_valid_( byref(self) ) != 0
+        __nonzero__ = __bool__  # < py2 compatibility
 
 
     def __len__( self ):
