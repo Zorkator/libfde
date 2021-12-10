@@ -424,3 +424,13 @@ contains
 
 end module
 
+
+!_PROC_EXPORT(fclose_c)
+logical &
+function fclose_c( unit ) result(res)
+  use fde_file, only: fclose
+  implicit none
+  integer, intent(in) :: unit
+  res = fclose( unit )
+end function
+
