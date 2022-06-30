@@ -97,9 +97,9 @@ class LibLoader( object ):
 
 
     def _tryLoad( self, libPattern, searchPaths ):
-        envPaths = _env[_PATH]
+        envPaths = _env.get( _PATH, '' )
         paths    = list( filter( _path.isdir, glob( _path.dirname( libPattern ) ) ) ) + searchPaths
-        paths.append( _env[_PATH] )
+        paths.append( envPaths )
 
         _env[_PATH] = _pathDelim.join( paths )
         self._hdl   = None
