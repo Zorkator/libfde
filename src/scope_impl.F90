@@ -262,7 +262,9 @@ end module
     character(len=*)      :: ident
     type(c_ptr), optional :: arg
     integer*4             :: res
-    res = tryCallback( self, ident, arg )
+    if (tryCallback( self, ident, arg ) < 0) then
+      call throw( KeyError, __no_such_hook(ident) )
+    end if
   end subroutine
 
 
@@ -285,7 +287,7 @@ end module
     _optArg( raise_, raise, .true. )
     res => getPtr( scope, id )
     if (.not. associated(res) .and. raise_) then
-      call throw( KeyError, __no_item(id) )
+      call throw( KeyError, __no_such_item(id) )
     end if
   end function
 

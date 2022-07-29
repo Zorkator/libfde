@@ -402,8 +402,11 @@
 !##############################################################################
 
 ! define some exception messages ...
-#   define __no_item(id) \
+#   define __no_such_item(id) \
       "can't locate item named "//id
+
+#   define __no_such_hook(id) \
+      "hook '"//id//"' not available"
 
 #   define __ill_var_ref(id) \
       "type mismatch at getting variable reference of "//id

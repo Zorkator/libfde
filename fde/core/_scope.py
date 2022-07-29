@@ -67,10 +67,15 @@ class Scope( HashMap ):
         return self.disconnect_callback_( byref(self), c_char_p(ident), func, c_int(len(ident)) )
 
 
-    def invokeCallback( self, ident, arg = None ):
+    def tryCallback( self, ident, arg = None ):
         ident  = ident.encode()
         argPtr = VOID_Ptr() if arg is None else byref(arg)
-        self.invoke_callback_( byref(self), c_char_p(ident), argPtr, c_int(len(ident)) )
+        return self.try_callback_( byref(self), c_char_p(ident), argPtr, c_int(len(ident)) )
+
+
+    def invokeCallback( self, ident, arg = None ):
+        if self.tryCallback( ident, arg ) < 0:
+            raise KeyError( "undeclared or disabled callback %s" % ident )
 
 
     def setProcedure( self, ident, func, retType = None, args = () ):
