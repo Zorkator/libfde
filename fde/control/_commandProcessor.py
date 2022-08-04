@@ -22,7 +22,7 @@ class CommandProcessor( object ):
             try:
                 res = None
                 cmd = self.receive()
-                if self._debug > 0:
+                if self.opts.debug > 0:
                     from ..tools import debug; debug()
 
                 if   isinstance( cmd, string_types ): res = self._dispatchCommand( cmd )
@@ -71,7 +71,7 @@ class CommandProcessor( object ):
         return self.fork( **kwArgs )
 
     def cmd_debug( self, stat ):
-        self._debug = int( stat.lower() in 'on true 1 yes enabled'.split() )
+        self.opts.debug = int( stat.lower() in 'on true 1 yes enabled'.split() )
         return True
 
 

@@ -50,13 +50,13 @@ class Stateful( object ):
     @cached_property
     def root( self ):
         """return root scope, specified by option rootPath."""
-        return self._get_path_scope( self._rootPath )
+        return self._get_path_scope( self.opts.rootPath )
 
 
     @cached_property
     def state( self ):
         """return state scope, specified by option statePath."""
-        return self._get_path_scope( self._statePath )
+        return self._get_path_scope( self.opts.statePath )
 
 
     def _get_path_scope( self, path ):
@@ -92,7 +92,7 @@ class Stateful( object ):
         """return new variable factory that does <rootScope>-based path lookups and creates <varType> from the result.
         The optional argument keyTok allows specifying a special keyTokenizer different from that currently set.
         """
-        from ..tools import UniqueObjectFactory, _decorate
+        from ..tools import UniqueObjectFactory
         rootScope = rootScope or self.root
         keyTok    = keyTok    or self.keyTokenizer
         varType   = varType   or self.Variable

@@ -35,7 +35,7 @@ class Startable(object):
     def fork( self, **kwArgs ):
         """fork the current Python process and run start() method of instance."""
         from multiprocessing import Process
-        if self._debug > 0: debug()
+        if self.opts.debug > 0: debug()
         childProc = Process( target=self._start, args=(kwArgs,) )
         childProc.start()
         return childProc
@@ -46,10 +46,14 @@ class Startable(object):
 
 
     def start( self, **kwArgs ):
-        if self._debug > 0: debug()
+        """initializes Startable instance and call its __start__ method.
+        If option `workdir` was specified change working directory before calling __start__.
+        The current workdir gets restored afterwards.
+        """
+        if self.opts.debug > 0: debug()
 
         # create and change to working directory of simulation ...
-        workdir = self._workdir.format( **self.about )
+        workdir = self.opts.workdir.format( **self.about )
         prevdir = os.getcwd()
         if workdir:
           makedirs( workdir )
@@ -57,7 +61,7 @@ class Startable(object):
 
         try:
             # determine argument list ... if not given explicitly use predefined
-            args = kwArgs.get('args') or self._args
+            args = kwArgs.get('args') or self.opts.args
             try   : args = args.strip and [args] #< if args is string wrap it by list
             except: pass
 

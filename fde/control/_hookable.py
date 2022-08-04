@@ -16,7 +16,7 @@ class Hookable(object):
     def hooks( self ):
         """return hook scope, specified by option hooksPath."""
         from fde.core import Scope
-        path = self._hooksPath.format( **self.about ).split('/')
+        path = self.opts.hooksPath.format( **self.about ).split('/')
         return Scope.getProcessScope( *path )
 
 
