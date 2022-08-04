@@ -8,7 +8,7 @@ def threadID():
 #--------------------------------------------
 class ExceptionRouter( object ):
 #--------------------------------------------
-    """Mixin class extending NativeController types.
+    """Mixin class extending FDEControllable types.
 
     ExceptionRouter tries to forward python exceptions to controlled native code.
     The native code must provide an C-compatible function for throwing exceptions, with the following signature:

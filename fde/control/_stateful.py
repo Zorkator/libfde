@@ -1,10 +1,12 @@
 
-from ._nativeController import cached_property
+from ._controllable import cached_property
 
 #----------------------------
 class Stateful( object ):
 #----------------------------
-    """Mixin class extending FDEController types.
+    """Mixin class extending Controllable types.
+    Used Interfaces:
+      Controllable: about
 
     Stateful provides cashed access to certain state scope, determined by option statePath
     """

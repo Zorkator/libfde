@@ -1,11 +1,11 @@
 
-from ..tools            import openFile, sys_channel
-from ._nativeController import cached_property
+from ..tools        import openFile, sys_channel
+from ._controllable import cached_property
 
 #----------------------------
 class Verbose( object ):
 #----------------------------
-    """Mixin class extending NativeController types.
+    """Mixin class extending Controllable types.
 
     Verbose provides a basic interface for log messages put to console or logfile.
     """

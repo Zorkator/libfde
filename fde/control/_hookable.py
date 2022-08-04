@@ -1,10 +1,12 @@
 
-from ._nativeController import cached_property
+from ._controllable import cached_property
 
 #---------------------------
 class Hookable(object):
 #---------------------------
-    """Mixin class extending FDEController types.
+    """Mixin class extending Controllable types.
+    Used Interfaces:
+      Controllable: about
 
     Hookable provides cashed access to certain hook scope, determined by option hooksPath
     """

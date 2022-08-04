@@ -6,7 +6,10 @@ import sys, os, shlex
 #--------------------------------------------
 class CommandProcessor( object ):
 #--------------------------------------------
-    """Abstract Mixin class extending Startable, Stateful, Hookable FDEController types.
+    """Abstract Mixin class extending Startable, Stateful Controller types.
+    Used interfaces:
+      Stateful : setData, getData, makeKeyTokenizer, state
+      Startable: fork
 
     CommandProcessor provides a simple interface for executing the main loop of Startable codes
       controlled by commands.
