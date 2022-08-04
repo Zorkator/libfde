@@ -2,13 +2,12 @@
 from ._object import Object
 from ._ftypes import MemoryRef, mappedType, _mapType, POINTER_t
 from ctypes   import c_int8, string_at, byref, c_char_p, c_int32
-import six
 
 #-------------------------------------------
 class BaseString( Object ):
 #-------------------------------------------
-    if six.PY2:
-        __abstract__ = [basestring] #< use basestring as abstract base class
+    try   :  __abstract__ = [basestring] #< py2: use basestring as abstract base class
+    except: pass
 
     _attribute_volatile  = c_int8(0)
     _attribute_permanent = c_int8(1)
@@ -28,12 +27,16 @@ class BaseString( Object ):
 #-------------------------------------------
 class String( BaseString ):
 #-------------------------------------------
+    @property
+    def bytes( self ):
+        m = MemoryRef()
+        self.memoryref_( byref( m ), byref( self ) )
+        return string_at( m.ptr, m.len )
 
     @property
     def value( self ):
-        m = MemoryRef()
-        self.memoryref_( byref(m), byref(self) )
-        return string_at( m.ptr, m.len )
+        if bytes is str: return self.bytes          #< py2 return str (byte string)
+        else           : return self.bytes.decode() #< py3 return decoded to str
 
     @value.setter
     def value( self, val ):
@@ -51,20 +54,22 @@ class String( BaseString ):
             self.init_by_charstring_( byref(self), byref(self._attribute_permanent), c_char_p(other), c_int32(len(other)) )
 
     def __repr__( self ):
-        return repr(self._decode( self.value ))
+        return repr(self.value)
 
     def __str__( self ):
-        return self._decode( self.value )
+        return self.value
 
     def __len__( self ):
-        return len(self._decode( self.value ))
+        return len(self.value)
+
+    def __getitem__( self, key ):
+        return self.value[key]
 
     def encode( self, *args ):
-        if args: return self.decode().encode( *args )
-        else   : return self.value
+        return self.value.encode( *args )
 
     def decode( self, *args ):
-        return self._decode( self.value, *args )
+        return self.bytes.decode( *args )
 
 
 StringPtr = POINTER_t( String )

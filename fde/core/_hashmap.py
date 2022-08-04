@@ -45,7 +45,7 @@ class HashMap( Object ):
     @classmethod
     def _walk( _class, scope, level = 1 ):
         keys  = sorted( scope.keys() )
-        width = max( map( len, keys ) or [0] )
+        width = max( list(map( len, keys )) or [0] )
         for k in keys:
             v = scope[k]
             yield (level, width, k, v)
