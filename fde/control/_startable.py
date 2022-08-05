@@ -57,6 +57,7 @@ class Startable(object):
             args = kwArgs.get('args') or self.opts.args
             try   : args = args.strip and [args] #< if args is string wrap it by list
             except: pass
+            args[:] = map( self.resolveEnv, args ) #< resolve environment variables in args ...
 
             with getattr( self, 'routedExceptions', NullGuard )(): #< mixin-method might not be available.
                 code = self.__start__( *args, **kwArgs )

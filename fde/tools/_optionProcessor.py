@@ -45,6 +45,22 @@ class OptionProcessor( object ):
         return (values + [default])[0]
 
 
+    @staticmethod
+    def resolveEnv( envStr, maxdepth = 5, catched = (TypeError,) ):
+        """returns `envStr` with environment variables expanded up to `maxdepth`.
+        Exceptions given in `catched` will be ignored.
+        """
+        catched = catched or ( type("NullException", (Exception,), {}), )
+        try:
+            for i in range( maxdepth ):
+                envStr, old = path.expandvars( envStr ), envStr
+                if envStr == old:
+                    break
+        except catched:
+            pass
+        return envStr
+
+
     @classmethod
     def _merge_class_attrib( _class, attrId ):
         """merge option dictionaries of class hierarchy."""
@@ -75,6 +91,7 @@ class OptionProcessor( object ):
 
         for optId, valDefault in _class.knownOptions( optsMap ).items():
             optVal = _class._pickOpt( opts, optId, valDefault )
+            optVal = _class.resolveEnv( optVal )
 
             if isinstance( optVal, Exception ): raise optVal
             else                              : yield optId, conv.get( optId, type(valDefault) )( optVal )
