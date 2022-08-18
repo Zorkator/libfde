@@ -58,7 +58,7 @@ def mkTypeObject( ident, bases = (TypeObject,), members = {} ):
     return type( ident[:1].upper() + ident[1:], tuple(bases), members )()
 
 
-# -------------------------------------------
+#-------------------------------------------
 class NullGuard( object ):
 #-------------------------------------------
     def __init__( self, *args, **kwArgs ):
