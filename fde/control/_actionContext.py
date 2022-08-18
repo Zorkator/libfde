@@ -1,14 +1,26 @@
 
 from ._expression import Expression
 from ..tools      import _decorate
+import re
 
 #--------------------------------------------
 class _Trigger(Expression):
 #--------------------------------------------
-    context = None #< set by ActionContext
+    _str1     = '"[^"]+"'
+    _str2     = "'[^']+'"
+    _other    = "[^\"'\s]+"
+    _regEx    = '(%s|%s|%s)' % (_str1, _str2, _other)
+    _strTokOp = '__lookup__({})'.format
+
+    context   = None #< set by ActionContext
 
     def __init__( self, expr, **kwArgs ):
-        super(_Trigger,self).__init__( expr )
+        tokens = []
+        for t in re.findall( self._regEx, expr ):
+            if t[0] in '\'"':
+                t = self._strTokOp( t )
+            tokens.append( t )
+        super(_Trigger, self).__init__( ' '.join( tokens ) )
         self.__dict__.update( _decorate( kwArgs.items() ) )
 
 
