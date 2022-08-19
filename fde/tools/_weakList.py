@@ -28,6 +28,9 @@ class WeakList(list):
         else                       : obj = self._ref( obj )[0]
         super(WeakList, self).__setitem__( idx, obj )
 
+    def __contains__( self, obj ):
+        return any( o == obj for o in self )
+
     def __add__( self, other ):
         return type(self)( list(self) + list(other) )
 
