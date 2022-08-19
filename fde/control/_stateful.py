@@ -94,14 +94,14 @@ class Stateful( object ):
         """return new variable factory that does <rootScope>-based path lookups and creates <varType> from the result.
         The optional argument keyTok allows specifying a special keyTokenizer different from that currently set.
         """
-        from ..tools import UniqueObjectFactory
+        from ..tools import NamedObjectFactory
         rootScope = rootScope or self.root
         keyTok    = keyTok    or self.keyTokenizer
         varType   = varType   or self.Variable
 
         def _createVar( ident, *args, **kwArgs ):
             return varType( rootScope[ident], *args, **kwArgs )
-        return UniqueObjectFactory( _createVar, keyTok )
+        return NamedObjectFactory( _createVar, keyTok )
 
 
     @cached_property

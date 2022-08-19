@@ -9,12 +9,12 @@ from ._libLoader        import LibLoader, core_loader, CDLL_t
 from ._convert          import dict2obj
 from ._files            import sys_channel, openFile, makedirs
 from ._optionProcessor  import OptionProcessor
-from ._objectFactory    import ObjectFactory, UniqueObjectFactory
+from ._objectFactory    import ObjectFactory, NamedObjectFactory
 from ._weakList         import WeakList
 
 __all__.extend( 'NullHandle Wallet TypeObject mkTypeObject NullGuard LibLoader core_loader dict2obj sys_channel openFile makedirs'.split() )
 __all__.extend( '_arg auto_raise _decorate'.split() )
-__all__.extend( 'OptionProcessor ObjectFactory UniqueObjectFactory WeakList'.split() )
+__all__.extend( 'OptionProcessor ObjectFactory NamedObjectFactory WeakList'.split() )
 
 
 #-------------------------------------------
