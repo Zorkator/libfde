@@ -1,39 +1,7 @@
 
 from ._expression import Evaluable, Expression
-from ..tools      import _decorate, WeakList
+from ..tools      import _decorate
 import re
-
-#--------------------------------------------
-class Action( Evaluable ):
-#--------------------------------------------
-    @property
-    def cause( self ):
-        return self._cause
-
-    def __init__( self, cause, func, *args, **kwArgs ):
-        if not callable(func):
-            raise AssertionError( "Action argument 3 must be callable, got %s instead!" % type(func) )
-        self._cause  = cause
-        self._func   = func
-        self._args   = args
-        self._kwArgs = kwArgs
-        self._instances.append( self )
-
-    def __value__( self ):
-        return self._func( self, *self._args, **self._kwArgs )
-
-    def evaluate( self ):
-        if self._cause:
-            return self.value
-
-    @classmethod
-    def evaluateAll( _class ):
-        return [ a.evaluate() for a in _class._instances ]
-
-    @classmethod
-    def subclass( _class, context ):
-        return super(Action, _class).subclass( context=context, _instances=WeakList() )
-
 
 #--------------------------------------------
 class Trigger( Expression ):
@@ -43,6 +11,11 @@ class Trigger( Expression ):
     _other    = "[^\"'\s]+"
     _regEx    = '(%s|%s|%s)' % (_str1, _str2, _other)
     _strTokOp = '__lookup__({})'.format
+    _context  = None #< set via subclass
+
+    @property
+    def context( self ):
+        return self._context
 
     def __init__( self, expr, **kwArgs ):
         tokens = []
@@ -55,7 +28,40 @@ class Trigger( Expression ):
 
     @classmethod
     def subclass( _class, context ):
-        return super(Trigger, _class).subclass( context=context, globals=context.globals, locals=context.locals )
+        return super(Trigger, _class).subclass( _context=context, _globals=context.globals, _locals=context.locals )
+
+
+#--------------------------------------------
+class Action( Evaluable ):
+#--------------------------------------------
+    _context = None #< set via subclass
+
+    @property
+    def context( self ):
+        return self._context
+
+    @property
+    def cause( self ):
+        return self._cause
+
+    def __init__( self, cause, func, *args, **kwArgs ):
+        if not callable(func):
+            raise AssertionError( "Action argument 3 must be callable, got %s instead!" % type(func) )
+        self._cause  = cause
+        self._func   = func
+        self._args   = args
+        self._kwArgs = kwArgs
+
+    def __value__( self ):
+        return self._func( self, *self._args, **self._kwArgs )
+
+    def evaluate( self ):
+        if self._cause:
+            return self.value
+
+    @classmethod
+    def subclass( _class, context ):
+        return super(Action, _class).subclass( _context=context )
 
 
 
@@ -78,9 +84,6 @@ class ActionContext(object):
     def host( self ):
         return self._host
 
-    def subclass( self, _class, **members ):
-        members.update( context=self )
-        return type( _class.__name__, (_class,), members )
 
     def __init__( self, host, varLookup = None, globals = None, locals = None ):
         varLookup = varLookup or (lambda i: i)

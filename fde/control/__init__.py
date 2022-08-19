@@ -17,10 +17,10 @@ from ._commandProcessor   import CommandProcessor
 from ._fdeSimulator       import Simulator, FDESimulator
 from ._pySimulator        import PySimulator
 from ._expression         import Expression
-from ._actionContext      import ActionContext
+from ._actionContext      import ActionContext, Trigger, Action
 from ._variable           import Variable
 
 __all__.extend( 'cached_property Controllable FDEControllable ExceptionRouter'.split() )
 __all__.extend( 'Stateful Hookable connect_to_hook Startable FDEStartable Verbose CommandProcessor'.split() )
 __all__.extend( 'Simulator FDESimulator PySimulator'.split() )
-__all__.extend( 'Expression ActionContext Variable'.split() )
+__all__.extend( 'Expression ActionContext Trigger Action Variable'.split() )
