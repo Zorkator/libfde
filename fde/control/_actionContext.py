@@ -70,7 +70,7 @@ class ActionContext(object):
 #--------------------------------------------
     Action   = Action
     Trigger  = Trigger
-    _globals = dict( __builtins__ = None )
+    _globals = dict( __builtins__ = {} )
 
     @property
     def globals( self ):
@@ -107,4 +107,4 @@ class ActionContext(object):
 
     def exec_file( self, filename ):
         with open( filename ) as f:
-            self.exec_str( f.read(), f.name )
+            self.exec( compile( f.read(), f.name, 'exec' ) )
