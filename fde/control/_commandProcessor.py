@@ -41,9 +41,9 @@ class CommandProcessor( object ):
     def evalCommand( self, cmd ):
         ctxt = self.actionContext
         try:
-            return ctxt.eval( cmd )
+            return ctxt.eval_code( cmd )
         except SyntaxError:
-            ctxt.exec( cmd )
+            ctxt.exec_code( cmd )
 
 
     @cached_property

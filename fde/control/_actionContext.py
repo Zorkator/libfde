@@ -99,12 +99,12 @@ class ActionContext(object):
         self._globals.update( Action=self.Action, Trigger=self.Trigger, __lookup__=varLookup )
 
 
-    def eval( self, code ):
+    def eval_code( self, code ):
         return eval( code, self._globals, self._locals )
 
-    def exec( self, code ):
+    def exec_code( self, code ):
         exec( code, self._globals, self._locals )
 
     def exec_file( self, filename ):
         with open( filename ) as f:
-            self.exec( compile( f.read(), f.name, 'exec' ) )
+            self.exec_code( compile( f.read(), f.name, 'exec' ) )
