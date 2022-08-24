@@ -1,21 +1,16 @@
 
 from ._stateful import cached_property
 from traceback  import format_exception
-import sys, os
+import os
 
 #--------------------------------------------
 class CommandProcessor( object ):
 #--------------------------------------------
     """Mixin class extending Startable, Stateful Controller types.
-    Used interfaces:
-      Stateful : setData, getData, makeKeyTokenizer, state
-      Startable: fork
-
     CommandProcessor provides a simple command loop for executing Startable and Stateful
       codes interactively.
     """
     _prompt = '>>> '
-    CMD_OK  = 0xC0DE0
 
     def __init__( self, *args, **kwArgs ):
         super(CommandProcessor, self).__init__( *args, **kwArgs )
@@ -38,7 +33,7 @@ class CommandProcessor( object ):
                 elif hasattr( cmd, '__iter__' ): res = self.getData( cmd )
                 else                           : res = "unknown command"
             except Exception as e:
-                res = e.__class__( ''.join( format_exception( *sys.exc_info() ) ) )
+                res = e
             finally:
                 self.send( res )
 
@@ -49,7 +44,6 @@ class CommandProcessor( object ):
             return ctxt.eval( cmd )
         except SyntaxError:
             ctxt.exec( cmd )
-            return self.CMD_OK
 
 
     @cached_property
@@ -57,11 +51,9 @@ class CommandProcessor( object ):
         """return default ActionContext object, using class types for Action, Trigger and VariableLookup."""
         context  = super(CommandProcessor, self).actionContext
         selfType = type(self)
-        members  = [ getattr( selfType, m ) for m in dir( selfType ) if m.startswith( 'cmd_' ) ]
-        commands = [ getattr( f, 'fget', f ) for f in members ] #< treat cmd-properties the same
-        context.globals.update(
-            (cmd.__name__[4:], cmd.__get__(self)) for cmd in commands
-        )
+        members  = [ (m[4:], getattr( selfType, m )) for m in dir( selfType ) if m.startswith( 'cmd_' ) ]
+        commands = { i: getattr( m, 'fget', m ).__get__(self) for i, m in members } #< treat cmd-properties the same
+        context.globals.update( commands )
         return context
 
 
@@ -69,31 +61,38 @@ class CommandProcessor( object ):
     # command implementations
     #
 
-    def cmd_setKeyOp( self, sep = None ):
-        self.keyTokenizer = self.makeKeyTokenizer( sep )
+    def cmd_tick( self, n = 1 ):
+        """consecutively exit comamnd loop `n` times to continue execution of Startable."""
+        self._ticks.extend( (1,) * n )
 
-    # Some default commands for Simulators.
-    # Subclasses might need to reimplement these.
+    def cmd_exit( self ):
+        """disable command loop and continue execution of Startable."""
+        self._doProcess = False
 
-    def cmd_idle( self )     : return True
-    def cmd_state( self )    : return self.state
-    def cmd_getcwd( self )   : return os.getcwd()
+    def cmd_globals( self ):
+        """return dictionary of global definitions."""
+        return self.actionContext.globals
 
-    def cmd_tick( self, n=1 ): self._ticks.extend( (1,) * n )
-    def cmd_finalize( self ) : self._doProcess = False
-    def cmd_terminate( self ): self._doProcess = False
+    def cmd_locals( self ):
+        """return dictionary of global definitions."""
+        return self.actionContext.locals
 
-    def cmd_fork( self, **kwArgs ):
-        return self.fork( **kwArgs )
-
-    def cmd_debug( self, stat ):
-        self.opts.debug = int( stat.lower() in 'on true 1 yes enabled'.split() )
-
-    # methods to be [re-]implemented by subclasses
+    # methods that might be reimplemented by subclasses
 
     def receive( self ):
-        return input( self._prompt )
+        try:
+            return self.__receive__()
+        except EOFError:
+            return 'exit()' #< just exit on closed stdin!
 
     def send( self, what ):
-        if what is not self.CMD_OK:
-            print( repr(what) )
+        if what is not None:
+            if isinstance( what, Exception ):
+                what = ''.join( format_exception( type(what), what, what.__traceback__ ) )
+            self.__send__( what )
+
+    def __receive__( self ):
+        return input( self._prompt )
+
+    def __send__( self, what ):
+        print( what )
