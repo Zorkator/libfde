@@ -38,15 +38,17 @@ class Startable(object):
         return childProc
 
 
-    def start( self, **kwArgs ):
-        """initializes Startable instance and call its __start__ method.
-        If option `workdir` was specified change working directory before calling __start__.
+    def start( self, workdir = '', args = '', **kwArgs ):
+        """initializes Startable instance and call its __start__ method, passing args and kwArgs.
+        If `workdir` is specified the working directory is changed before calling __start__.
         The current workdir gets restored afterwards.
+        The `args` argument can be given as string of arguments or a list of string arguments.
+        Environment variables get resolved before passing the argument strings to __start__.
         """
         if self.opts.debug > 0: debug()
 
         # create and change to working directory of simulation ...
-        workdir = self.opts.workdir.format( **self.about )
+        workdir = workdir or self.opts.workdir.format( **self.about )
         prevdir = os.getcwd()
         if workdir:
             makedirs( workdir )
@@ -54,10 +56,10 @@ class Startable(object):
 
         try:
             # determine argument list ... if not given explicitly use predefined
-            args = kwArgs.get('args') or self.opts.args
+            args = args or self.opts.args
             try   : args = args.strip and [args] #< if args is string wrap it by list
             except: pass
-            args[:] = map( self.resolveEnv, args ) #< resolve environment variables in args ...
+            args = map( self.resolveEnv, args ) #< resolve environment variables in args ...
 
             with getattr( self, 'routedExceptions', NullGuard )(): #< mixin-method might not be available.
                 code = self.__start__( *args, **kwArgs )
