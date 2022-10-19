@@ -111,6 +111,6 @@ class OptionProcessor( object ):
         """
         from ._helper import TypeObject
         self._opts = TypeObject()
-        # # extract known options from kwArgs, and make them attributes ...
-        argDict and self._opts.__dict__.update( self.extractOpts( argDict ) )
-        kwArgs  and self._opts.__dict__.update( self.extractOpts( kwArgs ) )
+        # extract known options to attributes (at least once to set defaults) ...
+        argDict and self._opts.__dict__.update( self.extractOpts( argDict ) ) #< if given, from argDict
+        self._opts.__dict__.update( self.extractOpts( kwArgs ) )              #< might be overridden by kwArgs!
