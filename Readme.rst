@@ -232,8 +232,7 @@ Naming
 ------
 
 The library development started with the idea of providing abstract data types in Fortran, what resulted in naming the library **libadt**.
-Meanwhile this focus shifted and it contains a lot more than "just" *abstract data containers*, so it was really necessary to rename it to **libfde** (Fortran Development Extensions) to reflect better it's purpose and the contained functionality.
-This prefix change has been done some time ago, but I guess it's still possible that *adt* appears somewhere, e.g. in comments.
+After a while this focus shifted and since it contains a lot more than "just" *abstract data containers*, so it was really necessary to rename it to **libfde** (Fortran Development Extensions) to reflect better it's purpose and the contained functionality.
 
 
 Basic principles and state of development
@@ -266,7 +265,7 @@ Nevertheless, **a lot** of things can be improved and some aspects need further 
 Copyright and License Information
 ---------------------------------
 
-Copyright (c) 2021 Josef Scheuer.
+Copyright (c) 2022 Josef Scheuer.
 All rights reserved.
 
 See the file "LICENSE" for terms &
