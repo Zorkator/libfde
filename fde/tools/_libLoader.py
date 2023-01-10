@@ -110,6 +110,10 @@ class LibLoader( object ):
         _env[_PATH] = envPaths
 
         if self._hdl:
+            # if loader has a named environment variable for explicit filePath
+            #   we update the environment variable to allow child processes loading the same library.
+            if self.opt('fileEnv'):
+                _env[ self.opt('fileEnv') ] = self._hdl._name
             raise self.Success
 
 
