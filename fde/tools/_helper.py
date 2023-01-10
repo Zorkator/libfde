@@ -21,6 +21,10 @@ class Wallet( object ):
 #-------------------------------------------
 class TypeObject( object ):
 #-------------------------------------------
+    def __init__( self, kwIter = {}, **kwArgs ):
+        self.__dict__.update( **dict( kwIter, **kwArgs ) )
+
+
     def __iter__( self ):
         return iter(self.__dict__)
 
