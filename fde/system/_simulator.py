@@ -1,5 +1,4 @@
 
-from ..core    import Scope
 from ..control import Variable
 from ..tools   import mkTypeObject, OptionProcessor
 
@@ -15,6 +14,7 @@ class Simulator(OptionProcessor):
 
     def _get_path_scope( self, locator ):
         "get or create scope stored in process, located at /-separated path given by `locator`"
+        from ..core import Scope
         path = locator.format(self).split('/')
         return Scope.getProcessScope( *path, get_or_create=True )
 
