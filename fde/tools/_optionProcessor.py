@@ -82,16 +82,17 @@ class OptionProcessor( object ):
 
 
     @classmethod
-    def extractOpts( _class, opts, optsMap = '__opts__', convMap = '__conv__' ):
-        """extract known options from given dictionary opts.
-        Use the class attribute set by optsMap to build up the option dictionary.
-
+    def extractOpts( _class, opts, prioOpts = {}, optsMap = '__opts__', convMap = '__conv__' ):
+        """return iterator yielding all known options, with values extracted from given dictionaries opts and prioOpts.
+        Use the class attribute set by optsMap to build up the dictionary of known options.
+        The values for the yielded options get retrieved with by the precedence: prioOpts, opts, defaults
         """
         conv = _class._merge_class_attrib( convMap )
+        null = []
 
         for optId, valDefault in _class.knownOptions( optsMap ).items():
-            optVal = _class._pickOpt( opts, optId, valDefault )
-            optVal = _class.resolveEnv( optVal )
+            vA, vB = _class._pickOpt( prioOpts, optId, null ), _class._pickOpt( opts, optId, valDefault )
+            optVal = _class.resolveEnv( (vA, vB)[vA is null] )
 
             if isinstance( optVal, Exception ): raise optVal
             else                              : yield optId, conv.get( optId, type(valDefault) )( optVal )
@@ -107,10 +108,7 @@ class OptionProcessor( object ):
          * Any not recognized are left alone.
 
         argDict          : known options get removed from given dict.
-        keyword arguments: known options get stored and might update values specified by argDict.
+        keyword arguments: known options get stored with higher precedence and might override values from argDict.
         """
         from ._helper import TypeObject
-        self._opts = TypeObject()
-        # extract known options to attributes (at least once to set defaults) ...
-        argDict and self._opts.__dict__.update( self.extractOpts( argDict ) ) #< if given, from argDict
-        self._opts.__dict__.update( self.extractOpts( kwArgs ) )              #< might be overridden by kwArgs!
+        self._opts = TypeObject( self.extractOpts( argDict, kwArgs ) )
