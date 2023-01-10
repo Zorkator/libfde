@@ -1,10 +1,12 @@
 
-from ._nativeController import cached_property
+from ._controllable import cached_property
 
 #---------------------------
 class Hookable(object):
 #---------------------------
-    """Mixin class extending FDEController types.
+    """Mixin class extending Controllable types.
+    Used Interfaces:
+      Controllable: about
 
     Hookable provides cashed access to certain hook scope, determined by option hooksPath
     """
@@ -16,7 +18,7 @@ class Hookable(object):
     def hooks( self ):
         """return hook scope, specified by option hooksPath."""
         from fde.core import Scope
-        path = self._hooksPath.format( **self.about ).split('/')
+        path = self.opts.hooksPath.format( **self.about ).split('/')
         return Scope.getProcessScope( *path )
 
 

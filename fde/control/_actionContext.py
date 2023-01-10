@@ -1,63 +1,76 @@
 
-from ._expression import Expression
+from ._expression import Evaluable, Expression
 from ..tools      import _decorate
+import re
 
 #--------------------------------------------
-class _Trigger(Expression):
+class Trigger( Expression ):
 #--------------------------------------------
-    context = None #< set by ActionContext
+    _str1     = '"[^"]+"'
+    _str2     = "'[^']+'"
+    _other    = "[^\"'\s]+"
+    _regEx    = '(%s|%s|%s)' % (_str1, _str2, _other)
+    _strTokOp = '__lookup__({})'.format
+    _context  = None #< set via subclass
+
+    @property
+    def context( self ):
+        return self._context
 
     def __init__( self, expr, **kwArgs ):
-        super(_Trigger,self).__init__( expr )
+        tokens = []
+        for t in re.findall( self._regEx, expr ):
+            if t[0] in '\'"':
+                t = self._strTokOp( t )
+            tokens.append( t )
+        super(Trigger, self).__init__( ' '.join( tokens ) )
         self.__dict__.update( _decorate( kwArgs.items() ) )
 
+    @classmethod
+    def subclass( _class, context ):
+        return super(Trigger, _class).subclass( _context=context, _globals=context.globals, _locals=context.locals )
 
 
 #--------------------------------------------
-class _Action(object):
+class Action( Evaluable ):
 #--------------------------------------------
-    _instances = []
-    context    = None #< set by ActionContext
+    _context = None #< set via subclass
+
+    @property
+    def context( self ):
+        return self._context
 
     @property
     def cause( self ):
         return self._cause
 
-
     def __init__( self, cause, func, *args, **kwArgs ):
         if not callable(func):
             raise AssertionError( "Action argument 3 must be callable, got %s instead!" % type(func) )
-
         self._cause  = cause
         self._func   = func
         self._args   = args
         self._kwArgs = kwArgs
 
-        type(self)._instances.append( self )
-
+    def __value__( self ):
+        return self._func( self, *self._args, **self._kwArgs )
 
     def evaluate( self ):
         if self._cause:
-            self.execute()
-
-
-    def execute( self ):
-        return self._func( self, *self._args, **self._kwArgs )
-
+            return self.value
 
     @classmethod
-    def evaluateAll( _class ):
-        for a in _class._instances:
-            a.evaluate()
+    def subclass( _class, context ):
+        return super(Action, _class).subclass( _context=context )
 
 
 
 #--------------------------------------------
 class ActionContext(object):
 #--------------------------------------------
-    Trigger  = _Trigger
-    Action   = _Action
-    _globals = dict( __builtins__ = None )
+    Action   = Action
+    Trigger  = Trigger
+    _globals = dict( __builtins__ = {} )
 
     @property
     def globals( self ):
@@ -71,38 +84,27 @@ class ActionContext(object):
     def host( self ):
         return self._host
 
+
     def __init__( self, host, varLookup = None, globals = None, locals = None ):
-        varLookup = varLookup or (lambda i : i)
+        varLookup = varLookup or (lambda i: i)
 
         self._host    = host
         self._locals  = dict()                if (locals  is None) else locals
         self._globals = dict( self._globals ) if (globals is None) else globals
-        self._globals['__lookup__'] = varLookup
 
-        # Derive given classes to make own ones for the newly created ActionContext
-
-        #----------------------------------
-        class Action(self.Action):
-        #----------------------------------
-            _instances = []
-            context    = self
-
-        #----------------------------------
-        class Trigger(self.Trigger):
-        #----------------------------------
-            _globals = self._globals
-            _locals  = self._locals
-            context  = self
-
+        # subclass classes Action and Trigger to make own ones for the created ActionContext
+        self.Action  = self.Action.subclass( self )
+        self.Trigger = self.Trigger.subclass( self )
         self.lookup  = varLookup
-        self.Trigger = Trigger
-        self.Action  = Action
-        self._globals.update( Trigger = Trigger, Action = Action )
+        self._globals.update( Action=self.Action, Trigger=self.Trigger, __lookup__=varLookup )
 
 
-    def __call__( self, *args, **kwArgs ):
-        return self.create( *args, **kwArgs )
+    def eval_code( self, code ):
+        return eval( code, self._globals, self._locals )
 
-
-    def execute( self, code ):
+    def exec_code( self, code ):
         exec( code, self._globals, self._locals )
+
+    def exec_file( self, filename ):
+        with open( filename ) as f:
+            self.exec_code( compile( f.read(), f.name, 'exec' ) )

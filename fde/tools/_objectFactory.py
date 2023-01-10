@@ -1,23 +1,19 @@
 
-# ----------------------------------
-class ObjectFactory( object ):
-# ----------------------------------
+from weakref import WeakValueDictionary
 
-    def __init__( self, objCreator, identOp = None ):
+#----------------------------------
+class ObjectFactory( object ):
+#----------------------------------
+
+    def __init__( self, objCreator, identOp = None, dictType = WeakValueDictionary ):
         self._objCreator = objCreator
-        self._instances  = dict()
+        self._instances  = dictType()
         self._identOp    = identOp or id
 
     def __call__( self, *args, **kwArgs ):
         obj = self._objCreator( *args, **kwArgs )
         self._instances[ self._identOp( obj ) ] = obj
         return obj
-
-    def delete( self, item ):
-        del self._instances[ self._identOp( item ) ]
-
-    def clear( self ):
-        self._instances.clear()
 
     @property
     def count( self ):
@@ -32,12 +28,12 @@ class ObjectFactory( object ):
         return self
 
 
-# -------------------------------------------
-class UniqueObjectFactory( ObjectFactory ):
-# -------------------------------------------
+#-------------------------------------------
+class NamedObjectFactory( ObjectFactory ):
+#-------------------------------------------
 
-    def __init__( self, objCreator, identOp = None ):
-        super( UniqueObjectFactory, self ).__init__( objCreator, identOp or (lambda i: i) )
+    def __init__( self, objCreator, identOp = None, dictType = WeakValueDictionary ):
+        super(NamedObjectFactory, self).__init__( objCreator, identOp or (lambda i: i), dictType )
 
     def __call__( self, ident, *args, **kwArgs ):
         ident = self._identOp( ident )

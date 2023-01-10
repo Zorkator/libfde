@@ -1,10 +1,12 @@
 
-from ._nativeController import cached_property
+from ._controllable import cached_property
 
 #----------------------------
 class Stateful( object ):
 #----------------------------
-    """Mixin class extending FDEController types.
+    """Mixin class extending Controllable types.
+    Used Interfaces:
+      Controllable: about
 
     Stateful provides cashed access to certain state scope, determined by option statePath
     """
@@ -50,13 +52,13 @@ class Stateful( object ):
     @cached_property
     def root( self ):
         """return root scope, specified by option rootPath."""
-        return self._get_path_scope( self._rootPath )
+        return self._get_path_scope( self.opts.rootPath )
 
 
     @cached_property
     def state( self ):
         """return state scope, specified by option statePath."""
-        return self._get_path_scope( self._statePath )
+        return self._get_path_scope( self.opts.statePath )
 
 
     def _get_path_scope( self, path ):
@@ -92,14 +94,14 @@ class Stateful( object ):
         """return new variable factory that does <rootScope>-based path lookups and creates <varType> from the result.
         The optional argument keyTok allows specifying a special keyTokenizer different from that currently set.
         """
-        from ..tools import UniqueObjectFactory, _decorate
+        from ..tools import NamedObjectFactory
         rootScope = rootScope or self.root
         keyTok    = keyTok    or self.keyTokenizer
         varType   = varType   or self.Variable
 
         def _createVar( ident, *args, **kwArgs ):
             return varType( rootScope[ident], *args, **kwArgs )
-        return UniqueObjectFactory( _createVar, keyTok )
+        return NamedObjectFactory( _createVar, keyTok )
 
 
     @cached_property

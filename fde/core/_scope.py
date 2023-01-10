@@ -1,6 +1,5 @@
 
 from ._hashmap import HashMap
-from ._ref     import Ref
 from ._ftypes  import mappedType, _mapType, CALLBACK, CALLBACK_t, CFUNCTION_t, POINTER_t, VOID_Ptr
 from ..tools   import dict2obj, _arg, auto_raise
 from ctypes    import byref, c_char_p, c_int, POINTER, sizeof, Array
@@ -33,12 +32,11 @@ class Scope( HashMap ):
         return func, ITF
 
     def declareCallback( self, ident, argType = None ):
-        ident = ident.encode()
-        self.declare_callback_( byref(self), c_char_p(ident), c_int(len(ident)) )
+        bIdent = ident.encode()
+        self.declare_callback_( byref(self), c_char_p(bIdent), c_int(len(bIdent)) )
         self[ident].pyData['itf'] = CALLBACK_t( argType )
 
     def typifyCallback( self, ident, argType ):
-        ident = ident.encode()
         self[ident].pyData['itf'] = CALLBACK_t( argType )
 
     def _mk_CALLBACK( self, ident, func, remove = False ):
@@ -55,8 +53,8 @@ class Scope( HashMap ):
         return self.connected_callbacks_( byref(self), c_char_p(ident), c_int(len(ident)) )
 
     def connectCallback( self, ident, func ):
-        ident, func = self._mk_CALLBACK( ident, func )
-        return self.connect_callback_( byref(self), c_char_p(ident), func, c_int(len(ident)) )
+        bIdent, func = self._mk_CALLBACK( ident, func )
+        return self.connect_callback_( byref(self), c_char_p(bIdent), func, c_int(len(bIdent)) )
 
     #
     # compatibility
@@ -169,16 +167,21 @@ class Scope( HashMap ):
     def getSubScope( self, *path ):
         ptr = POINTER(type(self))(self)
         for ident in path:
+            ident = ident.encode()
             self.get_subscope_( byref(ptr), ptr, c_char_p(ident), c_int(len(ident)) )
         return ptr.contents
 
 
     @classmethod
-    def getProcessScope( _class, *path ):
+    def getProcessScope( _class, *path, **kwArgs ):
         ptr = POINTER(_class)()
         _class.__getattr__( 'get_processscope_' )( byref(ptr) )
-        # resolve scope nesting of given path ...
-        return reduce( _class.__getitem__, path, ptr.contents )
+        if kwArgs.get('get_or_create'):
+            # get or create subscope ...
+            return ptr.contents.getSubScope( *path )
+        else:
+            # resolve scope nesting of given path ...
+            return reduce( _class.__getitem__, path, ptr.contents )
 
 
 ScopePtr = POINTER_t( Scope )

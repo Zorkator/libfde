@@ -7,12 +7,58 @@ class OptionProcessor( object ):
 
     __conv__ = dict()
     __opts__ = dict( debug     = 0
+                   , help      = False
                    , verbosity = 1
+                   , version   = False
                    )
+
+    @property
+    def opts( self ):
+        "return options object."
+        return self._opts
+
 
     @staticmethod
     def realpath( p ):
+        "return realpath of `p` with any '~' or '~user' replaced by the user's home directory."
         return path.realpath( path.expanduser( p.strip() ) )
+
+
+    @staticmethod
+    def import_def( specifier, package = None ):
+        """return defined symbol given by `specifier` of format [package.][module.][defId].
+        It uses import_module to import the containing package/module, with `package` as
+          the anchor for resolving relative imports.
+        """
+        from importlib import import_module
+        modId, defId = specifier.rpartition('.')[::2]
+        return getattr( import_module( modId, package ), defId )
+
+
+    @staticmethod
+    def _pickOpt( d, opt, default ):
+        """Extract options `optId`, --`optId` from dictionary d.
+        return value by priority: 1) dashed, 2) explicit, 3) default
+        """
+        null   = []
+        values = [ v for v in (d.pop(k, null) for k in ('--'+opt, opt)) if v is not null ]
+        return (values + [default])[0]
+
+
+    @staticmethod
+    def resolveEnv( envStr, maxdepth = 5, catched = (TypeError,) ):
+        """returns `envStr` with environment variables expanded up to `maxdepth`.
+        Exceptions given in `catched` will be ignored.
+        """
+        catched = catched or ( type("NullException", (Exception,), {}), )
+        try:
+            for i in range( maxdepth ):
+                envStr, old = path.expandvars( envStr ), envStr
+                if envStr == old:
+                    break
+        except catched:
+            pass
+        return envStr
 
 
     @classmethod
@@ -36,34 +82,33 @@ class OptionProcessor( object ):
 
 
     @classmethod
-    def extractOpts( _class, opts, optsMap = '__opts__', convMap = '__conv__' ):
-        """extract known options from given dictionary opts.
-        Use the class attribute set by optsMap to build up the option dictionary.
-
+    def extractOpts( _class, opts, prioOpts = {}, optsMap = '__opts__', convMap = '__conv__' ):
+        """return iterator yielding all known options, with values extracted from given dictionaries opts and prioOpts.
+        Use the class attribute set by optsMap to build up the dictionary of known options.
+        The values for the yielded options get retrieved with by the precedence: prioOpts, opts, defaults
         """
         conv = _class._merge_class_attrib( convMap )
+        null = []
 
         for optId, valDefault in _class.knownOptions( optsMap ).items():
-            # pick value by priority: 1) dashed, 2) explicit, 3) default
-            optVal = opts.pop(        optId, None ) or valDefault
-            optVal = opts.pop( '--' + optId, None ) or optVal
+            vA, vB = _class._pickOpt( prioOpts, optId, null ), _class._pickOpt( opts, optId, valDefault )
+            optVal = _class.resolveEnv( (vA, vB)[vA is null] )
 
             if isinstance( optVal, Exception ): raise optVal
             else                              : yield optId, conv.get( optId, type(valDefault) )( optVal )
 
 
-    def __init__( self, **kwArgs ):
-        """prepares instance by accepting and converting given arguments to attributes.
+    def __init__( self, argDict = {}, **kwArgs ):
+        """prepares instance by accepting and converting given arguments in the options object.
+        Options get accepted if they are included in the class' __opts__ dict.
+        Each option given in __opts__ is also recognized if it appears 'dashed', i.e. preceeded by '--'.
 
-        keyword arguments:
-         * All accepted 'dashed' arguments, as provided by the commadline, get renamed and stored as attributes.
-           The attribute name is made by replacing the double dashes by one underscore , e.g.
-             --libEnv = 'SOME_ENV_VAR' gets accessable by self._libEnv
-         * Any 'dashed' arguments not recognized just get stored as attribute
-             --unknown = 42 gets stored as self.__dict__['--unknown']
-         * Any other arguments provided get decorated by underscore '_' and stored as attributes.
-           Note that on name collision 'dashed' arguments are treated with priority!
+         * All accepted 'dashed' arguments, as usually provided by the commadline, get stored undashed with precedence
+             to their undashed versions that might been given too. This is to give commandline options priority.
+         * Any not recognized are left alone.
+
+        argDict          : known options get removed from given dict.
+        keyword arguments: known options get stored with higher precedence and might override values from argDict.
         """
-        from . import _decorate
-        # # extract known options from kwArgs, and make them attributes ...
-        self.__dict__.update( _decorate( self.extractOpts( kwArgs ) ) )
+        from ._helper import TypeObject
+        self._opts = TypeObject( self.extractOpts( argDict, kwArgs ) )

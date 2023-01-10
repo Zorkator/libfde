@@ -1,11 +1,11 @@
 
-from ..tools            import openFile, sys_channel
-from ._nativeController import cached_property
+from ..tools        import openFile, sys_channel
+from ._controllable import cached_property
 
 #----------------------------
 class Verbose( object ):
 #----------------------------
-    """Mixin class extending NativeController types.
+    """Mixin class extending Controllable types.
 
     Verbose provides a basic interface for log messages put to console or logfile.
     """
@@ -30,15 +30,15 @@ class Verbose( object ):
         Returns self.
 
         """
-        if self._verbosity >= verbosity:
-            self.write( self._preamble.format( **self.about ) + msg + '\n', channel ).flush()
+        if self.opts.verbosity >= verbosity:
+            self.write( self.opts.preamble.format( **self.about ) + msg + '\n', channel ).flush()
         return self
 
 
     @cached_property
     def logger( self ):
         """returns lazy-opened output file handle, specified by options logFile and logBuff."""
-        return openFile( self._logFile.format( **self.about ), 'w+', int( self._logBuff ) )
+        return openFile( self.opts.logFile.format( **self.about ), 'w+', int( self.opts.logBuff ) )
 
 
     def log( self, msg ):

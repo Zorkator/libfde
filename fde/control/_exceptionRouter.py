@@ -8,7 +8,7 @@ def threadID():
 #--------------------------------------------
 class ExceptionRouter( object ):
 #--------------------------------------------
-    """Mixin class extending NativeController types.
+    """Mixin class extending FDEControllable types.
 
     ExceptionRouter tries to forward python exceptions to controlled native code.
     The native code must provide an C-compatible function for throwing exceptions, with the following signature:
@@ -75,12 +75,12 @@ class ExceptionRouter( object ):
     def __except__( self, _type, _value, _traceback ):
         code = c_int32( int( '0x02200000', 16 ) ) #< TODO: should map _type to exception code!
         what = ''.join( traceback.format_exception( _type, _value, _traceback ) ).encode()
-        self.handle[self._throwFunc]( byref(code), c_char_p(what), c_size_t(len(what)) )
+        self.handle[ self.opts.throwFunc ]( byref(code), c_char_p(what), c_size_t(len(what)) )
 
 
     def routedExceptions( self ):
         """return with-context that changes Python's excepthook to route Python-Exceptions to native code.
         Leaving the context restores the excepthook set formerly.
         """
-        throw = self.handle[ self._throwFunc, None ]
+        throw = self.handle[ self.opts.throwFunc, None ]
         return self._Hooker( throw and self.__except__ )

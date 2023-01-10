@@ -18,7 +18,51 @@ class Wallet( object ):
             self.__dict__.update( members )
 
 
-# -------------------------------------------
+#-------------------------------------------
+class TypeObject( object ):
+#-------------------------------------------
+    def __init__( self, kwIter = {}, **kwArgs ):
+        self.__dict__.update( **dict( kwIter, **kwArgs ) )
+
+
+    def __iter__( self ):
+        return iter(self.__dict__)
+
+
+    def __contains__( self, key ):
+        if hasattr( key, 'strip' ):
+            return hasattr( self, key )
+        else:
+            return all( hasattr( self, k ) for k in key )
+
+
+    def __getitem__( self, key ):
+        if hasattr( key, 'strip' ):
+            return getattr( self, key )
+        else:
+            return (getattr( self, k ) for k in key)
+
+
+    def __setitem__( self, key, value ):
+        if hasattr( key, 'strip' ):
+            setattr( self, key, value )
+        else:
+            assert len(key) == len(value), "mismatch in number of keys and values"
+            [ setattr( self, *kv ) for kv in zip(key,value) ]
+
+    def __getstate__( self ):
+        return dict( zip( self, self[self] ) )
+
+    def __setstate__( self, state ):
+        self[state.keys()] = state.values()
+
+
+def mkTypeObject( ident, bases = (TypeObject,), members = {} ):
+    "create and return instance of newly created class `ident` (upper-cased), inheriting `bases` and owning `members`."
+    return type( ident[:1].upper() + ident[1:], tuple(bases), members )()
+
+
+#-------------------------------------------
 class NullGuard( object ):
 #-------------------------------------------
     def __init__( self, *args, **kwArgs ):
