@@ -1,6 +1,6 @@
 
 from ._expression import Evaluable, Expression
-from ..tools      import _decorate
+from ..tools      import _decorate, Caching, cached_property
 import re
 
 #--------------------------------------------
@@ -108,3 +108,40 @@ class ActionContext(object):
     def exec_file( self, filename ):
         with open( filename ) as f:
             self.exec_code( compile( f.read(), f.name, 'exec' ) )
+
+
+
+#--------------------------------------------
+class ActionContextHost( Caching ):
+#--------------------------------------------
+    ActionContext = ActionContext
+
+    @cached_property
+    def actionContext( self ):
+      """return default ActionContext object, using class types for Action, Trigger and VariableLookup."""
+      return self.makeActionContext( self.Var )
+
+
+    def makeActionContext( self, varLookup = None, cmdPrefix = None ):
+        """return new action context, using custom or default VariableLookup.
+        If cmdPrefix is given, all methods or properties starting with it will be added without prefix as global symbols.
+        """
+        context = self.ActionContext( self, varLookup )
+        if cmdPrefix:
+            selfType = type( self )
+            members  = [(m[4:], getattr( selfType, m )) for m in dir( selfType ) if m.startswith( cmdPrefix )]
+            commands = {i: getattr( m, 'fget', m ).__get__( self ) for i, m in members}  # < treat cmd-properties the same
+            context.globals.update( commands )
+        return context
+
+
+    @cached_property
+    def Var( self ):
+        """return variable lookup object."""
+        return self.makeVariableLookup()
+
+
+    def makeVariableLookup( self, rootScope = None, keyTok = None, varType = None ):
+        """return new variable factory that does lookups and creates <varType> from the result.
+        """
+        return None

@@ -1,9 +1,11 @@
 
-from ..tools import cached_property
+from ..tools         import cached_property
+from ._actionContext import ActionContextHost
 
-#----------------------------
-class Stateful( object ):
-#----------------------------
+
+#-------------------------------------
+class Stateful( ActionContextHost ):
+#-------------------------------------
     """Mixin class extending Controllable types.
     Used Interfaces:
       Controllable: about
@@ -14,8 +16,7 @@ class Stateful( object ):
                    , statePath = '{rootId}/state'
                    )
 
-    from ._actionContext import ActionContext
-    from ._variable      import Variable
+    from ._variable import Variable
 
     @classmethod
     def makeKeyTokenizer( _class, sep = None, conv = [] ):
@@ -84,11 +85,7 @@ class Stateful( object ):
         return getattr( self._stock, '_req_data', [] )
 
 
-    @cached_property
-    def Var( self ):
-        """return root-Scope based variable lookup object."""
-        return self.makeVariableLookup()
-
+    # reimplement dummy variable lookup of ActionContextHost
 
     def makeVariableLookup( self, rootScope = None, keyTok = None, varType = None ):
         """return new variable factory that does <rootScope>-based path lookups and creates <varType> from the result.
@@ -102,14 +99,3 @@ class Stateful( object ):
         def _createVar( ident, *args, **kwArgs ):
             return varType( rootScope[ident], *args, **kwArgs )
         return NamedObjectFactory( _createVar, keyTok )
-
-
-    @cached_property
-    def actionContext( self ):
-        """return default ActionContext object, using class types for Action, Trigger and VariableLookup."""
-        return self.makeActionContext()
-
-
-    def makeActionContext( self, varLookup = None ):
-        """return new action context, using custom or default VariableLookup."""
-        return self.ActionContext( self, varLookup or self.Var )

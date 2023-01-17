@@ -1,12 +1,12 @@
 
-from ..tools   import cached_property
-from traceback import format_exception
+from traceback       import format_exception
+from ._actionContext import ActionContextHost
 
-#--------------------------------------------
-class CommandProcessor( object ):
-#--------------------------------------------
+#----------------------------------------------
+class CommandProcessor( ActionContextHost ):
+#----------------------------------------------
     """Mixin class extending Startable, Stateful Controller types.
-    CommandProcessor provides a simple command loop for executing Startable and Stateful
+    CommandProcessor provides a simple command loop for executing Stateful
       codes interactively.
     """
     _prompt = '>>> '
@@ -45,16 +45,8 @@ class CommandProcessor( object ):
             ctxt.exec_code( cmd )
 
 
-    @cached_property
-    def actionContext( self ):
-        """return default ActionContext object, using class types for Action, Trigger and VariableLookup."""
-        context  = super(CommandProcessor, self).actionContext
-        selfType = type(self)
-        members  = [ (m[4:], getattr( selfType, m )) for m in dir( selfType ) if m.startswith( 'cmd_' ) ]
-        commands = { i: getattr( m, 'fget', m ).__get__(self) for i, m in members } #< treat cmd-properties the same
-        context.globals.update( commands )
-        return context
-
+    def makeActionContext( self, varLookup = None, cmdPrefix = 'cmd_' ):
+        return super(CommandProcessor, self).makeActionContext( varLookup, cmdPrefix )
 
     ####
     # command implementations

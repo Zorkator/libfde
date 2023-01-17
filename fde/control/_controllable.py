@@ -1,6 +1,6 @@
 
 import os
-from ..tools   import OptionProcessor, Caching, cached_property, debug
+from ..tools import OptionProcessor, Caching, cached_property, debug
 
 #-------------------------------------------------
 class Controllable( Caching, OptionProcessor ):
