@@ -11,10 +11,11 @@ from ._files            import sys_channel, openFile, makedirs
 from ._optionProcessor  import OptionProcessor
 from ._objectFactory    import ObjectFactory, NamedObjectFactory
 from ._weakList         import WeakList
+from ._caching          import Caching, cached_property
 
 __all__.extend( 'NullHandle Wallet TypeObject mkTypeObject NullGuard LibLoader core_loader dict2obj sys_channel openFile makedirs'.split() )
 __all__.extend( '_arg auto_raise _decorate'.split() )
-__all__.extend( 'OptionProcessor ObjectFactory NamedObjectFactory WeakList'.split() )
+__all__.extend( 'OptionProcessor ObjectFactory NamedObjectFactory WeakList Caching cached_property'.split() )
 
 
 #-------------------------------------------

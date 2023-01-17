@@ -4,7 +4,7 @@ __versioninfo__ = (2, 8, 0)
 __version__     = '.'.join( map( str, __versioninfo__ ) )
 __all__         = []
 
-from ._controllable       import Controllable, cached_property
+from ._controllable       import Controllable
 from ._fdeControllable    import FDEControllable
 from ._exceptionRouter    import ExceptionRouter
 from ._stateful           import Stateful
@@ -20,7 +20,7 @@ from ._expression         import Expression
 from ._actionContext      import ActionContext, Trigger, Action
 from ._variable           import Variable
 
-__all__.extend( 'cached_property Controllable FDEControllable ExceptionRouter'.split() )
+__all__.extend( 'Controllable FDEControllable ExceptionRouter'.split() )
 __all__.extend( 'Stateful Hookable connect_to_hook Startable FDEStartable Verbose CommandProcessor'.split() )
 __all__.extend( 'Simulator FDESimulator PySimulator'.split() )
 __all__.extend( 'Expression ActionContext Trigger Action Variable'.split() )

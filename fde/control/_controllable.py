@@ -1,25 +1,10 @@
 
 import os
-from ..tools   import OptionProcessor, Wallet, debug
-from functools import wraps
+from ..tools   import OptionProcessor, Caching, cached_property, debug
 
-#----------------------------
-def cached_property( f ):
-#----------------------------
-    @wraps( f )
-    def _wrapper( self ):
-        try:
-            return getattr( self._stock, '_p_' + f.__name__ )
-        except AttributeError:
-            val = f( self )
-            setattr( self._stock, '_p_' + f.__name__, val )
-            return val
-    return property( _wrapper )
-
-
-#--------------------------------------------
-class Controllable( OptionProcessor ):
-#--------------------------------------------
+#-------------------------------------------------
+class Controllable( Caching, OptionProcessor ):
+#-------------------------------------------------
 
     __opts__ = dict( rootId = '{classId}' )
 
@@ -40,7 +25,6 @@ class Controllable( OptionProcessor ):
 
     def __init__( self, **kwArgs ):
         super(Controllable, self).__init__( **kwArgs )
-        self._stock    = Wallet()
         self._cloneCnt = 0
         self._id       = 0
         self.initialize()
@@ -48,8 +32,7 @@ class Controllable( OptionProcessor ):
 
     def __getstate__( self ):
         self._cloneCnt += 1
-        clone = self.__dict__.copy()
-        clone['_stock']    = Wallet()
+        clone = super(Controllable, self).__getstate__()
         clone['_cloneCnt'] = 0
         clone['_id']       = self._cloneCnt
         if self.opts.debug > 0: debug()

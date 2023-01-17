@@ -1,5 +1,6 @@
 
-from ._controllable import Controllable, cached_property
+from ._controllable import Controllable
+from ..tools        import cached_property
 
 #---------------------------------------
 class PyControllable( Controllable ):

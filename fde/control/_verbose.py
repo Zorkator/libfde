@@ -1,6 +1,5 @@
 
-from ..tools        import openFile, sys_channel
-from ._controllable import cached_property
+from ..tools import openFile, sys_channel, cached_property
 
 #----------------------------
 class Verbose( object ):

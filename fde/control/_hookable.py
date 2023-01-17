@@ -1,5 +1,5 @@
 
-from ._controllable import cached_property
+from ..tools import cached_property
 
 #---------------------------
 class Hookable(object):
