@@ -28,7 +28,7 @@
 
 cmake_minimum_required(VERSION 3.13)
 
-set(CMI_TAG "v0.4.4")
+set(CMI_TAG "v0.4.5")
 
 get_property(CMI_LOADER_FILE GLOBAL PROPERTY CMI_LOADER_FILE)
 # First include
@@ -96,7 +96,7 @@ unset(CMI_LOADER_FILE)
 ######################################
 
 set(CMI_LOADED TRUE)
-set(CMI_VERSION "0.4.4")
+set(CMI_VERSION "0.4.5")
 
 if(NOT DEFINED CMI_PRINT_VERSION)
   set(CMI_PRINT_VERSION TRUE CACHE INTERNAL "")
@@ -743,6 +743,10 @@ function(cmi_Fortran_append var name)
   set(Fortran_VSMP_Generic_Intel "")
   set(Fortran_VSMP_Windows_Intel "/MP")
 
+  set(Fortran_INITZERO_Generic_GNU "-finit-real=zero -finit-integer=0")
+  set(Fortran_INITZERO_Generic_Intel "-init=zero")
+  set(Fortran_INITZERO_Windows_Intel "/Qinit:zero")
+
   if(NOT MSVC)
     set(CMAKE_SYSTEM_NAME Generic)
   endif()
@@ -751,8 +755,12 @@ function(cmi_Fortran_append var name)
     message(SEND_ERROR "Fortran flags used, but no Fortran compiler detected (CMAKE_Fortran_COMPILER_ID undefined).")
   endif()
 
+  if("${CMAKE_Fortran_COMPILER_ID}" STREQUAL "IntelLLVM")
+    set(CMAKE_Fortran_COMPILER_ID Intel)
+  endif()
+
   if(NOT DEFINED Fortran_${name}_${CMAKE_SYSTEM_NAME}_${CMAKE_Fortran_COMPILER_ID})
-    message(AUTHOR_WARNING "Fortran flag ${name} not found. "
+    message(AUTHOR_WARNING "Fortran flag ${name} not found for ${CMAKE_Fortran_COMPILER_ID}."
       "If typing is correct, the root project's cmi.cmake file needs to be updated."
     )
   endif()
