@@ -17,7 +17,7 @@ contains
     character(10) :: files(5) = ["test.1.txt", "test.2.txt", "test.3.txt", "test.4.txt", "test.5.txt"]
 
     ! explicit close of non-opened units
-    call close( [10,20,30,40], iostat=i )
+    _assert( all( fclose( [10,20,30,40] ) .eqv. .false. ) )
 
     fh = fopen( files, position='append' )
     _assert( all( file_exists( files ) ) )
