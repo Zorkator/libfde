@@ -16,6 +16,9 @@ contains
   subroutine test_open_close()
     character(10) :: files(5) = ["test.1.txt", "test.2.txt", "test.3.txt", "test.4.txt", "test.5.txt"]
 
+    ! explicit close of non-opened units
+    call close( [10,20,30,40], iostat=i )
+
     fh = fopen( files, position='append' )
     _assert( all( file_exists( files ) ) )
 
