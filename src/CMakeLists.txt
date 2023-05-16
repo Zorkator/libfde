@@ -109,9 +109,7 @@ set_property(TARGET fde PROPERTY SOVERSION ${FDE_VERSION_SO})
 
 if(MSVC)
   target_compile_definitions(fde PRIVATE BUILT_TYPE=SHARED_LIB)
-  set_property(TARGET fde PROPERTY OUTPUT_NAME ${FDE_NAME}.${FDE_VERSION})
-else()
-  set_property(TARGET fde PROPERTY OUTPUT_NAME ${FDE_NAME})
+  set_property(TARGET fde PROPERTY OUTPUT_NAME ${FDE_NAME}.${FDE_VERSION_SO})
 endif()
 
 if(NOT MSVC)
