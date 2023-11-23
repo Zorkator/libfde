@@ -1,6 +1,6 @@
 # BSD 2-Clause License
 #
-# Copyright (c) 2019-2021, Volker Jacht
+# Copyright (c) 2019-2023, Volker Jacht
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -28,7 +28,7 @@
 
 cmake_minimum_required(VERSION 3.13)
 
-set(CMI_TAG "v0.4.5")
+set(CMI_TAG "v0.4.12")
 
 get_property(CMI_LOADER_FILE GLOBAL PROPERTY CMI_LOADER_FILE)
 # First include
@@ -96,7 +96,7 @@ unset(CMI_LOADER_FILE)
 ######################################
 
 set(CMI_LOADED TRUE)
-set(CMI_VERSION "0.4.5")
+set(CMI_VERSION "0.4.12")
 
 if(NOT DEFINED CMI_PRINT_VERSION)
   set(CMI_PRINT_VERSION TRUE CACHE INTERNAL "")
@@ -402,16 +402,34 @@ function(cmi_add_git_ PROJECT_NAME_ PROJECT_URL_ PROJECT_REV_)
             file(REMOVE_RECURSE \"\${TMP_DIR}\")
           endif()
           execute_process(
-            COMMAND \${GIT_EXECUTABLE} clone \${GIT_URL} \"\${TMP_DIR}\"
+            COMMAND \${GIT_EXECUTABLE} clone --no-checkout \${GIT_URL} \"\${TMP_DIR}\"
             RESULT_VARIABLE RESULT_ ERROR_VARIABLE STDERR_
           )
           if(RESULT_ STREQUAL 0)
             file(RENAME \"\${TMP_DIR}\" \"\${GIT_DIR}\")
+            execute_process(
+              COMMAND \${GIT_EXECUTABLE} -c advice.detachedHead=false checkout \${GIT_REV}
+              WORKING_DIRECTORY \"\${GIT_DIR}\"
+              RESULT_VARIABLE RESULT_
+              OUTPUT_VARIABLE STDOUT_
+              ERROR_VARIABLE STDOUT_
+            )
             break()
           endif()
           # Cloning failed. Delete directory.
           file(REMOVE_RECURSE \"\${TMP_DIR}\")
         else()
+          execute_process(
+            COMMAND \${GIT_EXECUTABLE} rev-parse --git-dir
+            WORKING_DIRECTORY \"\${GIT_DIR}\"
+            RESULT_VARIABLE RESULT_ OUTPUT_VARIABLE STDOUT_ ERROR_VARIABLE STDERR_
+            OUTPUT_STRIP_TRAILING_WHITESPACE
+          )
+          if(NOT STDOUT_ STREQUAL \".git\")
+            message(SEND_ERROR \"Git clone/fetch failed.\")
+            message(WARNING \"\${GIT_DIR} is supposed to be a git repository, but it's not. Consider deleting that folder and rerun CMake.\")
+            return()
+          endif()
           message(STATUS \"Fetch \${GIT_DIR} \${GIT_URL} \${GIT_REV}\")
           execute_process(
             COMMAND \${GIT_EXECUTABLE} remote get-url origin
@@ -482,7 +500,7 @@ function(cmi_add_git_ PROJECT_NAME_ PROJECT_URL_ PROJECT_REV_)
 
     if(STASH_NEEDED_)
       execute_process(
-        COMMAND \${GIT_EXECUTABLE} stash
+        COMMAND \${GIT_EXECUTABLE} stash -u
         WORKING_DIRECTORY \"\${GIT_DIR}\"
         RESULT_VARIABLE RESULT_
         OUTPUT_VARIABLE STDOUT_
@@ -1171,7 +1189,12 @@ function(cmi_add_external_library LIB_NAME_ LIB_SOURCE_ LIB_DESTINATION_)
   ")
 
   # Generate copy target
-  add_custom_target(${LIB_NAME_}_import COMMAND ${CMAKE_COMMAND} -P "${SCRIPT_FILE_}")
+  if(${CMAKE_VERSION} VERSION_LESS "3.20.0")
+    add_custom_target(${LIB_NAME_}_import COMMAND ${CMAKE_COMMAND} -P "${SCRIPT_FILE_}")
+  else()
+    add_custom_target(${LIB_NAME_}_import COMMAND ${CMAKE_COMMAND} -P "${SCRIPT_FILE_}" BYPRODUCTS "${LIB_DESTINATION_}/${LIB_SOURCE_NAME}")
+  endif()
+
 
   # Generate interface target
   add_library(${LIB_NAME_} INTERFACE)
@@ -1309,10 +1332,20 @@ function(cmi_find_mpi)
   if(NOT I_MPI_ROOT)
     if(EXISTS "$ENV{I_MPI_ROOT}")
       set(I_MPI_ROOT "$ENV{I_MPI_ROOT}" CACHE PATH "")
-    elseif(EXISTS "$ENV{I_MPI_ONEAPI_ROOT}")
-      set(I_MPI_ROOT "$ENV{I_MPI_ONEAPI_ROOT}" CACHE PATH "")
+      message(STATUS "MPI: Found environment variable I_MPI_ROOT")
+    else()
+      message(STATUS "MPI: Skip environment variable I_MPI_ROOT. Either not set or path doesn't exist.")
     endif()
   endif()
+  if(NOT I_MPI_ROOT)
+    if(EXISTS "$ENV{I_MPI_ONEAPI_ROOT}")
+      set(I_MPI_ROOT "$ENV{I_MPI_ONEAPI_ROOT}" CACHE PATH "")
+      message(STATUS "MPI: Found environment variable I_MPI_ONEAPI_ROOT")
+    else()
+      message(STATUS "MPI: Skip environment variable I_MPI_ONEAPI_ROOT. Either not set or path doesn't exist.")
+    endif()
+  endif()
+
   if(I_MPI_ROOT AND CYGWIN AND NOT DEFINED CMI_MPI_TYPE)
     message(STATUS "MPI: I_MPI_ROOT is set, but Intel MPI is not compatible with Cygwin!")
   endif()
@@ -1539,10 +1572,11 @@ function(cmi_copy PARAMETER_TARGET)
   cmake_parse_arguments("PARAMETER" "" "" "TARGET_OPTIONS" ${ARGN})
   get_property(${PARAMETER_TARGET}_COPY_SCRIPT_DEFINED GLOBAL PROPERTY ${PARAMETER_TARGET}_COPY_SCRIPT SET)
   if (NOT ${PARAMETER_TARGET}_COPY_SCRIPT_DEFINED)
-    set(COPY_SCRIPT_DRAFT "${CMAKE_BINARY_DIR}/cmi_copy_${PARAMETER_TARGET}.cmake")
-    set(COPY_SCRIPT "${CMAKE_BINARY_DIR}/cmi_copy_${PARAMETER_TARGET}_$<CONFIG>.cmake")
-
-    file(WRITE "${COPY_SCRIPT_DRAFT}" [=[
+    set(COPY_SCRIPT "${CMAKE_BINARY_DIR}/cmi_copy.cmake")
+    set(COPY_SCRIPT_CONTENT_DRAFT "${CMAKE_BINARY_DIR}/cmi_copy_${PARAMETER_TARGET}.cmake")
+    set(COPY_SCRIPT_CONTENT "${CMAKE_BINARY_DIR}/cmi_copy_${PARAMETER_TARGET}_$<CONFIG>.cmake")
+    file(WRITE "${COPY_SCRIPT_CONTENT_DRAFT}" "")
+    file(WRITE "${COPY_SCRIPT}" [=[
 
       cmake_minimum_required(VERSION 3.13)
 
@@ -1627,30 +1661,72 @@ function(cmi_copy PARAMETER_TARGET)
           list(GET SOURCE_FILES ${ITEM_INDEX} SOURCE_FILE)
           list(GET TARGET_FILES ${ITEM_INDEX} TARGET_FILE)
 
-          if("${SOURCE_FILE}" IS_NEWER_THAN "${TARGET_FILE}")
+          file(TIMESTAMP "${SOURCE_FILE}" SOURCE_FILE_TIMESTAMP)
+          file(TIMESTAMP "${TARGET_FILE}" TARGET_FILE_TIMESTAMP)
+
+          if(NOT ("${SOURCE_FILE_TIMESTAMP}" STREQUAL "${TARGET_FILE_TIMESTAMP}"))
             file(RELATIVE_PATH TARGET_FILE_RELATIVE "${PARAMETER_OUTPUT_BASE_DIR}" "${TARGET_FILE}")
-            message(STATUS "Updating ${TARGET_FILE_RELATIVE}")
-            if(UNIX)
-              execute_process(COMMAND /bin/sh -c "mkdir -p \$(dirname ${TARGET_FILE}) && cp -P \"${SOURCE_FILE}\" \"${TARGET_FILE}\"" RESULT_VARIABLE RESULT)
-            else()
-              execute_process(COMMAND ${CMAKE_COMMAND} -E copy "${SOURCE_FILE}" "${TARGET_FILE}" RESULT_VARIABLE RESULT)
-            endif()
-            if(NOT RESULT STREQUAL 0)
-              message(FATAL_ERROR "Can not copy ${SOURCE_FILE} to ${TARGET_FILE}")
-            endif()
+            list(APPEND LOG_LIST "${TARGET_FILE_RELATIVE}")
+            get_filename_component(TARGET_DIRECTORY "${TARGET_FILE}" DIRECTORY)
+            list(APPEND DIRECTORY_LIST "${TARGET_DIRECTORY}")
+            list(APPEND FILE_LIST "\"${SOURCE_FILE}\" \"${TARGET_FILE}\"")
           endif()
 
         endforeach()
+
+        set(FILE_LIST "${FILE_LIST}" PARENT_SCOPE)
+        set(LOG_LIST "${LOG_LIST}" PARENT_SCOPE)
+        set(DIRECTORY_LIST "${DIRECTORY_LIST}" PARENT_SCOPE)
       endfunction()
+
+      if(NOT EXISTS "${CONTENT}")
+        message(FATAL_ERROR "CMI_COPY: Content list ${CONTENT} not found.")
+      endif()
+      include("${CONTENT}")
+
+      list(LENGTH FILE_LIST FILE_LIST_LENGTH)
+      if (NOT ("${FILE_LIST_LENGTH}" STREQUAL "0"))
+        list(REMOVE_DUPLICATES DIRECTORY_LIST)
+        math(EXPR FILE_LIST_LENGTH "${FILE_LIST_LENGTH}-1")
+        if(UNIX)
+          file(WRITE ${CONTENT}_script.sh)
+          foreach(DIRECTORY IN LISTS DIRECTORY_LIST)
+            file(APPEND ${CONTENT}_script.sh "mkdir -p \"${DIRECTORY}\"\n")
+          endforeach()
+          foreach(ITEM_INDEX RANGE ${FILE_LIST_LENGTH})
+            list(GET FILE_LIST ${ITEM_INDEX} FILE)
+            list(GET LOG_LIST ${ITEM_INDEX} LOG)
+            file(APPEND ${CONTENT}_script.sh "echo \"Copying ${LOG}\"\n")
+            file(APPEND ${CONTENT}_script.sh "cp -Pp ${FILE} || exit 1\n")
+          endforeach()
+          execute_process(COMMAND sh -c "chmod +x ${CONTENT}_script.sh && ${CONTENT}_script.sh" RESULT_VARIABLE RESULT)
+        else()
+          file(WRITE ${CONTENT}_script.ps1)
+          foreach(DIRECTORY IN LISTS DIRECTORY_LIST)
+            file(APPEND ${CONTENT}_script.ps1 "mkdir \"${DIRECTORY}\" -Force > \$null\n")
+          endforeach()
+          foreach(ITEM_INDEX RANGE ${FILE_LIST_LENGTH})
+            list(GET FILE_LIST ${ITEM_INDEX} FILE)
+            list(GET LOG_LIST ${ITEM_INDEX} LOG)
+            file(APPEND ${CONTENT}_script.ps1 "echo \"Copying ${LOG}\"\n")
+            file(APPEND ${CONTENT}_script.ps1 "copy ${FILE}; if (!\$?) { exit 1 }\n")
+          endforeach()
+          execute_process(COMMAND powershell -executionpolicy bypass -File ${CONTENT}_script.ps1 RESULT_VARIABLE RESULT)
+        endif()
+        if(NOT RESULT STREQUAL 0)
+          message(FATAL_ERROR "Error during copy!")
+        endif()
+      endif()
+
     ]=])
 
-    set_property(GLOBAL PROPERTY ${PARAMETER_TARGET}_COPY_SCRIPT_DRAFT "${COPY_SCRIPT_DRAFT}")
-    set_property(GLOBAL PROPERTY ${PARAMETER_TARGET}_COPY_SCRIPT "${COPY_SCRIPT}")
+    set_property(GLOBAL PROPERTY ${PARAMETER_TARGET}_COPY_SCRIPT_CONTENT_DRAFT "${COPY_SCRIPT_CONTENT_DRAFT}")
+    set_property(GLOBAL PROPERTY ${PARAMETER_TARGET}_COPY_SCRIPT "${COPY_SCRIPT_CONTENT}")
 
-    file(GENERATE OUTPUT "${COPY_SCRIPT}" INPUT "${COPY_SCRIPT_DRAFT}")
+    file(GENERATE OUTPUT "${COPY_SCRIPT_CONTENT}" INPUT "${COPY_SCRIPT_CONTENT_DRAFT}")
   else()
-    get_property(COPY_SCRIPT_DRAFT GLOBAL PROPERTY ${PARAMETER_TARGET}_COPY_SCRIPT_DRAFT)
-    get_property(COPY_SCRIPT GLOBAL PROPERTY ${PARAMETER_TARGET}_COPY_SCRIPT)
+    get_property(COPY_SCRIPT_CONTENT_DRAFT GLOBAL PROPERTY ${PARAMETER_TARGET}_COPY_SCRIPT_CONTENT_DRAFT)
+    get_property(COPY_SCRIPT_CONTENT GLOBAL PROPERTY ${PARAMETER_TARGET}_COPY_SCRIPT)
   endif()
 
   unset(PARAMETERS_ESCAPED)
@@ -1663,12 +1739,12 @@ function(cmi_copy PARAMETER_TARGET)
     set(CMI_OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}")
   endif()
 
-  file(APPEND "${COPY_SCRIPT_DRAFT}" "
+  file(APPEND "${COPY_SCRIPT_CONTENT_DRAFT}" "
 copy(${PARAMETERS_ESCAPED} [[SOURCE_BASE_DIR]] [[${CMAKE_CURRENT_LIST_DIR}]] [[OUTPUT_BASE_DIR]] [[${CMI_OUTPUT_DIRECTORY}]])")
 
   if(NOT TARGET ${PARAMETER_TARGET})
     add_custom_target(${PARAMETER_TARGET} ALL
-      COMMAND ${CMAKE_COMMAND} -P "${COPY_SCRIPT}"
+      COMMAND ${CMAKE_COMMAND} -DCONTENT="${COPY_SCRIPT_CONTENT}" -P "${COPY_SCRIPT}"
       ${TARGET_OPTIONS}
     )
   endif()
