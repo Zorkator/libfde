@@ -5,8 +5,7 @@ image:
 
 
 for:
--
-  matrix:
+- matrix:
     only:
       - image: Ubuntu
 
@@ -19,8 +18,7 @@ for:
   test_script:
     - ctest --output-on-failure .
 
--
-  matrix:
+- matrix:
     only:
       - image: Visual Studio 2015
 
@@ -34,21 +32,18 @@ for:
   test_script:
     - ctest --output-on-failure .
 
--
-  matrix:
-    only:
-      - image: macOS
-
-  install:
-    - brew install gcc
-    - mkdir _build
-    - cd _build
-    - cmake .. -DCMAKE_BUILD_TYPE=Debug -DBUILD_TESTING=1
-    - cmake --build .
-
-  test_script:
-    - ctest --output-on-failure .
-
+#-
+#  matrix:
+#    only:
+#      - image: macOS
+#
+#  install:
+#    - brew install gcc
+#    - mkdir _build
+#    - cd _build
+#    - cmake .. -DCMAKE_BUILD_TYPE=Debug -DBUILD_TESTING=1
+#    - cmake --build .
+#
+#  test_script:
+#    - ctest --output-on-failure .
 build: off
-
-
