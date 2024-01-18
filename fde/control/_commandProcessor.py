@@ -12,14 +12,11 @@ class CommandProcessor( BaseCommandProcessor ):
         super(CommandProcessor, self).__init__( *args, **kwArgs )
         self._ticks = []
 
-    def do_commands( self ):
-        tick, self._ticks[:] = self._ticks[:1], self._ticks[1:]
-        if tick:
-            self._loop = False
-            # ... no pending ticks ...
-        else:
-            super(CommandProcessor, self).do_commands()
+    def _processCommand( self ):
+        # on pending tick, return StopIteration to end current round of processing commands
+        if self._ticks: return self._ticks.pop()
+        else          : return super(CommandProcessor, self)._processCommand()
 
     def cmd_tick( self, n = 1 ):
-        """consecutively exit comamnd loop `n` times to continue execution of Startable."""
-        self._ticks.extend( (1,) * n )
+        """consecutively exit comamnd processing loop `n` times to continue execution of Startable."""
+        self._ticks.extend( (StopIteration,) * n )

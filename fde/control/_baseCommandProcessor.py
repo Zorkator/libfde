@@ -14,17 +14,15 @@ class BaseCommandProcessor( ActionContextHost ):
     def __init__( self, *args, **kwArgs ):
         super(BaseCommandProcessor, self).__init__( *args, **kwArgs )
         self._doProcess = True
-        self._loop      = True
-        self._ticks     = []
 
 
     def processCommands( self ):
-        self._loop = True
-        while self._doProcess and self._loop:
-            self.do_commands()
+        while self._doProcess:
+            if self._processCommand() == StopIteration:
+                break
 
 
-    def do_commands( self ):
+    def _processCommand( self ):
         try:
             cmd = self.receive()
             if self.opts.debug > 0:
@@ -86,6 +84,3 @@ class BaseCommandProcessor( ActionContextHost ):
     def __send__( self, what ):
         print( what )
 
-
-
-#-------------------------------------------------
