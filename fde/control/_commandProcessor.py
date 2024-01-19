@@ -20,3 +20,4 @@ class CommandProcessor( BaseCommandProcessor ):
     def cmd_tick( self, n = 1 ):
         """consecutively exit comamnd processing loop `n` times to continue execution of Startable."""
         self._ticks.extend( (StopIteration,) * n )
+        return "tack"

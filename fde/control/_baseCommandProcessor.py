@@ -55,6 +55,7 @@ class BaseCommandProcessor( ActionContextHost ):
     def cmd_exit( self ):
         """disable command loop and continue execution of Startable."""
         self._doProcess = False
+        return 'bye!'
 
     def cmd_globals( self ):
         """return dictionary of global definitions."""
