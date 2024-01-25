@@ -12,10 +12,10 @@ class CommandProcessor( BaseCommandProcessor ):
         super(CommandProcessor, self).__init__( *args, **kwArgs )
         self._ticks = []
 
-    def _processCommand( self ):
+    def processCmd( self, cmd = None ):
         # on pending tick, return StopIteration to end current round of processing commands
         if self._ticks: return self._ticks.pop()
-        else          : return super(CommandProcessor, self)._processCommand()
+        else          : return super(CommandProcessor, self).processCmd( cmd )
 
     def cmd_tick( self, n = 1 ):
         """consecutively exit comamnd processing loop `n` times to continue execution of Startable."""

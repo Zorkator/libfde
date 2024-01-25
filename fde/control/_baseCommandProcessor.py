@@ -19,23 +19,23 @@ class BaseCommandProcessor( ActionContextHost ):
 
     def processCommands( self ):
         while self._doProcess:
-            if self._processCommand() == StopIteration:
+            if self.opts.debug > 0:
+                from ..tools import debug; debug()
+            if self.processCmd() == StopIteration:
                 break
 
 
-    def _processCommand( self ):
+    def processCmd( self, cmd = None ):
         try:
-            cmd = self.receive()
-            if self.opts.debug > 0:
-                from ..tools import debug; debug()
-            if   hasattr( cmd, 'strip' )   : res = self.evalCommand( cmd )
-            elif hasattr( cmd, 'keys' )    : res = self.setData( cmd )
-            elif hasattr( cmd, '__iter__' ): res = self.getData( cmd )
+            obj = self.receive() if cmd is None else cmd
+            if   hasattr( obj, 'strip' )   : res = self.evalCommand( obj )
+            elif hasattr( obj, 'keys' )    : res = self.setData( obj )
+            elif hasattr( obj, '__iter__' ): res = self.getData( obj )
             else                           : res = "unknown command"
-        except Exception as e:
-            res = e
-        finally:
-            self.send( res )
+        except Exception as e              : res = e
+        #
+        if cmd is None: self.send( res )
+        else          : return res
 
 
     ####
