@@ -9,7 +9,8 @@ class BaseCommandProcessor( ActionContextHost ):
     BaseCommandProcessor provides a simple command loop for executing Stateful
       codes interactively.
     """
-    _prompt = '>>> '
+    CommandPrefix = 'cmd_'
+    _prompt       = '>>> '
 
     def __init__( self, *args, **kwArgs ):
         super(BaseCommandProcessor, self).__init__( *args, **kwArgs )
@@ -37,17 +38,6 @@ class BaseCommandProcessor( ActionContextHost ):
             self.send( res )
 
 
-    def evalCommand( self, cmd ):
-        ctxt = self.actionContext
-        try:
-            return ctxt.eval_code( cmd )
-        except SyntaxError:
-            ctxt.exec_code( cmd )
-
-
-    def makeActionContext( self, varLookup = None, cmdPrefix = 'cmd_' ):
-        return super(BaseCommandProcessor, self).makeActionContext( varLookup, cmdPrefix )
-
     ####
     # command implementations
     #
@@ -74,14 +64,14 @@ class BaseCommandProcessor( ActionContextHost ):
             return 'exit()' #< just exit on closed stdin!
 
     def send( self, what ):
-        if what is not None:
-            if isinstance( what, Exception ):
-                what = ''.join( format_exception( type(what), what, what.__traceback__ ) )
-            self.__send__( what )
+        if isinstance( what, Exception ):
+            what = ''.join( format_exception( type(what), what, what.__traceback__ ) )
+        self.__send__( what )
 
     def __receive__( self ):
         return input( self._prompt )
 
     def __send__( self, what ):
-        print( what )
+        if what is not None:
+            print( what )
 

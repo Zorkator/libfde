@@ -109,17 +109,24 @@ class ActionContext(object):
         with open( filename ) as f:
             self.exec_code( compile( f.read(), f.name, 'exec' ) )
 
+    def eval_or_exec( self, cmd ):
+        try:
+            return self.eval_code( cmd )
+        except SyntaxError:
+            self.exec_code( cmd )
+
 
 
 #--------------------------------------------
 class ActionContextHost( Caching ):
 #--------------------------------------------
     ActionContext = ActionContext
+    CommandPrefix = None
 
     @cached_property
     def actionContext( self ):
       """return default ActionContext object, using class types for Action, Trigger and VariableLookup."""
-      return self.makeActionContext( self.Var )
+      return self.makeActionContext( self.Var, self.CommandPrefix )
 
 
     def makeActionContext( self, varLookup = None, cmdPrefix = None ):
@@ -145,3 +152,10 @@ class ActionContextHost( Caching ):
         """return new variable factory that does lookups and creates <varType> from the result.
         """
         return None
+
+
+    def evalCommand( self, cmd ):
+        """evaluate or execute the provided string `cmd`.
+        If `cmd` represents an expression, return its result or in case of a statement, return None.
+        """
+        return self.actionContext.eval_or_exec( cmd )
