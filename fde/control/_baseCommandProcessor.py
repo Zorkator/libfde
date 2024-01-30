@@ -58,20 +58,19 @@ class BaseCommandProcessor( ActionContextHost ):
     # methods that might be reimplemented by subclasses
 
     def receive( self ):
-        try:
-            return self.__receive__()
-        except EOFError:
-            return 'exit()' #< just exit on closed stdin!
+        return self.__receive__()
 
     def send( self, what ):
-        if isinstance( what, Exception ):
-            what = ''.join( format_exception( type(what), what, what.__traceback__ ) )
         self.__send__( what )
 
     def __receive__( self ):
-        return input( self._prompt )
+        try:
+            return input( self._prompt )
+        except EOFError:
+            return 'exit()'  # < just exit on closed stdin!
 
     def __send__( self, what ):
         if what is not None:
+            if isinstance( what, Exception ):
+                what = ''.join( format_exception( type(what), what, what.__traceback__ ) )
             print( what )
-
