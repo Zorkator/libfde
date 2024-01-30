@@ -9,7 +9,7 @@ class BaseCommandProcessor( ActionContextHost ):
     BaseCommandProcessor provides a simple command loop for executing Stateful
       codes interactively.
     """
-    CommandPrefix = 'cmd_'
+    commandPrefix = 'cmd_'
     _prompt       = '>>> '
 
     def __init__( self, *args, **kwArgs ):

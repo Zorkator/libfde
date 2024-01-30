@@ -121,15 +121,16 @@ class ActionContext(object):
 class ActionContextHost( Caching ):
 #--------------------------------------------
     ActionContext = ActionContext
-    CommandPrefix = None
+    commandPrefix = None
+    usedBuiltins  = []
 
     @cached_property
     def actionContext( self ):
       """return default ActionContext object, using class types for Action, Trigger and VariableLookup."""
-      return self.makeActionContext( self.Var, self.CommandPrefix )
+      return self.makeActionContext( self.Var, self.commandPrefix, self.usedBuiltins )
 
 
-    def makeActionContext( self, varLookup = None, cmdPrefix = None ):
+    def makeActionContext( self, varLookup = None, cmdPrefix = None, usedBuiltins = [] ):
         """return new action context, using custom or default VariableLookup.
         If cmdPrefix is given, all methods or properties starting with it will be added without prefix as global symbols.
         """
@@ -139,6 +140,7 @@ class ActionContextHost( Caching ):
             members  = [(m[4:], getattr( selfType, m )) for m in dir( selfType ) if m.startswith( cmdPrefix )]
             commands = {i: getattr( m, 'fget', m ).__get__( self ) for i, m in members}  # < treat cmd-properties the same
             context.globals.update( commands )
+        context.globals.update( {i: __builtins__[i] for i in set( __builtins__ ).intersection( usedBuiltins )} )
         return context
 
 
