@@ -126,8 +126,8 @@ class ActionContextHost( Caching ):
 
     @cached_property
     def actionContext( self ):
-      """return default ActionContext object, using class types for Action, Trigger and VariableLookup."""
-      return self.makeActionContext( self.Var, self.commandPrefix, self.usedBuiltins )
+        """return default ActionContext object, using class types for Action, Trigger and VariableLookup."""
+        return self.makeActionContext( self.Var, self.commandPrefix, self.usedBuiltins )
 
 
     def makeActionContext( self, varLookup = None, cmdPrefix = None, usedBuiltins = [] ):
