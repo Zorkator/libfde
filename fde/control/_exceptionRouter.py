@@ -36,8 +36,12 @@ class ExceptionRouter( object ):
                 if not self:
                     self = _class._instance = object.__new__( _class, *args, **kwArgs )
                     self._hooks    = dict()
-                    self._stdhook  = sys.excepthook
-                    sys.excepthook = self
+                    try:
+                        self._stdhook      = sys.unraisablehook #< python >= 3.8
+                        sys.unraisablehook = self
+                    except AttributeError:
+                        self._stdhook      = sys.excepthook     #< python < 3.8
+                        sys.excepthook     = self
                 return self
 
 
@@ -72,9 +76,10 @@ class ExceptionRouter( object ):
                 self._ExceptDispatch().pop()
 
 
-    def __except__( self, _type, _value, _traceback ):
+    def __except__( self, *args ):
+        excp = args if len(args) > 1 else args[0][:3] #< UnraisableHookArgs
         code = c_int32( int( '0x02200000', 16 ) ) #< TODO: should map _type to exception code!
-        what = ''.join( traceback.format_exception( _type, _value, _traceback ) ).encode()
+        what = ''.join( traceback.format_exception( *excp ) ).encode()
         self.handle[ self.opts.throwFunc ]( byref(code), c_char_p(what), c_size_t(len(what)) )
 
 
