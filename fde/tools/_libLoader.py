@@ -45,11 +45,10 @@ class LibLoader( object ):
 
 
     def searchpathIter( self ):
-        from distutils.sysconfig import get_python_lib
-
+        from sysconfig import get_path
         pathList = ['.']
         pathList.extend( self.splitEnvPaths( self.opt( 'prioPathEnv' ) ) )
-        pathList.append( get_python_lib() )
+        pathList.append( get_path('purelib') )
         pathList.extend( self.splitEnvPaths( _PATH ) )
         return iter( pathList )
 
@@ -102,14 +101,14 @@ class LibLoader( object ):
         paths.append( envPaths )
 
         _env[_PATH] = _pathDelim.join( paths )
-        self._hdl   = None
+        self.__dict__.pop( '_hdl', None )
         for f in glob( libPattern ):
             self._log.debug( "try loading " + str( f ) )
             try   : self._hdl = CDLL_t( str( f ) ); break  # < break if load succeeded
             except: pass
         _env[_PATH] = envPaths
 
-        if self._hdl:
+        if getattr( self, '_hdl', None ):
             # if loader has a named environment variable for explicit filePath
             #   we update the environment variable to allow child processes loading the same library.
             if self.opt('fileEnv'):
