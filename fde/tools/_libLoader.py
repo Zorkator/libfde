@@ -9,6 +9,7 @@ import platform
 _isWin = platform.system() == "Windows"
 _PATH  = ('LD_LIBRARY_PATH', 'PATH')[_isWin]
 
+logging.basicConfig()
 
 #-------------------------------------------
 class CDLL_t( _CDLL ):
@@ -38,16 +39,18 @@ class LibLoader( object ):
 
     @staticmethod
     def splitEnvPaths( envVarId ):
-        return _env.get( envVarId, '' ).split( _pathDelim )
+        return [p for p in _env.get( envVarId, '' ).split( _pathDelim ) if p]
 
     def opt( self, id, default='' ):
         return self._opt.get( id, default )
 
 
     def searchpathIter( self ):
+        from ..        import __path__ as parent_path
         from sysconfig import get_path
         pathList = ['.']
         pathList.extend( self.splitEnvPaths( self.opt( 'prioPathEnv' ) ) )
+        pathList.append( parent_path[0] )
         pathList.append( get_path('purelib') )
         pathList.extend( self.splitEnvPaths( _PATH ) )
         return iter( pathList )
@@ -120,7 +123,7 @@ class LibLoader( object ):
         if libPattern and self.opt( 'matchExisting' ):
             try               : import psutil, fnmatch
             except ImportError:
-                self._log.error( "library matching not available, need packages psutil and fnmatch!\n" )
+                self._log.warn( "library matching not available, need packages psutil and fnmatch!\n" )
             else:
                 prefix = ('*/', '')[_path.isabs( libPattern )]
                 p = psutil.Process( _getpid() )

@@ -1,33 +1,34 @@
-from distutils.core import setup
-# cannot use setuptools, because it includes every file in svn :-(
+from setuptools import setup
 
-import sys
+import shutil
+import fde
+from fde.tools import core_loader
 
-__version__ = ""  # get rid of warning, really import it __init__.py
-__author__ = ""
-
-# read version and author from __init__.py file ignoring a possible
-# exception if libfde cannot be loaded during package creation
-try:
-    exec(open('./fde/__init__.py').read())
-except OSError:
-    pass
-except:
-    print "Unexpected error:", sys.exc_info()[0]
-    raise
+shutil.copy2( core_loader.handle._name, fde.__path__[0] )
 
 setup(
     name='fde',
-    version=__version__,
-    author=__author__,
+    version=fde.__version__,
+    author=fde.__author__,
     author_email="",
-    packages=['fde'],
-    description='Python wrapper for hash map access to CDLL shared library',
+    install_requires=['six', 'psutil', 'intel-fortran-rt'],
+    packages=['fde'] + ['fde.' + mod for mod in fde.__all__],
+    package_data={'fde': ["*.dll", "*.so"]},
+    description='Python wrapper for FDE loading and using shared library',
     classifiers=[
-        "Programming Language :: Python",
-        "Programming Language :: Python :: 2.7",
-        "Operating System :: OS Independent",
         "Development Status :: 4 - Beta",
         "Environment :: Console",
+        "License :: OSI Approved :: GNU Lesser General Public License, Version 3 (LGPLv3)",
+        "Programming Language :: Python",
+        "Programming Language :: Python :: 2.7",
+        "Programming Language :: Python :: 3",
+        "Programming Language :: Python :: 3.7",
+        "Programming Language :: Python :: 3.8",
+        "Programming Language :: Python :: 3.9",
+        "Programming Language :: Python :: 3.10",
+        "Programming Language :: Python :: 3.11",
+        "Programming Language :: Python :: 3.12",
+        "Intended Audience :: Developers",
+        "Operating System :: OS Independent",
     ],
 )
