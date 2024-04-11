@@ -20,7 +20,7 @@ linux:
     - gcovr -r .. src libfortres
     - gcovr -r .. src libfortres --xml=../coverage.xml --html-details=../coverage/coverage.html
     - cd ..
-    - LIBFDE=$(realpath $(find _build/ -name "libfde*" | head -n 1)) python setup.py bdist_wheel
+    - LIBFDE=$(realpath $(find _build/ -name "libfde*" | head -n 1)) python setup.py bdist_wheel --dist-dir coverage
   coverage: '/^TOTAL.*\s+(\d+\%)$/'
   artifacts:
     reports:
@@ -30,6 +30,6 @@ linux:
     expose_as: 'Coverage Report'
     paths:
       - coverage/
-      - dist/*.whl
+      #- dist/*.whl
 
 
