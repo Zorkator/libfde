@@ -151,5 +151,5 @@ class LibLoader( object ):
         self._opt.update( kwArgs )
 
 
-_libPattern = ('libfde.*.so', '*fde.*.dll')[_isWin]
+_libPattern = ('libfde*.so*', '*fde.*.dll')[_isWin]
 core_loader = LibLoader( fileEnv='LIBFDE', prioPathEnv='FDEPATH', libPattern=_libPattern, matchExisting=True )

@@ -1,9 +1,10 @@
-from setuptools import setup
+from setuptools import setup, find_packages
 
-import shutil
 import fde
 from fde.tools import core_loader
 
+import sysconfig
+import shutil
 shutil.copy2( core_loader.handle._name, fde.__path__[0] )
 
 setup(
@@ -12,9 +13,15 @@ setup(
     author=fde.__author__,
     author_email="",
     install_requires=['six', 'psutil', 'intel-fortran-rt'],
-    packages=['fde'] + ['fde.' + mod for mod in fde.__all__],
-    package_data={'fde': ["*.dll", "*.so"]},
+    packages=find_packages( include=['fde', 'fde.*'] ),
+    package_data={'fde': ["*.dll", "*.so", "*.so.*"]},
     description='Python wrapper for FDE loading and using shared library',
+    options={
+        'bdist_wheel': {
+            'plat_name': sysconfig.get_platform(),
+            'universal': 1
+        }
+    },
     classifiers=[
         "Development Status :: 4 - Beta",
         "Environment :: Console",
