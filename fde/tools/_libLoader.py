@@ -2,7 +2,6 @@
 from ctypes import CDLL as _CDLL
 from os     import environ as _env, pathsep as _pathDelim, path as _path, getpid as _getpid
 from glob   import glob
-from sys    import stdout
 import logging
 import platform
 
@@ -105,10 +104,11 @@ class LibLoader( object ):
 
         _env[_PATH] = _pathDelim.join( paths )
         self.__dict__.pop( '_hdl', None )
+        self._log.debug( "try loading " + libPattern )
         for f in glob( libPattern ):
-            self._log.debug( "try loading " + str( f ) )
-            try   : self._hdl = CDLL_t( str( f ) ); break  # < break if load succeeded
-            except: pass
+            self._log.debug( "\ttry " + str(f) )
+            try   : self._hdl = CDLL_t( str(f) ); break  # < break if load succeeded
+            except: self._opt['onLoadError']( str(f) )
         _env[_PATH] = envPaths
 
         if getattr( self, '_hdl', None ):
@@ -125,18 +125,18 @@ class LibLoader( object ):
             except ImportError:
                 self._log.warn( "library matching not available, need packages psutil and fnmatch!\n" )
             else:
-                prefix = ('*/', '')[_path.isabs( libPattern )]
-                p = psutil.Process( _getpid() )
-                for lib in p.memory_maps():
-                    if fnmatch.fnmatch( lib.path, _path.normpath( prefix + str( libPattern ) ) ):
+                pattern = _path.normpath( ('*/', '')[_path.isabs( libPattern )] + str(libPattern) )
+                self._log.debug( "try matching " + pattern )
+                for lib in psutil.Process( _getpid() ).memory_maps():
+                    if fnmatch.fnmatch( lib.path, pattern ):
                         libPattern = lib.path
-                        self._log.info( "matched already loaded library {0}".format( libPattern ) )
+                        self._log.info( "\tmatched already loaded library {0}".format( libPattern ) )
                         break
         return libPattern
 
 
     def __init__( self, **kwArgs ):
-        self._opt = dict()
+        self._opt = dict( onLoadError=lambda f: None )
         self._log = logging.getLogger( type(self).__name__ )
         kwArgs.setdefault( 'logLevel', 'ERROR' )
         self.set( **kwArgs )
@@ -151,5 +151,5 @@ class LibLoader( object ):
         self._opt.update( kwArgs )
 
 
-_libPattern = ('libfde*.so*', '*fde.*.dll')[_isWin]
+_libPattern = ('libfde.so*', '*fde.*.dll')[_isWin]
 core_loader = LibLoader( fileEnv='LIBFDE', prioPathEnv='FDEPATH', libPattern=_libPattern, matchExisting=True )
