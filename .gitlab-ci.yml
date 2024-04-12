@@ -8,7 +8,7 @@ linux:
     - linux
   image: fedora:33
   before_script:
-    - dnf install -y g++ gcc-gfortran cmake gcovr
+    - dnf install -y g++ gcc-gfortran cmake gcovr python3-pip
 
   script:
     - mkdir -p _build
