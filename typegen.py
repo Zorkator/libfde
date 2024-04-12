@@ -18,12 +18,12 @@ import sys, re
 
 class TypeSpec(object):
 
-  _procItf     = '\s*procedure\s*\(\s*\w*\s*\)\s*'
-  _baseTypeId  = '\s*type\s*\(\s*(\w+)\s*\)\s*'
-  _dimSize     = '(?::|\d+)'
-  _dimSpec     = '\s*dimension\s*\(\s*%s(?:\s*,\s*%s)*\s*\)\s*' % (_dimSize, _dimSize)
-  _keyAssign   = '\s*(\w+)\s*=\s*(\w+|(?:"[^"]*?"))'
-  _varLength   = '.*\((?:len=)?[:*]\).*'
+  _procItf     = r'\s*procedure\s*\(\s*\w*\s*\)\s*'
+  _baseTypeId  = r'\s*type\s*\(\s*(\w+)\s*\)\s*'
+  _dimSize     = r'(?::|\d+)'
+  _dimSpec     = r'\s*dimension\s*\(\s*%s(?:\s*,\s*%s)*\s*\)\s*' % (_dimSize, _dimSize)
+  _keyAssign   = r'\s*(\w+)\s*=\s*(\w+|(?:"[^"]*?"))'
+  _varLength   = r'.*\((?:len=)?[:*]\).*'
 
   procItfMatch    = re.compile( _procItf ).match
   dimSpecMatch    = re.compile( _dimSpec ).match
@@ -898,14 +898,14 @@ class TypeGenerator(object):
   scope = dict()
   count = dict()
 
-  _ident     = '\s*(\w+)\s*'      #< some type identifier
-  _baseType  = '\s*([\w :*=()]+)' #< e.g. integer(kind=4), type(Struct), character(len=*), <interfaceId>, ...
-  _dimType   = '\s*([\w ,:()]+)'  #< e.g. scalar, dimension(:,:), procedure
-  _keySpecs  = '((?:,\s*\w+\s*=\s*.+\s*)*)'
-  _typeDecl  = '^\s*!\s*_TypeGen_declare_RefType\(%s,%s,%s,%s%s\)' % (_ident, _ident, _baseType, _dimType, _keySpecs)
-  _nodeDecl  = '^\s*!\s*_TypeGen_declare_ListNode\(%s,%s,%s,%s\)' % (_ident, _ident, _baseType, _dimType)
-  _typeImpl  = '^\s*!\s*_TypeGen_implement\(%s\)' % _ident
-  _typeImplA = '^\s*!\s*_TypeGen_implementAll\(\)'
+  _ident     = r'\s*(\w+)\s*'      #< some type identifier
+  _baseType  = r'\s*([\w :*=()]+)' #< e.g. integer(kind=4), type(Struct), character(len=*), <interfaceId>, ...
+  _dimType   = r'\s*([\w ,:()]+)'  #< e.g. scalar, dimension(:,:), procedure
+  _keySpecs  = r'((?:,\s*\w+\s*=\s*.+\s*)*)'
+  _typeDecl  = r'^\s*!\s*_TypeGen_declare_RefType\(%s,%s,%s,%s%s\)' % (_ident, _ident, _baseType, _dimType, _keySpecs)
+  _nodeDecl  = r'^\s*!\s*_TypeGen_declare_ListNode\(%s,%s,%s,%s\)' % (_ident, _ident, _baseType, _dimType)
+  _typeImpl  = r'^\s*!\s*_TypeGen_implement\(%s\)' % _ident
+  _typeImplA = r'^\s*!\s*_TypeGen_implementAll\(\)'
 
   typeDeclMatch    = re.compile( _typeDecl ).match
   nodeDeclMatch    = re.compile( _nodeDecl ).match
