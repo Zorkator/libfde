@@ -20,6 +20,7 @@ linux:
     - gcovr -r .. src libfortres
     - gcovr -r .. src libfortres --xml=../coverage.xml --html-details=../coverage/coverage.html
     - cd ..
+    - python3 -m pip install wheel
     - FDEPATH=_build/package/Debug/bin python3 setup.py bdist_wheel --dist-dir coverage
   coverage: '/^TOTAL.*\s+(\d+\%)$/'
   artifacts:
