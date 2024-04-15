@@ -6,9 +6,9 @@ import re
 #--------------------------------------------
 class Trigger( Expression ):
 #--------------------------------------------
-    _str1     = '"[^"]+"'
-    _str2     = "'[^']+'"
-    _other    = "[^\"'\s]+"
+    _str1     = r'"[^"]+"'
+    _str2     = r"'[^']+'"
+    _other    = r"[^\"'\s]+"
     _regEx    = '(%s|%s|%s)' % (_str1, _str2, _other)
     _strTokOp = '__lookup__({})'.format
     _context  = None #< set via subclass
