@@ -6,9 +6,9 @@ import re
 #--------------------------------------------
 class Trigger( Expression ):
 #--------------------------------------------
-    _str1     = '"[^"]+"'
-    _str2     = "'[^']+'"
-    _other    = "[^\"'\s]+"
+    _str1     = r'"[^"]+"'
+    _str2     = r"'[^']+'"
+    _other    = r"[^\"'\s]+"
     _regEx    = '(%s|%s|%s)' % (_str1, _str2, _other)
     _strTokOp = '__lookup__({})'.format
     _context  = None #< set via subclass
@@ -109,20 +109,28 @@ class ActionContext(object):
         with open( filename ) as f:
             self.exec_code( compile( f.read(), f.name, 'exec' ) )
 
+    def eval_or_exec( self, cmd ):
+        try:
+            return self.eval_code( cmd )
+        except SyntaxError:
+            self.exec_code( cmd )
+
 
 
 #--------------------------------------------
 class ActionContextHost( Caching ):
 #--------------------------------------------
     ActionContext = ActionContext
+    commandPrefix = None
+    usedBuiltins  = []
 
     @cached_property
     def actionContext( self ):
-      """return default ActionContext object, using class types for Action, Trigger and VariableLookup."""
-      return self.makeActionContext( self.Var )
+        """return default ActionContext object, using class types for Action, Trigger and VariableLookup."""
+        return self.makeActionContext( self.Var, self.commandPrefix, self.usedBuiltins )
 
 
-    def makeActionContext( self, varLookup = None, cmdPrefix = None ):
+    def makeActionContext( self, varLookup = None, cmdPrefix = None, usedBuiltins = [] ):
         """return new action context, using custom or default VariableLookup.
         If cmdPrefix is given, all methods or properties starting with it will be added without prefix as global symbols.
         """
@@ -132,6 +140,7 @@ class ActionContextHost( Caching ):
             members  = [(m[4:], getattr( selfType, m )) for m in dir( selfType ) if m.startswith( cmdPrefix )]
             commands = {i: getattr( m, 'fget', m ).__get__( self ) for i, m in members}  # < treat cmd-properties the same
             context.globals.update( commands )
+        context.globals.update( {i: __builtins__[i] for i in set( __builtins__ ).intersection( usedBuiltins )} )
         return context
 
 
@@ -145,3 +154,10 @@ class ActionContextHost( Caching ):
         """return new variable factory that does lookups and creates <varType> from the result.
         """
         return None
+
+
+    def evalCommand( self, cmd ):
+        """evaluate or execute the provided string `cmd`.
+        If `cmd` represents an expression, return its result or in case of a statement, return None.
+        """
+        return self.actionContext.eval_or_exec( cmd )

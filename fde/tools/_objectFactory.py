@@ -15,6 +15,9 @@ class ObjectFactory( object ):
         self._instances[ self._identOp( obj ) ] = obj
         return obj
 
+    def __getitem__( self, ident ):
+        return self._instances[ident]
+
     @property
     def count( self ):
         return len( self._instances )
