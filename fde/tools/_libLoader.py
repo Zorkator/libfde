@@ -109,14 +109,19 @@ class LibLoader( object ):
             self._log.debug( "\ttry " + str(f) )
             try   : self._hdl = CDLL_t( str(f) ); break  # < break if load succeeded
             except: self._opt['onLoadError']( str(f) )
-        _env[_PATH] = envPaths
 
-        if getattr( self, '_hdl', None ):
-            # if loader has a named environment variable for explicit filePath
-            #   we update the environment variable to allow child processes loading the same library.
-            if self.opt('fileEnv'):
-                _env[ self.opt('fileEnv') ] = self._hdl._name
-            raise self.Success
+        restorePATH = True
+        try:
+            if getattr( self, '_hdl', None ):
+                # if loader has a named environment variable for explicit filePath
+                #   we update the environment variable to allow child processes loading the same library.
+                if self.opt('fileEnv'):
+                    _env[ self.opt('fileEnv') ] = self._hdl._name
+                restorePATH &= bool(self.opt('restorePATH'))
+                raise self.Success
+        finally:
+            if restorePATH:
+                _env[_PATH] = envPaths
 
 
     def _tryMatch( self, libPattern ):
@@ -139,6 +144,7 @@ class LibLoader( object ):
         self._opt = dict( onLoadError=lambda f: None )
         self._log = logging.getLogger( type(self).__name__ )
         kwArgs.setdefault( 'logLevel', 'ERROR' )
+        kwArgs.setdefault( 'restorePATH', True )
         self.set( **kwArgs )
 
     def __str__( self ):
