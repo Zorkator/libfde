@@ -3,7 +3,7 @@ stages:
   - test
 
 linux:
-  tags: ["docker", "linux"]
+  tags: ["gitlab-org-docker"]
   image: fedora:33
   stage: build
   before_script:
@@ -29,9 +29,8 @@ linux:
       - coverage/
       - dist/
 
-
 test_wheel:
-  tags: ["docker", "linux"]
+  tags: ["gitlab-org-docker"]
   image: fedora:33
   stage: test
   before_script:
@@ -44,3 +43,4 @@ test_wheel:
   needs:
     - job: linux
       artifacts: true
+
