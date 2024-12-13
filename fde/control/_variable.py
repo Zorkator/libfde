@@ -40,19 +40,20 @@ class Variable(object):
 
 
     def __new__( _class, ref, *args, **kwArgs ):
-        try:
-            ref.value
+        if _class is Variable:
             try:
-                len(ref)
-                try   : ref[:]; _class = ValueVariable
-                except:         _class = MappingVariable
-            except:             _class = ValueVariable
-        except:
-            try:
-                len(ref)
-                try   : ref[:]; _class = ArrayVariable
-                except:         _class = MappingVariable
-            except:             _class = SimpleVariable
+                ref.value
+                try:
+                    len(ref)
+                    try   : ref[:]; _class = ValueVariable
+                    except:         _class = MappingVariable
+                except:             _class = ValueVariable
+            except:
+                try:
+                    len(ref)
+                    try   : ref[:]; _class = ArrayVariable
+                    except:         _class = MappingVariable
+                except:             _class = SimpleVariable
         #
         self = super(Variable, _class).__new__( _class )
         self._ref = ref
@@ -215,9 +216,9 @@ class SimpleVariable(Variable):
 
 
 
-#---------------------------------
+#--------------------------------------
 class ValueVariable(SimpleVariable):
-#---------------------------------
+#--------------------------------------
     @property
     def value( self ):
         return self._ref.value
