@@ -2,6 +2,7 @@
 from ._expression import Evaluable, Expression
 from ..tools      import _decorate, Caching, cached_property
 from itertools    import chain
+from pathlib      import Path
 import re
 
 #--------------------------------------------
@@ -85,7 +86,6 @@ class ActionContext(object):
     def host( self ):
         return self._host
 
-
     def __init__( self, host, varLookup = None, globals = None, locals = None ):
         varLookup = varLookup or (lambda i: i)
 
@@ -99,20 +99,30 @@ class ActionContext(object):
         self.lookup  = varLookup
         self._globals.update( Action=self.Action, Trigger=self.Trigger, __lookup__=varLookup )
 
+    def update( self, globals: dict = {}, locals: dict = {}, file: (Path | str) = None, code: str = None, **localVars ):
+        self._globals.update( globals )
+        self._locals.update( locals, **localVars )
+        file and self.exec_file( file )
+        code and self.exec_code( code )
+        return self
+
     def iter( self, type: type = object, globals: bool = False, locals: bool = True ):
         for k, v in chain( ({},self._globals)[globals].items(), ({},self._locals)[locals].items() ):
             if isinstance( v, type ):
                 yield k, v
 
-    def eval_code( self, code ):
+    def eval_code( self, code: (str | object) ):
         return eval( code, self._globals, self._locals )
 
-    def exec_code( self, code ):
+    def exec_code( self, code: (str | object) ):
         exec( code, self._globals, self._locals )
 
-    def exec_file( self, filename ):
-        with open( filename ) as f:
-            self.exec_code( compile( f.read(), f.name, 'exec' ) )
+    def exec_file( self, file: (Path, str) ):
+        try:
+            file = file.resolve()
+        except AttributeError:
+            file = Path( file )
+        self.exec_code( compile( file.read_text(), file.name, 'exec' ) )
 
     def eval_or_exec( self, cmd ):
         try:
@@ -142,7 +152,8 @@ class ActionContextHost( Caching ):
         context = self.ActionContext( self, varLookup )
         if cmdPrefix:
             selfType = type( self )
-            members  = [(m[4:], getattr( selfType, m )) for m in dir( selfType ) if m.startswith( cmdPrefix )]
+            startIdx = len(cmdPrefix)
+            members  = [(m[startIdx:], getattr( selfType, m )) for m in dir( selfType ) if m.startswith( cmdPrefix )]
             commands = {i: getattr( m, 'fget', m ).__get__( self ) for i, m in members}  # < treat cmd-properties the same
             context.globals.update( commands )
         context.globals.update( {i: __builtins__[i] for i in set( __builtins__ ).intersection( usedBuiltins )} )
