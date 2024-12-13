@@ -1,6 +1,7 @@
 
 from ._expression import Evaluable, Expression
 from ..tools      import _decorate, Caching, cached_property
+from itertools    import chain
 import re
 
 #--------------------------------------------
@@ -98,6 +99,10 @@ class ActionContext(object):
         self.lookup  = varLookup
         self._globals.update( Action=self.Action, Trigger=self.Trigger, __lookup__=varLookup )
 
+    def iter( self, type: type = object, globals: bool = False, locals: bool = True ):
+        for k, v in chain( ({},self._globals)[globals].items(), ({},self._locals)[locals].items() ):
+            if isinstance( v, type ):
+                yield k, v
 
     def eval_code( self, code ):
         return eval( code, self._globals, self._locals )
