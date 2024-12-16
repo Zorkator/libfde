@@ -20,13 +20,15 @@ class Wallet( object ):
 #-------------------------------------------
 class TypeObject( object ):
 #-------------------------------------------
-    def __init__( self, kwSeq = {}, **kwArgs ):
-        self.__dict__.update( kwSeq, **kwArgs )
 
+    def __init__( self, kwIter = {}, **kwArgs ):
+        self.__update__( kwIter, **kwArgs )
 
     def __iter__( self ):
         return iter(self.__dict__)
 
+    def __len__( self ):
+        return len(self.__dict__)
 
     def __contains__( self, key ):
         try:
@@ -34,26 +36,34 @@ class TypeObject( object ):
         except TypeError:
             return all( hasattr( self, k ) for k in key )
 
-
     def __getitem__( self, key ):
         try:
             return getattr( self, key )
         except TypeError:
             return (getattr( self, k ) for k in key)
 
-
     def __setitem__( self, key, value ):
-        try:
-            setattr( self, key, value )
-        except TypeError:
-            assert len(key) == len(value), "mismatch in number of keys and values"
-            [setattr( self, *kv ) for kv in zip(key, value)]
+        if hasattr( key, 'strip' ): #< TODO: handle key variants by TypeError!
+            try   : setattr( self, key, type(self)( {k:value[k] for k in value} ) )
+            except: setattr( self, key, value )
+        else:
+            [ setattr( self, *kv ) for kv in zip(key,value) ]
+
+    def __update__( self, kwIter = {}, **kwArgs ):
+        def _walk( itr, stack ):
+            for key, v in itr:
+                try                  : _walk( v.items(), stack + [stack[-1][key]] )
+                except AttributeError: stack[-1][key] = v
+        # assign mappings one after another to merge nested mappings!
+        kwIter and _walk( dict(kwIter).items(), [self] )
+        kwArgs and _walk( kwArgs.items(), [self] )
 
     def __getstate__( self ):
-        return dict( zip( self, self[self] ) )
+        return {k: (v.__getstate__() or v) for k, v in zip( self, self[self] )}
 
     def __setstate__( self, state ):
-        self[state.keys()] = state.values()
+        vars(self).clear()
+        self.__update__( state )
 
 
 def mkTypeObject( ident, bases = (TypeObject,), members = {} ):
