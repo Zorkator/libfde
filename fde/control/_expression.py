@@ -41,8 +41,8 @@ class Expression( Evaluable ):
         return self._locals
 
     def __init__( self, expr, *args, **kwArgs ):
-      self._expr = expr
-      self._code = compile( expr, type( self ).__name__, 'eval' )
+      self._expr = getattr( expr, '_expr', expr )
+      self._code = compile( self._expr, type(self).__name__, 'eval' )
 
     def __value__( self ):
         return eval( self._code, self._globals, self._locals )

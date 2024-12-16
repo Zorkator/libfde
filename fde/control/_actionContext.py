@@ -20,12 +20,15 @@ class Trigger( Expression ):
         return self._context
 
     def __init__( self, expr, **kwArgs ):
-        tokens = []
-        for t in re.findall( self._regEx, expr ):
-            if t[0] in '\'"':
-                t = self._strTokOp( t )
-            tokens.append( t )
-        super(Trigger, self).__init__( ' '.join( tokens ) )
+        if not isinstance( expr, Expression ):
+            # assume str-type ...
+            tokens = []
+            for t in re.findall( self._regEx, expr ):
+                if t[0] in '\'"':
+                    t = self._strTokOp( t )
+                tokens.append( t )
+            expr = ' '.join( tokens )
+        super(Trigger, self).__init__( expr )
         self.__dict__.update( _decorate( kwArgs.items() ) )
 
     @classmethod
@@ -49,7 +52,7 @@ class Action( Evaluable ):
     def __init__( self, cause, func, *args, **kwArgs ):
         if not callable(func):
             raise AssertionError( "Action argument 3 must be callable, got %s instead!" % type(func) )
-        self._cause  = cause
+        self._cause  = self._context.Trigger( cause )
         self._func   = func
         self._args   = args
         self._kwArgs = kwArgs
