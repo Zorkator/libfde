@@ -2,7 +2,7 @@
 import math
 
 #--------------------------------
-class Evaluable(object):
+class Evaluable( object ):
 #--------------------------------
     @property
     def value( self ):
@@ -25,12 +25,13 @@ class Evaluable(object):
         return type( _class.__name__, (_class,), kwArgs )
 
 
-#--------------------------------
-class Expression( Evaluable ):
-#--------------------------------
+#--------------------------------------
+class ContextEvaluable( Evaluable ):
+#--------------------------------------
     #           . O O (None uses python's default)
     _globals = None
     _locals  = None
+    _context = None  # < set via subclass
 
     @property
     def globals( self ):
@@ -40,12 +41,27 @@ class Expression( Evaluable ):
     def locals( self ):
         return self._locals
 
+    @property
+    def context( self ):
+        return self._context
+
+    @classmethod
+    def subclass( _class, context ):
+        return super(Expression, _class).subclass( _context=context, _globals=context.globals, _locals=context.locals )
+
+
+#---------------------------------------
+class Expression( ContextEvaluable ):
+#---------------------------------------
+
     def __init__( self, expr, *args, **kwArgs ):
       self._expr = getattr( expr, '_expr', expr )
-      self._code = compile( self._expr, type(self).__name__, 'eval' )
+      self._code = getattr( expr, '_code', None ) \
+                or compile( self._expr, type(self).__name__, 'eval' )
 
     def __value__( self ):
         return eval( self._code, self._globals, self._locals )
 
     def __str__( self ):
         return self._expr
+

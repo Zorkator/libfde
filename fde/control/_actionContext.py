@@ -13,11 +13,6 @@ class Trigger( Expression ):
     _other    = r"[^\"'\s]+"
     _regEx    = '(%s|%s|%s)' % (_str1, _str2, _other)
     _strTokOp = '__lookup__({})'.format
-    _context  = None #< set via subclass
-
-    @property
-    def context( self ):
-        return self._context
 
     def __init__( self, expr, **kwArgs ):
         if not isinstance( expr, Expression ):
@@ -30,10 +25,6 @@ class Trigger( Expression ):
             expr = ' '.join( tokens )
         super(Trigger, self).__init__( expr )
         self.__dict__.update( _decorate( kwArgs.items() ) )
-
-    @classmethod
-    def subclass( _class, context ):
-        return super(Trigger, _class).subclass( _context=context, _globals=context.globals, _locals=context.locals )
 
 
 #--------------------------------------------
@@ -73,8 +64,9 @@ class Action( Evaluable ):
 #--------------------------------------------
 class ActionContext(object):
 #--------------------------------------------
-    Action   = Action
-    Trigger  = Trigger
+    Action     = Action
+    Trigger    = Trigger
+    Expression = Expression
     _globals = dict( __builtins__ = {} )
 
     @property
@@ -97,8 +89,9 @@ class ActionContext(object):
         self._globals = dict( self._globals ) if (globals is None) else globals
 
         # subclass classes Action and Trigger to make own ones for the created ActionContext
-        self.Action  = self.Action.subclass( self )
-        self.Trigger = self.Trigger.subclass( self )
+        self.Action     = self.Action.subclass( self )
+        self.Trigger    = self.Trigger.subclass( self )
+        self.Expression = self.Expression.subclass( self )
         self.lookup  = varLookup
         self._globals.update( Action=self.Action, Trigger=self.Trigger, __lookup__=varLookup )
 
