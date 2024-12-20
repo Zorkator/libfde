@@ -51,7 +51,7 @@ class Variable(object):
             except:
                 try:
                     len(ref)
-                    try   : ref[:]; _class = (ArrayVariable, StringVariable)[hasattr( ref, 'encode' )]
+                    try   : ref[:]; _class = (ArrayVariable, StringVariable)[hasattr( ref, 'strip' )]
                     except:         _class = MappingVariable
                 except:             _class = (SimpleVariable, CallableVariable)[callable(ref)]
         #

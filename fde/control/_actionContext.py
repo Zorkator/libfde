@@ -1,5 +1,5 @@
 
-from ._expression import Evaluable, Expression
+from ._expression import Evaluable, Expression, Deferred
 from ..tools      import _decorate, Caching, cached_property
 from itertools    import chain
 from pathlib      import Path
@@ -49,7 +49,8 @@ class Action( Evaluable ):
         self._kwArgs = kwArgs
 
     def __value__( self ):
-        return self._func( self, *self._args, **self._kwArgs )
+        resolve = self._context.Deferred.__resolve__
+        return self._func( self, *resolve(self._args), **resolve(self._kwArgs) )
 
     def evaluate( self ):
         if self._cause:
@@ -67,6 +68,7 @@ class ActionContext(object):
     Action     = Action
     Trigger    = Trigger
     Expression = Expression
+    Deferred   = Deferred
     _globals = dict( __builtins__ = {} )
 
     @property
@@ -92,11 +94,12 @@ class ActionContext(object):
         self.Action     = self.Action.subclass( self )
         self.Trigger    = self.Trigger.subclass( self )
         self.Expression = self.Expression.subclass( self )
+        self.Deferred   = self.Deferred.subclass( self )
         self.lookup  = varLookup
         self._globals.update( Action=self.Action, Trigger=self.Trigger, __lookup__=varLookup )
 
-    def update( self, globals: dict = {}, locals: dict = {}, file: (Path | str) = None, code: str = None, **localVars ):
-        self._globals.update( globals )
+    def update( self, globals: dict = {}, locals: dict = {}, deferred: dict = {}, file: (Path | str) = None, code: str = None, **localVars ):
+        self._globals.update( globals, **{k: self.Deferred.wrap(v) for k, v in deferred.items()} )
         self._locals.update( locals, **localVars )
         file and self.exec_file( file )
         code and self.exec_code( code )
