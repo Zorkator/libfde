@@ -51,9 +51,9 @@ class Variable(object):
             except:
                 try:
                     len(ref)
-                    try   : ref[:]; _class = ArrayVariable
+                    try   : ref[:]; _class = (ArrayVariable, StringVariable)[hasattr( ref, 'encode' )]
                     except:         _class = MappingVariable
-                except:             _class = SimpleVariable
+                except:             _class = (SimpleVariable, CallableVariable)[callable(ref)]
         #
         self = super(Variable, _class).__new__( _class )
         self._ref = ref
@@ -228,6 +228,12 @@ class ValueVariable(SimpleVariable):
         self._ref.value = val
 
 
+#-----------------------------------------
+class CallableVariable(SimpleVariable):
+#-----------------------------------------
+    def __call__( self, *args, **kwArgs ):
+        return self.value( *args, **kwArgs )
+
 
 #--------------------------------------
 class _Iterable(Variable):
@@ -242,6 +248,12 @@ class _Iterable(Variable):
         self._ref[item] = val
 
 
+#--------------------------------------------------
+class StringVariable(_Iterable, SimpleVariable):
+#--------------------------------------------------
+    pass
+
+
 #--------------------------------------
 class ArrayVariable(_Iterable):
 #--------------------------------------
@@ -252,7 +264,6 @@ class ArrayVariable(_Iterable):
     @value.setter
     def value( self, val ):
         self._ref[:] = val
-
 
 
 #--------------------------------------
