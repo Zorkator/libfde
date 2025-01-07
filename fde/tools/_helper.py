@@ -10,7 +10,7 @@ class NullHandle( object ):
         return self.__null_method
 
 
-# -------------------------------------------
+#-------------------------------------------
 class Wallet( object ):
 #-------------------------------------------
     def __init__( self, kwSeq = {}, **kwArgs ):
@@ -64,6 +64,16 @@ class TypeObject( object ):
     def __setstate__( self, state ):
         vars(self).clear()
         self.__update__( state )
+
+
+# So far TypeObject doesn't define any non-magic methods to avoid name clashes.
+# However, for compatibility with **-unpacking or dict-converting TypeObjects we have to add a keys-method.
+# Actually, this smells like a bug in Python, since __iter__ and __getitem__ should be enough!
+try:
+    dict( **TypeObject() )
+except TypeError:
+    TypeObject.keys = TypeObject.__iter__
+
 
 
 def mkTypeObject( ident, bases = (TypeObject,), members = {} ):
