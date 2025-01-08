@@ -21,8 +21,24 @@ class Wallet( object ):
 class TypeObject( object ):
 #-------------------------------------------
 
-    def __init__( self, kwIter = {}, **kwArgs ):
-        self.__update__( kwIter, **kwArgs )
+    @staticmethod
+    def __is_mapping( obj ) -> bool:
+        try:
+            obj[:] #< mappings don't support slicing
+            return False
+        except:
+            # ... exclude sets by checking for __delitem__
+            return callable( getattr( obj, '__delitem__', None ) )
+
+    @staticmethod
+    def __items( kvItr ):
+        if iter(kvItr) is not kvItr:
+            return ((k, kvItr[k]) for k in kvItr)
+        else:
+            return kvItr
+
+    def __init__( self, kvIter = None, **kwArgs ):
+        self.__update__( kvIter, **kwArgs )
 
     def __iter__( self ):
         return iter(self.__dict__)
@@ -44,22 +60,32 @@ class TypeObject( object ):
 
     def __setitem__( self, key, value ):
         if hasattr( key, 'strip' ): #< TODO: handle key variants by TypeError!
-            try   : setattr( self, key, type(self)( {k:value[k] for k in value} ) )
-            except: setattr( self, key, value )
+            if self.__is_mapping( value ):
+                setattr( self, key, type(self)( self.__items( value ) ) )
+            else:
+                setattr( self, key, value )
         else:
-            [ setattr( self, *kv ) for kv in zip(key,value) ]
+            [ setattr( self, *kv ) for kv in zip(key, value) ]
 
-    def __update__( self, kwIter = {}, **kwArgs ):
+    def __delitem__( self, key ):
+        if hasattr( key, 'strip' ):
+            delattr( self, key )
+        else:
+            [ delattr( self, k ) for k in key ]
+
+    def __update__( self, kvIter = None, **kwArgs ):
         def _walk( itr, stack ):
             for key, v in itr:
-                try                  : _walk( v.items(), stack + [stack[-1][key]] )
-                except AttributeError: stack[-1][key] = v
+                if self.__is_mapping( v ) and key in stack[-1]:
+                    _walk( self.__items( v ), stack + [stack[-1][key]] )
+                else:
+                    setattr( stack[-1], key, v )
         # assign mappings one after another to merge nested mappings!
-        kwIter and _walk( dict(kwIter).items(), [self] )
+        kvIter and _walk( self.__items(kvIter), [self] )
         kwArgs and _walk( kwArgs.items(), [self] )
 
     def __getstate__( self ):
-        return {k: (v.__getstate__() or v) for k, v in zip( self, self[self] )}
+        return {k: (v.__getstate__() or v) for k, v in self.__items( self )}
 
     def __setstate__( self, state ):
         vars(self).clear()
