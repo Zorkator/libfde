@@ -22,7 +22,7 @@ class TypeObject( object ):
 #-------------------------------------------
 
     @staticmethod
-    def __is_mapping( obj ) -> bool:
+    def __is_mapping( obj ):
         try:
             obj[:] #< mappings don't support slicing
             return False
@@ -74,15 +74,17 @@ class TypeObject( object ):
             [ delattr( self, k ) for k in key ]
 
     def __update__( self, kvIter = None, **kwArgs ):
-        def _walk( itr, stack ):
+        def _walk( itr, parent ):
             for key, v in itr:
-                if self.__is_mapping( v ) and key in stack[-1]:
-                    _walk( self.__items( v ), stack + [stack[-1][key]] )
+                if self.__is_mapping( v ):
+                    if not self.__is_mapping( getattr( parent, key, None ) ):
+                        setattr( parent, key, type(self)() )
+                    _walk( self.__items( v ), getattr( parent, key ) )
                 else:
-                    setattr( stack[-1], key, v )
+                    setattr( parent, key, v )
         # assign mappings one after another to merge nested mappings!
-        kvIter and _walk( self.__items(kvIter), [self] )
-        kwArgs and _walk( kwArgs.items(), [self] )
+        kvIter and _walk( self.__items(kvIter), self )
+        kwArgs and _walk( kwArgs.items(), self )
 
     def __getstate__( self ):
         return {k: (v.__getstate__() or v) for k, v in self.__items( self )}
