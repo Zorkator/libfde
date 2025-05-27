@@ -694,9 +694,10 @@ end module
     type(Ref_t),    optional, target :: ref_
     type(Item_t),   optional, target :: item_
     type(TypeInfo_t),        pointer :: dt, refType, itemType
+    type(Item_t)                     :: temporary_item
 
     refType  => type_of(temporary_ref)
-    itemType => type_of(item_)
+    itemType => type_of(temporary_item)
 
     if     (present(ref_))  then; call visit_ref( ref_ )
     elseif (present(item_)) then; call visit_item( item_ )
@@ -754,9 +755,10 @@ end module
     type(Item_t), optional, target :: item_
     type(TypeInfo_t),      pointer :: res
     type(TypeInfo_t),      pointer :: refType, itemType
+    type(Item_t)                   :: temporary_item
 
     refType  => type_of(temporary_ref)
-    itemType => type_of(item_)
+    itemType => type_of(temporary_item)
 
     if     (present(ref_))  then; call visit_ref( ref_ )
     elseif (present(item_)) then; call visit_item( item_ )

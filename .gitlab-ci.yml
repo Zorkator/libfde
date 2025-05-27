@@ -4,10 +4,10 @@ stages:
 
 linux:
   tags: ["gitlab-org-docker"]
-  image: fedora:33
+  image: fedora:41
   stage: build
   before_script:
-    - dnf install -y g++ gcc-gfortran cmake gcovr python3-pip
+    - dnf install -y g++ gcc-gfortran cmake gcovr python3-pip python3-wheel python3-setuptools
   script:
     - mkdir -p _build coverage
     - pushd _build
@@ -17,8 +17,7 @@ linux:
     - gcovr -r .. src libfortres
     - gcovr -r .. src libfortres --xml=../coverage.xml --html-details=../coverage/coverage.html
     - popd
-    - python3 -m pip install wheel
-    - FDEPATH=_build/package/Debug/bin python3 setup.py bdist_wheel
+    - FDEPATH=_build/package/Debug/bin python setup.py bdist_wheel
   coverage: '/^TOTAL.*\s+(\d+\%)$/'
   artifacts:
     reports:
@@ -31,7 +30,7 @@ linux:
 
 test_wheel:
   tags: ["gitlab-org-docker"]
-  image: fedora:33
+  image: fedora:41
   stage: test
   before_script:
     - dnf install -y gcc-gfortran python3-pip python3-virtualenv
