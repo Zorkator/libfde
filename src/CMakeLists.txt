@@ -113,7 +113,7 @@ if(MSVC)
 endif()
 
 if(NOT MSVC)
-  set_property(TARGET fde PROPERTY LINKER_LANGUAGE CXX)
+  set_property(TARGET fde PROPERTY LINKER_LANGUAGE Fortran)
 endif()
 
 cmi_set_directory(fde)
