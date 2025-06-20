@@ -112,4 +112,8 @@ if(MSVC)
   set_property(TARGET fde PROPERTY OUTPUT_NAME ${FDE_NAME}.${FDE_VERSION_SO})
 endif()
 
+if(NOT MSVC)
+  set_property(TARGET fde PROPERTY LINKER_LANGUAGE Fortran)
+endif()
+
 cmi_set_directory(fde)
