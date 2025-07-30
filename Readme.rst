@@ -265,7 +265,7 @@ Nevertheless, **a lot** of things can be improved and some aspects need further 
 Copyright and License Information
 ---------------------------------
 
-Copyright (c) 2024 Josef Scheuer.
+Copyright (c) 2025 Josef Scheuer.
 All rights reserved.
 
 See the file "LICENSE" for terms &
