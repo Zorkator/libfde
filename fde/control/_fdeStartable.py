@@ -1,7 +1,9 @@
 
-from ._startable import Startable
 from ctypes      import c_int32, c_char_p, c_size_t, byref
+from ._startable import Startable, mixin
 
+
+#@mixin
 #-------------------------------------
 class FDEStartable( Startable ):
 #-------------------------------------

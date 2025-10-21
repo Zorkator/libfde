@@ -1,13 +1,12 @@
 
-from ..tools import cached_property
+from ._controllable import Controllable, mixin
+from ..tools        import cached_property
 
-#---------------------------
-class Hookable(object):
-#---------------------------
-    """Mixin class extending Controllable types.
-    Used Interfaces:
-      Controllable: about
-
+@mixin.requires( Controllable )
+#--------------------------------------
+class Hookable( object ):
+#--------------------------------------
+    """Mixin class extending `Controllable` types.
     Hookable provides cashed access to certain hook scope, determined by option hooksPath
     """
     __opts__      = dict( hooksPath = '{rootId}/hooks' )

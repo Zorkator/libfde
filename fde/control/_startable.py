@@ -1,7 +1,10 @@
 
 import os
-from ..tools import makedirs, NullGuard, debug
+from ..tools        import makedirs, NullGuard, debug, mixin
+from ._controllable import Controllable
 
+
+@mixin.requires( Controllable )
 #----------------------------
 class Startable(object):
 #----------------------------

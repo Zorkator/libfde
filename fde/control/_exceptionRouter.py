@@ -1,10 +1,15 @@
 
 import sys, traceback, threading
-from ctypes import c_int32, c_char_p, c_size_t, byref
+from ctypes            import c_int32, c_char_p, c_size_t, byref
+from ..tools           import mixin
+from ._fdeControllable import FDEControllable
+
 
 def threadID():
     return threading.current_thread().ident
 
+
+@mixin.requires( FDEControllable )
 #--------------------------------------------
 class ExceptionRouter( object ):
 #--------------------------------------------

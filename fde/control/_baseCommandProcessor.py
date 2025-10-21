@@ -1,11 +1,17 @@
 
 from traceback       import format_exception
 from ._actionContext import ActionContextHost
+from ._startable     import Startable
+from ._stateful      import Stateful
+from ._controllable  import Controllable
+from ..tools         import mixin
 
+
+@mixin( Startable, Stateful, Controllable )
 #--------------------------------------------------
 class BaseCommandProcessor( ActionContextHost ):
 #--------------------------------------------------
-    """Mixin class extending Startable, Stateful Controller types.
+    """Mixin class extending Startable, Stateful Controllable types.
     BaseCommandProcessor provides a simple command loop for executing Stateful
       codes interactively.
     """

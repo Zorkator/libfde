@@ -1,8 +1,10 @@
 
-from ..tools         import cached_property
+from ..tools         import cached_property, mixin
 from ._actionContext import ActionContextHost
+from ._controllable  import Controllable
 
 
+@mixin.requires( Controllable )
 #-------------------------------------
 class Stateful( ActionContextHost ):
 #-------------------------------------

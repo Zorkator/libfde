@@ -1,11 +1,12 @@
 
 import os
-from ..tools import OptionProcessor, Caching, cached_property, debug
+from ..tools import OptionProcessor, Caching, cached_property, debug, mixin, abstractmethod
 
+
+@mixin
 #-------------------------------------------------
 class Controllable( Caching, OptionProcessor ):
 #-------------------------------------------------
-
     __opts__ = dict( rootId = '{classId}' )
 
     @cached_property
@@ -54,7 +55,7 @@ class Controllable( Caching, OptionProcessor ):
 
 
     # methods to be [re-]implemented by subclasses
-
+    @abstractmethod
     def __initialize__( self, rootId ):
         """Should do initialization of state etc. using rootId."""
-        raise NotImplementedError
+        ...

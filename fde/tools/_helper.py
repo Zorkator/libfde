@@ -75,7 +75,7 @@ class NullGuard( object ):
         return
 
 
-# -------------------------------------------
+#-------------------------------------------
 class _arg( object ):
 #-------------------------------------------
     def __init__( self, default ):
@@ -100,3 +100,44 @@ def auto_raise( obj, what = None ):
 def _decorate( kvPairs, **kwArgs ):
     for k, v in dict( kvPairs, **kwArgs ).items():
         yield ('_' + k, v)
+
+
+from functools import wraps, partial
+from itertools import chain
+from abc       import ABCMeta, abstractmethod
+from six       import add_metaclass
+
+#-------------------------------------------
+class _mixin( metaclass=ABCMeta ):
+#-------------------------------------------
+    @property
+    @abstractmethod
+    def __required_bases__( self ):
+        ...
+
+    def __init_subclass__( _class, type = None, **kwArgs ):
+        super().__init_subclass__( **kwArgs )
+        if type is not _mixin:
+            required = set( chain( *(vars(c).get('__required_bases__', ()) for c in _class.mro()[:-1]) ) )
+            if len( missing := [c for c in required if not issubclass( _class, c )] ):
+                setattr( _class, '__missing_bases__', missing )
+                _class.__abstractmethods__ = frozenset({'__missing_bases__'})
+                _class
+                #raise TypeError( f'Mixin class {_class.__name__} must inherit from {", ".join(missing)}.' )
+
+    # decorator
+    @classmethod
+    def requires( _class, *reqClasses ):
+        return partial( _class.__tool, reqClasses )
+
+    @staticmethod
+    def __tool( reqClasses, cls ):
+        if not issubclass( cls, _mixin ):
+            cls = wraps(cls, updated=())( type( '#', (_mixin,) + cls.__bases__, {'__required_bases__': reqClasses}, type=_mixin ) )
+        return cls
+
+
+def mixin( cls ):
+    return _mixin.requires()( cls )
+
+vars(mixin)['requires'] = _mixin.requires
