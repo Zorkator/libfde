@@ -1,7 +1,6 @@
 
 from traceback       import format_exception
 from ._actionContext import ActionContextHost
-from ._hookable      import connect_to_hook
 
 #--------------------------------------------------
 class BaseCommandProcessor( ActionContextHost ):
@@ -13,8 +12,6 @@ class BaseCommandProcessor( ActionContextHost ):
     commandPrefix = 'cmd_'
     _prompt       = '>>> '
     _loopExit     = frozenset()
-    __opts__      = dict( commandHooks = 'NewTimeStep' )
-    __conv__      = dict( commandHooks = lambda s: [h.strip() for h in s.split( ',' )] )
 
     def __init__( self, *args, **kwArgs ):
         super(BaseCommandProcessor, self).__init__( *args, **kwArgs )
