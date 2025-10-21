@@ -18,6 +18,11 @@ class BaseCommandProcessor( ActionContextHost ):
         self._doProcess = True
 
 
+    def initialize( self ):
+        connect_to_hook( *self.opts.commandHooks )( self.processCommands )
+        super(BaseCommandProcessor, self).initialize()
+
+
     def processCommands( self ):
         while self._doProcess:
             if self.opts.debug > 0:
