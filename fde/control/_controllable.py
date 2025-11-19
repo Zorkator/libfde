@@ -1,6 +1,7 @@
 
 import os
-from ..tools import OptionProcessor, Caching, cached_property, debug, mixin, abstractmethod
+from ..abstract import mixin, abstractmethod
+from ..tools    import OptionProcessor, Caching, cached_property, debug
 
 
 @mixin

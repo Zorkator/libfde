@@ -3,8 +3,7 @@ from traceback       import format_exception
 from ._actionContext import ActionContextHost
 from ._startable     import Startable
 from ._stateful      import Stateful
-from ._controllable  import Controllable
-from ..tools         import mixin
+from ._controllable  import Controllable, mixin
 
 
 @mixin( Startable, Stateful, Controllable )

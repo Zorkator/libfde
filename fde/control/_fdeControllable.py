@@ -1,6 +1,6 @@
 
 from ..tools        import LibLoader, cached_property
-from ._controllable import Controllable
+from ._controllable import Controllable, mixin
 
 #--------------------------------------------
 class FDEControllable( Controllable ):

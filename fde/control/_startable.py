@@ -1,12 +1,12 @@
 
 import os
-from ..tools        import makedirs, NullGuard, debug, mixin
-from ._controllable import Controllable
+from ..tools        import makedirs, NullGuard, debug
+from ._controllable import Controllable, mixin
 
 
 @mixin.requires( Controllable )
 #----------------------------
-class Startable(object):
+class Startable( object ):
 #----------------------------
     """Mixin class extending Controllable types.
 

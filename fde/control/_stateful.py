@@ -1,7 +1,7 @@
 
-from ..tools         import cached_property, mixin
+from ..tools         import cached_property
 from ._actionContext import ActionContextHost
-from ._controllable  import Controllable
+from ._controllable  import Controllable, mixin
 
 
 @mixin.requires( Controllable )
