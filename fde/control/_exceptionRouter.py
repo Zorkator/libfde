@@ -1,14 +1,14 @@
 
 import sys, traceback, threading
 from ctypes            import c_int32, c_char_p, c_size_t, byref
-from ._fdeControllable import FDEControllable, mixin
+from ._fdeControllable import FDEControllable
 
 
 def threadID():
     return threading.current_thread().ident
 
 
-@mixin.requires( FDEControllable )
+@FDEControllable.mixin
 #--------------------------------------------
 class ExceptionRouter( object ):
 #--------------------------------------------
@@ -23,6 +23,8 @@ class ExceptionRouter( object ):
       __except__( self, _type, _value, _traceback )
     So in case the native code provides such function with another signature this method could be
       reimplemented to handle this.
+    Used Interfaces:
+      FDEControllable: handle, opts
     """
     __opts__ = dict( throwFunc = 'throw_c_' )
 

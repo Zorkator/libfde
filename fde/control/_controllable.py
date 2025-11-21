@@ -21,7 +21,7 @@ class Controllable( Caching, OptionProcessor ):
         return dict( pid     = os.getpid()
                    , id      = self._id
                    , classId = type(self).__name__
-                   , rootId  = self.opts.rootId.format( classId = type(self).__name__ )
+                   , rootId  = self.opts.rootId.format( classId=type(self).__name__ )
                    )
 
 

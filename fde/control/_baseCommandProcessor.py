@@ -3,10 +3,10 @@ from traceback       import format_exception
 from ._actionContext import ActionContextHost
 from ._startable     import Startable
 from ._stateful      import Stateful
-from ._controllable  import Controllable, mixin
+from ._controllable  import Controllable
 
 
-@mixin( Startable, Stateful, Controllable )
+@Controllable.mixin.requires( Startable, Stateful )
 #--------------------------------------------------
 class BaseCommandProcessor( ActionContextHost ):
 #--------------------------------------------------
@@ -21,11 +21,6 @@ class BaseCommandProcessor( ActionContextHost ):
     def __init__( self, *args, **kwArgs ):
         super(BaseCommandProcessor, self).__init__( *args, **kwArgs )
         self._doProcess = True
-
-
-    def initialize( self ):
-        connect_to_hook( *self.opts.commandHooks )( self.processCommands )
-        super(BaseCommandProcessor, self).initialize()
 
 
     def processCommands( self ):

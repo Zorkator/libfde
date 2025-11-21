@@ -1,7 +1,8 @@
 
 from ._baseCommandProcessor import BaseCommandProcessor
-from ._hookable             import connect_to_hook
+from ._hookable             import Hookable, connect_to_hook
 
+@Hookable.mixin
 #-------------------------------------------------------
 class TickedCommandProcessor( BaseCommandProcessor ):
 #-------------------------------------------------------
@@ -15,11 +16,9 @@ class TickedCommandProcessor( BaseCommandProcessor ):
         super(TickedCommandProcessor, self).__init__( *args, **kwArgs )
         self._tickQ = []
 
-
     def initialize( self ):
         connect_to_hook( *self.opts.commandHooks )( self.processCommands )
-        super(BaseCommandProcessor, self).initialize()
-
+        super(TickedCommandProcessor, self).initialize()
 
     def processCmd( self, cmd = None ):
         # on pending tick, return a queued _loopExit to end current round of processing commands

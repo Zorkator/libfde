@@ -1,10 +1,10 @@
 
 import os
 from ..tools        import makedirs, NullGuard, debug
-from ._controllable import Controllable, mixin
+from ._controllable import Controllable, abstractmethod
 
 
-@mixin.requires( Controllable )
+@Controllable.mixin
 #----------------------------
 class Startable( object ):
 #----------------------------
@@ -77,8 +77,10 @@ class Startable( object ):
 
     # methods to be [re-]implemented by subclasses
 
+    @abstractmethod
     def __start__( self, *args, **kwArgs ):
-        raise NotImplementedError
+        ...
 
+    @abstractmethod
     def __finalize__( self, code, **kwArgs ):
-        raise NotImplementedError
+        ...
