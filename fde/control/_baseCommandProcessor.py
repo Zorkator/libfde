@@ -1,6 +1,7 @@
 
 from traceback       import format_exception
 from ._actionContext import ActionContextHost
+from ._hookable      import connect_to_hook
 
 #--------------------------------------------------
 class BaseCommandProcessor( ActionContextHost ):
@@ -11,6 +12,9 @@ class BaseCommandProcessor( ActionContextHost ):
     """
     commandPrefix = 'cmd_'
     _prompt       = '>>> '
+    _loopExit     = frozenset()
+    __opts__      = dict( commandHooks = 'NewTimeStep' )
+    __conv__      = dict( commandHooks = lambda s: [h.strip() for h in s.split( ',' )] )
 
     def __init__( self, *args, **kwArgs ):
         super(BaseCommandProcessor, self).__init__( *args, **kwArgs )
@@ -21,7 +25,7 @@ class BaseCommandProcessor( ActionContextHost ):
         while self._doProcess:
             if self.opts.debug > 0:
                 from ..tools import debug; debug()
-            if self.processCmd() == StopIteration:
+            if self.processCmd() is self._loopExit:
                 break
 
 
@@ -31,7 +35,8 @@ class BaseCommandProcessor( ActionContextHost ):
             if   hasattr( obj, 'strip' )   : res = self.evalCommand( obj )
             elif hasattr( obj, 'keys' )    : res = self.setData( obj )
             elif hasattr( obj, '__iter__' ): res = self.getData( obj )
-            else                           : res = "unknown command"
+            else                           : res = LookupError("unknown command")
+        except StopIteration               : res = self.cmd_exit()
         except Exception as e              : res = e
         #
         if cmd is None: self.send( res )
