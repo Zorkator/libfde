@@ -54,6 +54,6 @@ class Hookable(object):
 def connect_to_hook( *hookIds ):
     """mark method for connecting it to given list of hookIds."""
     def _decorate( m ):
-        m._hookIds = hookIds
+        vars(m).setdefault( '_hookIds', [] ).extend( hookIds )
         return m
     return _decorate
