@@ -9,13 +9,13 @@ class Controllable( Caching, OptionProcessor ):
     __opts__ = dict( rootId = '{classId}' )
 
     @cached_property
-    def about( self ):
+    def about( self ) -> dict:
         """return dictionary of instance information."""
         return self._get_about()
 
 
     # keep this routine overridable!
-    def _get_about( self ):
+    def _get_about( self ) -> dict:
         return dict( pid     = os.getpid()
                    , id      = self._id
                    , classId = type(self).__name__
