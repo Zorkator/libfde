@@ -1,25 +1,27 @@
 
 import os
-from ..tools import OptionProcessor, Caching, cached_property, debug
+from ..abstract import mixin, abstractmethod
+from ..tools    import OptionProcessor, Caching, cached_property, debug
 
+
+@mixin
 #-------------------------------------------------
 class Controllable( Caching, OptionProcessor ):
 #-------------------------------------------------
-
     __opts__ = dict( rootId = '{classId}' )
 
     @cached_property
-    def about( self ):
+    def about( self ) -> dict:
         """return dictionary of instance information."""
         return self._get_about()
 
 
     # keep this routine overridable!
-    def _get_about( self ):
+    def _get_about( self ) -> dict:
         return dict( pid     = os.getpid()
                    , id      = self._id
                    , classId = type(self).__name__
-                   , rootId  = self.opts.rootId.format( classId = type(self).__name__ )
+                   , rootId  = self.opts.rootId.format( classId=type(self).__name__ )
                    )
 
 
@@ -54,7 +56,7 @@ class Controllable( Caching, OptionProcessor ):
 
 
     # methods to be [re-]implemented by subclasses
-
+    @abstractmethod
     def __initialize__( self, rootId ):
         """Should do initialization of state etc. using rootId."""
-        raise NotImplementedError
+        ...

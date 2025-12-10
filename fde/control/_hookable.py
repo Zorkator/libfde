@@ -1,14 +1,16 @@
 
-from ..tools import cached_property
+from ._controllable import Controllable
+from ..tools        import cached_property
 
-#---------------------------
-class Hookable(object):
-#---------------------------
-    """Mixin class extending Controllable types.
+
+@Controllable.mixin
+#--------------------------------------
+class Hookable( object ):
+#--------------------------------------
+    """Mixin class extending `Controllable` types.
+    Hookable provides cashed access to certain hook scope, determined by option hooksPath
     Used Interfaces:
       Controllable: about
-
-    Hookable provides cashed access to certain hook scope, determined by option hooksPath
     """
     __opts__      = dict( hooksPath = '{rootId}/hooks' )
     __hookAlias__ = dict()
@@ -54,6 +56,6 @@ class Hookable(object):
 def connect_to_hook( *hookIds ):
     """mark method for connecting it to given list of hookIds."""
     def _decorate( m ):
-        m._hookIds = hookIds
+        vars(m).setdefault( '_hookIds', [] ).extend( hookIds )
         return m
     return _decorate

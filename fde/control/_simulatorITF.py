@@ -1,5 +1,5 @@
 
-from ._hookable import Hookable
+from ._hookable import Hookable, connect_to_hook
 from ._stateful import Stateful
 
 #-----------------------------------------
