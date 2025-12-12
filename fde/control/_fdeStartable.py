@@ -19,6 +19,8 @@ class FDEStartable( Startable ):
         return retCode.value
 
 
-    def __finalize__( self, code, **kwArgs ):
+    def __finalize__( self, code, unload = False, **kwArgs ):
         self.handle[ self.opts.finalizeFunc, lambda: None ]()
+        if unload:
+            del self.handle
         return code
