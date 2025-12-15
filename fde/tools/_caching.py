@@ -19,11 +19,18 @@ class Caching( object ):
         state['_stock'] = TypeObject( self._preset )
         return state
 
+    def __enter__( self ):
+        return self
+
+    def __exit__( self, *args ):
+        self.cleanup()
+
     def cleanup( self ):
         for f in filter( callable, self._stock.__stale__.values() ):
             try   : f()
             except: pass
         self._stock.__stale__.clear()
+        return self
 
 
 def f_argcount( f ):
