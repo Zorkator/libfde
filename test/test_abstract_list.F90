@@ -12,6 +12,15 @@ module test_list
   use iso_c_binding
   implicit none
 
+  type MyNode
+    type(ListNode_t) :: super
+    integer*4        :: ival
+    real*4           :: rval
+  end type
+
+  integer :: chk
+
+
   contains
 
   subroutine printItems( idx )
@@ -28,7 +37,7 @@ module test_list
 
   subroutine printRange( beg, end )
     type(ListIndex_t) :: beg, end
-    
+
     print *, "items:"
     do while (beg /= end)
       print *, int4(beg)
@@ -37,7 +46,7 @@ module test_list
     print *, "########"
   end subroutine
 
-  
+
   subroutine fill( list, beg, end, stride )
     type(List_t)        :: list
     integer*4, optional :: beg, end, stride
@@ -56,7 +65,7 @@ module test_list
     end do
   end subroutine
 
-  
+
   subroutine printList( list )
     type(List_t)      :: list
     type(ListIndex_t) :: idx
@@ -77,7 +86,7 @@ module test_list
     type(Item_t)         :: var
     type(Ref_t)          :: ref1
     type(ListIndex_t)    :: idx
-    type(String_t)       :: strg 
+    type(String_t)       :: strg
     procedure(), pointer :: castProc => null()
 
     call initialize( l1 )
@@ -86,7 +95,7 @@ module test_list
     call initialize( l4 )
     call initialize( l5 )
     call initialize( l6 )
-    call initialize( l7 ) 
+    call initialize( l7 )
 
     var = 42
     call append( l6, new_ListNode_of(var) )
@@ -120,7 +129,7 @@ module test_list
       call append( l4, new_ListNode_of('test') )
     end do
 
-    ! list of references ... 
+    ! list of references ...
     ref1 = ref_of(cnt)
     do cnt = 1, 3
       call append( l5, new_ListNode_of(ref1) )
@@ -190,7 +199,7 @@ module test_list
 
     _exp("empty")
     call printItems( index( l1, tail, -1 ) )
-    
+
     call insert( index(l2),  index(l1, 5), index(l1, last) )
     _exp("1..4")
     call printItems( index(l1) )
@@ -244,7 +253,7 @@ module test_list
     print *, is_valid(idx) !< should be invalid!
     call printList(l1) !< 1-10
     call printList(l2) !< empty
-    
+
     idx = index(l1, first, 0) !< fixed index
     print *, is_valid(idx) !< should be valid!
     call insert( index(l2), idx )
@@ -292,7 +301,6 @@ module test_list
     ref1 = ref_of(l1)
 
     print *, len(List(ref1))
-
     print *, real4( index(l1) )
 
     ref1 = clone(ref1)
@@ -312,15 +320,10 @@ module test_list
 
 
   subroutine test_anonymous_nodes()
-    type MyNode
-      type(ListNode_t) :: super
-      integer*4        :: ival
-      real*4           :: rval
-    end type
     type(MyNode), pointer :: node
     type(List_t)          :: someList
     type(ListIndex_t)     :: idx
-    integer               :: i, chk
+    integer               :: i
 
     call initialize( someList )
 
@@ -330,7 +333,7 @@ module test_list
       node%rval = i * 0.345
       call append( someList, node%super )
     end do
-    
+
     !call foreach( someList, initDebug )
     !call foreach( someList, printNode )
     call sort( someList, is_lower_ )
@@ -340,41 +343,35 @@ module test_list
     chk = 1
     call foreach( someList, chkNode )
     call clear( someList )
-
-  contains
-
-    subroutine initDebug( node )
-      type(MyNode), target :: node
-      type XNode
-        integer(8) :: val(4)
-      end type
-      type(XNode), pointer :: ptr
-      call c_f_pointer( c_loc(node), ptr )
-      ptr%val(4) = node%ival
-    end subroutine
-
-
-    subroutine chkNode( node )
-      type(MyNode) :: node
-      if (node%ival /= chk) then; call throw( ValueError, "value mismatch at chkNode" )
-                            else; chk = chk + 1
-      end if
-    end subroutine
-
-
-    subroutine printNode( node )
-      type(MyNode) :: node
-      print *, node%ival, node%rval
-    end subroutine
-
-
-    logical &
-    function is_lower_( left, right ) result(res)
-      type(MyNode) :: left, right
-      res = left%ival < right%ival     
-    end function
   end subroutine
 
+  subroutine initDebug( node )
+    type(MyNode), target :: node
+    type XNode
+      integer(8) :: val(4)
+    end type
+    type(XNode), pointer :: ptr
+    call c_f_pointer( c_loc(node), ptr )
+    ptr%val(4) = node%ival
+  end subroutine
+
+  subroutine chkNode( node )
+    type(MyNode) :: node
+    if (node%ival /= chk) then; call throw( ValueError, "value mismatch at chkNode" )
+                          else; chk = chk + 1
+    end if
+  end subroutine
+
+  subroutine printNode( node )
+    type(MyNode) :: node
+    print *, node%ival, node%rval
+  end subroutine
+
+  logical &
+  function is_lower_( left, right ) result(res)
+    type(MyNode) :: left, right
+    res = left%ival < right%ival
+  end function
 end module
 
 

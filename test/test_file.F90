@@ -54,15 +54,12 @@ contains
       case (IOError); continue !< caught expected exception
       case   default; call throw( RuntimeError, 'expected IOError not thrown!' )
     end select
+  end subroutine
 
-    contains
-
-    subroutine open_bad_unit()
-      ! Opening a bad unit number with the open-statement would terminate the program.
-      ! The fde_file-open is expected to throw a IOError instead!
-      call open( -12, _testfile, form="UNFORMATTED", action='WRITE' )
-    end subroutine
-
+  subroutine open_bad_unit()
+    ! Opening a bad unit number with the open-statement would terminate the program.
+    ! The fde_file-open is expected to throw a IOError instead!
+    call open( -12, _testfile, form="UNFORMATTED", action='WRITE' )
   end subroutine
 
 end module
