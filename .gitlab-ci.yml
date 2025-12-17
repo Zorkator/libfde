@@ -4,9 +4,10 @@ stages:
 
 linux:
   tags: ["gitlab-org-docker"]
-  image: fedora:41
+  image: fedora:43
   stage: build
   before_script:
+    - dnf update -y
     - dnf install -y g++ gcc-gfortran cmake gcovr python3-pip python3-wheel python3-setuptools
   script:
     - mkdir -p _build coverage
