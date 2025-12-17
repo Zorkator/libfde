@@ -54,6 +54,7 @@ set(tests
   ./test_simulator.F90
   #./test_simulator_driver.F90
   ./test_sorting.F90
+  ./test_uservisitor.F90
   ./test_string.F90
   ./test_plugin.F90
 )
