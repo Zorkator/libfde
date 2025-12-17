@@ -1,5 +1,5 @@
 
-from ctypes import CDLL as _CDLL
+from ctypes import CDLL as _CDLL, c_int64
 from os     import environ as _env, pathsep as _pathDelim, path as _path, getpid as _getpid
 from glob   import glob
 import logging
@@ -7,6 +7,13 @@ import platform
 
 _isWin = platform.system() == "Windows"
 _PATH  = ('LD_LIBRARY_PATH', 'PATH')[_isWin]
+
+if _isWin:
+    from ctypes import windll
+    freeLibrary = windll.kernel32.FreeLibrary
+else:
+    from ctypes import cdll, util
+    freeLibrary = cdll.LoadLibrary( util.find_library('dl') ).dlclose
 
 logging.basicConfig()
 
@@ -27,6 +34,9 @@ class CDLL_t( _CDLL ):
             return ident[-1]
         else:
             return super(CDLL_t, self).__getitem__( ident )
+
+    def unload( self ):
+        freeLibrary( c_int64(self._handle) )
 
 
 #-------------------------------------------
