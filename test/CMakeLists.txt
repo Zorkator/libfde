@@ -45,6 +45,7 @@ set(tests
   ./test_charstacker.F90
   ./test_crc.F90
   ./test_dyncast.F90
+  ./test_exception.F90
   ./test_fde.F90
   ./test_file.F90
   ./test_hash_map.F90
