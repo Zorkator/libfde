@@ -4,12 +4,12 @@
 module test_sorting
   use fde_sort
   use fde_exception
+  real(8), dimension(:), allocatable :: array
+  integer                            :: i, cmp, swp, timing
+
   contains
 
   subroutine test_sort()
-    real(8), dimension(:), allocatable :: array
-    integer                            :: i, cmp, swp, timing
-
     allocate( array(10000) )
     cmp = 0; swp = 0
 
@@ -37,42 +37,39 @@ module test_sorting
     call init_random_seed(0)
     call random_number( array )
     _sortArrayBy( heapsort, " random" )
-
-  contains
-
-    logical &
-    function is_lower_( l, r ) result(res)
-      integer :: l, r
-      res = array(l) < array(r)
-      cmp = cmp + 1
-    end function
-
-    logical &
-    function is_greater_( l, r ) result(res)
-      integer :: l, r
-      res = array(l) > array(r)
-      cmp = cmp + 1
-    end function
-
-    subroutine swap_( l, r )
-      integer :: l, r
-      real(8) :: t
-      t = array(l)
-      array(l) = array(r)
-      array(r) = t
-      swp = swp + 1
-    end subroutine
-
-    subroutine chk_array()
-      do i = 2, size(array)
-        if (array(i-1) > array(i)) &
-          call throw( AssertionError, "unsorted sequence!" )
-      end do
-      print *, cmp, "comparisons", swp, "swaps"
-      cmp = 0; swp = 0
-    end subroutine
   end subroutine
 
+  logical &
+  function is_lower_( l, r ) result(res)
+    integer :: l, r
+    res = array(l) < array(r)
+    cmp = cmp + 1
+  end function
+
+  logical &
+  function is_greater_( l, r ) result(res)
+    integer :: l, r
+    res = array(l) > array(r)
+    cmp = cmp + 1
+  end function
+
+  subroutine swap_( l, r )
+    integer :: l, r
+    real(8) :: t
+    t = array(l)
+    array(l) = array(r)
+    array(r) = t
+    swp = swp + 1
+  end subroutine
+
+  subroutine chk_array()
+    do i = 2, size(array)
+      if (array(i-1) > array(i)) &
+        call throw( AssertionError, "unsorted sequence!" )
+    end do
+    print *, cmp, "comparisons", swp, "swaps"
+    cmp = 0; swp = 0
+  end subroutine
 
   subroutine init_random_seed( val )
     integer              :: val
@@ -100,7 +97,7 @@ module test_sorting
 end module
 
 program testing
-  use test_sorting 
+  use test_sorting
 
   call test_sort()
 end program

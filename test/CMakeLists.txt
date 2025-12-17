@@ -45,6 +45,7 @@ set(tests
   ./test_charstacker.F90
   ./test_crc.F90
   ./test_dyncast.F90
+  ./test_exception.F90
   ./test_fde.F90
   ./test_file.F90
   ./test_hash_map.F90
@@ -53,6 +54,7 @@ set(tests
   ./test_simulator.F90
   #./test_simulator_driver.F90
   ./test_sorting.F90
+  ./test_uservisitor.F90
   ./test_string.F90
   ./test_plugin.F90
 )
