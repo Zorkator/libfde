@@ -13,16 +13,15 @@ class NullHandle( object ):
 # -------------------------------------------
 class Wallet( object ):
 #-------------------------------------------
-    def __init__( self, members=None ):
-        if members is not None:
-            self.__dict__.update( members )
+    def __init__( self, kwSeq = {}, **kwArgs ):
+        self.__dict__.update( kwSeq, **kwArgs )
 
 
 #-------------------------------------------
 class TypeObject( object ):
 #-------------------------------------------
-    def __init__( self, kwIter = {}, **kwArgs ):
-        self.__dict__.update( **dict( kwIter, **kwArgs ) )
+    def __init__( self, kwSeq = {}, **kwArgs ):
+        self.__dict__.update( kwSeq, **kwArgs )
 
 
     def __iter__( self ):
@@ -30,25 +29,25 @@ class TypeObject( object ):
 
 
     def __contains__( self, key ):
-        if hasattr( key, 'strip' ):
+        try:
             return hasattr( self, key )
-        else:
+        except TypeError:
             return all( hasattr( self, k ) for k in key )
 
 
     def __getitem__( self, key ):
-        if hasattr( key, 'strip' ):
+        try:
             return getattr( self, key )
-        else:
+        except TypeError:
             return (getattr( self, k ) for k in key)
 
 
     def __setitem__( self, key, value ):
-        if hasattr( key, 'strip' ):
+        try:
             setattr( self, key, value )
-        else:
+        except TypeError:
             assert len(key) == len(value), "mismatch in number of keys and values"
-            [ setattr( self, *kv ) for kv in zip(key,value) ]
+            [setattr( self, *kv ) for kv in zip(key, value)]
 
     def __getstate__( self ):
         return dict( zip( self, self[self] ) )
