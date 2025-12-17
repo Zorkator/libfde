@@ -43,10 +43,15 @@ class FDEControllable( Controllable ):
       """
 
     @cached_property
-    def handle( self ):
+    def handle( self, stale_cleanup = None ):
         """lazy-load property returning handle of loaded library."""
+        callable(stale_cleanup) and stale_cleanup()
         opts = {'--debug': self.opts.debug > 2, '--verbose': self.opts.verbosity > 2}
         return LibLoader( filePath=self.opts.lib, prioPathEnv=self.opts.libEnv, restorePATH=self.opts.restorePATH, **opts ).handle
+
+    @handle.deleter
+    def handle( self, hdl = None ):
+        return hdl.unload #< return stale cleanup
 
 
     def __initialize__( self, rootId ):
