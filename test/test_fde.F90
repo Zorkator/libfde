@@ -423,15 +423,11 @@ module mod_basic!{{{
 # define _assert_not( expr ) \
     _assert( .not. (expr) )
 
-# define _visit_(typeId) \
-    call accept( _paste(v_,typeId), streamer%super )
-
 contains
 
   subroutine test_string()!{{{
     character(len=20) :: text = "TestInGEr -- T�xT"
     character(len=20) :: txtout
-
 
     txtout = lower( text )
     call to_lower( text )
@@ -466,6 +462,7 @@ contains
     call to_stripped( v_string )
     print *, '>>' // str(v_string) // '<<'
 
+    v_item = 42.5
     call stream( v_item, fout )
     call stream( v_bool1_1d, fout )
   end subroutine!}}}
@@ -1052,6 +1049,9 @@ contains
     call delete( r )
   end subroutine!}}}
 
+# define _visit_(typeId) \
+    call accept( _paste(v_,typeId), streamer%super )
+
   subroutine test_visitor()!{{{
     _visit_(bool1)
     _visit_(bool2)
@@ -1079,18 +1079,24 @@ contains
     call accept( v_item, streamer%super )
   end subroutine!}}}
 
+# define _callTest_(id)                   \
+    print *, repeat("*",40)              ;\
+    print *, "running test_" // _str(id) ;\
+    print *, repeat("*",40)              ;\
+    call _paste(test_,id)()
+
   subroutine test_basic()
-    call test_string()
-    call test_ref()
-    call test_item()
-    call test_dyntype()
-    call test_dyncast()
-    call test_list()
-    call test_usernode_list()
-    call test_hashmap()
-    call test_hashmap_nesting()
-    call test_hashmap_cloning()
-    call test_visitor()
+    _callTest_(string)
+    _callTest_(ref)
+    _callTest_(item)
+    _callTest_(dyntype)
+    _callTest_(dyncast)
+    _callTest_(list)
+    _callTest_(usernode_list)
+    _callTest_(hashmap)
+    _callTest_(hashmap_nesting)
+    _callTest_(hashmap_cloning)
+    _callTest_(visitor)
   end subroutine
 end module!}}}
 

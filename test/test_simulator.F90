@@ -84,7 +84,7 @@ module sim_data
     end do
 
     do i = 1,size(name_array)
-      write( name_array(i), '(A4I5)' ) 'name', i
+      write( name_array(i), '(A4,I5)' ) 'name', i
     end do
   end subroutine
 end module
