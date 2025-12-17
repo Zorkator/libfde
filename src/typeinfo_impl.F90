@@ -16,7 +16,7 @@ module impl_typeinfo__
     dummy%ptr => null()
     call vstr%visit( vstr, dummy, ti )
   end subroutine
-  
+
   subroutine type_stream_wrap_( wrap, ti, outs )
     use fde_ostream
     use fde_convert
@@ -27,6 +27,32 @@ module impl_typeinfo__
     type(ostream_t)  :: outs
     ! do nothing - we can't stream void!
   end subroutine
+
+  integer &
+  function dim_streamBuffer( streamProc ) result(resLen)
+    procedure() :: streamProc
+    integer     :: bufLen, status
+
+    bufLen = 32; status = 1
+    do while (.true.)
+      bufLen = bufLen * 2
+      resLen = try_streaming( streamProc, bufLen, status )
+      if (status == 0) exit
+    end do
+  end function
+
+  integer &
+  function try_streaming( streamProc, bufLen, status ) result(resLen)
+    procedure()           :: streamProc
+    integer               :: bufLen, status
+    character(len=bufLen) :: buffer
+
+    !buffer = "" !< memory inspector wants us to initialize buffer ... ???
+    call streamProc( buffer, status )
+    if (status == 0) then
+      resLen = len_trim( buffer ) - 1
+    end if
+  end function
 
 end module
 
@@ -60,7 +86,7 @@ end module
 !_PROC_EXPORT(typeinfo_init)
   subroutine typeinfo_init( self, typeId, baseType, bitSize, rank, subtype, &
                             acceptProc, assignProc, cloneObjProc, cloneRefProc, deleteProc, initProc, shapeProc, streamProc, tryStreamProc )
-    use impl_typeinfo__, only: TypeInfo_t, TypeSpecs_t, type_accept_wrap_, type_stream_wrap_
+    use impl_typeinfo__, only: TypeInfo_t, TypeSpecs_t, type_accept_wrap_, type_stream_wrap_, dim_streamBuffer
     use iso_c_binding
     implicit none
     type(TypeInfo_t),    intent(inout) :: self
@@ -103,7 +129,7 @@ end module
 
     ! try to find length of stream buffer ...
     if (present(tryStreamProc)) then
-      call dim_streamBuffer()
+      self%typeSpecs%streamLen = dim_streamBuffer( tryStreamProc )
     else if (associated( self%subtype )) then
       self%typeSpecs%streamLen = self%subtype%typeSpecs%streamLen
     end if
@@ -119,29 +145,7 @@ end module
       memref%loc = c_loc(what(1:1))
       memref%len = len_trim(what)
     end subroutine
-
-    subroutine dim_streamBuffer()
-      integer :: bufLen, status
-
-      bufLen = 32; status = 1
-      do while (.true.)
-        bufLen = bufLen * 2
-        call try_streaming( bufLen, status )
-        if (status == 0) exit
-      end do
-    end subroutine
-      
-    subroutine try_streaming( bufLen, status )
-      integer               :: bufLen, status
-      character(len=bufLen) :: buffer
-
-      !buffer = "" !< memory inspector wants us to initialize buffer ... ???
-      call tryStreamProc( buffer, status )
-      if (status == 0) then
-        self%typeSpecs%streamLen = len_trim( buffer ) - 1
-      end if
-    end subroutine
-  end subroutine
+end subroutine
 
 
 !_PROC_EXPORT(typeinfo_void_type)
