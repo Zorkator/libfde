@@ -7,9 +7,7 @@ class OptionProcessor( object ):
 
     __conv__ = dict()
     __opts__ = dict( debug     = 0
-                   , help      = False
                    , verbosity = 1
-                   , version   = False
                    )
 
     @property
@@ -75,10 +73,10 @@ class OptionProcessor( object ):
         """return dictionary of options and default values known by this class.
         Use the class attribute set by optsMap to build up the option dictionary.
         """
-        try   : return _class._knownOpts
+        try   : return vars(_class)['_knownOpts']
         except:
-            _class._knownOpts = _class._merge_class_attrib( optsMap )
-            return _class._knownOpts
+            _class._knownOpts = opts = _class._merge_class_attrib( optsMap )
+            return opts
 
 
     @classmethod
