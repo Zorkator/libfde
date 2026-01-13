@@ -1,8 +1,82 @@
-stages:
-  - build
-  - test
 
-linux:
+include:
+    - project: grs/gramovis/ci-tools
+      ref:     main
+      file:    [develop.yaml, git.yaml]
+
+
+.build_core:
+    extends: [.cit_build_job]
+    script:
+        - cmake -B ${BUILD_DIR} ${CONFIG_FLAGS}
+        - cmake --build ${BUILD_DIR} --config ${BUILD_CONFIG} --parallel ${NUMBER_OF_PROCESSORS}
+        - ctest --output-on-failure  --test-dir ${BUILD_DIR} --build-config ${BUILD_CONFIG}
+    variables:
+        BUILD_DIR:    .build
+        CONFIG_FLAGS: -DBUILD_TESTING=1 -DCMAKE_BUILD_TYPE=${BUILD_CONFIG} -DBUILD_PARALLEL=1
+    artifacts:
+        when: always
+        paths:
+            - ${BUILD_DIR}/package
+
+.build_wheel:
+    extends: [.cit_build_job]
+    script:
+        - pip wheel . -w dist
+    variables:
+        FDEPATH: .build/package/${BUILD_CONFIG}/bin
+    artifacts:
+        paths:
+            - dist
+
+
+
+core.windows:
+    extends: [.build_core, .image.windows.compiler:2025]
+
+
+core.linux:
+    extends: [.build_core, .image.debian.compiler:2025]
+
+
+wheel.windows:
+    extends: [.build_wheel, .image.windows.compiler:2025]
+    needs:
+        - job: core.windows
+          artifacts: true
+    before_script:
+        - python -m pip install setuptools wheel
+
+wheel.linux:
+    extends: [.build_wheel, .image.debian.compiler:2025]
+    needs:
+        - job: core.linux
+          artifacts: true
+    before_script:
+        - apt update
+        - apt install -y python3-pip python3-wheel python3-setuptools
+
+
+test.wheel.linux:
+    extends: [.cit_test_job, .image.debian.core:2025]
+    needs:
+        - job: wheel.linux
+          artifacts: true
+    before_script:
+        - apt update
+        - apt install -y python3 python3-pip python3-virtualenv
+    script:
+        - virtualenv venv
+        - source venv/bin/activate
+        - pip install dist/fde*.whl
+        - export LD_LIBRARY_PATH=venv/lib
+        - python test/test_wheel_setup.py
+
+
+
+
+
+.linux:
   tags: ["gitlab-org-docker"]
   image: fedora:43
   stage: build
