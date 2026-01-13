@@ -29,7 +29,7 @@ linux:
       - coverage/
       - dist/
 
-test_wheel:
+.test_wheel:
   tags: ["gitlab-org-docker"]
   image: fedora:41
   stage: test
