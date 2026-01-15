@@ -2,10 +2,12 @@
 include:
     - project: grs/gramovis/ci-tools
       ref:     main
-      file:    [develop.yaml, git.yaml]
+      file:    [develop.yaml, tools.yaml]
 
 
-.build_core:
+#----------------
+.build.core:
+#----------------
     extends: [.cit_build_job]
     script:
         - cmake -B ${BUILD_DIR} ${CONFIG_FLAGS}
@@ -19,102 +21,73 @@ include:
         paths:
             - ${BUILD_DIR}/package
 
-.build_wheel:
+#----------------
+.build.wheel:
+#----------------
     extends: [.cit_build_job]
     script:
         - pip wheel . -w dist
+        - auditwheel ${FDEPATH} repair dist/fde-*.whl
     variables:
         FDEPATH: .build/package/${BUILD_CONFIG}/bin
     artifacts:
         paths:
-            - dist
+            - wheelhouse
+
+#----------------
+.test.wheel:
+#----------------
+    extends: [.cit_test_job]
+    script:
+        - pip install --find-links=wheelhouse fde
+        - cd test
+        - python test_wheel_setup.py
 
 
-
-core.windows:
-    extends: [.build_core, .image.windows.compiler:2025]
-
+#----------------
+# build stage
+#----
 
 core.linux:
-    extends: [.build_core, .image.debian.compiler:2025]
+    extends: [.build.core, .image.debian.compiler:2025]
 
+core.windows:
+    extends: [.build.core, .image.windows.compiler:2025]
 
-wheel.windows:
-    extends: [.build_wheel, .image.windows.compiler:2025]
-    needs:
-        - job: core.windows
-          artifacts: true
-    before_script:
-        - python -m pip install setuptools wheel
 
 wheel.linux:
-    extends: [.build_wheel, .image.debian.compiler:2025]
+    extends: [.build.wheel, .image.debian.compiler:2025]
     needs:
         - job: core.linux
           artifacts: true
     before_script:
-        - apt update
-        - apt install -y python3-pip python3-wheel python3-setuptools
+        - !reference [.tools.linux, install, python.auditwheel]
 
+wheel.windows:
+    extends: [.build.wheel, .image.windows.compiler:2025]
+    needs:
+        - job: core.windows
+          artifacts: true
+    before_script:
+        - !reference [.tools.windows, install, python.auditwheel]
+
+
+#----------------
+# test stage
+#----
 
 test.wheel.linux:
-    extends: [.cit_test_job, .image.debian.core:2025]
+    extends: [.test.wheel, .image.debian.core:2025]
     needs:
         - job: wheel.linux
           artifacts: true
     before_script:
-        - apt update
-        - apt install -y python3 python3-pip python3-virtualenv
-    script:
-        - virtualenv venv
-        - source venv/bin/activate
-        - pip install dist/fde*.whl
-        - export LD_LIBRARY_PATH=venv/lib
-        - python test/test_wheel_setup.py
+        - !reference [.tools.linux, install, python.venv]
 
-
-
-
-
-.linux:
-  tags: ["gitlab-org-docker"]
-  image: fedora:43
-  stage: build
-  before_script:
-    - dnf update -y
-    - dnf install -y g++ gcc-gfortran cmake gcovr python3-pip python3-wheel python3-setuptools
-  script:
-    - mkdir -p _build coverage
-    - pushd _build
-    - cmake -DCMAKE_BUILD_TYPE=Debug -DBUILD_TESTING=1 -DCMAKE_Fortran_FLAGS=--coverage -DCMAKE_C_FLAGS=--coverage -DCMAKE_CXX_FLAGS=--coverage ..
-    - make
-    - make test
-    - gcovr -r .. src libfortres
-    - gcovr -r .. src libfortres --xml=../coverage.xml --html-details=../coverage/coverage.html
-    - popd
-    - FDEPATH=_build/package/Debug/bin python setup.py bdist_wheel
-  coverage: '/^TOTAL.*\s+(\d+\%)$/'
-  artifacts:
-    reports:
-      coverage_report:
-        coverage_format: cobertura
-        path: coverage.xml
-    paths:
-      - coverage/
-      - dist/
-
-.test_wheel:
-  tags: ["gitlab-org-docker"]
-  image: fedora:41
-  stage: test
-  before_script:
-    - dnf install -y gcc-gfortran python3-pip python3-virtualenv
-  script:
-    - virtualenv venv
-    - source venv/bin/activate
-    - python -m pip install dist/*.whl
-    - python test/test_wheel_setup.py
-  needs:
-    - job: linux
-      artifacts: true
-
+test.wheel.windows:
+    extends: [.test.wheel, .image.windows.core:2025]
+    needs:
+        - job: wheel.windows
+          artifacts: true
+    before_script:
+        - !reference [.tools.windows, install, python.venv]
