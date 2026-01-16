@@ -1,6 +1,7 @@
 
 import sys
 print( sys.version )
+print( sys.path )
 
 from fde.tools import core_loader as cl
 
