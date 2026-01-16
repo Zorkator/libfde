@@ -12,7 +12,7 @@ setup(
     version=fde.__version__,
     author=fde.__author__,
     author_email="",
-    install_requires=['six', 'psutil', 'intel-fortran-rt'],
+    install_requires=['six', 'psutil'],
     packages=find_packages( include=['fde', 'fde.*'] ),
     package_data={'fde': ["*.dll", "*.so", "*.so.*"]},
     description='Python wrapper for FDE loading and using shared library',

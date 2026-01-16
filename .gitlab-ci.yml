@@ -1,46 +1,51 @@
 stages:
-  - build
-  - test
+    - build
+    - test
 
 linux:
-  tags: ["gitlab-org-docker"]
-  image: fedora:43
-  stage: build
-  before_script:
-    - dnf update -y
-    - dnf install -y g++ gcc-gfortran cmake gcovr python3-pip python3-wheel python3-setuptools
-  script:
-    - mkdir -p _build coverage
-    - pushd _build
-    - cmake -DCMAKE_BUILD_TYPE=Debug -DBUILD_TESTING=1 -DCMAKE_Fortran_FLAGS=--coverage -DCMAKE_C_FLAGS=--coverage -DCMAKE_CXX_FLAGS=--coverage ..
-    - make
-    - make test
-    - gcovr -r .. src libfortres
-    - gcovr -r .. src libfortres --xml=../coverage.xml --html-details=../coverage/coverage.html
-    - popd
-    - FDEPATH=_build/package/Debug/bin python setup.py bdist_wheel
-  coverage: '/^TOTAL.*\s+(\d+\%)$/'
-  artifacts:
-    reports:
-      coverage_report:
-        coverage_format: cobertura
-        path: coverage.xml
-    paths:
-      - coverage/
-      - dist/
+    tags: ["gitlab-org-docker"]
+    image: fedora:42
+    stage: build
+    variables:
+        BUILD_DIR   : .build
+        BUILD_CFG   : Debug
+        CONFIG_FLAGS: -DCMAKE_BUILD_TYPE=${BUILD_CFG} -DBUILD_TESTING=1 -DCMAKE_Fortran_FLAGS=--coverage -DCMAKE_C_FLAGS=--coverage -DCMAKE_CXX_FLAGS=--coverage
+        FDEPATH     : ${BUILD_DIR}/package/${BUILD_CFG}/bin
+    before_script:
+        - dnf update -y
+        - dnf install -y g++ gcc-gfortran cmake gcovr python3-pip
+        - pip install setuptools wheel #auditwheel patchelf
+    script:
+        - mkdir -p coverage
+        - cmake -B ${BUILD_DIR} ${CONFIG_FLAGS}
+        - cmake --build ${BUILD_DIR} --config ${BUILD_CFG} --parallel
+        - ctest --output-on-failure  --test-dir ${BUILD_DIR} --build-config ${BUILD_CFG}
+        - pushd ${BUILD_DIR}
+          - gcovr -r .. src libfortres
+          - gcovr -r .. src libfortres --xml=../coverage.xml --html-details=../coverage/coverage.html
+        - popd
+        - pip wheel . -w dist
+        #- auditwheel repair dist/fde-*.whl #< patchelf seems broken, yields SEGFAULT on loading patched libs :-(
+    coverage: '/^TOTAL.*\s+(\d+\%)$/'
+    artifacts:
+        reports:
+            coverage_report:
+                coverage_format: cobertura
+                path: coverage.xml
+        paths:
+            - coverage/
+            - dist/
 
 test_wheel:
-  tags: ["gitlab-org-docker"]
-  image: fedora:41
-  stage: test
-  before_script:
-    - dnf install -y gcc-gfortran python3-pip python3-virtualenv
-  script:
-    - virtualenv venv
-    - source venv/bin/activate
-    - python -m pip install dist/*.whl
-    - python test/test_wheel_setup.py
-  needs:
-    - job: linux
-      artifacts: true
-
+    tags: ["gitlab-org-docker"]
+    image: fedora:42
+    stage: test
+    before_script:
+        - dnf update -y
+        - dnf install -y python3-pip gcc-gfortran #< need gfortran, since wheel has no libgfortran.so :-(
+    script:
+        - python -m pip install dist/*.whl
+        - python test/test_wheel_setup.py
+    needs:
+        - job: linux
+          artifacts: true
