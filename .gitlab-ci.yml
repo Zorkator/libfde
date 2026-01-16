@@ -2,8 +2,12 @@ stages:
     - build
     - test
 
-.gitlab.org:
-    tags: ["gitlab-org-docker"]
+variables:
+    BUILD_CFG:
+        value      : Release
+        options    : [Debug, Release]
+        description: build configuration
+
 
 .build.wheel.linux:
     stage: build
@@ -40,16 +44,19 @@ stages:
 
 
 
+include: [.gitlab-linux.yml]
+.gitlab.org:
+    tags: ["gitlab-org-docker"]
+
 #---------------
 # fedora:42
 #---
 
 build.wheel.fedora.42:
-    extends: [.build.wheel.linux, .gitlab.org]
-    image  : fedora:42
+    extends: [.build.wheel.linux, .fedora.42, .gitlab.org]
     before_script:
-        - dnf update -y
-        - dnf install -y g++ gcc-gfortran cmake gcovr python3-pip
+        - !reference [.fedora.42, before_script]
+        - dnf install -y g++ gcc-gfortran cmake gcovr
         - pip install setuptools wheel #auditwheel patchelf
     script:
         - !reference [.build.wheel.linux, script]
@@ -57,11 +64,10 @@ build.wheel.fedora.42:
         #- auditwheel repair .dist/fde-*.whl -w dist #< patchelf seems broken, yields SEGFAULT on loading patched libs :-(
 
 test.wheel.fedora.42:
-    extends: [.test.wheel.linux, .gitlab.org]
-    image  : fedora:42
+    extends: [.test.wheel.linux, .fedora.42, .gitlab.org]
     before_script:
-        - dnf update -y
-        - dnf install -y python3-pip gcc-gfortran #< need gfortran, since wheel has no libgfortran.so :-(
+        - !reference [.fedora.42, before_script]
+        - dnf install -y gcc-gfortran #< need gfortran, since wheel has no libgfortran.so :-(
     needs:
         - job: build.wheel.fedora.42
           artifacts: true
@@ -71,12 +77,10 @@ test.wheel.fedora.42:
 #---
 
 build.wheel.debian.11:
-    extends: [.build.wheel.linux, .gitlab.org]
-    image  : debian:11
+    extends: [.build.wheel.linux, .debian.11, .gitlab.org]
     before_script:
-        - apt update
-        - apt install -y g++ gfortran cmake gcovr python3-pip
-        - python() { command python3 "$@"; }
+        - !reference [.debian.11, before_script]
+        - apt install -y g++ gfortran cmake gcovr
         - pip install setuptools wheel auditwheel patchelf
     script:
         - !reference [.build.wheel.linux, script]
@@ -84,13 +88,7 @@ build.wheel.debian.11:
         - auditwheel repair .dist/fde-*.whl -w dist
 
 test.wheel.debian.11:
-    extends: [.test.wheel.linux, .gitlab.org]
-    image  : debian:11
-    before_script:
-        - apt update
-        - apt install -y python3-pip #gfortran #< need gfortran, since wheel has no libgfortran.so :-(
-        - python() { command python3 "$@"; }
+    extends: [.test.wheel.linux, .debian.11, .gitlab.org]
     needs:
         - job: build.wheel.debian.11
           artifacts: true
-
