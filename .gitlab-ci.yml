@@ -16,12 +16,12 @@ stages:
         - mkdir -p coverage
         - cmake -B ${BUILD_DIR} ${CONFIG_FLAGS}
         - cmake --build ${BUILD_DIR} --config ${BUILD_CFG} --parallel
-        - ctest --output-on-failure  --test-dir ${BUILD_DIR} --build-config ${BUILD_CFG}
         - pushd ${BUILD_DIR}
+        - - ctest --output-on-failure --build-config ${BUILD_CFG}
         - - gcovr -r .. src libfortres
         - - gcovr -r .. src libfortres --xml=../coverage.xml --html-details=../coverage/coverage.html
         - popd
-        - pip wheel . -w dist
+        - python setup.py bdist_wheel
     coverage: '/^TOTAL.*\s+(\d+\%)$/'
     artifacts:
         reports:
@@ -40,6 +40,10 @@ stages:
 
 
 
+#---------------
+# fedora:42
+#---
+
 build.wheel.fedora.42:
     extends: [.build.wheel.linux, .gitlab.org]
     image  : fedora:42
@@ -49,12 +53,8 @@ build.wheel.fedora.42:
         - pip install setuptools wheel #auditwheel patchelf
     script:
         - !reference [.build.wheel.linux, script]
-        #- auditwheel repair dist/fde-*.whl #< patchelf seems broken, yields SEGFAULT on loading patched libs :-(
-        - mv dist wheelhouse
-    artifacts:
-        paths:
-            - wheelhouse/
-
+        #- mv dist .dist
+        #- auditwheel repair .dist/fde-*.whl -w dist #< patchelf seems broken, yields SEGFAULT on loading patched libs :-(
 
 test.wheel.fedora.42:
     extends: [.test.wheel.linux, .gitlab.org]
@@ -65,3 +65,32 @@ test.wheel.fedora.42:
     needs:
         - job: build.wheel.fedora.42
           artifacts: true
+
+#---------------
+# debian:11
+#---
+
+build.wheel.debian.11:
+    extends: [.build.wheel.linux, .gitlab.org]
+    image  : debian:11
+    before_script:
+        - apt update
+        - apt install -y g++ gfortran cmake gcovr python3-pip
+        - python() { command python3 "$@"; }
+        - pip install setuptools wheel auditwheel patchelf
+    script:
+        - !reference [.build.wheel.linux, script]
+        - mv dist .dist
+        - auditwheel repair .dist/fde-*.whl -w dist
+
+test.wheel.debian.11:
+    extends: [.test.wheel.linux, .gitlab.org]
+    image  : debian:11
+    before_script:
+        - apt update
+        - apt install -y python3-pip #gfortran #< need gfortran, since wheel has no libgfortran.so :-(
+        - python() { command python3 "$@"; }
+    needs:
+        - job: build.wheel.debian.11
+          artifacts: true
+
