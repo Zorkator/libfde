@@ -2,19 +2,16 @@ stages:
     - build
     - test
 
-linux:
+.gitlab.org:
     tags: ["gitlab-org-docker"]
-    image: fedora:42
+
+.build.wheel.linux:
     stage: build
     variables:
         BUILD_DIR   : .build
         BUILD_CFG   : Debug
         CONFIG_FLAGS: -DCMAKE_BUILD_TYPE=${BUILD_CFG} -DBUILD_TESTING=1 -DCMAKE_Fortran_FLAGS=--coverage -DCMAKE_C_FLAGS=--coverage -DCMAKE_CXX_FLAGS=--coverage
         FDEPATH     : ${BUILD_DIR}/package/${BUILD_CFG}/bin
-    before_script:
-        - dnf update -y
-        - dnf install -y g++ gcc-gfortran cmake gcovr python3-pip
-        - pip install setuptools wheel #auditwheel patchelf
     script:
         - mkdir -p coverage
         - cmake -B ${BUILD_DIR} ${CONFIG_FLAGS}
@@ -25,7 +22,6 @@ linux:
         - - gcovr -r .. src libfortres --xml=../coverage.xml --html-details=../coverage/coverage.html
         - popd
         - pip wheel . -w dist
-        #- auditwheel repair dist/fde-*.whl #< patchelf seems broken, yields SEGFAULT on loading patched libs :-(
     coverage: '/^TOTAL.*\s+(\d+\%)$/'
     artifacts:
         reports:
@@ -36,16 +32,36 @@ linux:
             - coverage/
             - dist/
 
-test_wheel:
-    tags: ["gitlab-org-docker"]
-    image: fedora:42
+.test.wheel.linux:
     stage: test
-    before_script:
-        - dnf update -y
-        - dnf install -y python3-pip gcc-gfortran #< need gfortran, since wheel has no libgfortran.so :-(
     script:
         - python -m pip install dist/*.whl
         - python test/test_wheel_setup.py
+
+
+
+build.wheel.fedora.42:
+    extends: [.build.wheel.linux, .gitlab.org]
+    image  : fedora:42
+    before_script:
+        - dnf update -y
+        - dnf install -y g++ gcc-gfortran cmake gcovr python3-pip
+        - pip install setuptools wheel #auditwheel patchelf
+    script:
+        - !reference [.build.wheel.linux, script]
+        #- auditwheel repair dist/fde-*.whl #< patchelf seems broken, yields SEGFAULT on loading patched libs :-(
+        - mv dist wheelhouse
+    artifacts:
+        paths:
+            - wheelhouse/
+
+
+test.wheel.fedora.42:
+    extends: [.test.wheel.linux, .gitlab.org]
+    image  : fedora:42
+    before_script:
+        - dnf update -y
+        - dnf install -y python3-pip gcc-gfortran #< need gfortran, since wheel has no libgfortran.so :-(
     needs:
-        - job: linux
+        - job: build.wheel.fedora.42
           artifacts: true
