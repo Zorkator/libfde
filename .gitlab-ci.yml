@@ -3,44 +3,61 @@ stages:
     - test
 
 variables:
-    BUILD_CFG:
+    BUILD_DIR   : .build
+    BUILD_CONFIG:
         value      : Release
         options    : [Debug, Release]
         description: build configuration
 
-
-.build.wheel.linux:
+#----------------
+.build.core:
+#----------------
     stage: build
     variables:
-        BUILD_DIR   : .build
-        BUILD_CFG   : Debug
-        CONFIG_FLAGS: -DCMAKE_BUILD_TYPE=${BUILD_CFG} -DBUILD_TESTING=1 -DCMAKE_Fortran_FLAGS=--coverage -DCMAKE_C_FLAGS=--coverage -DCMAKE_CXX_FLAGS=--coverage
-        FDEPATH     : ${BUILD_DIR}/package/${BUILD_CFG}/bin
+        CONFIG_FLAGS: -DCMAKE_BUILD_TYPE=${BUILD_CONFIG} -DBUILD_TESTING=1 -DCMAKE_Fortran_FLAGS=--coverage -DCMAKE_C_FLAGS=--coverage -DCMAKE_CXX_FLAGS=--coverage
     script:
         - mkdir -p coverage
         - cmake -B ${BUILD_DIR} ${CONFIG_FLAGS}
-        - cmake --build ${BUILD_DIR} --config ${BUILD_CFG} --parallel
+        - cmake --build ${BUILD_DIR} --config ${BUILD_CONFIG} --parallel ${NUMBER_OF_PROCESSORS}
         - pushd ${BUILD_DIR}
-        - - ctest --output-on-failure --build-config ${BUILD_CFG}
+        - - ctest --output-on-failure --build-config ${BUILD_CONFIG}
         - - gcovr -r .. src libfortres
         - - gcovr -r .. src libfortres --xml=../coverage.xml --html-details=../coverage/coverage.html
         - popd
-        - python setup.py bdist_wheel
     coverage: '/^TOTAL.*\s+(\d+\%)$/'
     artifacts:
+        when   : always
         reports:
             coverage_report:
                 coverage_format: cobertura
                 path: coverage.xml
         paths:
+            - ${BUILD_DIR}/package
             - coverage/
-            - dist/
 
-.test.wheel.linux:
+
+#----------------
+.build.wheel:
+#----------------
+    stage: build
+    variables:
+        FDEPATH: ${BUILD_DIR}/package/${BUILD_CONFIG}/bin
+    script:
+        - python setup.py bdist_wheel --dist-dir=.dist
+        - auditwheel repair .dist/fde-*.whl -w dist
+    artifacts:
+        paths:
+            - dist/fde-*.whl
+
+
+#----------------
+.test.wheel:
+#----------------
     stage: test
     script:
-        - python -m pip install dist/*.whl
-        - python test/test_wheel_setup.py
+        - pip install --find-links=dist fde
+        - cd test
+        - python test_wheel_setup.py
 
 
 
@@ -52,43 +69,56 @@ include: [.gitlab-linux.yml]
 # fedora:42
 #---
 
-build.wheel.fedora.42:
-    extends: [.build.wheel.linux, .fedora.42, .gitlab.org]
+core.fedora.42:
+    extends: [.build.core, .fedora.42, .gitlab.org]
     before_script:
         - !reference [.fedora.42, before_script]
         - dnf install -y g++ gcc-gfortran cmake gcovr
-        - pip install setuptools wheel #auditwheel patchelf
-    script:
-        - !reference [.build.wheel.linux, script]
-        #- mv dist .dist
-        #- auditwheel repair .dist/fde-*.whl -w dist #< patchelf seems broken, yields SEGFAULT on loading patched libs :-(
 
-test.wheel.fedora.42:
-    extends: [.test.wheel.linux, .fedora.42, .gitlab.org]
+wheel.fedora.42:
+    extends: [.build.wheel, .fedora.42, .gitlab.org]
+    needs:
+        - job: core.fedora.42
+          artifacts: true
+    before_script:
+        - !reference [.fedora.42, before_script]
+        - dnf install -y gcc-gfortran
+        - pip install setuptools wheel auditwheel patchelf
+        # FIXME: disable auditwheel, since patchelf seems broken: loading patched libs yields SEGFAULT :-(
+        - auditwheel() { mv .dist dist; } #< just rename outdir
+
+test.fedora.42:
+    extends: [.test.wheel, .fedora.42, .gitlab.org]
+    needs:
+        - job: wheel.fedora.42
+          artifacts: true
     before_script:
         - !reference [.fedora.42, before_script]
         - dnf install -y gcc-gfortran #< need gfortran, since wheel has no libgfortran.so :-(
-    needs:
-        - job: build.wheel.fedora.42
-          artifacts: true
+
 
 #---------------
 # debian:11
 #---
 
-build.wheel.debian.11:
-    extends: [.build.wheel.linux, .debian.11, .gitlab.org]
+core.debian.11:
+    extends: [.build.core, .debian.11, .gitlab.org]
     before_script:
         - !reference [.debian.11, before_script]
         - apt install -y g++ gfortran cmake gcovr
-        - pip install setuptools wheel auditwheel patchelf
-    script:
-        - !reference [.build.wheel.linux, script]
-        - mv dist .dist
-        - auditwheel repair .dist/fde-*.whl -w dist
 
-test.wheel.debian.11:
-    extends: [.test.wheel.linux, .debian.11, .gitlab.org]
+wheel.debian.11:
+    extends: [.build.wheel, .debian.11, .gitlab.org]
     needs:
-        - job: build.wheel.debian.11
+        - job: core.debian.11
+          artifacts: true
+    before_script:
+        - !reference [.debian.11, before_script]
+        - apt install -y gfortran
+        - pip install setuptools wheel auditwheel patchelf
+
+test.debian.11:
+    extends: [.test.wheel, .debian.11, .gitlab.org]
+    needs:
+        - job: wheel.debian.11
           artifacts: true
