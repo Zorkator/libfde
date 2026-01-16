@@ -21,8 +21,8 @@ linux:
         - cmake --build ${BUILD_DIR} --config ${BUILD_CFG} --parallel
         - ctest --output-on-failure  --test-dir ${BUILD_DIR} --build-config ${BUILD_CFG}
         - pushd ${BUILD_DIR}
-          - gcovr -r .. src libfortres
-          - gcovr -r .. src libfortres --xml=../coverage.xml --html-details=../coverage/coverage.html
+        - - gcovr -r .. src libfortres
+        - - gcovr -r .. src libfortres --xml=../coverage.xml --html-details=../coverage/coverage.html
         - popd
         - pip wheel . -w dist
         #- auditwheel repair dist/fde-*.whl #< patchelf seems broken, yields SEGFAULT on loading patched libs :-(
