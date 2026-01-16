@@ -37,17 +37,17 @@ Objectives:
 
   * make use of other software packages
   * get used by other software packages
-  
+
 * **allow interdisciplinary use of simulation code!**
 
 .. image:: docs/coupling_A_B_ls.png
- 
+
 Needs what?
 ***********
 * communication between individual software packages
 
   * data exchange, execution control
-  
+
 * generic, robust and flexible interface
 
   * exchange arbitrary data efficiently
@@ -64,7 +64,7 @@ How?
   * actively interfere with simulation cycle of **A**
   * add code accessing and sending internal data to **B**
   * wait for **B** to respond, write back data
-  
+
 * **requires a lot of specific code changes!**
 
 .. image:: docs/coupling_A_B_common_ls.png
@@ -95,7 +95,7 @@ How?
 
   * access simulation state
   * control simulation flow
-  
+
 * **turn simulation codes into team player!**
 
 .. image:: docs/coupling_A_B_libfde_ls.png
@@ -106,13 +106,13 @@ Results in ...
 * easy communication between individual software packages
 
   * data exchange, execution control
-  
+
 * generic, robust and flexible interface
 
   * exchange arbitrary data efficiently
   * easy scaling / adaption to given situations
   * requires very little maintenance
-  
+
 * **very little coupling code, created easily on demand**
 
 
@@ -203,7 +203,7 @@ Extend simulation code by Plugin:
 
   * possibly in any C-compatible programming language
     *(currently best support for Fortran)*
-    
+
   * linking only toolbox library libfde
 
 * Accessing simulator data:
@@ -214,9 +214,9 @@ Extend simulation code by Plugin:
 
   * injected functionality *(no-/one-arg callback functions)*
   * dedicated functionality / override internal functionality
-  
+
     * must match to what simulator expects at certain context:
-    
+
       * name of plugin and function
       * function signature *(return type, argument list)*
 
@@ -253,7 +253,7 @@ However, aside from using Fortran codes in Python the mayor goals of libfde comp
 
 The library reached a quite stable state and it's used in productive code.
 Nevertheless, **a lot** of things can be improved and some aspects need further development.
- 
+
 - mainly, the documentation of interfaces and examples!
   (still looking for a good tool for generating it from Fortran-code!!)
 - the python interface is not complete
@@ -265,7 +265,7 @@ Nevertheless, **a lot** of things can be improved and some aspects need further 
 Copyright and License Information
 ---------------------------------
 
-Copyright (c) 2025 Josef Scheuer.
+Copyright (c) 2026 Josef Scheuer.
 All rights reserved.
 
 See the file "LICENSE" for terms &
