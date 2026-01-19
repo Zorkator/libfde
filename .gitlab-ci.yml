@@ -3,7 +3,7 @@ include:
     - project: grs/gramovis/ci-tools
       ref:     main
       file:    [develop.yaml, tools.yaml]
-      
+
 variables:
     BUILD_DIR: .build
 
@@ -12,14 +12,14 @@ variables:
 .build.core:
 #----------------
     extends: [.cit_build_job]
+    variables:
+        CONFIG_FLAGS: -DCMAKE_BUILD_TYPE=${BUILD_CONFIG} -DBUILD_TESTING=1 -DBUILD_PARALLEL=1
     script:
         - cmake -B ${BUILD_DIR} ${CONFIG_FLAGS}
         - cmake --build ${BUILD_DIR} --config ${BUILD_CONFIG} --parallel ${NUMBER_OF_PROCESSORS}
         - pushd ${BUILD_DIR}
         - - ctest --output-on-failure --build-config ${BUILD_CONFIG}
         - popd
-    variables:
-        CONFIG_FLAGS: -DBUILD_TESTING=1 -DCMAKE_BUILD_TYPE=${BUILD_CONFIG} -DBUILD_PARALLEL=1
     artifacts:
         when: always
         paths:
@@ -48,24 +48,36 @@ variables:
         - python test_wheel_setup.py
 
 
-#----------------
-# build stage
-#----
+#---------------
+# debian:11
+#---
 
-core.linux:
+core.debian.11:
     extends: [.build.core, .image.debian.compiler:2025]
 
-core.windows:
-    extends: [.build.core, .image.windows.compiler:2025]
-
-
-wheel.linux:
+wheel.debian.11:
     extends: [.build.wheel, .image.debian.compiler:2025]
     needs:
-        - job: core.linux
+        - job: core.debian.11
           artifacts: true
     before_script:
         - !reference [.tools.linux, install, python.auditwheel]
+
+test.debian.11:
+    extends: [.test.wheel, .image.debian.core:2025]
+    needs:
+        - job: wheel.debian.11
+          artifacts: true
+    before_script:
+        - !reference [.tools.linux, install, python.venv]
+
+
+#---------------
+# windows
+#--- 
+
+core.windows:
+    extends: [.build.core, .image.windows.compiler:2025]
 
 wheel.windows:
     extends: [.build.wheel, .image.windows.compiler:2025]
@@ -75,20 +87,7 @@ wheel.windows:
     before_script:
         - !reference [.tools.windows, install, python.auditwheel]
 
-
-#----------------
-# test stage
-#----
-
-test.wheel.linux:
-    extends: [.test.wheel, .image.debian.core:2025]
-    needs:
-        - job: wheel.linux
-          artifacts: true
-    before_script:
-        - !reference [.tools.linux, install, python.venv]
-
-test.wheel.windows:
+test.windows:
     extends: [.test.wheel, .image.windows.core:2025]
     needs:
         - job: wheel.windows
