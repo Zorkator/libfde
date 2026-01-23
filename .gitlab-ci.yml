@@ -92,3 +92,28 @@ test.windows:
           artifacts: true
     before_script:
         - !reference [.tools.windows, install, python.venv]
+
+
+#-----------------------
+upload:
+#-----------------------
+    extends: .cit_upload
+    needs:
+        - job: test.debian.11
+        - job: test.windows
+        #
+        - job: wheel.debian.11
+          artifacts: true
+        - job: wheel.windows
+          artifacts: true
+    variables:
+        FILE_PATTERN: "dist/*.whl"
+
+
+#-----------------------
+publish:
+#-----------------------
+    extends: .cit_publish
+    needs:
+        - job: upload
+          artifacts: true
