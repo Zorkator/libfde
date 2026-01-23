@@ -107,7 +107,7 @@ upload:
         - job: wheel.windows
           artifacts: true
     variables:
-        FILE_PATTERN: "dist/*.whl"
+        FILE_PATTERN: "*.whl"
 
 
 #-----------------------
