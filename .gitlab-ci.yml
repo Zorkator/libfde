@@ -2,7 +2,7 @@
 include:
     - project: grs/gramovis/ci-tools
       ref:     main
-      file:    [develop.yaml, tools.yaml]
+      file:    [develop.yaml, tools.yaml, linux.yaml]
 
 variables:
     BUILD_DIR: .build
@@ -50,23 +50,25 @@ variables:
 # debian:11
 #---
 
-core.debian.11:
-    extends: [.build.core, .image.debian.compiler:2025]
+core.debian:
+    extends: [.build.core, .debian, .image.debian.compiler:2025]
 
-wheel.debian.11:
-    extends: [.build.wheel, .image.debian.compiler:2025]
+wheel.debian:
+    extends: [.build.wheel, .debian, .image.debian.compiler:2025]
     needs:
-        - job: core.debian.11
+        - job: core.debian
           artifacts: true
     before_script:
-        - !reference [.tools.linux, install, python.auditwheel]
+        - !reference [.debian, before_script]
+        - !reference [.tools.debian, install, python.auditwheel]
 
-test.debian.11:
-    extends: [.test.wheel, .image.debian.core:2025]
+test.debian:
+    extends: [.test.wheel, .debian, .image.debian.core:2025]
     needs:
-        - job: wheel.debian.11
+        - job: wheel.debian
           artifacts: true
     before_script:
+        - !reference [.debian, before_script]
         - !reference [.tools.linux, install, python.venv]
 
 
