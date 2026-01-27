@@ -101,10 +101,10 @@ upload:
 #-----------------------
     extends: .cit_upload
     needs:
-        - job: test.debian.11
+        - job: test.debian
         - job: test.windows
         #
-        - job: wheel.debian.11
+        - job: wheel.debian
           artifacts: true
         - job: wheel.windows
           artifacts: true
