@@ -1,6 +1,9 @@
 
-from ..tools import openFile, sys_channel, cached_property
+from ..tools        import openFile, sys_channel, cached_property
+from ._controllable import Controllable
 
+
+@Controllable.mixin
 #----------------------------
 class Verbose( object ):
 #----------------------------
@@ -9,9 +12,9 @@ class Verbose( object ):
     Verbose provides a basic interface for log messages put to console or logfile.
     """
 
-    __opts__ = dict( logFile  = '{rootId}.{pid}.log'
-                   , logBuff  = '-1'
-                   , preamble = '{rootId} {pid}: '
+    __opts__ = dict( logFile   = '{rootId}.{pid}.log'
+                   , logBuff   = '-1'
+                   , logFormat = '{rootId} {pid}: {0}\n'
                    )
 
     def write( self, msg, channel = 1 ):
@@ -30,7 +33,7 @@ class Verbose( object ):
 
         """
         if self.opts.verbosity >= verbosity:
-            self.write( self.opts.preamble.format( **self.about ) + msg + '\n', channel ).flush()
+            self.write( self.opts.logFormat.format( msg, **self.about ), channel ).flush()
         return self
 
 
