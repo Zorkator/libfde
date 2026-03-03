@@ -4,7 +4,6 @@ from os import path
 #----------------------------------
 class OptionProcessor( object ):
 #----------------------------------
-
     __conv__ = dict()
     __opts__ = dict( debug     = 0
                    , verbosity = 1
@@ -16,10 +15,16 @@ class OptionProcessor( object ):
         return self._opts
 
 
-    @staticmethod
-    def realpath( p ):
-        "return realpath of `p` with any '~' or '~user' replaced by the user's home directory."
-        return path.realpath( path.expanduser( p.strip() ) )
+    @classmethod
+    def realpath( _class, p ):
+        "return realpath of `p` with environment variables resolved and '~'/'~user' replaced by user's home directory."
+        return path.realpath( path.expanduser( _class.resolveEnv( p.strip() ) ) )
+
+
+    @classmethod
+    def filepath( _class, p ):
+        "return realpath of `p`"
+        return _class.realpath( p )
 
 
     @staticmethod
@@ -34,27 +39,29 @@ class OptionProcessor( object ):
 
 
     @staticmethod
-    def _pickOpt( d, opt, default ):
+    def _pickOpt( d, optId, default ):
         """Extract options `optId`, --`optId` from dictionary d.
         return value by priority: 1) dashed, 2) explicit, 3) default
         """
         null   = []
-        values = [ v for v in (d.pop(k, null) for k in ('--'+opt, opt)) if v is not null ]
+        values = [v for v in (d.pop(k, null) for k in ('--' + optId, optId)) if v is not null]
         return (values + [default])[0]
 
 
     @staticmethod
-    def resolveEnv( envStr, maxdepth = 5, catched = (TypeError,) ):
+    def resolveEnv( envStr, maxdepth = 5, caught = (TypeError,) ):
         """returns `envStr` with environment variables expanded up to `maxdepth`.
         Exceptions given in `catched` will be ignored.
         """
-        catched = catched or ( type("NullException", (Exception,), {}), )
+        caught = caught or (type( "NullException", (Exception,), {} ),)
         try:
             for i in range( maxdepth ):
                 envStr, old = path.expandvars( envStr ), envStr
                 if envStr == old:
                     break
-        except catched:
+            else:
+                raise RecursionError( 'environment variables nested too deep!', envStr )
+        except caught:
             pass
         return envStr
 
@@ -69,14 +76,40 @@ class OptionProcessor( object ):
 
 
     @classmethod
-    def knownOptions( _class, optsMap = '__opts__' ):
-        """return dictionary of options and default values known by this class.
-        Use the class attribute set by optsMap to build up the option dictionary.
-        """
-        try   : return vars(_class)['_knownOpts']
+    def _optsMap( _class, optsMap = '__opts__' ):
+        try   : opts = vars(_class)['.' + optsMap]
         except:
-            _class._knownOpts = opts = _class._merge_class_attrib( optsMap )
-            return opts
+            opts = _class._merge_class_attrib( optsMap )
+            setattr(_class, '.' + optsMap, opts )
+        return opts
+
+
+    @classmethod
+    def _convMap( _class, convMap = '__conv__' ):
+        try   : conv = vars(_class)['.' + convMap]
+        except:
+            conv = _class._merge_class_attrib( convMap )
+            setattr(_class, '.' + convMap, conv )
+        return conv
+
+
+    @classmethod
+    def knownOptions( _class, only = (), hide = (), pairConv = False ):
+        """return dictionary of options and default values known by this class.
+        Optional arguments `only` and `hide` allow passing lists of regex strings for filtering options.
+        If `pairConv` is set True, the options default value get paired with its converter.
+        """
+        opts = _class._optsMap()
+        if only or hide:
+            import re
+            chkOnly  = [re.compile(fr'^{p}$').match for p in only]
+            chkHide  = [re.compile(fr'^{p}$').match for p in hide]
+            selected = lambda s: (not chkOnly or any(c(s) for c in chkOnly)) and not any(c(s) for c in chkHide)
+            opts     = dict( i for i in opts.items() if selected( i[0] ) )
+        if pairConv:
+            conv = _class._convMap()
+            opts = { k: (v, conv.get( k, type(v) )) for k, v in opts.items() }
+        return opts
 
 
     @classmethod
@@ -85,10 +118,10 @@ class OptionProcessor( object ):
         Use the class attribute set by optsMap to build up the dictionary of known options.
         The values for the yielded options get retrieved with by the precedence: prioOpts, opts, defaults
         """
-        conv = _class._merge_class_attrib( convMap )
+        conv = _class._convMap( convMap )
         null = []
 
-        for optId, valDefault in _class.knownOptions( optsMap ).items():
+        for optId, valDefault in _class._optsMap( optsMap ).items():
             vA, vB = _class._pickOpt( prioOpts, optId, null ), _class._pickOpt( opts, optId, valDefault )
             optVal = _class.resolveEnv( (vA, vB)[vA is null] )
 

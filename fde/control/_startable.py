@@ -1,5 +1,6 @@
 
 import os
+from pathlib        import Path
 from ..tools        import makedirs, NullGuard, debug
 from ._controllable import Controllable, abstractmethod
 
@@ -28,7 +29,7 @@ class Startable( object ):
     """
 
     __opts__ = dict( args    = ''
-                   , workdir = ''
+                   , workdir = Path()
                    )
 
 
@@ -51,7 +52,7 @@ class Startable( object ):
         if self.opts.debug > 0: debug()
 
         # create and change to working directory of simulation ...
-        workdir = workdir or self.opts.workdir.format( **self.about )
+        workdir = workdir or str(self.opts.workdir).format( **self.about )
         prevdir = os.getcwd()
         if workdir:
             makedirs( workdir )

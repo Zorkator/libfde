@@ -28,7 +28,7 @@ class FDEControllable( Controllable ):
      * the initialization **should** use the infoBuffer to store the filePath of the libfde it loaded.
        This filePath allows the python binding to use the very same library, what is crucial for exchanging data.
     """
-    __conv__ = dict( lib         = Controllable.realpath )
+    __conv__ = dict( lib         = Controllable.filepath )
     __opts__ = dict( lib         = LookupError( 'missing library specification!' )
                    , libEnv      = 'FDEPATH'
                    , initFunc    = 'initialize_c_'
