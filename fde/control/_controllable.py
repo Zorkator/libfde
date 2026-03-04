@@ -9,6 +9,7 @@ from ..tools    import OptionProcessor, Caching, cached_property, debug
 class Controllable( Caching, OptionProcessor ):
 #-------------------------------------------------
     __opts__ = dict( rootId = '{classId}' )
+    __info__ = dict( rootId = "root scope id of Controllable type" )
 
     @cached_property
     def about( self ) -> dict:

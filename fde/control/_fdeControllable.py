@@ -34,6 +34,11 @@ class FDEControllable( Controllable ):
                    , initFunc    = 'initialize_c_'
                    , restorePATH = True
                    )
+    __info__ = dict( lib         = 'FDE-compatible shared library to load and control'
+                   , libEnv      = 'environment variable used when looking for shared library of libfde'
+                   , initFunc    = 'name of native initialization function called after loading `lib`'
+                   , restorePATH = 'restore PATH/LIBRARYPATH environment variable after loading `lib`'
+                   )
 
     _fdeLibPathError = \
       """WARNING:

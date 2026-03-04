@@ -5,6 +5,7 @@ __version__     = '.'.join( map( str, __versioninfo__ ) )
 
 from ._controllable           import Controllable
 from ._fdeControllable        import FDEControllable
+from ._pyControllable         import PyControllable
 from ._exceptionRouter        import ExceptionRouter
 from ._stateful               import Stateful
 from ._hookable               import Hookable, connect_to_hook

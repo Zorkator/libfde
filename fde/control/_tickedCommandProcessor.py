@@ -10,6 +10,7 @@ class TickedCommandProcessor( BaseCommandProcessor ):
     CommandProcessor extends BaseCommandProcessor by ticks.
     """
     __opts__ = dict( commandHooks='' )
+    __info__ = dict( commandHooks='comma separated hook names for which to start command loop' )
     __conv__ = dict( commandHooks=lambda s: [*filter( bool, (h.strip() for h in s.split( ',' )) )] )
 
     def __init__( self, *args, **kwArgs ):

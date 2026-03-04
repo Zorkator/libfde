@@ -27,6 +27,7 @@ class ExceptionRouter( object ):
       FDEControllable: handle, opts
     """
     __opts__ = dict( throwFunc = 'throw_c_' )
+    __info__ = dict( throwFunc = 'name of native function where python exceptions get forwarded' )
 
     #--------------------------------------------
     class _Hooker( object ):
