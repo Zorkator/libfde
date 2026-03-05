@@ -1,4 +1,6 @@
 
+from ..abstract import mixin
+
 #--------------------------
 class _Cache( dict ):
 #--------------------------
@@ -13,6 +15,7 @@ class _Cache( dict ):
         self.stale.clear()
 
 
+@mixin
 #--------------------------------------------
 class Caching( object ):
 #--------------------------------------------
@@ -21,7 +24,11 @@ class Caching( object ):
     """
 
     def __init__( self, *args, **kwArgs ):
-        super( Caching, self ).__init__( *args, **kwArgs )
+        mro  = type(self).mro()
+        if mro[mro.index(Caching)+1] is object:
+            super(Caching, self).__init__()
+        else:
+            super(Caching, self).__init__( *args, **kwArgs )
         self._stock = _Cache()
 
     def __getstate__( self ):

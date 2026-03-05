@@ -6,11 +6,11 @@ from ._stateful      import Stateful
 from ._controllable  import Controllable
 
 
-@Controllable.mixin.requires( Startable, Stateful )
+@Controllable.mixin.requires( Stateful )
 #--------------------------------------------------
 class BaseCommandProcessor( ActionContextHost ):
 #--------------------------------------------------
-    """Mixin class extending Startable, Stateful Controllable types.
+    """Mixin class extending Stateful Controllable types.
     BaseCommandProcessor provides a simple command loop for executing Stateful
       codes interactively.
     """
@@ -50,7 +50,7 @@ class BaseCommandProcessor( ActionContextHost ):
     #
 
     def cmd_exit( self ):
-        """disable command loop and continue execution of Startable."""
+        """disable command loop and continue execution of processCommands-caller."""
         self._doProcess = False
         return 'bye!'
 

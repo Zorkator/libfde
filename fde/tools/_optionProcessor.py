@@ -1,9 +1,10 @@
 
-from os import path
+from os        import path, getpid
+from ._caching import Caching, cached_property
 
-#----------------------------------
-class OptionProcessor( object ):
-#----------------------------------
+#-----------------------------------
+class OptionProcessor( Caching ):
+#-----------------------------------
     __conv__ = dict()
     __opts__ = dict( debug     = 0
                    , verbosity = 1
@@ -16,6 +17,19 @@ class OptionProcessor( object ):
     def opts( self ):
         "return options object."
         return self._opts
+
+
+    @cached_property
+    def about( self ) -> dict:
+        """return dictionary of instance information."""
+        return self._get_about()
+
+
+    # keep this routine overridable!
+    def _get_about( self ) -> dict:
+        return dict( pid     = getpid()
+                   , classId = type(self).__name__
+                   )
 
 
     @classmethod
@@ -131,4 +145,5 @@ class OptionProcessor( object ):
         keyword arguments: known options get stored with higher precedence and might override values from argDict.
         """
         from ._helper import TypeObject
+        super(OptionProcessor, self).__init__( **kwArgs )
         self._opts = TypeObject( self.extractOpts( argDict, kwArgs ) )
