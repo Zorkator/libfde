@@ -34,8 +34,8 @@ class FDEControllable( Controllable ):
                    , initFunc    = 'initialize_c_'
                    , restorePATH = True
                    )
-    __info__ = dict( lib         = 'FDE-compatible shared library to load and control'
-                   , libEnv      = 'environment variable used when looking for shared library of libfde'
+    __info__ = dict( lib         = 'FDEControllable compatible shared library to load and control'
+                   , libEnv      = 'environment variable used when loading shared library of fde dynamically'
                    , initFunc    = 'name of native initialization function called after loading `lib`'
                    , restorePATH = 'restore PATH/LIBRARYPATH environment variable after loading `lib`'
                    )

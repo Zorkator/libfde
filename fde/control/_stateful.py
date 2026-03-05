@@ -17,6 +17,9 @@ class Stateful( ActionContextHost ):
     __opts__ = dict( rootPath  = '{rootId}'
                    , statePath = '{rootId}/state'
                    )
+    __info__ = dict( rootPath  = 'scope path root of Controllable'
+                   , statePath = 'scope path of Controllable\'s state'
+                   )
 
     from ._variable import Variable
 

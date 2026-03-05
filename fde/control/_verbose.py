@@ -13,8 +13,12 @@ class Verbose( object ):
     """
 
     __opts__ = dict( logFile   = '{rootId}.{pid}.log'
-                   , logBuff   = '-1'
+                   , logBuff   = 1
                    , logFormat = '{rootId} {pid}: {0}\n'
+                   )
+    __info__ = dict( logFile   = 'logfile for logging verbose output'
+                   , logBuff   = 'buffer for logging verbose output'
+                   , logFormat = 'format for log messages'
                    )
 
     def write( self, msg, channel = 1 ):
@@ -40,7 +44,7 @@ class Verbose( object ):
     @cached_property
     def logger( self ):
         """returns lazy-opened output file handle, specified by options logFile and logBuff."""
-        return openFile( self.opts.logFile.format( **self.about ), 'w+', int( self.opts.logBuff ) )
+        return openFile( self.opts.logFile.format( **self.about ), 'w+', self.opts.logBuff )
 
 
     def log( self, msg ):

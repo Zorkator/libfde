@@ -31,6 +31,9 @@ class Startable( object ):
     __opts__ = dict( args    = ''
                    , workdir = Path()
                    )
+    __info__ = dict( args    = 'preconfigured start arguments'
+                   , workdir = 'working directory to create and to change to when starting'
+                   )
 
 
     def fork( self, **kwArgs ):

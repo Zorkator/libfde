@@ -13,6 +13,7 @@ class Hookable( object ):
       Controllable: about
     """
     __opts__      = dict( hooksPath = '{rootId}/hooks' )
+    __info__      = dict( hooksPath = 'scope path of global hooks in `lib`' )
     __hookAlias__ = dict()
 
 

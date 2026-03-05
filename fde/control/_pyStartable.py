@@ -7,6 +7,9 @@ class PyStartable( Startable ):
     __opts__ = dict( startFunc    = 'start'
                    , finalizeFunc = 'finalize'
                    )
+    __info__ = dict( startFunc    = 'method name called when starting'
+                   , finalizeFunc = 'method name called after `startFunc` has finished'
+                   )
 
 
     def __start__( self, *args, **kwArgs ):
