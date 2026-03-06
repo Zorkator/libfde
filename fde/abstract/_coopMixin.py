@@ -18,7 +18,7 @@ class _mixin( object ):
         return partial( _class._transform, reqClasses )
 
     @staticmethod
-    def _transform( reqClasses, cls ):
+    def _transform( reqClasses: tuple[str], cls ):
         if not issubclass( type(cls), MixinType ):
             cls = MixinType( cls.__name__, cls.__bases__, dict( cls.__dict__, __coop_bases__=reqClasses ) )
         return cls

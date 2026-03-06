@@ -114,8 +114,8 @@ class LibLoader( object ):
 
         _env[_PATH] = _pathDelim.join( paths )
         self.__dict__.pop( '_hdl', None )
-        self._log.debug( "try loading " + libPattern )
-        for f in glob( libPattern ):
+        self._log.debug( "try loading %s" % libPattern )
+        for f in glob( str(libPattern) ):
             self._log.debug( "\ttry " + str(f) )
             try   : self._hdl = CDLL_t( str(f) ); break  # < break if load succeeded
             except: self._opt['onLoadError']( str(f) )

@@ -1,6 +1,7 @@
 
 from os        import path, getpid
 from ._caching import Caching, cached_property
+from pathlib   import Path
 
 #-----------------------------------
 class OptionProcessor( Caching ):
@@ -33,15 +34,26 @@ class OptionProcessor( Caching ):
 
 
     @classmethod
-    def realpath( _class, p ):
+    def realpath( _class, p ) -> str:
         "return realpath of `p` with environment variables resolved and '~'/'~user' replaced by user's home directory."
-        return path.realpath( path.expanduser( _class.resolveEnv( p.strip() ) ) )
+        return path.realpath( path.expanduser( _class.resolveEnv( str(p).strip() ) ) )
 
 
     @classmethod
-    def filepath( _class, p ):
+    def filepath( _class, p ) -> Path:
         "return realpath of `p`"
-        return _class.realpath( p )
+        return Path( _class.realpath( p ) )
+
+
+    @classmethod
+    def list( _class, T ):
+        import shlex
+        def _wrap( obj ):
+            try   : obj = shlex.split( obj )
+            except: pass
+            return T(obj[0]) if len(obj) == 1 else [T(i) for i in obj]
+        _wrap.__name__ = T.__name__ + 'list'
+        return _wrap
 
 
     @staticmethod

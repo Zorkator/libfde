@@ -21,6 +21,11 @@ class Verbose( object ):
                    , logFormat = 'format for log messages'
                    )
 
+    def __init__( self, *args, **kwArgs ):
+        from pprint import pformat
+        super(Verbose, self).__init__( *args, **kwArgs )
+        self.say( 2, lambda: '\n' + pformat( self.opts.__getstate__(), indent=3 ) )
+
     def write( self, msg, channel = 1 ):
         """write message string msg to system channel {1,2} => (stdout, stderr).
         Returned channel might be used to trigger flush().
@@ -37,6 +42,7 @@ class Verbose( object ):
 
         """
         if self.opts.verbosity >= verbosity:
+            msg = msg() if callable(msg) else msg
             self.write( self.opts.logFormat.format( msg, **self.about ), channel ).flush()
         return self
 
