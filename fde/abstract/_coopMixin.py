@@ -20,7 +20,19 @@ class _mixin( object ):
     @staticmethod
     def _transform( reqClasses: tuple[str], cls ):
         if not issubclass( type(cls), MixinType ):
-            cls = MixinType( cls.__name__, cls.__bases__, dict( cls.__dict__, __coop_bases__=reqClasses ) )
+            # inspired by six.add_metaclass...
+            members = dict( cls.__dict__, __coop_bases__=reqClasses )
+            slots   = members.get( '__slots__' )
+            if slots is not None:
+                if isinstance( slots, str ):
+                    slots = [slots]
+                for s in slots:
+                    members.pop( s )
+            members.pop( '__dict__', None )
+            members.pop( '__weakref__', None )
+            if hasattr( cls, '__qualname__' ):
+                members['__qualname__'] = cls.__qualname__
+            cls = MixinType( cls.__name__, cls.__bases__, members )
         return cls
 
 
