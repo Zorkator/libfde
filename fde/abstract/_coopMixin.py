@@ -6,8 +6,8 @@ from abc import ABCMeta, abstractmethod
 class _mixin( object ):
 #-------------------------------------------
 
-    def __init__( self, *reqClasses ):
-        self._req = reqClasses
+    def __init__( self, *req ):
+        self._req = req
 
     def __call__( self, cls ):
         if self._req or not isinstance( cls, MixinType ):
@@ -20,8 +20,17 @@ class _mixin( object ):
             cls = MixinType( cls.__name__, cls.__bases__, members )
         return cls
 
-    def requires( self, *reqClasses ):
-        return type(self)( *self._req, *reqClasses )
+    def requires( self, *req ):
+        return type(self)( *self._req, *req )
+
+    def employ( self, mixins, sequential = False ):
+        cls = next( iter(self._req), None )
+        if sequential:
+            for m in mixins:
+                cls = type( cls )( m.__name__ + cls.__name__, (m, cls), {} )
+        elif mixins:
+            cls = type(cls)( ''.join( m.__name__ for m in mixins ) + cls.__name__, (*mixins, cls), {} )
+        return cls
 
 
 #-------------------------------------------
