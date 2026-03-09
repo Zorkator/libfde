@@ -1,6 +1,4 @@
 
-from ..abstract import mixin
-
 #--------------------------
 class _Cache( dict ):
 #--------------------------
@@ -15,7 +13,6 @@ class _Cache( dict ):
         self.stale.clear()
 
 
-@mixin
 #--------------------------------------------
 class Caching( object ):
 #--------------------------------------------

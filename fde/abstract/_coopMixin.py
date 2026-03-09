@@ -1,39 +1,27 @@
 
-from abc       import ABCMeta, abstractmethod
-from functools import partial
+from abc import ABCMeta, abstractmethod
 
 
 #-------------------------------------------
 class _mixin( object ):
 #-------------------------------------------
 
-    @classmethod
-    def decorator( _class, *reqClasses ):
-        dec          = partial( _class._transform, reqClasses )
-        dec.requires = partial( _class._requires, *reqClasses )
-        return dec
+    def __init__( self, *reqClasses ):
+        self._req = reqClasses
 
-    @classmethod
-    def _requires( _class, *reqClasses ):
-        return partial( _class._transform, reqClasses )
-
-    @staticmethod
-    def _transform( reqClasses: tuple[str], cls ):
-        if not issubclass( type(cls), MixinType ):
+    def __call__( self, cls ):
+        if self._req or not isinstance( cls, MixinType ):
             # inspired by six.add_metaclass...
-            members = dict( cls.__dict__, __coop_bases__=reqClasses )
-            slots   = members.get( '__slots__' )
-            if slots is not None:
-                if isinstance( slots, str ):
-                    slots = [slots]
-                for s in slots:
-                    members.pop( s )
-            members.pop( '__dict__', None )
-            members.pop( '__weakref__', None )
-            if hasattr( cls, '__qualname__' ):
-                members['__qualname__'] = cls.__qualname__
+            members = dict( cls.__dict__, __qualname__=cls.__qualname__, __coop_bases__=self._req )
+            slots   = members.get( '__slots__', () )
+            if isinstance( slots, str ):
+                slots = (slots,)
+            [members.pop(i, None) for i in (*slots, '__dict__', '__weakref__')]
             cls = MixinType( cls.__name__, cls.__bases__, members )
         return cls
+
+    def requires( self, *reqClasses ):
+        return type(self)( *self._req, *reqClasses )
 
 
 #-------------------------------------------
@@ -58,7 +46,7 @@ class MixinType( ABCMeta ):
             members['__missing_coops__'] = missing = tuple( c for c in coops if not issubclass( cls, c ) )
             members.update( _class._ensureMarker( missing, cls, '\xa0\b<missing superclasses>' ) )
             cls = super( MixinType, _class ).__new__( _class, name, bases, members )
-        cls.mixin = _mixin.decorator( cls )
+        cls.mixin = _mixin( cls )
         return cls
 
     @property
@@ -66,4 +54,4 @@ class MixinType( ABCMeta ):
         return getattr( _class, '__missing_coops__', () )
 
 
-mixin = _mixin.decorator()
+mixin = _mixin()
