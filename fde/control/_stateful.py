@@ -16,9 +16,11 @@ class Stateful( ActionContextHost ):
     """
     __opts__ = dict( rootPath  = '{rootId}'
                    , statePath = '{rootId}/state'
+                   , pivotPath = '{rootId}/state/t'
                    )
     __info__ = dict( rootPath  = 'scope path root of Controllable'
                    , statePath = 'scope path of Controllable\'s state'
+                   , pivotPath = 'scope path of Controllable\'s main progress variable'
                    )
 
     from ._variable import Variable
@@ -65,6 +67,12 @@ class Stateful( ActionContextHost ):
     def state( self ):
         """return state scope, specified by option statePath."""
         return self._get_path_scope( self.opts.statePath )
+
+
+    @cached_property
+    def pivot( self ):
+        """return state scope, specified by option statePath."""
+        return self._get_path_scope( self.opts.pivotPath )
 
 
     def _get_path_scope( self, path ):
