@@ -2,7 +2,7 @@
 include:
     - project: grs/gramovis/ci-tools
       ref:     main
-      file:    [develop.yaml, tools.yaml, linux.yaml]
+      file:    [develop.yaml, tools.yaml, platform.yaml]
 
 variables:
     BUILD_DIR: .build
@@ -31,7 +31,7 @@ variables:
         FDEPATH: ${BUILD_DIR}/package/${BUILD_CONFIG}/bin
     script:
         - python -m pip wheel -w .dist --find-links .dist .
-        - auditwheel ${FDEPATH} repair .dist/*.whl -w dist
+        - auditwheel ${FDEPATH} repair .dist/fde-*.whl -w dist
     artifacts:
         paths:
             - "{.dist,dist}"
@@ -77,22 +77,24 @@ test.debian:
 #---
 
 core.windows:
-    extends: [.build.core, .image.windows.compiler:2025]
+    extends: [.build.core, .windows, .image.windows.compiler:2025]
 
 wheel.windows:
-    extends: [.build.wheel, .image.windows.compiler:2025]
+    extends: [.build.wheel, .windows, .image.windows.compiler:2025]
     needs:
         - job: core.windows
           artifacts: true
     before_script:
+        - !reference [.windows, before_script]
         - !reference [.tools.windows, install, python.auditwheel]
 
 test.windows:
-    extends: [.test.wheel, .image.windows.core:2025]
+    extends: [.test.wheel, .windows, .image.windows.core:2025]
     needs:
         - job: wheel.windows
           artifacts: true
     before_script:
+        - !reference [.windows, before_script]
         - !reference [.tools.windows, install, python.venv]
 
 
