@@ -115,6 +115,16 @@ class ActionContext( ProtoClass ):
         except SyntaxError:
             self.exec_code( cmd )
 
+    # decorator
+    @classmethod
+    def config( _class, Trigger = None, Action = None, globals = None, **other ):
+        def _extender( cls ):
+            _g = dict( dict( _class._globals, **globals or {} ), **other )
+            setattr( cls, _class.__name__, _class.subclass_omit( None, Trigger=Trigger, Action=Action, _globals=_g ) )
+            return cls
+        return _extender
+
+
 
 #-------------------------------------------------
 class ActionContextHost( ProtoClass, Caching ):
