@@ -30,11 +30,12 @@ variables:
     variables:
         FDEPATH: ${BUILD_DIR}/package/${BUILD_CONFIG}/bin
     script:
-        - python -m pip wheel -w .dist --find-links .dist .
-        - auditwheel ${FDEPATH} repair .dist/fde-*.whl -w dist
+        - python -m pip wheel -w dist --find-links dist .
+        - auditwheel ${FDEPATH} repair dist/fde-*.whl -w .dist
+        - cit.rcopy .dist/* dist
     artifacts:
         paths:
-            - "{.dist,dist}"
+            - dist
 
 #----------------
 .test.wheel:
