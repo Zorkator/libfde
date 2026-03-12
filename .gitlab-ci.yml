@@ -47,6 +47,16 @@ variables:
         - python test_wheel_setup.py
 
 
+#-------------------------
+test.athlet-controller:
+#-------------------------
+    extends: [.cit_test_job]
+    trigger:
+        project: grs/gramovis/athlet-controller
+        branch: master
+
+
+
 #---------------
 # debian:11
 #---
