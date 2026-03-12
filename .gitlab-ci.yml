@@ -33,9 +33,10 @@ variables:
         - python -m pip wheel -w dist --find-links dist .
         - auditwheel ${FDEPATH} repair dist/fde-*.whl -w .dist
         - cp -r .dist/* dist
+        - mv dist dist.${PLATFORM_NAME}
     artifacts:
         paths:
-            - dist
+            - dist.${PLATFORM_NAME}
 
 #----------------
 .test.wheel:
@@ -62,10 +63,10 @@ test.athlet-controller:
 #---
 
 core.debian:
-    extends: [.build.core, .debian, .image.debian.compiler:2025]
+    extends: [.build.core, .image.debian.compiler:2025]
 
 wheel.debian:
-    extends: [.build.wheel, .debian, .image.debian.compiler:2025]
+    extends: [.build.wheel, .image.debian.compiler:2025]
     needs:
         - job: core.debian
           artifacts: true
@@ -74,7 +75,7 @@ wheel.debian:
         - !reference [.tools.debian, install, python.auditwheel]
 
 test.debian:
-    extends: [.test.wheel, .debian, .image.debian.core:2025]
+    extends: [.test.wheel, .image.debian.core:2025]
     needs:
         - job: wheel.debian
           artifacts: true
@@ -88,10 +89,10 @@ test.debian:
 #---
 
 core.windows:
-    extends: [.build.core, .windows, .image.windows.compiler:2025]
+    extends: [.build.core, .image.windows.compiler:2025]
 
 wheel.windows:
-    extends: [.build.wheel, .windows, .image.windows.compiler:2025]
+    extends: [.build.wheel, .image.windows.compiler:2025]
     needs:
         - job: core.windows
           artifacts: true
@@ -100,7 +101,7 @@ wheel.windows:
         - !reference [.tools.windows, install, python.auditwheel]
 
 test.windows:
-    extends: [.test.wheel, .windows, .image.windows.core:2025]
+    extends: [.test.wheel, .image.windows.core:2025]
     needs:
         - job: wheel.windows
           artifacts: true
