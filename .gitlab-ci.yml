@@ -43,7 +43,7 @@ variables:
 #----------------
     extends: [.cit_test_job]
     script:
-        - pip install --find-links=dist fde
+        - pip install --find-links=dist.${PLATFORM_NAME} fde
         - cd test
         - python test_wheel_setup.py
 
