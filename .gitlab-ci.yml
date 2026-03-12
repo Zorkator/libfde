@@ -50,7 +50,7 @@ variables:
 #-------------------------
 test.athlet-controller:
 #-------------------------
-    extends: [.cit_test_job]
+    stage: test
     trigger:
         project: grs/gramovis/athlet-controller
         branch: master
