@@ -32,7 +32,7 @@ variables:
     script:
         - python -m pip wheel -w dist --find-links dist .
         - auditwheel ${FDEPATH} repair dist/fde-*.whl -w .dist
-        - cit.rcopy .dist/* dist
+        - cp -r .dist/* dist
     artifacts:
         paths:
             - dist
