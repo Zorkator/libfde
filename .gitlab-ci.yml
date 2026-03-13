@@ -33,7 +33,7 @@ variables:
         - python -m pip wheel -w dist --find-links dist .
         - auditwheel ${FDEPATH} repair dist/fde-*.whl -w .dist
         - cp -r .dist/* dist
-        - mv dist ${PACKAGE_DIR}.${PLATFORM_NAME}
+        - mv dist "${PACKAGE_DIR}.${PLATFORM_NAME}"
 
 #----------------
 .test.wheel:
