@@ -33,17 +33,14 @@ variables:
         - python -m pip wheel -w dist --find-links dist .
         - auditwheel ${FDEPATH} repair dist/fde-*.whl -w .dist
         - cp -r .dist/* dist
-        - mv dist dist.${PLATFORM_NAME}
-    artifacts:
-        paths:
-            - dist.${PLATFORM_NAME}
+        - mv dist ${PACKAGE_DIR}.${PLATFORM_NAME}
 
 #----------------
 .test.wheel:
 #----------------
     extends: [.cit_test_job]
     script:
-        - pip install --find-links=dist.${PLATFORM_NAME} fde
+        - pip install --find-links=${PACKAGE_DIR}.${PLATFORM_NAME} fde
         - cd test
         - python test_wheel_setup.py
 
@@ -111,19 +108,25 @@ test.windows:
 
 
 #-----------------------
-upload:
+pack:
 #-----------------------
-    extends: .cit_upload
+    extends: [.cit_pack_job]
     needs:
-        - job: test.debian
-        - job: test.windows
-        #
         - job: wheel.debian
           artifacts: true
         - job: wheel.windows
           artifacts: true
     variables:
-        FILE_PATTERN: "*.whl"
+        PACKED_PLATFORM_NAMES: debian windows
+
+
+#-----------------------
+upload:
+#-----------------------
+    extends: .cit_upload
+    needs:
+        - job: pack
+          artifacts: true
 
 
 #-----------------------
