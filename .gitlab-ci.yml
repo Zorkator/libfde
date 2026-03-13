@@ -32,7 +32,8 @@ variables:
     script:
         - python -m pip wheel -w dist --find-links dist .
         - auditwheel ${FDEPATH} repair dist/fde-*.whl -w .dist
-        - cp -r .dist/* dist
+        - rm dist/fde-*.whl  #< delete incomplete wheel
+        - cp -r .dist/* dist #< before copying repaired one into dist
         - mv dist "${PACKAGE_DIR}.${PLATFORM_NAME}"
 
 #----------------
@@ -124,6 +125,11 @@ pack:
           artifacts: true
         - job: wheel.windows
           artifacts: true
+    script:
+        # pack packages zipped with its dependencies...
+        - !reference [.cit_pack_job, script]
+        # ...  and simply the fde-*.whl files for all platforms.
+        - find ${PACKAGE_DIR}.* -name "fde-*.whl" -exec cp {} ${PACKAGE_DIR} \;
     variables:
         PACKED_PLATFORM_NAMES: debian windows
 
