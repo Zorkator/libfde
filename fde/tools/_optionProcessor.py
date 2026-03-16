@@ -3,6 +3,12 @@ from os        import path, getpid
 from ._caching import Caching, cached_property
 from pathlib   import Path
 
+try:
+    import __main__
+    _iwd = __main__.iwd
+except:
+    _iwd = Path().resolve()
+
 #-----------------------------------
 class OptionProcessor( Caching ):
 #-----------------------------------
@@ -30,6 +36,7 @@ class OptionProcessor( Caching ):
     def _get_about( self ) -> dict:
         return dict( pid     = getpid()
                    , classId = type(self).__name__
+                   , iwd     = _iwd
                    )
 
 
@@ -41,8 +48,8 @@ class OptionProcessor( Caching ):
 
     @classmethod
     def filepath( _class, p ) -> Path:
-        "return realpath of `p`"
-        return Path( _class.realpath( p ) )
+        "return realpath path of `p`, but with relative path resolved based on iwd (initial working directory)"
+        return (_iwd/path.expanduser( _class.resolveEnv( str(p).strip() ) )).resolve()
 
 
     @classmethod
@@ -51,9 +58,23 @@ class OptionProcessor( Caching ):
         def _wrap( obj ):
             try   : obj = shlex.split( obj )
             except: pass
-            return T(obj[0]) if len(obj) == 1 else [T(i) for i in obj]
+            return [T(i) for i in _class.flatten(obj)]
         _wrap.__name__ = T.__name__ + 'list'
         return _wrap
+
+
+    @classmethod
+    def flatten( _class, s ):
+        "flatten maybe nested string sequence `s` to linear list of strings."
+        from itertools import chain
+        if isinstance( s, str ): return [s]
+        else                   : return [*chain( *(_class.flatten(i) for i in s) )]
+
+
+    @classmethod
+    def unique( _class, s ):
+        seen = set()
+        return type(s)( i for i in s if not (i in seen or seen.add( i )) )
 
 
     @staticmethod
