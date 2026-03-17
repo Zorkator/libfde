@@ -1,18 +1,14 @@
 
 from traceback       import format_exception
 from ._actionContext import ActionContextHost
-from ._startable     import Startable
-from ._stateful      import Stateful
-from ._controllable  import Controllable
+from ..abstract      import mixin
 
 
-@Controllable.mixin.requires( Stateful )
+@mixin
 #--------------------------------------------------
 class BaseCommandProcessor( ActionContextHost ):
 #--------------------------------------------------
-    """Mixin class extending Stateful Controllable types.
-    BaseCommandProcessor provides a simple command loop for executing Stateful
-      codes interactively.
+    """Mixin class that provides a command loop for processing commands on ActionContextHosts.
     """
     commandPrefix = 'cmd_'
     _prompt       = '>>> '
@@ -34,16 +30,17 @@ class BaseCommandProcessor( ActionContextHost ):
     def processCmd( self, cmd = None ):
         try:
             obj = self.receive() if cmd is None else cmd
-            if   hasattr( obj, 'strip' )   : res = self.evalCommand( obj )
-            elif hasattr( obj, 'keys' )    : res = self.setData( obj )
-            elif hasattr( obj, '__iter__' ): res = self.getData( obj )
-            else                           : res = LookupError("unknown command")
-        except StopIteration               : res = self.cmd_exit()
-        except Exception as e              : res = e
+            if hasattr( obj, 'strip' ): res = self.evalCommand( obj )
+            else                      : res = self._dispatch( obj )
+        except StopIteration : res = self.cmd_exit()
+        except Exception as e: res = e
         #
         if cmd is None: self.send( res )
         else          : return res
 
+
+    def _dispatch( self, obj ):
+        return LookupError( "unknown command" )
 
     ####
     # command implementations
