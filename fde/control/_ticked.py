@@ -1,7 +1,7 @@
 
 from ._baseCommandProcessor import BaseCommandProcessor
 from ._hookable             import Hookable, connect_to_hook
-from ..tools                import OptionProcessor
+from ..tools                import OptionProcessor as OP
 
 
 @BaseCommandProcessor.mixin.requires( Hookable )
@@ -9,18 +9,18 @@ from ..tools                import OptionProcessor
 class Ticked( object ):
 #-------------------------------------------------------
     """Mixin class extending Hookable BaseCommandProcessor types by command processing at
-      configurable commandHooks.
+      configurable commandHook[s].
     """
-    __conv__ = dict( commandHooks=OptionProcessor.list(str) )
-    __opts__ = dict( commandHooks=[] )
-    __info__ = dict( commandHooks='hook names for which to start command loop' )
+    __conv__ = dict( commandHook=OP.unique(OP.list(str)) )
+    __opts__ = dict( commandHook=[] )
+    __info__ = dict( commandHook='hook name[s] for which to start command loop' )
 
     def __init__( self, *args, **kwArgs ):
         super(Ticked, self).__init__( *args, **kwArgs )
         self._tickQ = []
 
     def initialize( self ):
-        connect_to_hook( *self.opts.commandHooks )( self.processCommands )
+        connect_to_hook( *self.opts.commandHook )( self.processCommands )
         super(Ticked, self).initialize()
 
     def processCmd( self, cmd = None ):

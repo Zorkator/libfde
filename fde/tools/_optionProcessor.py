@@ -2,6 +2,7 @@
 from os        import path, getpid
 from ._caching import Caching, cached_property
 from pathlib   import Path
+from itertools import chain
 
 try:
     import __main__
@@ -53,6 +54,13 @@ class OptionProcessor( Caching ):
 
 
     @classmethod
+    def flatten( _class, s ):
+        "flatten maybe nested string sequence `s` to linear list of strings."
+        if isinstance( s, str ): return [s]
+        else                   : return [*chain( *(_class.flatten(i) for i in s) )]
+
+
+    @classmethod
     def list( _class, T ):
         import shlex
         def _wrap( obj ):
@@ -63,18 +71,15 @@ class OptionProcessor( Caching ):
         return _wrap
 
 
-    @classmethod
-    def flatten( _class, s ):
-        "flatten maybe nested string sequence `s` to linear list of strings."
-        from itertools import chain
-        if isinstance( s, str ): return [s]
-        else                   : return [*chain( *(_class.flatten(i) for i in s) )]
-
-
-    @classmethod
-    def unique( _class, s ):
-        seen = set()
-        return type(s)( i for i in s if not (i in seen or seen.add( i )) )
+    @staticmethod
+    def unique( f = None ):
+        f, n = f and (f, f.__name__) or ((lambda x: x), '')
+        def unique( seq ):
+            seen = set()
+            seq  = f(seq)
+            return type(seq)( i for i in seq if not (i in seen or seen.add( i )) )
+        unique.__name__ += n
+        return unique
 
 
     @staticmethod
