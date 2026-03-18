@@ -121,8 +121,10 @@ pack:
 #-----------------------
     extends: [.cit_pack_job]
     needs:
+        - job: test.debian
         - job: wheel.debian
           artifacts: true
+        - job: test.windows
         - job: wheel.windows
           artifacts: true
     script:
