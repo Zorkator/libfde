@@ -56,18 +56,14 @@ core.debian:
 
 wheel.debian:
     extends: [.build.wheel, .image.debian.compiler:2025]
-    needs:
-        - job: core.debian
-          artifacts: true
+    needs:   [core.debian]
     before_script:
         - !reference [.debian, before_script]
         - !reference [.tools.debian, install, python.auditwheel]
 
 test.debian:
     extends: [.test.wheel, .image.debian.core:2025]
-    needs:
-        - job: wheel.debian
-          artifacts: true
+    needs:   [wheel.debian]
     before_script:
         - !reference [.debian, before_script]
         - !reference [.tools.linux, install, python.venv]
@@ -82,18 +78,14 @@ core.windows:
 
 wheel.windows:
     extends: [.build.wheel, .image.windows.compiler:2025]
-    needs:
-        - job: core.windows
-          artifacts: true
+    needs:   [core.windows]
     before_script:
         - !reference [.windows, before_script]
         - !reference [.tools.windows, install, python.auditwheel]
 
 test.windows:
     extends: [.test.wheel, .image.windows.core:2025]
-    needs:
-        - job: wheel.windows
-          artifacts: true
+    needs:   [wheel.windows]
     before_script:
         - !reference [.windows, before_script]
         - !reference [.tools.windows, install, python.venv]
@@ -107,48 +99,33 @@ test.windows:
 test.athlet-controller:
 #-------------------------
     stage: test
-    needs:
-        - job: wheel.debian
-        - job: wheel.windows
+    needs: [wheel.debian, wheel.windows]
     trigger:
         project: grs/gramovis/athlet-controller
         branch: master
-
 
 
 #-----------------------
 pack:
 #-----------------------
     extends: [.cit_pack_job]
-    needs:
-        - job: test.debian
-        - job: wheel.debian
-          artifacts: true
-        - job: test.windows
-        - job: wheel.windows
-          artifacts: true
+    needs:   [test.debian, test.windows, wheel.debian, wheel.windows]
     script:
         # pack packages zipped with its dependencies...
         - !reference [.cit_pack_job, script]
         # ...  and simply the fde-*.whl files for all platforms.
-        - find ${PACKAGE_DIR}.* -name "fde-*.whl" -exec cp {} ${PACKAGE_DIR} \;
+        - cp -n ${PACKAGE_DIR}.*/fde-*.whl ${PACKAGE_DIR}
     variables:
         PACKED_PLATFORM_NAMES: debian windows
-
 
 #-----------------------
 upload:
 #-----------------------
     extends: .cit_upload
-    needs:
-        - job: pack
-          artifacts: true
-
+    needs:   [pack]
 
 #-----------------------
 publish:
 #-----------------------
     extends: .cit_publish
-    needs:
-        - job: upload
-          artifacts: true
+    needs:   [upload]

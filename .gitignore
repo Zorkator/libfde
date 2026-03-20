@@ -41,3 +41,5 @@ test/exe/
 libfortres/release/
 
 /_*/
+
+*.egg-info/
