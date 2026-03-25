@@ -1,7 +1,8 @@
 
-from ctypes import CDLL as _CDLL, c_int64
-from os     import environ as _env, pathsep as _pathDelim, path as _path, getpid as _getpid
-from glob   import glob
+from ctypes     import CDLL as _CDLL, c_int64
+from os         import environ as _env, pathsep as _pathDelim, path as _path, getpid as _getpid
+from glob       import glob
+from contextlib import contextmanager
 import logging
 import platform
 
@@ -9,11 +10,29 @@ _isWin = platform.system() == "Windows"
 _PATH  = ('LD_LIBRARY_PATH', 'PATH')[_isWin]
 
 if _isWin:
-    from ctypes import windll
-    freeLibrary = windll.kernel32.FreeLibrary
+  from ctypes import windll
+  freeLibrary = windll.kernel32.FreeLibrary
 else:
-    from ctypes import cdll, util
-    freeLibrary = cdll.LoadLibrary( util.find_library('dl') ).dlclose
+  from ctypes import cdll, util
+  freeLibrary = cdll.LoadLibrary( util.find_library('dl') ).dlclose
+
+
+@contextmanager
+def extendLoadPaths( *pathpattern, **opts ):
+    from itertools import chain
+    envPaths = _env.get( _PATH, '' )
+    try:
+        paths    = [p for p in chain( *(glob( pat ) for pat in pathpattern) ) if _path.isdir( p )]
+        _env[_PATH] = _pathDelim.join( (*paths, envPaths) )
+        yield None
+    finally:
+        if envPaths and opts.get('restore', True):
+            _env[_PATH] = envPaths
+
+
+def libPattern( name ):
+  return ('lib%s.so*', '*%s.*.dll')[_isWin] % name
+
 
 logging.basicConfig()
 
@@ -108,30 +127,20 @@ class LibLoader( object ):
 
 
     def _tryLoad( self, libPattern, searchPaths ):
-        envPaths = _env.get( _PATH, '' )
-        paths    = list( filter( _path.isdir, glob( _path.dirname( libPattern ) ) ) ) + searchPaths
-        paths.append( envPaths )
+        with extendLoadPaths( _path.dirname( libPattern ), *searchPaths, restore=self.opt('restorePATH') ):
+            self.__dict__.pop( '_hdl', None )
+            self._log.debug( "try loading %s" % libPattern )
+            for f in glob( str(libPattern) ):
+                self._log.debug( "\ttry " + str(f) )
+                try   : self._hdl = CDLL_t( str(f) ); break  # < break if load succeeded
+                except: self._opt['onLoadError']( str(f) )
 
-        _env[_PATH] = _pathDelim.join( paths )
-        self.__dict__.pop( '_hdl', None )
-        self._log.debug( "try loading %s" % libPattern )
-        for f in glob( str(libPattern) ):
-            self._log.debug( "\ttry " + str(f) )
-            try   : self._hdl = CDLL_t( str(f) ); break  # < break if load succeeded
-            except: self._opt['onLoadError']( str(f) )
-
-        restorePATH = True
-        try:
             if getattr( self, '_hdl', None ):
                 # if loader has a named environment variable for explicit filePath
                 #   we update the environment variable to allow child processes loading the same library.
                 if self.opt('fileEnv'):
                     _env[ self.opt('fileEnv') ] = self._hdl._name
-                restorePATH &= bool(self.opt('restorePATH'))
                 raise self.Success
-        finally:
-            if restorePATH:
-                _env[_PATH] = envPaths
 
 
     def _tryMatch( self, libPattern ):
@@ -167,5 +176,4 @@ class LibLoader( object ):
         self._opt.update( kwArgs )
 
 
-_libPattern = ('libfde.so*', '*fde.*.dll')[_isWin]
-core_loader = LibLoader( fileEnv='LIBFDE', prioPathEnv='FDEPATH', libPattern=_libPattern, matchExisting=True )
+core_loader = LibLoader( fileEnv='LIBFDE', prioPathEnv='FDEPATH', libPattern=libPattern('fde'), matchExisting=True )
