@@ -6,8 +6,10 @@ from contextlib import contextmanager
 import logging
 import platform
 
-_isWin = platform.system() == "Windows"
-_PATH  = ('LD_LIBRARY_PATH', 'PATH')[_isWin]
+_isWin   = platform.system() == "Windows"
+_PATH    = ('LD_LIBRARY_PATH', 'PATH')[_isWin]
+_libPtrn = (['lib%s.so', 'lib%s.so*'],
+            ['*%s.dll',  '*%s.*.dll'])[_isWin]
 
 if _isWin:
   from ctypes import windll
@@ -30,8 +32,8 @@ def extendLoadPaths( *pathpattern, **opts ):
             _env[_PATH] = envPaths
 
 
-def libPattern( name ):
-  return ('lib%s.so*', '*%s.*.dll')[_isWin] % name
+def libPattern( name, versionTagged = False ):
+    return _libPtrn[versionTagged] % name
 
 
 logging.basicConfig()
@@ -176,4 +178,4 @@ class LibLoader( object ):
         self._opt.update( kwArgs )
 
 
-core_loader = LibLoader( fileEnv='LIBFDE', prioPathEnv='FDEPATH', libPattern=libPattern('fde'), matchExisting=True )
+core_loader = LibLoader( fileEnv='LIBFDE', prioPathEnv='FDEPATH', libPattern=libPattern('fde',versionTagged=True), matchExisting=True )
