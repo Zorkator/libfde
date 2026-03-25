@@ -63,11 +63,7 @@ class Startable( object ):
 
         try:
             # determine argument list ... if not given explicitly use predefined
-            args = args or self.opts.args
-            try   : args = args.strip and [args] #< if args is string wrap it by list
-            except: pass
-            args = map( self.resolveEnv, args ) #< resolve environment variables in args ...
-
+            args = self.list(self.resolveEnv)( args or self.opts.args ) #< convert args into list of resolved strings.
             with getattr( self, 'routedExceptions', NullGuard )(): #< mixin-method might not be available.
                 code = self.__start__( *args, **kwArgs )
                 code = self.finalize( code, **kwArgs )

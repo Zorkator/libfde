@@ -56,15 +56,17 @@ class OptionProcessor( Caching ):
     @classmethod
     def flatten( _class, s ):
         "flatten maybe nested string sequence `s` to linear list of strings."
-        if isinstance( s, str ): return [s]
-        else                   : return [*chain( *(_class.flatten(i) for i in s) )]
+        from collections.abc import Sequence
+        if isinstance( s, str ) or not isinstance( s, Sequence ):
+            return [s]
+        return [*chain( *(_class.flatten(i) for i in s) )]
 
 
     @classmethod
     def list( _class, T ):
-        import shlex
+        import winshlex
         def _wrap( obj ):
-            try   : obj = shlex.split( obj )
+            try   : obj = winshlex.split( obj )
             except: pass
             return [T(i) for i in _class.flatten(obj)]
         _wrap.__name__ = T.__name__ + 'list'
@@ -111,7 +113,7 @@ class OptionProcessor( Caching ):
         caught = caught or (type( "NullException", (Exception,), {} ),)
         try:
             for i in range( maxdepth ):
-                envStr, old = path.expandvars( envStr ), envStr
+                envStr, old = path.expandvars( envStr ), str(envStr)
                 if envStr == old:
                     break
             else:
