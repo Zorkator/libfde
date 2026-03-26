@@ -161,11 +161,14 @@ class LibLoader( object ):
         return libPattern
 
 
-    def __init__( self, **kwArgs ):
+    def __init__( self, filePath = None, name = None, versionTagged = True, **kwArgs ):
         self._opt = dict( onLoadError=lambda f: None )
         self._log = logging.getLogger( type(self).__name__ )
+        if   filePath                  : kwArgs.update( filePath=filePath )
+        elif 'libPattern' not in kwArgs: kwArgs.update( libPattern=libPattern(name, versionTagged) )
         kwArgs.setdefault( 'logLevel', 'ERROR' )
         kwArgs.setdefault( 'restorePATH', True )
+        kwArgs.setdefault( 'matchExisting', True )
         self.set( **kwArgs )
 
     def __str__( self ):
@@ -178,4 +181,4 @@ class LibLoader( object ):
         self._opt.update( kwArgs )
 
 
-core_loader = LibLoader( fileEnv='LIBFDE', prioPathEnv='FDEPATH', libPattern=libPattern('fde',versionTagged=True), matchExisting=True )
+core_loader = LibLoader( name='fde', fileEnv='LIBFDE', prioPathEnv='FDEPATH' )
