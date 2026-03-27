@@ -1,6 +1,7 @@
 
 from ..tools        import openFile, sys_channel, cached_property
 from ._controllable import Controllable
+from functools      import wraps
 
 
 @Controllable.mixin
@@ -57,3 +58,9 @@ class Verbose( object ):
         """write message string msg to logger file handle."""
         self.logger.write( str(msg) + '\n' )
         return self
+
+
+    @wraps(print)
+    def print( self, *args, **kwArgs ):
+        # make print overridable
+        return print( *args, **kwArgs )

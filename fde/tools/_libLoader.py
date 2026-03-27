@@ -12,11 +12,11 @@ _libPtrn = (['lib%s.so', 'lib%s.so*'],
             ['*%s.dll',  '*%s.*.dll'])[_isWin]
 
 if _isWin:
-  from ctypes import windll
-  freeLibrary = windll.kernel32.FreeLibrary
+    from ctypes import windll
+    freeLibrary = windll.kernel32.FreeLibrary
 else:
-  from ctypes import cdll, util
-  freeLibrary = cdll.LoadLibrary( util.find_library('dl') ).dlclose
+    from ctypes import cdll, util
+    freeLibrary = cdll.LoadLibrary( util.find_library('dl') ).dlclose
 
 
 @contextmanager
