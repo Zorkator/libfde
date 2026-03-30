@@ -30,7 +30,7 @@ variables:
     variables:
         FDEPATH: ${BUILD_DIR}/package/${BUILD_CONFIG}/bin
     script:
-        - python -m pip wheel -w dist --find-links dist .
+        - python -m pip wheel -w dist .
         - auditwheel ${FDEPATH} repair dist/fde-*.whl -w .dist
         - rm dist/fde-*.whl  #< delete incomplete wheel
         - cp -r .dist/* dist #< before copying repaired one into dist

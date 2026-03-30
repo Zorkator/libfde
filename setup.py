@@ -1,11 +1,11 @@
 from setuptools import setup, find_packages
 
 import fde
-from fde.tools import core_loader
+from fde.tools import core_loader as cl
 
 import sysconfig
 import shutil
-shutil.copy2( core_loader.handle._name, fde.__path__[0] )
+shutil.copy2( cl.set(matchExisting=False).handle._name, fde.__path__[0] )
 
 setup(
     name='fde',
