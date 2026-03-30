@@ -12,7 +12,7 @@ setup(
     version=fde.__version__,
     author=fde.__author__,
     author_email="",
-    install_requires=['six', 'psutil', 'winshlex'],
+    install_requires=['six', 'psutil', 'fnmatch', 'winshlex'],
     packages=find_packages( include=['fde', 'fde.*'] ),
     package_data={'fde': ["*.dll", "*.so", "*.so.*"]},
     description='Python wrapper for FDE loading and using shared library',
