@@ -6,18 +6,19 @@ class MyTestCase( unittest.TestCase ):
 
     @staticmethod
     def loadError( lib ):
-        import os
-        try   : os.system( 'ldd ' + lib )
-        except: print( 'failed loading ' + lib )
+        print( 'failed loading ' + lib )
 
-    def test_load( self ):
+    #         . o O (make this test running first)
+    def test_0_load( self ):
         from fde.tools import core_loader as cl
+        from pathlib   import Path
         cl.set( logLevel='DEBUG', onLoadError=self.loadError, footprint=True )
         print( cl.handle )
-        self.assertTrue( cl.handle._name in cl.processLibs( cl.opt('libPattern') ) )
-        self.assertTrue( cl.handle._name in cl.handle.footprint )
+        hdlPath = Path( cl.handle._name )
+        self.assertTrue( hdlPath.name in [Path(l).name for l in cl.processLibs( cl.opt('libPattern'))] )
+        # testing on footprint needs initial handle loaded with footprint enabled!
+        self.assertTrue( hdlPath.name in [Path(l).name for l in cl.handle.footprint] )
         self.assertTrue( cl.handle.footprint.issubset( cl.processLibs() ) )
-
 
     def test_simple( self ):
         from fde import core
