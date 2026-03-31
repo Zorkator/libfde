@@ -83,7 +83,7 @@ class LibLoader( object ):
         libs = (l.path for l in Process(_getpid()).memory_maps())
         if pattern:
             pname = (lambda p: p) if dirname(pattern) else basename
-            libs = (fn for fn in libs if fnmatch( pname(fn), pattern ))
+            libs  = (fn for fn in libs if fnmatch( pname(fn), pattern ))
         return libs
 
     @classmethod
