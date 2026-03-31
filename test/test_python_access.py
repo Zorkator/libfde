@@ -6,14 +6,6 @@ Created on Mon Nov 03 19:53:28 2014
 """
 
 from __future__ import print_function
-import os
-import sys
-import glob
-
-basePath = os.path.join( os.path.dirname(__file__), '..' )
-os.environ['LIBFDE'] = glob.glob( basePath+'/lib/*/libfde*.so')[0]
-sys.path.insert(0, basePath)
-#%%
 from ctypes import *
 
 import fde
