@@ -42,8 +42,8 @@ variables:
     extends: [.cit_test_job]
     script:
         - pip install --find-links=${PACKAGE_DIR}.${PLATFORM_NAME} fde pytest
-        - cd test
-        - - pytest -s --log-cli-level=DEBUG test_wheel_setup.py
+        - cd test #           . o O (avoid including fde-module from source directories!)
+        - - pytest --rootdir=. -s --log-cli-level=DEBUG test_wheel_setup.py
 
 
 
