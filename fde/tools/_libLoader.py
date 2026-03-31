@@ -99,16 +99,16 @@ class LibLoader( object ):
         return self._opt.get( id, default )
 
 
-    def searchpathIter( self ):
+    def iterSearchPaths( self ):
         from ..        import __path__ as parent_path
         from sysconfig import get_path
-        pathList = ['.']
-        pathList.extend( self.splitEnvPaths( self.opt('prioPathEnv') ) )
-        pathList.append( parent_path[0] )
-        pathList.append( get_path('purelib') )
-        pathList.extend( self.splitEnvPaths( _PATH ) )
-        return iter( pathList )
-
+        pkgName = self.opt('name') or _path.basename( *parent_path )
+        cfgPath = get_path('purelib')
+        return iter(['.',
+                     *self.splitEnvPaths( self.opt('prioPathEnv') ),
+                     *parent_path,
+                     _path.join( cfgPath, pkgName), cfgPath,
+                     *self.splitEnvPaths(_PATH)])
 
     @property
     def explicitFilePath( self ):
@@ -142,7 +142,7 @@ class LibLoader( object ):
                     # try loading matched lib ...
                     self._tryLoad( matchedLib, searchPaths )
                     # ... before searching in search-paths
-                    for path in self.searchpathIter():
+                    for path in self.iterSearchPaths():
                         self._tryLoad( path + _path.sep + filePath, searchPaths )
 
                 raise OSError( "unable to load shared library {0}".format( filePath ) )
@@ -189,7 +189,7 @@ class LibLoader( object ):
         kwArgs.setdefault( 'logLevel', 'ERROR' )
         kwArgs.setdefault( 'restorePATH', True )
         kwArgs.setdefault( 'matchExisting', True )
-        self.set( **kwArgs )
+        self.set( name=name, **kwArgs )
 
     def __enter__( self ):
         self._opt['footprint'] = self.opt( 'footprint', True )
