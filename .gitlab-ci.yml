@@ -103,7 +103,9 @@ test.athlet-controller:
     trigger:
         project: grs/gramovis/athlet-controller
         branch: master
-
+        strategy: depend 
+    variables: 
+        FDE_COMMIT_SHA: $CI_COMMIT_SHA 
 
 #-----------------------
 pack:
