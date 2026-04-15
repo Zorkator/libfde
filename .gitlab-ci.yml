@@ -26,10 +26,11 @@ variables:
 #----------------
 .build.wheel:
 #----------------
-    extends: [.cit_build_job]
+    extends: [.cit_build_job, .cit_referenced]
     variables:
         FDEPATH: ${BUILD_DIR}/package/${BUILD_CONFIG}/bin
     script:
+        - !reference [.cit_referenced, script]
         - python -m pip wheel -w dist .
         - auditwheel ${FDEPATH} repair dist/fde-*.whl -w .dist
         - rm dist/fde-*.whl  #< delete incomplete wheel
@@ -92,6 +93,15 @@ test.windows:
 
 
 #---------------
+# all platforms
+#---
+
+wheel:
+    extends: [.cit_build_job, .cit_job_collect]
+    needs:   [wheel.debian, wheel.windows]
+
+
+#---------------
 # external
 #---
 
@@ -99,13 +109,14 @@ test.windows:
 test.athlet-controller:
 #-------------------------
     stage: test
-    needs: [wheel.debian, wheel.windows]
+    needs: [wheel]
     trigger:
         project: grs/gramovis/athlet-controller
         branch: master
         strategy: mirror
     variables:
-        FDE_PIPELINE_ID: $CI_PIPELINE_ID
+        FDE_UPSTREAM: ${wheel_JOB_IDs}
+
 
 #-----------------------
 pack:
