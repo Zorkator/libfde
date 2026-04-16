@@ -44,7 +44,9 @@ variables:
     script:
         - pip install --find-links=${PACKAGE_DIR}.${PLATFORM_NAME} fde pytest
         - cd test #           . o O (avoid including fde-module from source directories!)
-        - - pytest --rootdir=. -s --log-cli-level=DEBUG test_0_initial.py test_1_basic.py
+        - - pytest --rootdir=. -s --log-cli-level=DEBUG test_0_basic.py
+    variables:
+        PYTHON_VERSION: 3.11
 
 
 
@@ -67,7 +69,7 @@ test.debian:
     needs:   [wheel.debian]
     before_script:
         - !reference [.debian, before_script]
-        - !reference [.tools.linux, install, python.venv]
+        - !reference [.tools.debian, setup, conda.python]
 
 
 #---------------
@@ -89,7 +91,7 @@ test.windows:
     needs:   [wheel.windows]
     before_script:
         - !reference [.windows, before_script]
-        - !reference [.tools.windows, install, python.venv]
+        - !reference [.tools.windows, setup, conda.python]
 
 
 #---------------
