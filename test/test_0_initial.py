@@ -1,7 +1,7 @@
 import unittest
 
 #-------------------------------------------
-class MyTestCase( unittest.TestCase ):
+class Initial( unittest.TestCase ):
 #-------------------------------------------
 
     @staticmethod
