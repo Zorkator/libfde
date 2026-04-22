@@ -95,6 +95,8 @@ _complexType( 'complex8',  'complex*8',  c_float )
 _complexType( 'complex16', 'complex*16', c_double, complex )
 _complexType( 'complex32', 'complex*32', c_longdouble )
 
+global Complex8, Complex16, Complex32
+
 
 ##
 # some helper functions for array and pointer types

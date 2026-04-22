@@ -1,8 +1,21 @@
 
 import math
 
+#-----------------------------
+class ProtoClass( object ):
+#-----------------------------
+    @classmethod
+    def subclass( _class, *mixins, **kwArgs ):
+        return type( _class.__name__, (*mixins, _class), kwArgs )
+
+    @classmethod
+    def subclass_omit( _class, omit, *mixins, **kwArgs ):
+        kwArgs = dict( i for i in kwArgs.items() if i[1] != omit )
+        return _class.subclass( *mixins, **kwArgs )
+
+
 #--------------------------------
-class Evaluable(object):
+class Evaluable( ProtoClass ):
 #--------------------------------
     @property
     def value( self ):
@@ -19,10 +32,6 @@ class Evaluable(object):
         return bool(v) and not math.isnan(v)
 
     __nonzero__ = __bool__ #< ... you've to redefine this as well!
-
-    @classmethod
-    def subclass( _class, **kwArgs ):
-        return type( _class.__name__, (_class,), kwArgs )
 
 
 #--------------------------------

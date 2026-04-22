@@ -1,5 +1,5 @@
 
-from ._expression import Evaluable, Expression
+from ._expression import ProtoClass, Evaluable, Expression
 from ..tools      import _decorate, Caching, cached_property
 import re
 
@@ -12,6 +12,10 @@ class Trigger( Expression ):
     _regEx    = '(%s|%s|%s)' % (_str1, _str2, _other)
     _strTokOp = '__lookup__({})'.format
     _context  = None #< set via subclass
+
+    @classmethod
+    def subclass( _class, context ):
+        return super(Trigger, _class).subclass( _context=context, _globals=context.globals, _locals=context.locals )
 
     @property
     def context( self ):
@@ -26,15 +30,15 @@ class Trigger( Expression ):
         super(Trigger, self).__init__( ' '.join( tokens ) )
         self.__dict__.update( _decorate( kwArgs.items() ) )
 
-    @classmethod
-    def subclass( _class, context ):
-        return super(Trigger, _class).subclass( _context=context, _globals=context.globals, _locals=context.locals )
-
 
 #--------------------------------------------
 class Action( Evaluable ):
 #--------------------------------------------
     _context = None #< set via subclass
+
+    @classmethod
+    def subclass( _class, context ):
+        return super(Action, _class).subclass( _context=context )
 
     @property
     def context( self ):
@@ -59,14 +63,10 @@ class Action( Evaluable ):
         if self._cause:
             return self.value
 
-    @classmethod
-    def subclass( _class, context ):
-        return super(Action, _class).subclass( _context=context )
-
 
 
 #--------------------------------------------
-class ActionContext(object):
+class ActionContext( ProtoClass ):
 #--------------------------------------------
     Action   = Action
     Trigger  = Trigger
@@ -115,11 +115,20 @@ class ActionContext(object):
         except SyntaxError:
             self.exec_code( cmd )
 
+    # decorator
+    @classmethod
+    def config( _class, Trigger = None, Action = None, globals = None, **other ):
+        def _extender( cls ):
+            _g = dict( dict( _class._globals, **globals or {} ), **other )
+            setattr( cls, _class.__name__, _class.subclass_omit( None, Trigger=Trigger, Action=Action, _globals=_g ) )
+            return cls
+        return _extender
 
 
-#--------------------------------------------
-class ActionContextHost( Caching ):
-#--------------------------------------------
+
+#-------------------------------------------------
+class ActionContextHost( ProtoClass, Caching ):
+#-------------------------------------------------
     ActionContext = ActionContext
     commandPrefix = None
     usedBuiltins  = []

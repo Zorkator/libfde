@@ -9,6 +9,9 @@ class FDEStartable( Startable ):
     __opts__ = dict( startFunc    = 'start_c_'
                    , finalizeFunc = 'finalize_c_'
                    )
+    __info__ = dict( startFunc    = 'function in `lib` called when starting'
+                   , finalizeFunc = 'function in `lib` called after `startFunc` has finished'
+                   )
 
 
     def __start__( self, *args, **kwArgs ):

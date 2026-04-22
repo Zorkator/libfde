@@ -1,18 +1,18 @@
 from setuptools import setup, find_packages
 
 import fde
-from fde.tools import core_loader
+from fde.tools import core_loader as cl
 
 import sysconfig
 import shutil
-shutil.copy2( core_loader.handle._name, fde.__path__[0] )
+shutil.copy2( cl.set(matchExisting=False).handle._name, fde.__path__[0] )
 
 setup(
     name='fde',
     version=fde.__version__,
     author=fde.__author__,
     author_email="",
-    install_requires=['six', 'psutil'],
+    install_requires=['six', 'psutil', 'fnmatch2', 'winshlex'],
     packages=find_packages( include=['fde', 'fde.*'] ),
     package_data={'fde': ["*.dll", "*.so", "*.so.*"]},
     description='Python wrapper for FDE loading and using shared library',

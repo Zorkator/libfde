@@ -1,27 +1,19 @@
 
-import os
 from ..abstract import mixin, abstractmethod
-from ..tools    import OptionProcessor, Caching, cached_property, debug
+from ..tools    import OptionProcessor, debug
 
 
 @mixin
-#-------------------------------------------------
-class Controllable( Caching, OptionProcessor ):
-#-------------------------------------------------
+#----------------------------------------
+class Controllable( OptionProcessor ):
+#----------------------------------------
     __opts__ = dict( rootId = '{classId}' )
+    __info__ = dict( rootId = "root scope id of Controllable type" )
 
-    @cached_property
-    def about( self ) -> dict:
-        """return dictionary of instance information."""
-        return self._get_about()
-
-
-    # keep this routine overridable!
     def _get_about( self ) -> dict:
-        return dict( pid     = os.getpid()
-                   , id      = self._id
-                   , classId = type(self).__name__
-                   , rootId  = self.opts.rootId.format( classId=type(self).__name__ )
+        return dict( super(Controllable, self)._get_about()
+                   , id     = self._id
+                   , rootId = self.opts.rootId.format( classId=type( self ).__name__ )
                    )
 
 

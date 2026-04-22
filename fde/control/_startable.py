@@ -1,5 +1,6 @@
 
 import os
+from pathlib        import Path
 from ..tools        import makedirs, NullGuard, debug
 from ._controllable import Controllable, abstractmethod
 
@@ -28,7 +29,10 @@ class Startable( object ):
     """
 
     __opts__ = dict( args    = ''
-                   , workdir = ''
+                   , workdir = Path()
+                   )
+    __info__ = dict( args    = 'preconfigured start arguments'
+                   , workdir = 'working directory to create and to change to when starting'
                    )
 
 
@@ -51,7 +55,7 @@ class Startable( object ):
         if self.opts.debug > 0: debug()
 
         # create and change to working directory of simulation ...
-        workdir = workdir or self.opts.workdir.format( **self.about )
+        workdir = workdir or str(self.opts.workdir).format( **self.about )
         prevdir = os.getcwd()
         if workdir:
             makedirs( workdir )
@@ -59,11 +63,7 @@ class Startable( object ):
 
         try:
             # determine argument list ... if not given explicitly use predefined
-            args = args or self.opts.args
-            try   : args = args.strip and [args] #< if args is string wrap it by list
-            except: pass
-            args = map( self.resolveEnv, args ) #< resolve environment variables in args ...
-
+            args = self.list(self.resolveEnv)( args or self.opts.args ) #< convert args into list of resolved strings.
             with getattr( self, 'routedExceptions', NullGuard )(): #< mixin-method might not be available.
                 code = self.__start__( *args, **kwArgs )
                 code = self.finalize( code, **kwArgs )

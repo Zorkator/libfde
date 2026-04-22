@@ -5,12 +5,13 @@ project(fde Fortran CXX)
 set(FDE_NAME "fde")
 set(FDE_VERSION_MAJOR 2)
 set(FDE_VERSION_MINOR 8)
-set(FDE_VERSION_PATCH 6)
+set(FDE_VERSION_PATCH 8)
 set(FDE_VERSION_SO "${FDE_VERSION_MAJOR}.${FDE_VERSION_MINOR}")
 set(FDE_VERSION    "${FDE_VERSION_MAJOR}.${FDE_VERSION_MINOR}.${FDE_VERSION_PATCH}")
 
 set(CMI_DOWNLOAD_TAG v0.4.12)
 include(cmi.cmake)
+cmi_add_git(runtime https://gitlab.grs.de/grs/ac2/contribution/runtime/runtime.git 5a7733c3c26d935e600dbbaf5cf94c882c399fd0)
 cmi_set_build_environment()
 
 # Generating files
@@ -21,6 +22,9 @@ set(FDE_GENERATOR_SCRIPT "${CMAKE_CURRENT_SOURCE_DIR}/typegen.py")
 # fortres
 add_subdirectory(libfortres)
 add_subdirectory(src)
+
+cmi_add_subdirectory(runtime)
+add_runtime()
 
 # tests
 if(BUILD_TESTING)

@@ -28,11 +28,16 @@ class FDEControllable( Controllable ):
      * the initialization **should** use the infoBuffer to store the filePath of the libfde it loaded.
        This filePath allows the python binding to use the very same library, what is crucial for exchanging data.
     """
-    __conv__ = dict( lib         = Controllable.realpath )
+    __conv__ = dict( lib         = Controllable.filepath )
     __opts__ = dict( lib         = LookupError( 'missing library specification!' )
                    , libEnv      = 'FDEPATH'
                    , initFunc    = 'initialize_c_'
                    , restorePATH = True
+                   )
+    __info__ = dict( lib         = 'FDEControllable compatible shared library to load and control'
+                   , libEnv      = 'environment variable used when loading shared library of fde dynamically'
+                   , initFunc    = 'name of native initialization function called after loading `lib`'
+                   , restorePATH = 'restore PATH/LIBRARYPATH environment variable after loading `lib`'
                    )
 
     _fdeLibPathError = \
@@ -47,7 +52,7 @@ class FDEControllable( Controllable ):
         """lazy-load property returning handle of loaded library."""
         callable(stale_cleanup) and stale_cleanup()
         opts = {'--debug': self.opts.debug > 2, '--verbose': self.opts.verbosity > 2}
-        return LibLoader( filePath=self.opts.lib, prioPathEnv=self.opts.libEnv, restorePATH=self.opts.restorePATH, **opts ).handle
+        return LibLoader( self.opts.lib, prioPathEnv=self.opts.libEnv, restorePATH=self.opts.restorePATH, **opts ).handle
 
     @handle.deleter
     def handle( self, hdl = None ):
