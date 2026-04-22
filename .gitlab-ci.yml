@@ -81,8 +81,8 @@ wheel.debian:11:
     needs:   [core.debian:11]
     before_script:
         - !reference [.debian:11, before_script]
+        - !reference [.tools.debian, install, python.auditwheel]
         - apt install -y gfortran 1> /dev/null
-        - pip install setuptools wheel auditwheel patchelf
 
 test.debian:11:
     extends: [.test.wheel, .runner.debian:11]
