@@ -1,13 +1,17 @@
-stages:
-    - build
-    - test
 
-variables:
-    BUILD_DIR   : .build
-    BUILD_CONFIG:
-        value      : Release
-        options    : [Debug, Release]
-        description: build configuration
+include:
+    - project: $CI_PROJECT_ROOT_NAMESPACE/ci-tools
+      ref    : $CI_SERVER_FQDN
+      file:    [develop.yaml]
+      rules:
+          - if: $CI_SERVER_FQDN == "gitlab.com"
+    #
+    - project: $CI_PROJECT_ROOT_NAMESPACE/gramovis/ci-tools
+      ref    : $CI_SERVER_FQDN
+      file:    [develop.yaml]
+      rules:
+          - if: $CI_SERVER_FQDN != "gitlab.com"
+
 
 #----------------
 .build.core:
@@ -60,65 +64,28 @@ variables:
         - python test_wheel_setup.py
 
 
-
-include: [.gitlab-linux.yml]
-.gitlab.org:
-    tags: ["gitlab-org-docker"]
-
 #---------------
 # debian:11
 #---
 
 core.debian.11:
-    extends: [.build.core, .debian.11, .gitlab.org]
+    extends: [.build.core, .runner.debian:11]
     before_script:
-        - !reference [.debian.11, before_script]
+        - !reference [.debian:11, before_script]
         - apt install -y g++ gfortran cmake gcovr
 
 wheel.debian.11:
-    extends: [.build.wheel, .debian.11, .gitlab.org]
+    extends: [.build.wheel, .runner.debian:11]
     needs:
         - job: core.debian.11
           artifacts: true
     before_script:
-        - !reference [.debian.11, before_script]
+        - !reference [.debian:11, before_script]
         - apt install -y gfortran
         - pip install setuptools wheel auditwheel patchelf
 
 test.debian.11:
-    extends: [.test.wheel, .debian.11, .gitlab.org]
+    extends: [.test.wheel, .runner.debian:11]
     needs:
         - job: wheel.debian.11
           artifacts: true
-
-
-#---------------
-# fedora:42
-#---
-
-core.fedora.42:
-    extends: [.build.core, .fedora.42, .gitlab.org]
-    before_script:
-        - !reference [.fedora.42, before_script]
-        - dnf install -y g++ gcc-gfortran cmake gcovr
-
-wheel.fedora.42:
-    extends: [.build.wheel, .fedora.42, .gitlab.org]
-    needs:
-        - job: core.fedora.42
-          artifacts: true
-    before_script:
-        - !reference [.fedora.42, before_script]
-        - dnf install -y gcc-gfortran
-        - pip install setuptools wheel auditwheel patchelf
-        # FIXME: disable auditwheel, since patchelf seems broken: loading patched libs yields SEGFAULT :-(
-        - auditwheel() { mv .dist dist; } #< just rename outdir
-
-test.fedora.42:
-    extends: [.test.wheel, .fedora.42, .gitlab.org]
-    needs:
-        - job: wheel.fedora.42
-          artifacts: true
-    before_script:
-        - !reference [.fedora.42, before_script]
-        - dnf install -y gcc-gfortran #< need gfortran, since wheel has no libgfortran.so :-(
