@@ -1,8 +1,16 @@
 
 include:
-    - project: grs/gramovis/ci-tools
-      ref:     main
+    - project: $CI_PROJECT_ROOT_NAMESPACE/ci-tools
+      ref    : $CI_SERVER_FQDN
       file:    [develop.yaml, tools.yaml, platform.yaml]
+      rules:
+          - if: $CI_SERVER_FQDN == "gitlab.com"
+    #
+    - project: $CI_PROJECT_ROOT_NAMESPACE/gramovis/ci-tools
+      ref    : $CI_SERVER_FQDN
+      file:    [develop.yaml, tools.yaml, platform.yaml]
+      rules:
+          - if: $CI_SERVER_FQDN != "gitlab.com"
 
 variables:
     BUILD_DIR: .build
