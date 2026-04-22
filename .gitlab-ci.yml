@@ -87,7 +87,9 @@ wheel.debian:11:
 test.debian:11:
     extends: [.test.wheel, .runner.debian:11]
     needs:   [wheel.debian:11]
-
+    before_script: 
+        - !reference [.debian:11, before_script] 
+        - !reference [.tools.debian, setup, conda.python] 
 
 
 #-----------------------
