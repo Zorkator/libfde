@@ -70,25 +70,25 @@ variables:
 # debian:11
 #---
 
-core.debian:11:
+core.debian:
     extends: [.build.core, .runner.debian:11]
     before_script:
-        - !reference [.debian:11, before_script]
+        - !reference [.runner.debian:11, before_script]
         - apt install -y g++ gfortran cmake gcovr 1> /dev/null
 
-wheel.debian:11:
+wheel.debian:
     extends: [.build.wheel, .runner.debian:11]
-    needs:   [core.debian:11]
+    needs:   [core.debian]
     before_script:
-        - !reference [.debian:11, before_script]
+        - !reference [.runner.debian:11, before_script]
         - !reference [.tools.debian, install, python.auditwheel]
         - apt install -y gfortran 1> /dev/null
 
-test.debian:11:
+test.debian:
     extends: [.test.wheel, .runner.debian:11]
-    needs:   [wheel.debian:11]
+    needs:   [wheel.debian]
     before_script: 
-        - !reference [.debian:11, before_script] 
+        - !reference [.runner.debian:11, before_script] 
         - !reference [.tools.debian, setup, conda.python] 
 
 
@@ -96,7 +96,7 @@ test.debian:11:
 pack:
 #-----------------------
     extends: [.cit_pack_job]
-    needs:   [test.debian:11, wheel.debian:11]
+    needs:   [test.debian, wheel.debian]
     script:
         # pack packages zipped with its dependencies...
         - !reference [.cit_pack_job, script]
