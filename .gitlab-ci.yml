@@ -86,10 +86,7 @@ variables:
 #---
 
 core.debian:
-    extends: [.build.core.cov, .runner.debian:11]
-    before_script:
-        - !reference [.runner.debian:11, before_script]
-        - apt install -y g++ gfortran cmake gcovr 1> /dev/null
+    extends: [.build.core.cov, .runner.debian.compiler:11]
 
 wheel.debian:
     extends: [.build.wheel, .runner.debian:11]
