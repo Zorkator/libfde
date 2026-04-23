@@ -21,17 +21,32 @@ variables:
 #----------------
     extends: [.cit_build_job]
     script:
-        - cmake -B ${BUILD_DIR} "-DCMAKE_BUILD_TYPE=${BUILD_CONFIG}" -DBUILD_PARALLEL=1 -DBUILD_TESTING=1 "-DRUNTIME_URL=${RUNTIME_URL}" "-DRUNTIME_REV=${RUNTIME_REV}" -DCMAKE_Fortran_FLAGS=--coverage -DCMAKE_C_FLAGS=--coverage -DCMAKE_CXX_FLAGS=--coverage
+        - cmake -B ${BUILD_DIR} "-DCMAKE_BUILD_TYPE=${BUILD_CONFIG}" -DBUILD_PARALLEL=1 -DBUILD_TESTING=1 "-DRUNTIME_URL=${RUNTIME_URL}" "-DRUNTIME_REV=${RUNTIME_REV}" ${CMAKE_EXTRA_FLAGS}
         - cmake --build ${BUILD_DIR} --config ${BUILD_CONFIG} --parallel ${NUMBER_OF_PROCESSORS}
         - pushd ${BUILD_DIR}
         - - ctest --output-on-failure --build-config ${BUILD_CONFIG}
-        - - mkdir -p ../coverage
+        - popd
+    artifacts:
+        when: always
+        paths:
+            - ${BUILD_DIR}/package
+
+#----------------
+.build.core.cov:
+#----------------
+    extends: [.build.core]
+    variables:
+        CMAKE_EXTRA_FLAGS: -DCMAKE_Fortran_FLAGS=--coverage -DCMAKE_C_FLAGS=--coverage -DCMAKE_CXX_FLAGS=--coverage
+    script:
+        - !reference [.build.core, script]
+        - mkdir -p coverage
+        - pushd ${BUILD_DIR}
         - - gcovr -r .. src libfortres
         - - gcovr -r .. src libfortres --xml=../coverage.xml --html-details=../coverage/coverage.html
         - popd
     coverage: '/^TOTAL.*\s+(\d+\%)$/'
     artifacts:
-        when   : always
+        when: always
         reports:
             coverage_report:
                 coverage_format: cobertura
@@ -71,7 +86,7 @@ variables:
 #---
 
 core.debian:
-    extends: [.build.core, .runner.debian:11]
+    extends: [.build.core.cov, .runner.debian:11]
     before_script:
         - !reference [.runner.debian:11, before_script]
         - apt install -y g++ gfortran cmake gcovr 1> /dev/null
