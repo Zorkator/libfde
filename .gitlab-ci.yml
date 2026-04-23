@@ -21,11 +21,11 @@ variables:
 #----------------
     extends: [.cit_build_job]
     script:
-        - mkdir -p coverage
         - cmake -B ${BUILD_DIR} "-DCMAKE_BUILD_TYPE=${BUILD_CONFIG}" -DBUILD_PARALLEL=1 -DBUILD_TESTING=1 "-DRUNTIME_URL=${RUNTIME_URL}" "-DRUNTIME_REV=${RUNTIME_REV}" -DCMAKE_Fortran_FLAGS=--coverage -DCMAKE_C_FLAGS=--coverage -DCMAKE_CXX_FLAGS=--coverage
         - cmake --build ${BUILD_DIR} --config ${BUILD_CONFIG} --parallel ${NUMBER_OF_PROCESSORS}
         - pushd ${BUILD_DIR}
         - - ctest --output-on-failure --build-config ${BUILD_CONFIG}
+        - - mkdir -p ../coverage
         - - gcovr -r .. src libfortres
         - - gcovr -r .. src libfortres --xml=../coverage.xml --html-details=../coverage/coverage.html
         - popd
