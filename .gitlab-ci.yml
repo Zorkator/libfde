@@ -89,19 +89,18 @@ core.debian:
     extends: [.build.core.cov, .runner.debian.compiler:11]
 
 wheel.debian:
-    extends: [.build.wheel, .runner.debian:11]
+    extends: [.build.wheel, .runner.debian.compiler:11]
     needs:   [core.debian]
     before_script:
-        - !reference [.runner.debian:11, before_script]
+        - !reference [.runner.debian.compiler:11, before_script]
         - !reference [.tools.debian, install, python.auditwheel]
-        - apt install -y gfortran 1> /dev/null
 
 test.debian:
     extends: [.test.wheel, .runner.debian:11]
     needs:   [wheel.debian]
-    before_script: 
-        - !reference [.runner.debian:11, before_script] 
-        - !reference [.tools.debian, setup, conda.python] 
+    before_script:
+        - !reference [.runner.debian:11, before_script]
+        - !reference [.tools.debian, setup, conda.python]
 
 
 #-----------------------
