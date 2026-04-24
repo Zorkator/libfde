@@ -21,7 +21,7 @@ variables:
 #----------------
     extends: [.cit_build_job]
     script:
-        - cmake -B ${BUILD_DIR} -G "${CMAKE_GENERATOR}" "-DCMAKE_BUILD_TYPE=${BUILD_CONFIG}" -DBUILD_PARALLEL=1 -DBUILD_TESTING=1 "-DRUNTIME_URL=${RUNTIME_URL}" "-DRUNTIME_REV=${RUNTIME_REV}" ${CMAKE_EXTRA_FLAGS}
+        - cmake -B ${BUILD_DIR} "-DCMAKE_BUILD_TYPE=${BUILD_CONFIG}" -DBUILD_PARALLEL=1 -DBUILD_TESTING=1 "-DRUNTIME_URL=${RUNTIME_URL}" "-DRUNTIME_REV=${RUNTIME_REV}" -G "${CMAKE_GENERATOR}" ${CMAKE_EXTRA_FLAGS}
         - cmake --build ${BUILD_DIR} --config ${BUILD_CONFIG} --parallel ${NUMBER_OF_PROCESSORS}
         - pushd ${BUILD_DIR}
         - - ctest --output-on-failure --build-config ${BUILD_CONFIG}
