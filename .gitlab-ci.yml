@@ -103,18 +103,51 @@ test.debian:
         - !reference [.tools.debian, setup, conda.python]
 
 
+#---------------
+# windows
+#---
+
+core.windows:
+    extends: [.build.core, .runner.windows.compiler:2025]
+    variables:
+        CMAKE_EXTRA_FLAGS: -G "MinGW Makefiles"
+
+wheel.windows:
+    extends: [.build.wheel, .runner.windows.compiler:2025]
+    needs:   [core.windows]
+    before_script:
+        - !reference [.runner.windows.compiler:2025, before_script]
+        - !reference [.tools.windows, install, python.auditwheel]
+
+test.windows:
+    extends: [.test.wheel, .runner.windows.core:2025]
+    needs:   [wheel.windows]
+    before_script:
+        - !reference [.runner.windows.core:2025, before_script]
+        - !reference [.tools.windows, setup, conda.python]
+
+
+#---------------
+# all platforms
+#---
+
+wheel:
+    extends: [.cit_build_job, .cit_job_collect]
+    needs:   [wheel.debian, wheel.windows]
+
+
 #-----------------------
 pack:
 #-----------------------
     extends: [.cit_pack_job]
-    needs:   [test.debian, wheel.debian]
+    needs:   [test.debian, wheel.debian, test.windows, wheel.windows]
     script:
         # pack packages zipped with its dependencies...
         - !reference [.cit_pack_job, script]
         # ...  and simply the fde-*.whl files for all platforms.
         - cp -n ${PACKAGE_DIR}.*/fde-*.whl ${PACKAGE_DIR}
     variables:
-        PACKED_PLATFORM_NAMES: debian
+        PACKED_PLATFORM_NAMES: debian windows
 
 #-----------------------
 upload:
