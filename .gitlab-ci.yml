@@ -87,8 +87,6 @@ variables:
 
 core.debian:
     extends: [.build.core.cov, .runner.debian.compiler:11]
-    variables:
-        CMAKE_GENERATOR: "Unix Makefiles"
 
 wheel.debian:
     extends: [.build.wheel, .runner.debian.compiler:11]
@@ -111,8 +109,6 @@ test.debian:
 
 core.windows:
     extends: [.build.core, .runner.windows.compiler:2025]
-    variables:
-        CMAKE_GENERATOR: "MinGW Makefiles"
 
 wheel.windows:
     extends: [.build.wheel, .runner.windows.compiler:2025]
