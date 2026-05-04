@@ -109,11 +109,12 @@ set_property(TARGET fde PROPERTY SOVERSION ${FDE_VERSION_SO})
 
 if(MSVC)
   target_compile_definitions(fde PRIVATE BUILT_TYPE=SHARED_LIB)
-  set_property(TARGET fde PROPERTY OUTPUT_NAME ${FDE_NAME}.${FDE_VERSION_SO})
+else()
+  set_property(TARGET fde PROPERTY LINKER_LANGUAGE Fortran)
 endif()
 
-if(NOT MSVC)
-  set_property(TARGET fde PROPERTY LINKER_LANGUAGE Fortran)
+if(WIN32)
+  set_property(TARGET fde PROPERTY OUTPUT_NAME ${FDE_NAME}.${FDE_VERSION_SO})
 endif()
 
 cmi_set_directory(fde)
