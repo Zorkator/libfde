@@ -20,4 +20,4 @@ from ._fdeSimulator           import Simulator, FDESimulator
 from ._pySimulator            import PySimulator
 from ._expression             import Expression
 from ._actionContext          import ActionContextHost, ActionContext, Trigger, Action
-from ._variable               import Variable
+from ._variable               import Variable, SimpleVariable, ValueVariable, ArrayVariable, MappingVariable, StringVariable, CallableVariable

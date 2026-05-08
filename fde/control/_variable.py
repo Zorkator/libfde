@@ -40,19 +40,20 @@ class Variable(object):
 
 
     def __new__( _class, ref, *args, **kwArgs ):
-        try:
-            ref.value
+        if _class is Variable:
             try:
-                len(ref)
-                try   : ref[:]; _class = ValueVariable
-                except:         _class = MappingVariable
-            except:             _class = ValueVariable
-        except:
-            try:
-                len(ref)
-                try   : ref[:]; _class = ArrayVariable
-                except:         _class = MappingVariable
-            except:             _class = SimpleVariable
+                ref.value
+                try:
+                    len(ref)
+                    try   : ref[:]; _class = ValueVariable
+                    except:         _class = MappingVariable
+                except:             _class = ValueVariable
+            except:
+                try:
+                    len(ref)
+                    try   : ref[:]; _class = (ArrayVariable, StringVariable)[hasattr( ref, 'strip' )]
+                    except:         _class = MappingVariable
+                except:             _class = (SimpleVariable, CallableVariable)[callable(ref)]
         #
         self = super(Variable, _class).__new__( _class )
         self._ref = ref
@@ -215,9 +216,9 @@ class SimpleVariable(Variable):
 
 
 
-#---------------------------------
+#--------------------------------------
 class ValueVariable(SimpleVariable):
-#---------------------------------
+#--------------------------------------
     @property
     def value( self ):
         return self._ref.value
@@ -226,6 +227,12 @@ class ValueVariable(SimpleVariable):
     def value( self, val ):
         self._ref.value = val
 
+
+#-----------------------------------------
+class CallableVariable(SimpleVariable):
+#-----------------------------------------
+    def __call__( self, *args, **kwArgs ):
+        return self.value( *args, **kwArgs )
 
 
 #--------------------------------------
@@ -241,6 +248,12 @@ class _Iterable(Variable):
         self._ref[item] = val
 
 
+#--------------------------------------------------
+class StringVariable(_Iterable, SimpleVariable):
+#--------------------------------------------------
+    pass
+
+
 #--------------------------------------
 class ArrayVariable(_Iterable):
 #--------------------------------------
@@ -251,7 +264,6 @@ class ArrayVariable(_Iterable):
     @value.setter
     def value( self, val ):
         self._ref[:] = val
-
 
 
 #--------------------------------------
