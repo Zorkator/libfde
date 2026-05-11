@@ -43,17 +43,14 @@ class Variable(object):
         if _class is Variable:
             try:
                 ref.value
-                try:
-                    len(ref)
-                    try   : ref[:]; _class = ValueVariable
-                    except:         _class = MappingVariable
-                except:             _class = ValueVariable
+                try   : iter(ref), ref.items
+                except: _class = ValueVariable
+                else  : _class = MappingVariable
             except:
-                try:
-                    len(ref)
-                    try   : ref[:]; _class = (ArrayVariable, StringVariable)[hasattr( ref, 'strip' )]
-                    except:         _class = MappingVariable
-                except:             _class = (SimpleVariable, CallableVariable)[callable(ref)]
+                try:   iter(ref), ref.items
+                except TypeError     : _class = (SimpleVariable, CallableVariable)[callable( ref )]
+                except AttributeError: _class = (ArrayVariable, StringVariable)[hasattr( ref, 'strip' )]
+                else                 : _class = MappingVariable
         #
         self = super(Variable, _class).__new__( _class )
         self._ref = ref
