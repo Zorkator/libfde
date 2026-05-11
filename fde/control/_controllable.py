@@ -2,7 +2,6 @@
 from ..abstract import mixin, abstractmethod
 from ..tools    import OptionProcessor, debug
 
-
 @mixin
 #----------------------------------------
 class Controllable( OptionProcessor ):
@@ -17,8 +16,8 @@ class Controllable( OptionProcessor ):
                    )
 
 
-    def __init__( self, **kwArgs ):
-        super(Controllable, self).__init__( **kwArgs )
+    def __init__( self, *args, **kwArgs ):
+        super(Controllable, self).__init__( *args, **kwArgs )
         self._cloneCnt = 0
         self._id       = 0
         self.initialize()

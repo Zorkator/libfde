@@ -10,7 +10,7 @@ class NullHandle( object ):
         return self.__null_method
 
 
-# -------------------------------------------
+#-------------------------------------------
 class Wallet( object ):
 #-------------------------------------------
     def __init__( self, kwSeq = {}, **kwArgs ):
@@ -20,12 +20,24 @@ class Wallet( object ):
 #-------------------------------------------
 class TypeObject( object ):
 #-------------------------------------------
+    """
+    A recursive dictionary-like object that allows access via attributes.
+
+    Key Features:
+    - **Dot Access:** Attributes can be accessed as `obj.key` or `obj['key']`.
+    - **Batch Operations:** Get, Set, and Delete operations support lists of keys
+      to perform actions in batch.
+    """
     def __init__( self, kwSeq = {}, **kwArgs ):
         self.__dict__.update( kwSeq, **kwArgs )
 
 
     def __iter__( self ):
         return iter(self.__dict__)
+
+
+    def __len__( self ):
+        return len(self.__dict__)
 
 
     def __contains__( self, key ):
@@ -54,6 +66,17 @@ class TypeObject( object ):
 
     def __setstate__( self, state ):
         self[state.keys()] = state.values()
+
+
+
+# So far TypeObject doesn't define any non-magic methods to avoid name clashes.
+# However, for compatibility with **-unpacking or dict-converting TypeObjects we have to add a keys-method.
+# Actually, this smells like a bug in Python, since __iter__ and __getitem__ should be enough!
+try:
+    dict( **TypeObject() )
+except TypeError:
+    TypeObject.keys = TypeObject.__iter__
+
 
 
 def mkTypeObject( ident, bases = (TypeObject,), members = {} ):

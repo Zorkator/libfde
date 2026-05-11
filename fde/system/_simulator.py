@@ -49,7 +49,7 @@ class Simulator(OptionProcessor):
     def setupState( self, state = {}, **kwArgs ):
         self.state = self.exposeDomain( self._v_state, dict( self.__state__, **state ), 'state' )
         # convert given values to state types ...
-        kwArgs = { k: type(self.state[k])(v) for k,v in kwArgs.items() }
+        kwArgs = { k: type(self.state[k])(v) for k, v in kwArgs.items() if k in self.state }
         self._v_state.updateDomain( kwArgs )
         self.callHook( 'initialization_done' )
         return self.state

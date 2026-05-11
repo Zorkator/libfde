@@ -1,6 +1,9 @@
 
 from ._expression import ProtoClass, Evaluable, Expression
+from ._deferred   import Deferred
 from ..tools      import _decorate, Caching, cached_property
+from itertools    import chain
+from pathlib      import Path
 import re
 
 #--------------------------------------------
@@ -11,23 +14,21 @@ class Trigger( Expression ):
     _other    = r"[^\"'\s]+"
     _regEx    = '(%s|%s|%s)' % (_str1, _str2, _other)
     _strTokOp = '__lookup__({})'.format
-    _context  = None #< set via subclass
-
-    @classmethod
-    def subclass( _class, context ):
-        return super(Trigger, _class).subclass( _context=context, _globals=context.globals, _locals=context.locals )
 
     @property
     def context( self ):
         return self._context
 
     def __init__( self, expr, **kwArgs ):
-        tokens = []
-        for t in re.findall( self._regEx, expr ):
-            if t[0] in '\'"':
-                t = self._strTokOp( t )
-            tokens.append( t )
-        super(Trigger, self).__init__( ' '.join( tokens ) )
+        if not isinstance( expr, Expression ):
+            # assume str-type ...
+            tokens = []
+            for t in re.findall( self._regEx, expr ):
+                if t[0] in '\'"':
+                    t = self._strTokOp( t )
+                tokens.append( t )
+            expr = ' '.join( tokens )
+        super(Trigger, self).__init__( expr )
         self.__dict__.update( _decorate( kwArgs.items() ) )
 
 
@@ -51,13 +52,14 @@ class Action( Evaluable ):
     def __init__( self, cause, func, *args, **kwArgs ):
         if not callable(func):
             raise AssertionError( "Action argument 3 must be callable, got %s instead!" % type(func) )
-        self._cause  = cause
+        self._cause  = self._context.Trigger( cause )
         self._func   = func
         self._args   = args
         self._kwArgs = kwArgs
 
     def __value__( self ):
-        return self._func( self, *self._args, **self._kwArgs )
+        resolve = self._context.Deferred.__resolve__
+        return self._func( self, *resolve(self._args), **resolve(self._kwArgs) )
 
     def evaluate( self ):
         if self._cause:
@@ -68,9 +70,11 @@ class Action( Evaluable ):
 #--------------------------------------------
 class ActionContext( ProtoClass ):
 #--------------------------------------------
-    Action   = Action
-    Trigger  = Trigger
-    _globals = dict( __builtins__ = {} )
+    Action     = Action
+    Trigger    = Trigger
+    Expression = Expression
+    Deferred   = Deferred
+    _globals   = dict( __builtins__ = {} )
 
     @property
     def globals( self ):
@@ -84,30 +88,40 @@ class ActionContext( ProtoClass ):
     def host( self ):
         return self._host
 
-
     def __init__( self, host, varLookup = None, globals = None, locals = None ):
-        varLookup = varLookup or (lambda i: i)
-
         self._host    = host
         self._locals  = dict()                if (locals  is None) else locals
         self._globals = dict( self._globals ) if (globals is None) else globals
 
         # subclass classes Action and Trigger to make own ones for the created ActionContext
-        self.Action  = self.Action.subclass( self )
-        self.Trigger = self.Trigger.subclass( self )
-        self.lookup  = varLookup
-        self._globals.update( Action=self.Action, Trigger=self.Trigger, __lookup__=varLookup )
+        self.Action     = self.Action.subclass( self )
+        self.Trigger    = self.Trigger.subclass( self )
+        self.Expression = self.Expression.subclass( self )
+        self.Deferred   = self.Deferred.subclass( self )
+        self.lookup     = varLookup or (lambda i: i)
+        self._globals.update( Action=self.Action, Trigger=self.Trigger, __lookup__=self.lookup )
 
+    def update( self, globals = {}, locals = {}, deferred = {}, file = None, code = None, **localVars ):
+        self._globals.update( globals, **{k: self.Deferred.wrap(v) for k, v in deferred.items()} )
+        self._locals.update( locals, **localVars )
+        file and self.exec_file( file )
+        code and self.exec_code( code )
+        return self
 
-    def eval_code( self, code ):
+    def iter( self, type = object, globals = False, locals = True ):
+        for k, v in chain( ({}, self._globals)[globals].items(), ({}, self._locals)[locals].items() ):
+            if isinstance( v, type ):
+                yield k, v
+
+    def eval_code( self, code: (str | object) ):
         return eval( code, self._globals, self._locals )
 
-    def exec_code( self, code ):
+    def exec_code( self, code: (str | object) ):
         exec( code, self._globals, self._locals )
 
-    def exec_file( self, filename ):
-        with open( filename ) as f:
-            self.exec_code( compile( f.read(), f.name, 'exec' ) )
+    def exec_file( self, file: (Path | str) ):
+        file = Path( file )
+        self.exec_code( compile( file.read_text(), file.name, 'exec' ) )
 
     def eval_or_exec( self, cmd ):
         try:
@@ -146,7 +160,8 @@ class ActionContextHost( ProtoClass, Caching ):
         context = self.ActionContext( self, varLookup )
         if cmdPrefix:
             selfType = type( self )
-            members  = [(m[4:], getattr( selfType, m )) for m in dir( selfType ) if m.startswith( cmdPrefix )]
+            startIdx = len(cmdPrefix)
+            members  = [(m[startIdx:], getattr( selfType, m )) for m in dir( selfType ) if m.startswith( cmdPrefix )]
             commands = {i: getattr( m, 'fget', m ).__get__( self ) for i, m in members}  # < treat cmd-properties the same
             context.globals.update( commands )
         context.globals.update( {i: __builtins__[i] for i in set( __builtins__ ).intersection( usedBuiltins )} )
