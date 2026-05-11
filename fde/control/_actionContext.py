@@ -1,5 +1,6 @@
 
 from ._expression import ProtoClass, Evaluable, Expression
+from ._deferred   import Deferred
 from ..tools      import _decorate, Caching, cached_property
 from itertools    import chain
 from pathlib      import Path
@@ -57,7 +58,8 @@ class Action( Evaluable ):
         self._kwArgs = kwArgs
 
     def __value__( self ):
-        return self._func( self, *self._args, **self._kwArgs )
+        resolve = self._context.Deferred.__resolve__
+        return self._func( self, *resolve(self._args), **resolve(self._kwArgs) )
 
     def evaluate( self ):
         if self._cause:
@@ -71,6 +73,7 @@ class ActionContext( ProtoClass ):
     Action     = Action
     Trigger    = Trigger
     Expression = Expression
+    Deferred   = Deferred
     _globals   = dict( __builtins__ = {} )
 
     @property
@@ -94,11 +97,19 @@ class ActionContext( ProtoClass ):
         self.Action     = self.Action.subclass( self )
         self.Trigger    = self.Trigger.subclass( self )
         self.Expression = self.Expression.subclass( self )
+        self.Deferred   = self.Deferred.subclass( self )
         self.lookup     = varLookup or (lambda i: i)
         self._globals.update( Action=self.Action, Trigger=self.Trigger, __lookup__=self.lookup )
 
-    def iter( self, type: type = object, globals: bool = False, locals: bool = True ):
-        for k, v in chain( ({},self._globals)[globals].items(), ({},self._locals)[locals].items() ):
+    def update( self, globals = {}, locals = {}, deferred = {}, file = None, code = None, **localVars ):
+        self._globals.update( globals, **{k: self.Deferred.wrap(v) for k, v in deferred.items()} )
+        self._locals.update( locals, **localVars )
+        file and self.exec_file( file )
+        code and self.exec_code( code )
+        return self
+
+    def iter( self, type = object, globals = False, locals = True ):
+        for k, v in chain( ({}, self._globals)[globals].items(), ({}, self._locals)[locals].items() ):
             if isinstance( v, type ):
                 yield k, v
 
@@ -108,7 +119,7 @@ class ActionContext( ProtoClass ):
     def exec_code( self, code: (str | object) ):
         exec( code, self._globals, self._locals )
 
-    def exec_file( self, file: (Path, str) ):
+    def exec_file( self, file: (Path | str) ):
         file = Path( file )
         self.exec_code( compile( file.read_text(), file.name, 'exec' ) )
 

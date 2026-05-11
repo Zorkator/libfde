@@ -42,16 +42,11 @@ class Deferred( ContextEvaluable, metaclass=DeferredType ):
     def __resolve__( _class, obj ):
         if isinstance( obj, Deferred ):
             return obj.__value__()
-        try:
-            len(obj)
-            try:
-                obj[:]
-                if not hasattr(obj, 'strip'):
-                    return [_class.__resolve__(a) for a in obj]
-            except TypeError:
-                return {k:_class.__resolve__(v) for k, v in obj.items()}
-        except TypeError:
-            pass
+        try:   return {k: _class.__resolve__( v ) for k, v in obj.items()}       #< try mapping
+        except AttributeError:
+            try                  : iter(obj), obj.strip
+            except TypeError     : pass                                          #< non-iterable
+            except AttributeError: return [_class.__resolve__( a ) for a in obj] #< non-string iterable
         return obj
 
 
