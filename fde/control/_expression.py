@@ -1,5 +1,6 @@
 
-import math
+from math import isnan
+
 
 #-----------------------------
 class ProtoClass( object ):
@@ -29,10 +30,9 @@ class Evaluable( ProtoClass ):
         CAUTION: in contrast to normal bool-conversion NaN is considered False.
         """
         v = self.value
-        return bool(v) and not math.isnan(v)
+        return bool(v) and not isnan(v)
 
-    __nonzero__ = __bool__ #< ... you've to redefine this as well!
-
+    __nonzero__ = __bool__  #< ... you've to redefine this as well!
 
 
 #--------------------------------------
