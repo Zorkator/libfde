@@ -109,9 +109,6 @@ test.debian:
 
 core.windows:
     extends: [.build.core, .runner.windows.compiler:2025]
-    variables:
-        RUNTIME_URL: $AC2_RUNTIME_URL
-        RUNTIME_REV: $AC2_RUNTIME_REV
 
 wheel.windows:
     extends: [.build.wheel, .runner.windows.compiler:2025]
@@ -135,23 +132,6 @@ test.windows:
 wheel:
     extends: [.cit_build_job, .cit_job_collect]
     needs:   [wheel.debian, wheel.windows]
-
-
-#---------------
-# external
-#---
-
-#-------------------------
-test.athlet-controller:
-#-------------------------
-    stage: test
-    needs: [wheel]
-    trigger:
-        project : grs/gramovis/athlet-controller
-        branch  : integration/master #< non-protected branch!
-        strategy: mirror
-    variables:
-        FDE_UPSTREAM: ${wheel_JOB_IDs}
 
 
 #-----------------------
