@@ -66,15 +66,16 @@ variables:
 #---
 
 core.debian:
-    extends: [.build.core.cov, .runner.debian.compiler:11]
+    extends: [.build.core.cov, .runner.debian.compiler]
 
 wheel.debian:
-    extends: [.build.wheel, .runner.debian.compiler:11]
+    extends: [.build.wheel, .runner.debian.compiler]
     needs:   [core.debian]
     before_script:
-        - !reference [.runner.debian.compiler:11, before_script]
+        - !reference [.runner.debian.compiler, before_script]
         - !reference [.tools.debian, setup, conda.python]
         - !reference [.tools.debian, install, python.auditwheel]
+        - !reference [.tools.debian, install, git]
 
 test.debian:
     extends: [.test.wheel, .runner.debian]
@@ -90,8 +91,6 @@ test.debian:
 
 core.windows:
     extends: [.build.core, .runner.windows.compiler:2025]
-    variables:
-        CMAKE_EXTRA_FLAGS: -DRUNTIME_URL='${AC2_RUNTIME_URL}' -DRUNTIME_REV='${AC2_RUNTIME_REV}' -DBUILD_TESTING=1
 
 wheel.windows:
     extends: [.build.wheel, .runner.windows.compiler:2025]
@@ -100,6 +99,7 @@ wheel.windows:
         - !reference [.runner.windows.compiler:2025, before_script]
         - !reference [.tools.windows, setup, conda.python]
         - !reference [.tools.windows, install, python.auditwheel]
+        - !reference [.tools.windows, install, git]
 
 test.windows:
     extends: [.test.wheel, .runner.windows.core:2025]
@@ -116,36 +116,6 @@ test.windows:
 wheel:
     extends: [.cit_build_job, .cit_job_collect]
     needs:   [wheel.debian, wheel.windows]
-
-
-#---------------
-# external
-#---
-
-.test_trigger:
-    extends: [.cit_test_trigger]
-    needs:   [wheel, test.debian, test.windows]
-    variables:
-        FDE_UPSTREAM: ${wheel_JOB_IDs}
-
-
-#-------------------------
-test.athlet-controller:
-#-------------------------
-    extends: [.test_trigger]
-    trigger:
-        project : grs/gramovis/athlet-controller
-        branch  : integration/master #< non-protected branch!
-        strategy: mirror
-
-#-------------------------
-test.uncertainty:
-#-------------------------
-    extends: [.test_trigger]
-    trigger:
-        project : grs/usamethods/uncertainty
-        branch  : integration/main #< non-protected branch!
-        strategy: mirror
 
 
 #-----------------------
