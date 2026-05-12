@@ -147,8 +147,8 @@ test.athlet-controller:
     stage: test
     needs: [wheel]
     trigger:
-        project: grs/gramovis/athlet-controller
-        branch: master
+        project : grs/gramovis/athlet-controller
+        branch  : integration/master #< non-protected branch!
         strategy: mirror
     variables:
         FDE_UPSTREAM: ${wheel_JOB_IDs}
