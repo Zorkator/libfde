@@ -19,5 +19,6 @@ from ._ticked                 import Ticked
 from ._fdeSimulator           import Simulator, FDESimulator
 from ._pySimulator            import PySimulator
 from ._expression             import Evaluable, ContextEvaluable, Expression
+from ._deferred               import Deferred
 from ._actionContext          import ActionContextHost, ActionContext, Trigger, Action
 from ._variable               import Variable, SimpleVariable, ValueVariable, ArrayVariable, MappingVariable, StringVariable, CallableVariable
