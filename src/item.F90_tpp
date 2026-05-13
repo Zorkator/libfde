@@ -250,7 +250,7 @@ module fde_item
     subroutine _paste(item_assign_to_,typeId)_c( lhs, rhs ) ;\
       import Item_t; bt_import                              ;\
       baseType, intent(inout) :: lhs                        ;\
-      type(Item_t),    target :: rhs                        ;\
+      type(Item_t), intent(in), target :: rhs               ;\
     end subroutine
 
     _declare_assign_to_(bool1,      logical*1,)

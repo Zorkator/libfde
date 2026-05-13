@@ -501,7 +501,7 @@ end module
   subroutine _paste(item_assign_to_,typeId)_c( lhs, rhs )            ;\
     use impl_item__; implicit none                                   ;\
     baseType,     target, intent(inout) :: lhs                       ;\
-    type(Item_i), target                :: rhs                       ;\
+    type(Item_i), target, intent(in)    :: rhs                       ;\
     baseType,                   pointer :: ptr                       ;\
     type(c_ptr)                         :: src                       ;\
     if (auto_assignable_( src, c_loc(lhs), type_of(lhs), rhs )) then ;\
