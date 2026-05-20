@@ -153,6 +153,18 @@ test.athlet-controller:
     variables:
         FDE_UPSTREAM: ${wheel_JOB_IDs}
 
+#-------------------------
+test.uncertainty:
+#-------------------------
+    stage: test
+    needs: [wheel]
+    trigger:
+        project : grs/usamethods/uncertainty
+        branch  : integration/main #< non-protected branch!
+        strategy: mirror
+    variables:
+        FDE_UPSTREAM: ${wheel_JOB_IDs}
+
 
 #-----------------------
 pack:
