@@ -13,8 +13,9 @@ include:
           - if: $CI_SERVER_FQDN != "gitlab.com"
 
 variables:
-    BUILD_DIR: .build
-
+    BUILD_DIR:      .build
+    WHEEL_BASENAME: fde
+    CIT_DEBUG: true
 
 #----------------
 .build.core:
@@ -93,6 +94,7 @@ wheel.debian:
     needs:   [core.debian]
     before_script:
         - !reference [.runner.debian.compiler:11, before_script]
+        - !reference [.tools.debian, setup, conda.python]
         - !reference [.tools.debian, install, python.auditwheel]
 
 test.debian:
@@ -144,8 +146,8 @@ wheel:
 #-------------------------
 test.athlet-controller:
 #-------------------------
-    stage: test
-    needs: [wheel]
+    extends: [.cit_test_trigger]
+    needs:   [wheel]
     trigger:
         project : grs/gramovis/athlet-controller
         branch  : integration/master #< non-protected branch!
@@ -171,13 +173,6 @@ pack:
 #-----------------------
     extends: [.cit_pack_job]
     needs:   [test.debian, wheel.debian, test.windows, wheel.windows]
-    script:
-        # pack packages zipped with its dependencies...
-        - !reference [.cit_pack_job, script]
-        # ...  and simply the fde-*.whl files for all platforms.
-        - cp -n ${PACKAGE_DIR}.*/fde-*.whl ${PACKAGE_DIR}
-    variables:
-        PACKED_PLATFORM_NAMES: debian windows
 
 #-----------------------
 upload:
