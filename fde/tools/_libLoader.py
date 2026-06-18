@@ -81,8 +81,8 @@ class LibLoader( object ):
         from fnmatch import fnmatch
         from os.path import basename, dirname
         libs = (l.path for l in Process(_getpid()).memory_maps())
-        if pattern:
-            pname = (lambda p: p) if dirname(pattern) else basename
+        if pattern:                                #     . o O (ignore any matching dirname to avoid matching only by directory name!)
+            pname = (lambda p: p) if dirname(pattern).strip('*') else basename
             libs  = (fn for fn in libs if fnmatch( pname(fn), pattern ))
         return libs
 
