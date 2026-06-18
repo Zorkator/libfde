@@ -143,29 +143,30 @@ wheel:
 # external
 #---
 
+.test_trigger:
+    extends: [.cit_test_trigger]
+    needs:   [wheel]
+    variables:
+        FDE_UPSTREAM: ${wheel_JOB_IDs}
+
+
 #-------------------------
 test.athlet-controller:
 #-------------------------
-    extends: [.cit_test_trigger]
-    needs:   [wheel]
+    extends: [.test_trigger]
     trigger:
         project : grs/gramovis/athlet-controller
         branch  : integration/master #< non-protected branch!
         strategy: mirror
-    variables:
-        FDE_UPSTREAM: ${wheel_JOB_IDs}
 
 #-------------------------
 test.uncertainty:
 #-------------------------
-    stage: test
-    needs: [wheel]
+    extends: [.test_trigger]
     trigger:
         project : grs/usamethods/uncertainty
         branch  : integration/main #< non-protected branch!
         strategy: mirror
-    variables:
-        FDE_UPSTREAM: ${wheel_JOB_IDs}
 
 
 #-----------------------
