@@ -13,34 +13,26 @@ include:
           - if: $CI_SERVER_FQDN != "gitlab.com"
 
 variables:
-    BUILD_DIR: .build
-
+    WHEEL_BASENAME: fde
+    CIT_DEBUG: true
 
 #----------------
 .build.core:
 #----------------
-    extends: [.cit_build_job]
-    script:
-        - cmake -B ${BUILD_DIR} "-DCMAKE_BUILD_TYPE=${BUILD_CONFIG}" -DBUILD_PARALLEL=1 -DBUILD_TESTING=1 "-DRUNTIME_URL=${RUNTIME_URL}" "-DRUNTIME_REV=${RUNTIME_REV}" -G "${CMAKE_GENERATOR}" ${CMAKE_EXTRA_FLAGS}
-        - cmake --build ${BUILD_DIR} --config ${BUILD_CONFIG} --parallel ${NUMBER_OF_PROCESSORS}
-        - pushd ${BUILD_DIR}
-        - - ctest --output-on-failure --build-config ${BUILD_CONFIG}
-        - popd
-    artifacts:
-        when: always
-        paths:
-            - ${BUILD_DIR}/package
+    extends: [.cit_build.cmake]
+    variables:
+        CMAKE_PKGBIN_DIR_VAR: FDEPATH
 
 #----------------
 .build.core.cov:
 #----------------
     extends: [.build.core]
     variables:
-        CMAKE_EXTRA_FLAGS: -DCMAKE_Fortran_FLAGS=--coverage -DCMAKE_C_FLAGS=--coverage -DCMAKE_CXX_FLAGS=--coverage
+        CMAKE_EXTRA_FLAGS: -DBUILD_TESTING=1 -DCMAKE_Fortran_FLAGS=--coverage -DCMAKE_C_FLAGS=--coverage -DCMAKE_CXX_FLAGS=--coverage
     script:
         - !reference [.build.core, script]
         - mkdir -p coverage
-        - pushd ${BUILD_DIR}
+        - pushd ${CMAKE_BUILD_DIR}
         - - gcovr -r .. src libfortres
         - - gcovr -r .. src libfortres --xml=../coverage.xml --html-details=../coverage/coverage.html
         - popd
@@ -52,34 +44,22 @@ variables:
                 coverage_format: cobertura
                 path: coverage.xml
         paths:
-            - ${BUILD_DIR}/package
+            - ${CMAKE_BUILD_DIR}/package
             - coverage/
 
 #----------------
 .build.wheel:
 #----------------
-    extends: [.cit_build_job, .cit_referenced]
+    extends: [.cit_build.wheel]
     variables:
-        FDEPATH: ${BUILD_DIR}/package/${BUILD_CONFIG}/bin
-    script:
-        - !reference [.cit_referenced, script]
-        - python -m pip wheel -w dist .
-        - auditwheel ${FDEPATH} repair dist/fde-*.whl -w .dist
-        - rm dist/fde-*.whl  #< delete incomplete wheel
-        - cp -r .dist/* dist #< before copying repaired one into dist
-        - mv dist "${PACKAGE_DIR}.${PLATFORM_NAME}"
+        AUDITWHEEL_LIBSDIR: ${FDEPATH}
 
 #----------------
 .test.wheel:
 #----------------
-    extends: [.cit_test_job]
-    script:
-        - pip install --find-links=${PACKAGE_DIR}.${PLATFORM_NAME} fde pytest
-        - cd test #           . o O (avoid including fde-module from source directories!)
-        - - pytest --rootdir=. -s --log-cli-level=DEBUG test_0_basic.py
-    variables:
-        PYTHON_VERSION: 3.11
-
+    extends: [.cit_test.wheel]
+    variables: #                 . o O (avoid including fde-module from source directories!)
+        PYTEST_OPTS: --rootdir=test -s --log-cli-level=DEBUG test/test_0_basic.py
 
 #---------------
 # debian:11
@@ -93,6 +73,7 @@ wheel.debian:
     needs:   [core.debian]
     before_script:
         - !reference [.runner.debian.compiler:11, before_script]
+        - !reference [.tools.debian, setup, conda.python]
         - !reference [.tools.debian, install, python.auditwheel]
 
 test.debian:
@@ -110,8 +91,7 @@ test.debian:
 core.windows:
     extends: [.build.core, .runner.windows.compiler:2025]
     variables:
-        RUNTIME_URL: $AC2_RUNTIME_URL
-        RUNTIME_REV: $AC2_RUNTIME_REV
+        CMAKE_EXTRA_FLAGS: -DRUNTIME_URL='${AC2_RUNTIME_URL}' -DRUNTIME_REV='${AC2_RUNTIME_REV}' -DBUILD_TESTING=1
 
 wheel.windows:
     extends: [.build.wheel, .runner.windows.compiler:2025]
@@ -141,29 +121,30 @@ wheel:
 # external
 #---
 
+.test_trigger:
+    extends: [.cit_test_trigger]
+    needs:   [wheel]
+    variables:
+        FDE_UPSTREAM: ${wheel_JOB_IDs}
+
+
 #-------------------------
 test.athlet-controller:
 #-------------------------
-    stage: test
-    needs: [wheel]
+    extends: [.test_trigger]
     trigger:
         project : grs/gramovis/athlet-controller
         branch  : integration/master #< non-protected branch!
         strategy: mirror
-    variables:
-        FDE_UPSTREAM: ${wheel_JOB_IDs}
 
 #-------------------------
 test.uncertainty:
 #-------------------------
-    stage: test
-    needs: [wheel]
+    extends: [.test_trigger]
     trigger:
         project : grs/usamethods/uncertainty
         branch  : integration/main #< non-protected branch!
         strategy: mirror
-    variables:
-        FDE_UPSTREAM: ${wheel_JOB_IDs}
 
 
 #-----------------------
@@ -171,13 +152,6 @@ pack:
 #-----------------------
     extends: [.cit_pack_job]
     needs:   [test.debian, wheel.debian, test.windows, wheel.windows]
-    script:
-        # pack packages zipped with its dependencies...
-        - !reference [.cit_pack_job, script]
-        # ...  and simply the fde-*.whl files for all platforms.
-        - cp -n ${PACKAGE_DIR}.*/fde-*.whl ${PACKAGE_DIR}
-    variables:
-        PACKED_PLATFORM_NAMES: debian windows
 
 #-----------------------
 upload:

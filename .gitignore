@@ -43,3 +43,5 @@ libfortres/release/
 /_*/
 
 *.egg-info/
+
+*.lnk
