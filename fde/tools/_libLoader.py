@@ -46,11 +46,17 @@ class CDLL_t( _CDLL ):
     def footprint( self ):
         return self._footprint
 
-    def __init__( self, name, footprint = False, **kwArgs ):
+    @property
+    def filepath( self ):
+        from pathlib import Path
+        return Path( self._name )
+
+    def __init__( self, name, footprint = False, onUnload = None, **kwArgs ):
         pre = set(LibLoader.processLibs()) if footprint else set()
         try             : super(CDLL_t, self).__init__( name, **kwArgs )
         except Exception: super(CDLL_t, self).__init__( name, **dict( {'winmode':0}, **kwArgs ) )
         self._footprint = pre and pre.symmetric_difference( LibLoader.processLibs() )
+        self._onUnload  = onUnload
 
     def __getitem__( self, ident ):
         """if given more than one argument, try one after another before giving up and returning the last as default."""
@@ -65,6 +71,7 @@ class CDLL_t( _CDLL ):
     def unload( self ):
         freeLibrary( c_int64(self._handle) )
         self._footprint = self._footprint and self._footprint.intersection( LibLoader.processLibs() )
+        self._onUnload and self._onUnload()
 
 
 #-------------------------------------------
@@ -158,7 +165,7 @@ class LibLoader( object ):
             self._log.debug( "try loading %s" % libPattern )
             for f in glob( str(libPattern) ):
                 self._log.debug( "\ttry " + str(f) )
-                try   : self._hdl = CDLL_t( str(f), self.opt('footprint') ); break  # < break if load succeeded
+                try   : self._hdl = CDLL_t( str(f), self.opt('footprint'), onUnload=(lambda: self.__delattr__('_hdl')) ); break  # < break if load succeeded
                 except: self._opt['onLoadError']( str(f) )
 
             if getattr( self, '_hdl', None ):
