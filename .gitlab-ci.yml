@@ -98,6 +98,7 @@ wheel.windows:
     needs:   [core.windows]
     before_script:
         - !reference [.runner.windows.compiler:2025, before_script]
+        - !reference [.tools.windows, setup, conda.python]
         - !reference [.tools.windows, install, python.auditwheel]
 
 test.windows:
