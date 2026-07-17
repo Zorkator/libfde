@@ -43,10 +43,9 @@ class Basic( unittest.TestCase ):
         from pathlib   import Path
         cl.set( logLevel='DEBUG', onLoadError=self._loadError, footprint=True )
         print( cl.handle )
-        hdlPath = Path( cl.handle._name )
-        self.assertTrue( hdlPath.name in [Path(l).name for l in cl.processLibs( cl.opt('libPattern'))] )
         # testing on footprint needs initial handle loaded with footprint enabled!
-        self.assertTrue( hdlPath.name in [Path(l).name for l in cl.handle.footprint] )
+        self.assertTrue( str(cl.handle.filepath) in cl.handle.footprint )
+        self.assertTrue( str(cl.handle.filepath) in cl.processLibs( cl.opt('libPattern') ) )
         self.assertTrue( cl.handle.footprint.issubset( cl.processLibs() ) )
 
     #         . o O (make sure this test runs AFTER testing the coreLoader!)
