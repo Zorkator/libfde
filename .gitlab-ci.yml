@@ -62,7 +62,7 @@ variables:
         PYTEST_OPTS: --rootdir=test -s --log-cli-level=DEBUG test/test_0_basic.py
 
 #---------------
-# debian:11
+# debian
 #---
 
 core.debian:
@@ -77,10 +77,10 @@ wheel.debian:
         - !reference [.tools.debian, install, python.auditwheel]
 
 test.debian:
-    extends: [.test.wheel, .runner.debian:11]
+    extends: [.test.wheel, .runner.debian]
     needs:   [wheel.debian]
     before_script:
-        - !reference [.runner.debian:11, before_script]
+        - !reference [.runner.debian, before_script]
         - !reference [.tools.debian, setup, conda.python]
 
 
