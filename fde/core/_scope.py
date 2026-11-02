@@ -96,14 +96,14 @@ class Scope( HashMap ):
 
     def _assign_tree( self, other, keyOp = None ):
         keyOp = keyOp or (lambda k: k)
-
+        #
         def _tree_walk( itemItr, stack ):
             for key, v in itemItr:
                 if not isinstance( v, CALLBACK ):
                     k = keyOp( key )
                     try                  : _tree_walk( iteritems(v), stack + [stack[-1][k]] )
                     except AttributeError: stack[-1][k] = v
-
+        #
         _tree_walk( iteritems(other), [self] )
 
 
@@ -115,25 +115,35 @@ class Scope( HashMap ):
         self._assign_tree( path_dict, keyOp )
 
 
-    def iterDomain( self, paths, keyOp = str.split, default = LookupError ):
-        keyOp = keyOp or (lambda k: [k])
-        for p in map( keyOp, paths ):
+    def _iter_leaves( self, obj, *path ):
+        try:
+            for k, v in obj.items():
+                yield from self._iter_leaves( v, *path, k )
+        except AttributeError:
+            yield path, obj
+
+
+    def iterDomain( self, *paths, keyOp = str.split, recursive = False, default = LookupError ):
+        keyOp = keyOp or (lambda *k: k)
+        for p in filter( bool, map( keyOp, paths ) if paths else [any] ):
             try:
-                yield p, self[p] if p else None
+                obj, p = (self, ()) if p is any else (self[p], p)
+                if recursive: yield from self._iter_leaves( obj, *p )
+                else        : yield p, obj
             except (TypeError, KeyError, AttributeError) as e:
-                yield p, auto_raise( default, 'invalid scope path ' + str(p) )
+                yield p, auto_raise( default, f'invalid scope path {p}' )
 
 
-    def extractDomain( self, paths, keyOp = str.split, default = LookupError ):
+    def extractDomain( self, *paths, keyOp = str.split, default = LookupError ):
         def _put( d, k ): return d.setdefault( k, dict() )
 
         domain = dict()
-        for p, v in self.iterDomain( paths, keyOp, default ):
+        for p, v in self.iterDomain( *paths, keyOp, default ):
             if p: reduce( _put, p[:-1], domain )[p[-1]] = v
         return domain
 
-    def extractContext( self, paths, keyOp = str.split, default = LookupError ):
-        return dict2obj( self.extractDomain( paths, keyOp, default ) )
+    def extractContext( self, *paths, keyOp = str.split, default = LookupError ):
+        return dict2obj( self.extractDomain( *paths, keyOp, default ) )
 
     def asContext( self ):
         return dict2obj( self )
@@ -148,7 +158,7 @@ class Scope( HashMap ):
                 else:
                     return base[ident[-1]]
             except (TypeError, KeyError, AttributeError) as e:
-                raise KeyError( 'invalid scope path ' + str(ident) )
+                raise KeyError( f'invalid scope path {ident}' )
         else:
             return super(Scope, self).__getitem__( ident )
 
