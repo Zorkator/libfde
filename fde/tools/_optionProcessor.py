@@ -63,18 +63,36 @@ class OptionProcessor( Caching ):
 
 
     @classmethod
-    def list( _class, T ):
+    def slice( _class, T, *extra ):
+        """make option converter creating slice[T] from `arg`:
+          try splitting tokens according to format '<start>[:<stop>[:<step>]]',
+          or create slice from `arg` and `extra`.
+        """
+        def _wrap( arg ):
+            try   : return slice( *[T(i) if i else None for i in arg.split(':')] )
+            except: return slice( arg, *extra )
+        _wrap.__name__ = f'slice[{T.__name__}]'
+        return _wrap
+
+
+    @classmethod
+    def list( _class, T, sep=None ):
+        """make option converter creating list[T] from `arg`:
+          try splitting tokens either by separator `sep` or winshlex (quotes-aware split).
+        """
         import winshlex
-        def _wrap( obj ):
-            try   : obj = winshlex.split( obj )
+        split = (lambda s: str.split(s, sep)) if sep else winshlex.split
+        def _wrap( arg ):
+            try   : arg = split( arg )
             except: pass
-            return [T(i) for i in _class.flatten(obj)]
-        _wrap.__name__ = T.__name__ + 'list'
+            return [T(i) for i in _class.flatten( arg )]
+        _wrap.__name__ = f'list[{T.__name__}]'
         return _wrap
 
 
     @staticmethod
     def unique( f = None ):
+        """make unique modified option converter"""
         f, n = f and (f, f.__name__) or ((lambda x: x), '')
         def unique( seq ):
             seen = set()
