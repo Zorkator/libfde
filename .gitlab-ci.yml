@@ -124,7 +124,7 @@ wheel:
 
 .test_trigger:
     extends: [.cit_test_trigger]
-    needs:   [wheel]
+    needs:   [wheel, test.debian, test.windows]
     variables:
         FDE_UPSTREAM: ${wheel_JOB_IDs}
 
