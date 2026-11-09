@@ -50,7 +50,7 @@ variables:
 #----------------
 .build.wheel:
 #----------------
-    extends: [.cit_build.wheel]
+    extends: [.cit_build.wheel.vcs]
     variables:
         AUDITWHEEL_LIBSDIR: ${FDEPATH}
 
