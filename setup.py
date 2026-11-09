@@ -1,4 +1,5 @@
-from setuptools import setup, find_packages
+from setuptools     import setup, find_packages
+from setuptools_scm import get_version
 import sysconfig
 
 def copy_sharedlib():
@@ -12,12 +13,13 @@ def copy_sharedlib():
     dest = Path(__file__).parent/'fde'/core.name
     copy2( core, dest )
 
+
 copy_sharedlib()
 setup(
     name             = 'fde',
     description      = 'Python wrapper for FDE loading and using shared library',
     license          = "GNU Lesser General Public License, Version 3 (LGPLv3)",
-    version          = "2.8.9",
+    version          = get_version(),
     author           = "Josef Scheuer",
     author_email     = "sjo@grs.de",
     install_requires = ['six', 'psutil', 'fnmatch2', 'winshlex'],
