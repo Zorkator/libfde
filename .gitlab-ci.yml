@@ -50,7 +50,7 @@ variables:
 #----------------
 .build.wheel:
 #----------------
-    extends: [.cit_build.wheel]
+    extends: [.cit_build.wheel.vcs]
     variables:
         AUDITWHEEL_LIBSDIR: ${FDEPATH}
 
@@ -58,8 +58,8 @@ variables:
 .test.wheel:
 #----------------
     extends: [.cit_test.wheel]
-    variables: #                 . o O (avoid including fde-module from source directories!)
-        PYTEST_OPTS: --rootdir=test -s --log-cli-level=DEBUG test/test_0_basic.py
+    variables: #                 . o O (prevent pytest adding project root to sys.path!)
+        PYTEST_OPTS: --config-file test/pytest-root.cfg -s --log-cli-level=DEBUG test/test_0_basic.py test/test_import.py
 
 #---------------
 # debian
@@ -124,7 +124,7 @@ wheel:
 
 .test_trigger:
     extends: [.cit_test_trigger]
-    needs:   [wheel]
+    needs:   [wheel, test.debian, test.windows]
     variables:
         FDE_UPSTREAM: ${wheel_JOB_IDs}
 
