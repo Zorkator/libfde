@@ -136,7 +136,7 @@ test.athlet-controller:
     extends: [.test_trigger]
     trigger:
         project : grs/gramovis/athlet-controller
-        branch  : integration/master #< non-protected branch!
+        branch  : sjo/data_access #< non-protected branch!
         strategy: mirror
 
 #-------------------------
