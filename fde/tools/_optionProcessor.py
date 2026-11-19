@@ -157,8 +157,8 @@ class OptionProcessor( Caching ):
     def knownOptions( _class, only = (), hide = (), annotate = () ):
         """return dictionary of options and default values known by this class.
         Optional arguments `only` and `hide` allow passing lists of regex strings for filtering options.
-        If class attribute names {'conv', 'info'} are given in `annotate`, the option's default value gets tupled
-          with its according attribute values or None.
+        If class attribute names {'conv', 'info'} are given in `annotate`, the option's default value gets combined
+          with its according attribute values or None, in a sequence of type(annotate), i.e. by default: tuple.
         """
         opts = _class._merged_class_attrib( '__opts__' )
         if only or hide:
@@ -171,6 +171,30 @@ class OptionProcessor( Caching ):
         if attrs:
             opts = {k: type(annotate)( (v, *(attrs[a].get(k) for a in annotate)) ) for k,v in opts.items()}
         return opts
+
+
+    @classmethod
+    def decorateOptions( _class, cmd, only = (), hide = (), sorter = sorted, optionFactory = None ):
+        """decorate known options to given command `cmd` by applying `optionFactory` (default: click.option).
+        Optional arguments `only` and `hide` allow passing lists of regex strings for filtering options.
+        The decoration order can be determined by `sorter` (default: sorted).
+        Both `sorter` and `optionFactory`, if given, must be signature compatible with builtin.sorted and click.option, respectively.
+        Returns `cmd` decorated.
+        """
+        if optionFactory is None:
+            from click import option as optionFactory
+        #
+        opts = _class.knownOptions( only, hide, ['conv', 'info'] ) #< get options with conv and info, paired as list
+        for opt, vci in reversed( sorter( opts.items() ) ):
+            vci[1] = vci[1] or type(vci[0])
+            optArgs = dict( required = isinstance( vci[0], Exception ),
+                            multiple = isinstance( vci[0], (list, tuple) ),
+                            type     = vci[1],
+                            help     = vci[2] )
+            if optArgs['required']: optArgs.update( metavar=vci[1].__name__.upper() )
+            else                  : optArgs.update( default=vci[0] )
+            cmd = optionFactory( f'--{opt}', opt, **optArgs )( cmd )
+        return cmd
 
 
     @classmethod

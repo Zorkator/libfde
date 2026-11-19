@@ -27,7 +27,7 @@ class _mixin( object ):
         cls = next( iter(self._req), None )
         if sequential:
             for m in mixins:
-                cls = type( cls )( m.__name__ + cls.__name__, (m, cls), {} )
+                cls = type(cls)( m.__name__ + cls.__name__, (m, cls), {} )
         elif mixins:
             cls = type(cls)( ''.join( m.__name__ for m in mixins ) + cls.__name__, (*mixins, cls), {} )
         return cls

@@ -22,7 +22,7 @@ setup(
     version          = get_version(),
     author           = "Josef Scheuer",
     author_email     = "sjo@grs.de",
-    install_requires = ['six', 'psutil', 'fnmatch2', 'winshlex'],
+    install_requires = ['six', 'psutil', 'fnmatch2', 'winshlex', 'click'],
     packages         = find_packages( include=['fde', 'fde.*'] ),
     package_data     = {
         'fde': ["*.dll", "*.so", "*.so.*"]
@@ -30,8 +30,7 @@ setup(
     #
     options = {
         'bdist_wheel': {
-            'plat_name': sysconfig.get_platform(),
-            'universal': 1
+            'plat_name': sysconfig.get_platform()
         }
     },
     classifiers = [
