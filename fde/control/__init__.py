@@ -1,5 +1,5 @@
 
-from ._controllable           import Controllable
+from ._controllable           import Controllable, Group, group
 from ._fdeControllable        import FDEControllable
 from ._pyControllable         import PyControllable
 from ._exceptionRouter        import ExceptionRouter

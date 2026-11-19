@@ -2,6 +2,52 @@
 from ..abstract import mixin, abstractmethod
 from ..tools    import OptionProcessor, debug
 
+import click
+from click.decorators import t, _AnyCallable, GrpType
+from functools        import wraps
+
+#---------------------------------
+class Group( click.Group ):
+#---------------------------------
+    optionKeys  = { 'expert': ('--expert',),
+                    'mixin' : ('-m', '--mixin') }
+    knownMixins = {}
+
+    def parse_args( self, ctx, args ):
+        obj    = ctx.ensure_object( dict )
+        mixins = obj.setdefault( 'mixins', [] )
+        others = []
+        itr    = iter(args)
+        for arg in itr:
+            if arg == '--':
+                others.extend( ('--', *itr) )
+                break
+            elif arg in self.optionKeys['expert']:
+                obj['expert'] = True
+            elif arg in self.optionKeys['mixin']:
+                try:
+                    mixins.append( self.knownMixins[next(itr)] )
+                except StopIteration:
+                    raise click.BadParameter(f"Missing value for {arg}")
+                except KeyError as e:
+                    raise click.BadParameter(f"Unknown {arg} {e.args[0]}")
+            else:
+                 others.append( arg )
+        return super(Group, self).parse_args( ctx, others )
+
+
+def group( cls: type[click.Group] = click.Group, mixins = {}, **kwArgs ) -> Group | t.Callable[[_AnyCallable], Group | GrpType]:
+    kwArgs['cls'] = type(cls)( 'Group', (Group, cls), {'knownMixins': mixins} )
+
+    @wraps(click.group)
+    def decorator( func ):
+        func = click.option( *Group.optionKeys['expert'], is_flag=True, help='Show all available options' )( func )
+        if mixins:
+            func = click.option( *Group.optionKeys['mixin'], type=click.Choice( mixins.keys(), case_sensitive=True ), multiple=True, help='Apply mixin class' )( func )
+        return click.group( **kwArgs )( func )
+    return decorator
+
+
 @mixin
 #----------------------------------------
 class Controllable( OptionProcessor ):
