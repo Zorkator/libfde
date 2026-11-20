@@ -136,7 +136,7 @@ test.athlet-controller:
     extends: [.test_trigger]
     trigger:
         project : grs/gramovis/athlet-controller
-        branch  : sjo/data_access #< non-protected branch!
+        branch  : $CI_COMMIT_REF_NAME #< non-protected branch!
         strategy: mirror
 
 #-------------------------
